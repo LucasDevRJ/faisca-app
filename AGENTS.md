@@ -14,7 +14,14 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 - `docs/`: SPEC e DECISIONS.
 
 ## Comandos
-> Preencher quando os projetos forem criados (dev, build, lint, typecheck, test, migrate).
+Backend (rodar dentro de `backend/`; detalhes em `backend/README.md`):
+- `npm run dev`: API em modo dev (porta 3333)
+- `npm run lint` · `npm run typecheck` · `npm test`: rodar ao terminar uma mudança
+- `npm run build`: compila para `dist/`
+- `npm run db:up`: sobe o Postgres local (Docker)
+- `npm run db:migrate`: nova migration em dev · `npm run db:deploy`: aplica as pendentes
+
+Frontend e `tests/`: preencher quando forem criados.
 
 ## Regras invioláveis
 1. **Autorização no backend.** No contexto de terapeuta, só GET e só de pacientes com vínculo
