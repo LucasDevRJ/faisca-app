@@ -124,6 +124,29 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
 - **Motivo:** o JSON é fácil de filtrar no Railway, e o `redact` é uma rede de segurança para a
   regra de logs sem dados sensíveis. Ele não dispensa o cuidado de não logar esses dados.
 
+## DEC-023 — API no mesmo domínio do front, via proxy
+- **Decisão:**
+  - o front chama sempre `/api/...` no próprio domínio;
+  - em produção, o `vercel.json` repassa `/api/*` para a API no Railway;
+  - em dev, o proxy do Vite faz o mesmo para `localhost:3333`;
+  - o cookie de sessão será `SameSite=Lax`.
+- **Motivo:** Vercel e Railway ficam em sites diferentes, e o cookie da API seria de terceiros,
+  bloqueado pelo Safari e restrito no Chrome, o que quebraria o login da DEC-010. Com o proxy o
+  cookie é first-party, sem depender do domínio próprio (ainda em aberto).
+- **Consequência:** há mais um proxy na frente da API; o `trust proxy` do Express precisa ser
+  ajustado na etapa de rate limit para ler o IP real do usuário.
+
+## DEC-024 — Frontend: dados do servidor, testes e fontes
+- **Decisão:**
+  - TanStack Query para buscar e fazer cache dos dados da API em memória;
+  - Vitest + Testing Library + jsdom nos testes, com a API simulada pelo MSW;
+  - fontes Nunito e Inter hospedadas no próprio app (Fontsource), sem Google Fonts;
+  - service worker próprio (`injectManifest`) com precache só do shell.
+- **Motivo:** o Query cuida de carregamento, erro e recarga sem código repetido; os testes seguem
+  o mesmo ferramental do backend (DEC-021); sem requisições a terceiros (LGPD) e com as fontes no
+  cache do PWA; o service worker próprio deixa explícito que a API nunca entra em cache e já
+  recebe o Web Push depois.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

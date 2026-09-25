@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens do Faísca. Regra do frontend/CLAUDE.md: nada de cor solta.
+ * `--color-*: initial` remove a paleta padrão do Tailwind, então só existem as cores abaixo.
+ * `inline` faz as utilities apontarem para as variáveis, que trocam com o tema.
+ * Contraste WCAG AA conferido nos dois temas (texto >= 4.5:1, interface >= 3:1).
+ */
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-bg: var(--faisca-bg);
+  --color-surface: var(--faisca-surface);
+  --color-border: var(--faisca-border);
+  --color-text: var(--faisca-text);
+  --color-muted: var(--faisca-muted);
+  --color-primary: var(--faisca-primary);
+  --color-on-primary: var(--faisca-on-primary);
+  --color-primary-text: var(--faisca-primary-text);
+  --color-accent: var(--faisca-accent);
+  --color-accent-text: var(--faisca-accent-text);
+
+  /* Notas 0–10: uma só cor (sálvia), variando a intensidade. Nunca vermelho/verde. */
+  --color-score-0: var(--faisca-score-0);
+  --color-score-1: var(--faisca-score-1);
+  --color-score-2: var(--faisca-score-2);
+  --color-score-3: var(--faisca-score-3);
+  --color-score-4: var(--faisca-score-4);
+  --color-score-5: var(--faisca-score-5);
+  --color-score-6: var(--faisca-score-6);
+  --color-score-7: var(--faisca-score-7);
+  --color-score-8: var(--faisca-score-8);
+  --color-score-9: var(--faisca-score-9);
+  --color-score-10: var(--faisca-score-10);
+
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-heading: 'Nunito Variable', system-ui, sans-serif;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
+}
+
+/*
+ * Cada cor: light-dark(<tema claro>, <tema escuro>).
+ * Claro = off-white quente; escuro = azul-petróleo.
+ * Sem escolha salva, segue o sistema; data-theme (ver src/app/theme.tsx) força um dos dois.
+ */
+:root {
+  color-scheme: light dark;
+
+  --faisca-bg: light-dark(#fbf7f1, #0f2429);
+  --faisca-surface: light-dark(#fffdf9, #16323a);
+  --faisca-border: light-dark(#e6ddd0, #2b4b53);
+  --faisca-text: light-dark(#23302e, #ecf1ee);
+  --faisca-muted: light-dark(#5a6662, #a7b8b4);
+  --faisca-primary: light-dark(#4f6f58, #9cc2a5);
+  --faisca-on-primary: light-dark(#fffdf9, #0f2429);
+  --faisca-primary-text: light-dark(#46654f, #a6cbae);
+  --faisca-accent: light-dark(#e8a56b, #f0b98a);
+  --faisca-accent-text: light-dark(#8f5520, #f0b98a);
+
+  --faisca-score-0: light-dark(#e3ece4, #1e3b3f);
+  --faisca-score-1: light-dark(#d1dcd3, #304c4e);
+  --faisca-score-2: light-dark(#bfccc1, #425e5d);
+  --faisca-score-3: light-dark(#adbbb0, #546f6d);
+  --faisca-score-4: light-dark(#9bab9e, #66807c);
+  --faisca-score-5: light-dark(#899b8d, #78928b);
+  --faisca-score-6: light-dark(#768b7c, #8aa39a);
+  --faisca-score-7: light-dark(#647b6a, #9cb4a9);
+  --faisca-score-8: light-dark(#526a59, #aec5b9);
+  --faisca-score-9: light-dark(#405a47, #c0d7c8);
+  --faisca-score-10: light-dark(#2e4a36, #d2e8d7);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    @apply bg-bg font-sans text-text antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading text-balance;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+}
+
+/* Animações sutis, e nenhuma para quem pediu menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

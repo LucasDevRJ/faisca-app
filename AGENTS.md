@@ -4,7 +4,7 @@ PWA do Registro de Ativação (TCC). Requisitos em `docs/SPEC.md`; decisões e m
 em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de negócio.
 
 ## Stack
-- **frontend/**: React 19, Vite, TypeScript, Tailwind CSS v4, React Router, Recharts, Axios, PWA
+- **frontend/**: React 19, Vite, TypeScript, Tailwind CSS v4, React Router, TanStack Query, Recharts, Axios, PWA
 - **backend/**: Node.js, Express, TypeScript, Zod, Prisma, PostgreSQL, JWT (cookie httpOnly), Resend, web-push, node-cron
 - **tests/**: Playwright (API e E2E), com foco em autorização
 - CI no GitHub Actions; deploy do front na Vercel e do back no Railway
@@ -21,7 +21,12 @@ Backend (rodar dentro de `backend/`; detalhes em `backend/README.md`):
 - `npm run db:up`: sobe o Postgres local (Docker)
 - `npm run db:migrate`: nova migration em dev · `npm run db:deploy`: aplica as pendentes
 
-Frontend e `tests/`: preencher quando forem criados.
+Frontend (rodar dentro de `frontend/`; detalhes em `frontend/README.md`):
+- `npm run dev`: app em http://localhost:5173, com `/api` repassado para a API (DEC-023)
+- `npm run lint` · `npm run typecheck` · `npm test`: rodar ao terminar uma mudança
+- `npm run build` · `npm run preview`: build com service worker e servidor local para testá-lo
+
+`tests/`: preencher quando for criado.
 
 ## Regras invioláveis
 1. **Autorização no backend.** No contexto de terapeuta, só GET e só de pacientes com vínculo
