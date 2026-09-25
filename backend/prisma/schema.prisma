@@ -1,0 +1,13 @@
+// Schema do Faísca. Os models entram nas próximas etapas (usuários, atividades...).
+// A URL do banco fica no prisma.config.ts (CLI) e em src/lib/prisma.ts (runtime).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
