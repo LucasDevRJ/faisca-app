@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Ícone provisório do Faísca: uma faísca de quatro pontas sobre o verde-sálvia. -->
+  <rect width="512" height="512" rx="112" fill="#4F6F58"/>
+  <path d="M256 96 C270 196 316 242 416 256 C316 270 270 316 256 416 C242 316 196 270 96 256 C196 242 242 196 256 96 Z" fill="#FBF7F1"/>
+  <circle cx="366" cy="146" r="26" fill="#E8A56B"/>
+</svg>
