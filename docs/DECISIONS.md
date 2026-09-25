@@ -104,6 +104,26 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   - fim de linha LF, garantido por `.gitattributes`.
 - **Motivo:** histórico legível e scripts que funcionam no CI e no deploy, que rodam em Linux.
 
+## DEC-020 — Postgres local com Docker Compose
+- **Decisão:**
+  - em desenvolvimento, Postgres 17 via `docker compose` em `backend/`;
+  - o `docker/init-db.sh` cria `faisca_migrator` e `faisca_app`, e o CI usa o mesmo script;
+  - no Railway, os usuários são criados à mão, uma vez, com o passo a passo do `backend/README.md`.
+- **Motivo:** ambiente igual para todos, sem instalar Postgres na máquina, e os dois usuários
+  (DEC-003) já existem desde o primeiro dia, inclusive no CI.
+
+## DEC-021 — Testes do backend com Vitest + Supertest
+- **Decisão:** testes de unidade e de integração HTTP do backend com Vitest + Supertest, sobre o
+  `createApp()` e sem abrir porta. O Playwright em `tests/` fica para API ponta a ponta e E2E.
+- **Motivo:** o Vitest roda TypeScript/ESM sem configuração extra e é rápido. O Supertest testa as
+  rotas e os middlewares (incluindo a autorização) dentro do próprio projeto.
+
+## DEC-022 — Logs com pino
+- **Decisão:** logs em JSON com pino, com `redact` de campos sensíveis (senha, token, código de
+  vínculo, nome, notas, observação, cookie). O ESLint proíbe `console`.
+- **Motivo:** o JSON é fácil de filtrar no Railway, e o `redact` é uma rede de segurança para a
+  regra de logs sem dados sensíveis. Ele não dispensa o cuidado de não logar esses dados.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

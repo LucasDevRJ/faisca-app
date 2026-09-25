@@ -1,0 +1,28 @@
+# Postgres só para desenvolvimento local. Em produção o banco é a instância do Railway (DEC-002).
+# As senhas vêm do backend/.env (o Compose lê esse arquivo automaticamente).
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: faisca-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no backend/.env}
+      POSTGRES_DB: faisca
+      FAISCA_MIGRATOR_PASSWORD: ${FAISCA_MIGRATOR_PASSWORD:?defina FAISCA_MIGRATOR_PASSWORD no backend/.env}
+      FAISCA_APP_PASSWORD: ${FAISCA_APP_PASSWORD:?defina FAISCA_APP_PASSWORD no backend/.env}
+    ports:
+      # Porta do host configurável, caso já exista outro Postgres na 5432.
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - faisca-db-data:/var/lib/postgresql/data
+      # Roda só na primeira vez, com o volume vazio.
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d faisca']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  faisca-db-data:

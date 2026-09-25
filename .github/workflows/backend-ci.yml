@@ -1,0 +1,79 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    # Senhas descartáveis, válidas só dentro deste job.
+    env:
+      FAISCA_MIGRATOR_PASSWORD: ci_migrator
+      FAISCA_APP_PASSWORD: ci_app
+      MIGRATION_DATABASE_URL: postgresql://faisca_migrator:ci_migrator@localhost:5432/faisca
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_superuser
+          POSTGRES_DB: faisca
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d faisca"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Testes
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Mesmo script do docker compose local: cria faisca_migrator e faisca_app.
+      - name: Criar usuários do banco
+        env:
+          PGHOST: localhost
+          PGPASSWORD: ci_superuser
+          POSTGRES_USER: postgres
+          POSTGRES_DB: faisca
+        run: sh docker/init-db.sh
+
+      - name: Aplicar migrations
+        run: npm run db:deploy
