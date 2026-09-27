@@ -36,6 +36,7 @@ const SEED_USERS = [
 ];
 
 await prisma.activity.deleteMany();
+await prisma.appointment.deleteMany();
 await prisma.authToken.deleteMany();
 await prisma.user.deleteMany();
 const passwordHash = await hashPassword(SEED_PASSWORD);
