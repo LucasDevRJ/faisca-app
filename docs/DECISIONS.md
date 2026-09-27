@@ -230,6 +230,30 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   e gravar, que uma checagem só no código deixaria aberta. Os 42 dias cobrem a semana e um mês
   com as semanas das pontas, sem permitir baixar o histórico inteiro de uma vez.
 
+## DEC-029 — Telas de atividades
+- **Decisão:**
+  - "Meus registros" fica em `/registros`, com a semana na URL (`?semana=AAAA-MM-DD`, qualquer dia
+    abre a semana dele). `/` leva a `/registros` para quem é paciente e a `/pacientes` para quem é
+    só terapeuta; cada tela exige o seu perfil, e só quem tem os dois vê a alternância;
+  - formulários em `<dialog>` nativo, aberto como modal: o navegador cuida do foco, do Esc e de
+    deixar o resto da página inerte, sem biblioteca nova;
+  - notas em slider grande de 0 a 10, com legendas nos extremos. O slider começa **sem valor
+    escolhido** ("—") e o formulário só envia depois que a pessoa mexe nele;
+  - "Conta como foi?" numa PLANEJADA pede também a vontade e faz duas chamadas (`start` e
+    `complete`); "Não aconteceu" ao criar faz `POST` como PLANEJADA e `not-done`. O backend
+    continua seguindo a SPEC. Se só a primeira chamada gravar, o formulário fecha e a tela avisa
+    o que ficou salvo, para não reenviar e duplicar;
+  - os botões seguem o estado: registro final não tem ações, e "Conta como foi?" e "Não
+    aconteceu" só aparecem a partir do dia da atividade;
+  - gráfico de barras agrupadas por atividade feita (vontade, prazer, realização), em três
+    intensidades da escala de notas, com o valor escrito em cada barra e uma tabela para leitor
+    de tela; a partir de 8 atividades, rolagem lateral; sem animação com `prefers-reduced-motion`;
+  - datas com `Intl` no fuso de São Paulo, sem biblioteca de datas.
+- **Motivo:** a semana na URL sobrevive a recarregar e ao botão voltar. O slider sem valor inicial
+  evita que um 5 "sugerido" vire resposta sem a pessoa pensar nele, o que distorceria o registro.
+  Os passos duplos resolvem o caso comum (planejou, fez e só depois abriu o app) sem afrouxar a
+  máquina de estados da DEC-028.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
