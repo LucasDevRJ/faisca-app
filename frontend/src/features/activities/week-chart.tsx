@@ -55,7 +55,8 @@ export function WeekChart({ activities }: { activities: Activity[] }) {
                   o nome na cor da barra mais clara não teria contraste. */}
               <Legend
                 itemSorter={null}
-                wrapperStyle={{ fontSize: 14 }}
+                iconSize={10}
+                wrapperStyle={{ fontSize: 13 }}
                 formatter={(value) => <span style={{ color: 'var(--color-text)' }}>{value}</span>}
               />
               {SERIES.map((series) => (

@@ -64,12 +64,12 @@ export function RecordsPage() {
   return (
     <>
       <section className="flex flex-col gap-2">
-        <h1 className="text-4xl font-bold">Olá, {firstName}!</h1>
-        <p className="text-lg text-muted">Um espaço calmo para registrar suas atividades, no seu ritmo.</p>
+        <h1 className="text-3xl font-bold sm:text-4xl">Olá, {firstName}!</h1>
+        <p className="text-muted sm:text-lg">Um espaço calmo para registrar suas atividades, no seu ritmo.</p>
       </section>
 
-      <section aria-labelledby="week-title" className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section aria-labelledby="week-title" className="flex flex-col gap-5 sm:gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -91,15 +91,20 @@ export function RecordsPage() {
               ›
             </Button>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {!isCurrentWeek && (
               <Button variant="secondary" onClick={() => goToWeek(currentMonday)}>
                 Voltar para esta semana
               </Button>
             )}
+            {/* No celular, o botão flutua no canto de baixo, ao alcance do polegar durante a rolagem. */}
             <Button
+              className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 shadow-soft sm:static sm:shadow-none"
               onClick={() => setDialog({ kind: 'create', date: days.includes(today) ? today : monday })}
             >
+              <span aria-hidden="true" className="text-xl leading-none sm:hidden">
+                +
+              </span>
               Nova atividade
             </Button>
           </div>
@@ -136,14 +141,16 @@ export function RecordsPage() {
 
             <WeekChart activities={activities} />
 
-            <ol className="flex flex-col gap-6">
+            <ol className="flex flex-col gap-2 sm:gap-6">
               {days.map((day) => {
                 const ofDay = activities.filter((a) => a.activityDate === day);
                 const isToday = day === today;
                 return (
-                  <li key={day} className="flex flex-col gap-3">
+                  <li key={day} className="flex flex-col gap-2 sm:gap-3">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className={`text-lg font-semibold first-letter:uppercase ${ofDay.length ? '' : 'text-muted'}`}>
+                      <h3
+                        className={`font-semibold first-letter:uppercase sm:text-lg ${ofDay.length ? '' : 'text-muted'}`}
+                      >
                         {formatDayHeading(day)}
                         {isToday && (
                           <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">

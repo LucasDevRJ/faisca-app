@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type CSSProperties } from 'react';
 
 type ScoreFieldProps = {
   label: string;
@@ -42,7 +42,10 @@ export function ScoreField({ label, value, onChange, minLabel, maxLabel, error }
         aria-valuetext={value === null ? 'ainda não escolhida' : `${value} de 10`}
         aria-invalid={error ? true : undefined}
         aria-describedby={[legendId, error && errorId].filter(Boolean).join(' ')}
-        className={`h-11 w-full cursor-pointer accent-primary ${value === null ? 'opacity-60' : ''}`}
+        data-empty={value === null ? '' : undefined}
+        // Quanto do trilho aparece preenchido (ver .score-range no index.css).
+        style={{ '--fill': `${(value ?? 0) * 10}%` } as CSSProperties}
+        className="score-range"
       />
       <div id={legendId} className="flex justify-between text-sm text-muted">
         <span>0 · {minLabel}</span>

@@ -248,11 +248,16 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   - gráfico de barras agrupadas por atividade feita (vontade, prazer, realização), em três
     intensidades da escala de notas, com o valor escrito em cada barra e uma tabela para leitor
     de tela; a partir de 8 atividades, rolagem lateral; sem animação com `prefers-reduced-motion`;
-  - datas com `Intl` no fuso de São Paulo, sem biblioteca de datas.
+  - datas com `Intl` no fuso de São Paulo, sem biblioteca de datas;
+  - pensado primeiro para o celular: topo só com a marca e "Sair" (o tema fica no rodapé),
+    "Nova atividade" flutuando no canto de baixo, formulários como painel que sobe de baixo
+    com Cancelar/Salvar sempre visíveis, botões do card em grade de duas colunas e slider com
+    polegar de 28px. A partir de 640px (`sm`), o layout de desktop.
 - **Motivo:** a semana na URL sobrevive a recarregar e ao botão voltar. O slider sem valor inicial
   evita que um 5 "sugerido" vire resposta sem a pessoa pensar nele, o que distorceria o registro.
   Os passos duplos resolvem o caso comum (planejou, fez e só depois abriu o app) sem afrouxar a
-  máquina de estados da DEC-028.
+  máquina de estados da DEC-028. O uso principal é no celular, com uma mão: as ações ficam ao
+  alcance do polegar e nada importante some atrás da rolagem.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

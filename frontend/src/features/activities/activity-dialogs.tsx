@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
-import { Dialog } from '../../components/ui/dialog';
+import { Dialog, DialogFooter } from '../../components/ui/dialog';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { getApiError } from '../auth/auth-api';
@@ -84,14 +84,14 @@ function DialogActions({
   onCancel: () => void;
 }) {
   return (
-    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+    <DialogFooter>
       <Button variant="secondary" onClick={onCancel}>
         Cancelar
       </Button>
       <Button type="submit" disabled={pending}>
         {pending ? 'Salvando…' : submitLabel}
       </Button>
-    </div>
+    </DialogFooter>
   );
 }
 
@@ -205,12 +205,12 @@ export function CreateActivityDialog({
           error={fieldError('activityDate')}
         />
 
-        <fieldset className="flex flex-col gap-2">
+        <fieldset className="flex flex-col gap-1.5 sm:gap-2">
           <legend className="mb-2 font-medium">Como você quer registrar?</legend>
           {CREATE_MODES.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer items-start gap-3 rounded-md border border-border px-4 py-3 has-checked:border-primary"
+              className="flex cursor-pointer items-start gap-3 rounded-md border border-border px-3 py-2 has-checked:border-primary has-checked:bg-bg sm:px-4 sm:py-3"
             >
               <input
                 type="radio"
@@ -222,7 +222,7 @@ export function CreateActivityDialog({
               />
               <span className="flex flex-col">
                 <span className="font-medium">{option.label}</span>
-                <span className="text-sm text-muted">{option.hint}</span>
+                <span className="text-sm leading-snug text-muted">{option.hint}</span>
               </span>
             </label>
           ))}

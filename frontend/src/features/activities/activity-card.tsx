@@ -3,6 +3,9 @@ import { Button } from '../../components/ui/button';
 import { isFinal, type Activity } from './activities-api';
 import { SCORE_TEXT, STATUS_LABEL } from './activity-labels';
 
+// Botão de meia largura na grade do celular: texto menor e sem quebra, para caber em 360px.
+const HALF_WIDTH = 'px-2 text-sm whitespace-nowrap sm:px-5 sm:text-base';
+
 export type ActivityAction = 'start' | 'complete' | 'notDone' | 'edit' | 'delete';
 
 type ActivityCardProps = {
@@ -26,7 +29,7 @@ export function ActivityCard({ activity, today, onAction }: ActivityCardProps) {
   return (
     <article
       aria-labelledby={titleId}
-      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h4 id={titleId} className="text-lg font-semibold break-words">
@@ -50,19 +53,31 @@ export function ActivityCard({ activity, today, onAction }: ActivityCardProps) {
 
       {!final && (
         <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-2">
+          {/* No celular, grade de duas colunas: a ação principal ocupa a linha toda.
+              A partir do sm, uma linha só. */}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            {dayArrived && (
+              <Button className="col-span-2 sm:col-auto" onClick={() => onAction('complete', activity)}>
+                Conta como foi?
+              </Button>
+            )}
             {activity.status === 'PLANEJADA' && (
-              <Button variant={dayArrived ? 'secondary' : 'primary'} onClick={() => onAction('start', activity)}>
+              <Button
+                variant={dayArrived ? 'secondary' : 'primary'}
+                className={dayArrived ? HALF_WIDTH : 'col-span-2 sm:col-auto'}
+                onClick={() => onAction('start', activity)}
+              >
                 Registrar vontade
               </Button>
             )}
             {dayArrived && (
-              <>
-                <Button onClick={() => onAction('complete', activity)}>Conta como foi?</Button>
-                <Button variant="secondary" onClick={() => onAction('notDone', activity)}>
-                  Não aconteceu
-                </Button>
-              </>
+              <Button
+                variant="secondary"
+                className={activity.status === 'PLANEJADA' ? HALF_WIDTH : 'col-span-2 sm:col-auto'}
+                onClick={() => onAction('notDone', activity)}
+              >
+                Não aconteceu
+              </Button>
             )}
           </div>
           {/* Editar e excluir ficam à parte, mais discretos que as ações do dia a dia. */}
