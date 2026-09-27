@@ -6,6 +6,7 @@ import { env } from './config/env.js';
 import { createResendMailer, type Mailer } from './lib/mailer.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { notFound } from './middlewares/not-found.js';
+import { createActivitiesRoutes } from './modules/activities/activities.routes.js';
 import { createAuthRoutes } from './modules/auth/auth.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 
@@ -30,6 +31,7 @@ export function createApp({ mailer = createResendMailer() }: AppDependencies = {
 
   app.use(healthRoutes);
   app.use(createAuthRoutes(mailer));
+  app.use(createActivitiesRoutes());
 
   app.use(notFound);
   app.use(errorHandler);
