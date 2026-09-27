@@ -41,6 +41,7 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - O paciente registra as datas das consultas (passadas e futuras) e pode editar ou excluir essas datas.
 - **Última consulta** = a mais recente com data até hoje.
 - **Próxima consulta** = a mais próxima com data a partir de amanhã.
+- Uma consulta por dia, registrada só com a data (sem horário).
 
 ## Tela semanal (paciente e terapeuta)
 - A semana vai de segunda a domingo e dá para navegar entre semanas.

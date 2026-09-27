@@ -259,6 +259,23 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   máquina de estados da DEC-028. O uso principal é no celular, com uma mão: as ações ficam ao
   alcance do polegar e nada importante some atrás da rolagem.
 
+## DEC-030 — Consultas
+- **Decisão:**
+  - model `Appointment` só com o dia (`appointmentDate`, DATE), sem horário, e **uma consulta
+    por dia** por paciente, garantida por índice único no banco (a segunda dá 409
+    `APPOINTMENT_EXISTS`);
+  - rotas do contexto de paciente em `/appointments` (listar, criar, mudar a data, excluir),
+    com as mesmas respostas das atividades (401, 403, 404). `GET /appointments` devolve a lista,
+    da mais recente para a mais antiga, e já calcula `last` e `next` no fuso de São Paulo;
+  - telas: card "Consultas" no topo de `/registros` (próxima e última, com a distância em dias),
+    página `/consultas` com "Próximas" e "Anteriores" e um selo "consulta" no dia da semana;
+  - `DialogForm` e `DialogActions` passam para `components/ui/dialog.tsx`, usados por
+    atividades e consultas.
+- **Motivo:** a SPEC fala em datas, e o dia basta para "última", "próxima", o filtro e o destaque
+  da terapeuta; o horário pode entrar depois, se os lembretes precisarem. Duas sessões no mesmo
+  dia são raras, e a unicidade evita cadastrar a mesma consulta duas vezes. Calcular última e
+  próxima na API deixa o "hoje" num lugar só, e a visão da terapeuta vai reaproveitar o cálculo.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
