@@ -1,4 +1,6 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type FormEvent, type ReactNode } from 'react';
+import { Alert } from './alert';
+import { Button } from './button';
 
 type DialogProps = {
   title: string;
@@ -56,5 +58,45 @@ export function DialogFooter({ children }: { children: ReactNode }) {
     <div className="sticky bottom-0 -mx-5 mt-auto grid grid-cols-2 gap-3 border-t border-border bg-surface px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:flex sm:justify-end sm:px-6 sm:pb-6">
       {children}
     </div>
+  );
+}
+
+// Formulário padrão de um dialog: erro da API no topo e os campos em coluna.
+export function DialogForm({
+  onSubmit,
+  error,
+  children,
+}: {
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  error: string | null;
+  children: ReactNode;
+}) {
+  return (
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+      {error && <Alert tone="attention">{error}</Alert>}
+      {children}
+    </form>
+  );
+}
+
+// Cancelar e o botão de envio, no rodapé fixo.
+export function DialogActions({
+  submitLabel,
+  pending,
+  onCancel,
+}: {
+  submitLabel: string;
+  pending: boolean;
+  onCancel: () => void;
+}) {
+  return (
+    <DialogFooter>
+      <Button variant="secondary" onClick={onCancel}>
+        Cancelar
+      </Button>
+      <Button type="submit" disabled={pending}>
+        {pending ? 'Salvando…' : submitLabel}
+      </Button>
+    </DialogFooter>
   );
 }

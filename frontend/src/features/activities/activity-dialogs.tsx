@@ -1,7 +1,5 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { Alert } from '../../components/ui/alert';
-import { Button } from '../../components/ui/button';
-import { Dialog, DialogFooter } from '../../components/ui/dialog';
+import { useState, type FormEvent } from 'react';
+import { Dialog, DialogActions, DialogForm } from '../../components/ui/dialog';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { getApiError } from '../auth/auth-api';
@@ -72,44 +70,6 @@ function useSubmitError(onDone: DialogDone) {
   }
 
   return { apiErrors, message, handle, reset };
-}
-
-function DialogActions({
-  submitLabel,
-  pending,
-  onCancel,
-}: {
-  submitLabel: string;
-  pending: boolean;
-  onCancel: () => void;
-}) {
-  return (
-    <DialogFooter>
-      <Button variant="secondary" onClick={onCancel}>
-        Cancelar
-      </Button>
-      <Button type="submit" disabled={pending}>
-        {pending ? 'Salvando…' : submitLabel}
-      </Button>
-    </DialogFooter>
-  );
-}
-
-function DialogForm({
-  onSubmit,
-  error,
-  children,
-}: {
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  error: string | null;
-  children: ReactNode;
-}) {
-  return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-      {error && <Alert tone="attention">{error}</Alert>}
-      {children}
-    </form>
-  );
 }
 
 type CreateMode = CreateRequest['status'];
