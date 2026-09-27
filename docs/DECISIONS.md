@@ -183,11 +183,26 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   - `tests/` (Playwright, `package.json` próprio) sobe a API em uma porta própria (3334), pelo
     `backend/scripts/e2e-server.ts`: banco `faisca_test` recriado, usuários fictícios já
     confirmados e uma caixa de entrada de teste (`/__test__/emails/latest`) que só existe nesse
-    servidor. O projeto `api` já existe; o `e2e` (navegador) entra com as telas;
+    servidor. Dois projetos: `api` (só HTTP) e `e2e` (Chromium), que também sobe o front na
+    porta 5174 com o `/api` repassado para a API de testes;
   - o CI tem um workflow próprio para `tests/`.
 - **Motivo:** as regras de autorização e de estado dependem do banco (vínculo ativo, unicidade,
   transações), e simular o Prisma esconderia justamente esses erros. O servidor de testes fica
   fora de `src/`, então nada dele entra no build de produção.
+
+## DEC-027 — Telas de conta no front
+- **Decisão:**
+  - a sessão vem de `GET /auth/me` (TanStack Query, chave `session`); 401 vira "sem sessão", não
+    erro. Guardas de rota: `RequireAuth` (manda para `/entrar?next=...`) e `GuestOnly`;
+  - o `?next=` só aceita caminhos internos (começando com `/`, sem `//`);
+  - as telas abertas por link de e-mail leem o `?token=` e em seguida o tiram da barra de
+    endereço; a confirmação de e-mail é enviada sozinha ao abrir a tela, uma única vez;
+  - depois do cadastro, o e-mail vai para a tela seguinte no state da navegação, não na URL;
+  - no cadastro, nenhum perfil vem marcado: a pessoa escolhe (SPEC, "Contas e perfis");
+  - sair e redefinir a senha limpam os dados em memória do TanStack Query.
+- **Motivo:** o token e o e-mail na URL ficariam no histórico e em capturas de tela; o `next`
+  sem validação deixaria usar o link do Faísca para mandar a pessoa a outro site. Os guardas
+  só evitam telas vazias: quem protege os dados é o backend.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

@@ -20,7 +20,11 @@ const envSchema = z.object({
     .min(32)
     .refine((value) => !value.startsWith('CHANGE_ME')),
   RESEND_API_KEY: z.string().min(1),
-  EMAIL_FROM: z.string().min(1),
+  // O domínio de exemplo nunca é aceito pelo Resend: melhor falhar ao subir do que no primeiro cadastro.
+  EMAIL_FROM: z
+    .string()
+    .min(1)
+    .refine((value) => !value.includes('seu-dominio.com')),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -22,6 +22,16 @@ O front chama sempre **`/api/...` no próprio domínio**. Quem repassa para a AP
 Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de terceiros.
 **No deploy:** troque `CHANGE-ME.up.railway.app` no `vercel.json` pela URL real da API.
 
+## Sessão e telas de conta (DEC-025, DEC-027)
+
+- Quem está logado vem de `useSession()` (`GET /api/auth/me`); `data` é `null` sem sessão.
+- `RequireAuth` protege as telas de quem entrou; `GuestOnly`, as de entrar, cadastro e "esqueci a senha".
+  Eles só evitam telas vazias: quem protege os dados é o backend.
+- Rotas em pt-BR: `/entrar`, `/cadastro`, `/verifique-seu-email`, `/confirmar-email`,
+  `/esqueci-a-senha` e `/redefinir-senha`. As duas com token são as dos links dos e-mails.
+- Para testar o cadastro de verdade em dev, a API precisa da chave do Resend no `backend/.env`.
+  Sem domínio próprio, o e-mail só chega para o dono da conta do Resend.
+
 ## Scripts
 
 | Script | O que faz |
@@ -37,7 +47,7 @@ Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de te
 ```
 src/
 ├─ app/            router, providers (Query + tema), contexto do tema
-├─ components/ui/  componentes visuais básicos (Button, Card)
+├─ components/ui/  componentes visuais básicos (Button, Card, TextField, Alert)
 ├─ features/       código por funcionalidade (hooks de dados, componentes)
 ├─ lib/            cliente HTTP (api.ts) e QueryClient
 ├─ pages/          telas ligadas às rotas

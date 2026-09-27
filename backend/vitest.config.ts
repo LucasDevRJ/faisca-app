@@ -8,6 +8,9 @@ export default defineConfig({
     globalSetup: ['scripts/vitest-global-setup.ts'],
     // Os arquivos de teste compartilham o mesmo banco, então rodam um de cada vez.
     fileParallelism: false,
+    // O bcrypt (custo 12) é lento de propósito: ~350 ms por senha no CI. Testes de rate limit
+    // verificam mais de dez senhas, e o padrão de 5 s ficava no limite.
+    testTimeout: 20_000,
     // Segredos fictícios, válidos só nos testes. O mailer é trocado por um em memória.
     env: {
       NODE_ENV: 'test',
