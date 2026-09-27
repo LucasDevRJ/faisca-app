@@ -1,0 +1,91 @@
+name: Tests CI (Playwright)
+
+# Testes de API e E2E (DEC-026). Rodam quando muda o backend, o frontend ou a própria pasta tests/.
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'tests/**'
+      - '.github/workflows/tests-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'tests/**'
+      - '.github/workflows/tests-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+
+    # Senhas descartáveis, válidas só dentro deste job. O e2e-server usa o banco faisca_test.
+    env:
+      FAISCA_MIGRATOR_PASSWORD: ci_migrator
+      FAISCA_APP_PASSWORD: ci_app
+      MIGRATION_DATABASE_URL: postgresql://faisca_migrator:ci_migrator@localhost:5432/faisca
+      DATABASE_URL: postgresql://faisca_app:ci_app@localhost:5432/faisca
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_superuser
+          POSTGRES_DB: faisca
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d faisca"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            tests/package-lock.json
+
+      - name: Instalar dependências do backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Criar usuários do banco
+        working-directory: backend
+        env:
+          PGHOST: localhost
+          PGPASSWORD: ci_superuser
+          POSTGRES_USER: postgres
+          POSTGRES_DB: faisca
+        run: sh docker/init-db.sh
+
+      - name: Instalar dependências dos testes
+        working-directory: tests
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: tests
+        run: npm run typecheck
+
+      # Só o projeto de API por enquanto: não precisa instalar navegador.
+      - name: Testes de API
+        working-directory: tests
+        run: npm run test:api
+
+      - name: Relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/playwright-report
+          retention-days: 7

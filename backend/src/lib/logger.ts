@@ -9,7 +9,9 @@ import { env } from '../config/env.js';
 const SENSITIVE_KEYS = [
   'password',
   'passwordHash',
+  'email',
   'token',
+  'tokenHash',
   'inviteToken',
   'linkCode',
   'name',

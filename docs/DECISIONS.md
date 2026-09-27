@@ -147,6 +147,48 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   cache do PWA; o service worker próprio deixa explícito que a API nunca entra em cache e já
   recebe o Web Push depois.
 
+## DEC-025 — Sessão, links por e-mail e respostas neutras
+- **Decisão:**
+  - sessão de **30 dias**, renovada (cookie novo) no máximo uma vez por dia de uso;
+  - o JWT leva um `sessionVersion`; redefinir a senha incrementa o valor e derruba todas as
+    sessões abertas;
+  - links de confirmação de e-mail valem **24 horas**; de redefinição de senha, **1 hora**. Valem
+    uma vez, pedir outro invalida o anterior e o banco guarda só o hash (SHA-256);
+  - o link abre uma tela do front, que confirma por POST (antivírus de e-mail abrem links sozinhos,
+    e um GET consumiria o token). Depois de confirmar, a pessoa vê "e-mail confirmado" e entra
+    pelo botão Entrar; o link não cria sessão;
+  - cadastro, reenvio de confirmação e "esqueci a senha" respondem igual exista ou não a conta.
+    Cadastro com e-mail já confirmado só envia um aviso ao dono do e-mail;
+  - login com e-mail inexistente compara a senha com um hash fictício, para levar o mesmo tempo;
+  - senha com mínimo de 8 caracteres e máximo de 72 bytes (limite do bcrypt), sem regras de
+    composição; bcrypt (`bcryptjs`) com custo 12; JWT com `jose` (HS256);
+  - rate limit em memória, com respostas 429: cadastro 5/h por IP; login 10 falhas a cada 15 min por
+    IP + e-mail; reenvio e "esqueci a senha" 3/h por e-mail e 10/h por IP. Confirmar e redefinir
+    não têm limite: o token tem 256 bits e não há o que adivinhar;
+  - `trust proxy` configurável por `TRUST_PROXY_HOPS`, com valor de produção confirmado no deploy.
+- **Motivo:** o app é de uso diário no celular, e pedir login toda semana gera atrito; o
+  `sessionVersion` compensa a falta de revogação do JWT no caso que mais importa (senha vazada);
+  as respostas neutras evitam descobrir quem usa o Faísca, o que já é um dado de saúde.
+- **Limitação conhecida:** sair da conta apaga o cookie, mas o JWT copiado antes continua válido
+  até expirar ou até a senha ser redefinida. O contador em memória zera a cada deploy e não serve
+  para mais de uma instância.
+
+## DEC-026 — Testes com banco e pasta `tests/`
+- **Decisão:**
+  - o Vitest do backend roda contra um Postgres de verdade, no banco `faisca_test`, criado e
+    migrado sozinho antes dos testes. Os arquivos rodam em sequência e os dados são apagados
+    antes de cada teste;
+  - os e-mails passam por uma interface `Mailer`; nos testes, um mailer em memória guarda as
+    mensagens para os testes lerem os links;
+  - `tests/` (Playwright, `package.json` próprio) sobe a API em uma porta própria (3334), pelo
+    `backend/scripts/e2e-server.ts`: banco `faisca_test` recriado, usuários fictícios já
+    confirmados e uma caixa de entrada de teste (`/__test__/emails/latest`) que só existe nesse
+    servidor. O projeto `api` já existe; o `e2e` (navegador) entra com as telas;
+  - o CI tem um workflow próprio para `tests/`.
+- **Motivo:** as regras de autorização e de estado dependem do banco (vínculo ativo, unicidade,
+  transações), e simular o Prisma esconderia justamente esses erros. O servidor de testes fica
+  fora de `src/`, então nada dele entra no build de produção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
