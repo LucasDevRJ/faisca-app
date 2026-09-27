@@ -66,3 +66,15 @@ export function formatDayHeading(value: string): string {
   const date = toUtcDate(value);
   return `${weekdayLong.format(date)}, ${dayMonthNumeric.format(date)}`;
 }
+
+// Quantos dias de `from` até `to` (negativo se `to` vem antes).
+export function daysBetween(from: string, to: string): number {
+  return Math.round((toUtcDate(to).getTime() - toUtcDate(from).getTime()) / DAY_MS);
+}
+
+const relative = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' });
+
+// "hoje", "amanhã", "em 7 dias", "ontem", "há 3 dias".
+export function formatRelativeDay(value: string, today: string): string {
+  return relative.format(daysBetween(today, value), 'day');
+}
