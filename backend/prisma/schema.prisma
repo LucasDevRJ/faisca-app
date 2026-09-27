@@ -1,4 +1,4 @@
-// Schema do Faísca. Os models entram nas próximas etapas (usuários, atividades...).
+// Schema do Faísca. Os models entram por etapa (usuários agora; atividades e vínculos depois).
 // A URL do banco fica no prisma.config.ts (CLI) e em src/lib/prisma.ts (runtime).
 
 generator client {
@@ -10,4 +10,43 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String
+  // Sempre em minúsculas e sem espaços nas pontas (normalizado no schema Zod).
+  email               String    @unique
+  passwordHash        String
+  // Pelo menos um dos dois é true: garantido por CHECK na migration (DEC-013).
+  hasPatientProfile   Boolean   @default(false)
+  hasTherapistProfile Boolean   @default(false)
+  // null = e-mail ainda não confirmado; o login é recusado até confirmar.
+  emailConfirmedAt    DateTime?
+  // Vai dentro do JWT. Ao redefinir a senha, sobe e derruba as sessões abertas (DEC-025).
+  sessionVersion      Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  authTokens AuthToken[]
+}
+
+enum AuthTokenType {
+  EMAIL_CONFIRMATION
+  PASSWORD_RESET
+}
+
+// Links enviados por e-mail. O token em texto só existe no e-mail; aqui fica o hash (SHA-256).
+model AuthToken {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @db.Uuid
+  type      AuthTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }
