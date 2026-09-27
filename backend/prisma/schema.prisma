@@ -1,4 +1,4 @@
-// Schema do Faísca. Os models entram por etapa (usuários, atividades; vínculos depois).
+// Schema do Faísca. Os models entram por etapa (usuários, atividades, consultas; vínculos depois).
 // A URL do banco fica no prisma.config.ts (CLI) e em src/lib/prisma.ts (runtime).
 
 generator client {
@@ -28,8 +28,9 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  authTokens AuthToken[]
-  activities Activity[]
+  authTokens   AuthToken[]
+  activities   Activity[]
+  appointments Appointment[]
 }
 
 enum AuthTokenType {
@@ -83,4 +84,21 @@ model Activity {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, activityDate])
+}
+
+// Datas das consultas, registradas pelo paciente (DEC-017). Servem para "última" e "próxima"
+// consulta e, na etapa de vínculo, para o filtro e o destaque da terapeuta.
+model Appointment {
+  id              String   @id @default(uuid()) @db.Uuid
+  // O paciente dono do registro.
+  userId          String   @db.Uuid
+  // Só o dia, no fuso America/Sao_Paulo (DEC-007).
+  appointmentDate DateTime @db.Date
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Uma consulta por dia (DEC-030).
+  @@unique([userId, appointmentDate])
 }

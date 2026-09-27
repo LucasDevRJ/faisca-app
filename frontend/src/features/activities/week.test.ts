@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDays,
+  daysBetween,
   formatDayHeading,
+  formatRelativeDay,
   formatWeekRange,
   isValidDateOnly,
   startOfWeek,
@@ -50,5 +52,15 @@ describe('week', () => {
 
   it('formata o título do dia', () => {
     expect(formatDayHeading('2026-09-21')).toBe('segunda-feira, 21/09');
+  });
+});
+
+describe('dias relativos', () => {
+  it('conta os dias e escreve em pt-BR', () => {
+    expect(daysBetween('2026-09-27', '2026-10-04')).toBe(7);
+    expect(formatRelativeDay('2026-09-27', '2026-09-27')).toBe('hoje');
+    expect(formatRelativeDay('2026-09-28', '2026-09-27')).toBe('amanhã');
+    expect(formatRelativeDay('2026-10-04', '2026-09-27')).toBe('em 7 dias');
+    expect(formatRelativeDay('2026-09-24', '2026-09-27')).toBe('há 3 dias');
   });
 });

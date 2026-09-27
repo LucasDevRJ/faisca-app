@@ -32,7 +32,7 @@ Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de te
 - Para testar o cadastro de verdade em dev, a API precisa da chave do Resend no `backend/.env`.
   Sem domínio próprio, o e-mail só chega para o dono da conta do Resend.
 
-## Atividades (DEC-028, DEC-029)
+## Atividades e consultas (DEC-028, DEC-029, DEC-030)
 
 - `/` leva a `/registros` (paciente) ou a `/pacientes` (só terapeuta). `RequireProfile` guarda
   cada tela pelo perfil; só quem tem os dois perfis vê a alternância no topo.
@@ -42,6 +42,8 @@ Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de te
   card, dialogs e gráfico.
 - Formulários em `<dialog>` nativo (`components/ui/dialog.tsx`); notas no `ScoreField` (slider
   de 0 a 10 que começa sem valor escolhido).
+- Consultas (DEC-030) em `src/features/appointments/`: card de próxima/última consulta no topo de
+  `/registros`, página `/consultas` e selo "consulta" no dia da semana.
 
 ## Scripts
 

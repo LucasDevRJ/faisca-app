@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js';
 // Apaga os dados entre testes. deleteMany em vez de TRUNCATE: o faisca_app só tem DML.
 export async function resetDatabase() {
   await prisma.activity.deleteMany();
+  await prisma.appointment.deleteMany();
   await prisma.authToken.deleteMany();
   await prisma.user.deleteMany();
 }

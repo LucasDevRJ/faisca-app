@@ -43,8 +43,9 @@ export const handlers = [
     HttpResponse.json({ status: 'ok', timestamp: '2026-01-01T12:00:00.000Z' }),
   ),
   http.get('*/api/auth/me', () => apiError(401, 'UNAUTHENTICATED', 'Entre na sua conta para continuar.')),
-  // Semana vazia por padrão.
+  // Semana vazia e nenhuma consulta, por padrão.
   http.get('*/api/activities', () => HttpResponse.json({ activities: [] })),
+  http.get('*/api/appointments', () => HttpResponse.json({ appointments: [], last: null, next: null })),
 ];
 
 export const server = setupServer(...handlers);

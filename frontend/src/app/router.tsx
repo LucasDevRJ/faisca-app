@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { GuestOnly, HomeRedirect, RequireAuth, RequireProfile } from '../features/auth/route-guards';
 import { CheckEmailPage } from '../pages/check-email-page';
+import { AppointmentsPage } from '../pages/appointments-page';
 import { ConfirmEmailPage } from '../pages/confirm-email-page';
 import { ErrorPage } from '../pages/error-page';
 import { ForgotPasswordPage } from '../pages/forgot-password-page';
@@ -27,7 +28,10 @@ export const routes = [
             children: [
               {
                 element: <RequireProfile profile="patient" />,
-                children: [{ path: 'registros', element: <RecordsPage /> }],
+                children: [
+                  { path: 'registros', element: <RecordsPage /> },
+                  { path: 'consultas', element: <AppointmentsPage /> },
+                ],
               },
               {
                 element: <RequireProfile profile="therapist" />,

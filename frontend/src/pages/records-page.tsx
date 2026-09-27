@@ -14,6 +14,8 @@ import {
   StartActivityDialog,
 } from '../features/activities/activity-dialogs';
 import { useWeekActivities } from '../features/activities/use-activities';
+import { AppointmentsCard } from '../features/appointments/appointments-card';
+import { useAppointments } from '../features/appointments/use-appointments';
 import {
   addDays,
   formatDayHeading,
@@ -44,6 +46,8 @@ export function RecordsPage() {
 
   const week = useWeekActivities(monday);
   const activities = week.data ?? [];
+  // Dias com consulta ganham um selo na semana (DEC-030).
+  const appointmentDays = new Set(useAppointments().data?.appointments.map((a) => a.appointmentDate));
 
   function goToWeek(target: string) {
     setNotice(null);
@@ -67,6 +71,8 @@ export function RecordsPage() {
         <h1 className="text-3xl font-bold sm:text-4xl">Olá, {firstName}!</h1>
         <p className="text-muted sm:text-lg">Um espaço calmo para registrar suas atividades, no seu ritmo.</p>
       </section>
+
+      <AppointmentsCard today={today} />
 
       <section aria-labelledby="week-title" className="flex flex-col gap-5 sm:gap-6">
         <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
@@ -155,6 +161,11 @@ export function RecordsPage() {
                         {isToday && (
                           <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">
                             hoje
+                          </span>
+                        )}
+                        {appointmentDays.has(day) && (
+                          <span className="ml-2 rounded-sm border border-primary px-2 py-0.5 text-sm font-medium text-primary-text">
+                            consulta
                           </span>
                         )}
                       </h3>

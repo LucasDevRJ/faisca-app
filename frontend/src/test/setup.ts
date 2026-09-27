@@ -1,7 +1,11 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { server } from './server';
+
+// findBy*/waitFor esperam até 3 s (o padrão é 1 s). Com os arquivos em paralelo, o primeiro
+// teste de cada arquivo às vezes passava do limite só carregando os módulos.
+configure({ asyncUtilTimeout: 3_000 });
 
 // O jsdom não implementa o <dialog> modal: o suficiente para abrir, fechar e disparar "close".
 HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
