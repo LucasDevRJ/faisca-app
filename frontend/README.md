@@ -32,6 +32,17 @@ Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de te
 - Para testar o cadastro de verdade em dev, a API precisa da chave do Resend no `backend/.env`.
   Sem domínio próprio, o e-mail só chega para o dono da conta do Resend.
 
+## Atividades (DEC-028, DEC-029)
+
+- `/` leva a `/registros` (paciente) ou a `/pacientes` (só terapeuta). `RequireProfile` guarda
+  cada tela pelo perfil; só quem tem os dois perfis vê a alternância no topo.
+- `/registros?semana=AAAA-MM-DD` é a semana de segunda a domingo. Sem `semana`, a semana atual.
+- Tudo de atividades fica em `src/features/activities/`: chamadas à API, hooks do TanStack Query
+  (toda gravação recarrega as semanas em memória), cálculo da semana no fuso de São Paulo,
+  card, dialogs e gráfico.
+- Formulários em `<dialog>` nativo (`components/ui/dialog.tsx`); notas no `ScoreField` (slider
+  de 0 a 10 que começa sem valor escolhido).
+
 ## Scripts
 
 | Script | O que faz |
@@ -47,7 +58,7 @@ Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de te
 ```
 src/
 ├─ app/            router, providers (Query + tema), contexto do tema
-├─ components/ui/  componentes visuais básicos (Button, Card, TextField, Alert)
+├─ components/ui/  componentes visuais básicos (Button, Card, TextField, Alert, Dialog, ScoreField)
 ├─ features/       código por funcionalidade (hooks de dados, componentes)
 ├─ lib/            cliente HTTP (api.ts) e QueryClient
 ├─ pages/          telas ligadas às rotas

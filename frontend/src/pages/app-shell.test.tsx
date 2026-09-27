@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ afterEach(() => {
   delete document.documentElement.dataset.theme;
 });
 
-describe('HomePage', () => {
+describe('telas de quem entrou', () => {
   it('sem sessão, manda para a tela de entrar', async () => {
     const { router } = renderRoute('/');
 
@@ -19,11 +19,50 @@ describe('HomePage', () => {
     expect(router.state.location.pathname).toBe('/entrar');
   });
 
-  it('com sessão, cumprimenta pelo primeiro nome', async () => {
+  it('paciente: o início leva aos registros e cumprimenta pelo primeiro nome', async () => {
     server.use(loggedIn);
-    renderRoute('/');
+    const { router } = renderRoute('/');
 
     expect(await screen.findByRole('heading', { name: 'Olá, Ana!' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/registros');
+    // Um perfil só: sem alternância entre perfis.
+    expect(screen.queryByRole('navigation', { name: 'Perfis' })).not.toBeInTheDocument();
+  });
+
+  it('só terapeuta: o início leva aos pacientes, e os registros não abrem', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true } } }),
+      ),
+    );
+    const { router } = renderRoute('/registros');
+
+    expect(await screen.findByRole('heading', { name: 'Meus pacientes' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/pacientes');
+  });
+
+  it('só paciente: a tela de pacientes não abre', async () => {
+    server.use(loggedIn);
+    const { router } = renderRoute('/pacientes');
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/registros'));
+  });
+
+  it('dois perfis: alterna entre "Meus registros" e "Meus pacientes"', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: true, therapist: true } } }),
+      ),
+    );
+    const user = userEvent.setup();
+    const { router } = renderRoute('/');
+
+    const nav = await screen.findByRole('navigation', { name: 'Perfis' });
+    await user.click(within(nav).getByRole('link', { name: 'Meus pacientes' }));
+    expect(router.state.location.pathname).toBe('/pacientes');
+
+    await user.click(within(nav).getByRole('link', { name: 'Meus registros' }));
+    expect(router.state.location.pathname).toBe('/registros');
   });
 
   it('sair encerra a sessão e volta para a tela de entrar', async () => {

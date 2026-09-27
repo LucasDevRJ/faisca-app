@@ -102,6 +102,75 @@
   }
 }
 
+/*
+ * Slider das notas (ScoreField): polegar de 28px, fácil de acertar com o dedo, e trilho
+ * preenchido até o valor (--fill, definido no componente). Sem valor escolhido
+ * (data-empty), trilho vazio e polegar apagado: a tela não sugere nenhuma nota.
+ */
+@layer components {
+  .score-range {
+    appearance: none;
+    background: transparent;
+    height: 2.75rem;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .score-range::-webkit-slider-runnable-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to right,
+      var(--color-primary) var(--fill, 0%),
+      var(--color-border) var(--fill, 0%)
+    );
+  }
+
+  .score-range::-moz-range-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-border);
+  }
+
+  .score-range::-moz-range-progress {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+  }
+
+  .score-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: -0.625rem;
+    border-radius: 9999px;
+    border: 3px solid var(--color-surface);
+    background: var(--color-primary);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .score-range::-moz-range-thumb {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    border: 3px solid var(--color-surface);
+    background: var(--color-primary);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .score-range[data-empty]::-webkit-slider-thumb {
+    background: var(--color-muted);
+  }
+
+  .score-range[data-empty]::-moz-range-thumb {
+    background: var(--color-muted);
+  }
+
+  .score-range[data-empty]::-moz-range-progress {
+    background: transparent;
+  }
+}
+
 /* Animações sutis, e nenhuma para quem pediu menos movimento. */
 @media (prefers-reduced-motion: reduce) {
   *,

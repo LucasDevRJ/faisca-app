@@ -1,4 +1,4 @@
-import { useId, useState, type InputHTMLAttributes } from 'react';
+import { useId, useState, type InputHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 
 type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> & {
   label: string;
@@ -56,6 +56,46 @@ export function PasswordField(props: Omit<TextFieldProps, 'type'>) {
       >
         {visible ? 'Esconder' : 'Mostrar'}
       </button>
+    </div>
+  );
+}
+
+type TextAreaFieldProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> & {
+  label: string;
+  hint?: string;
+  error?: string;
+};
+
+// Mesmo padrão do TextField, para textos mais longos (ex.: observação).
+export function TextAreaField({ label, hint, error, className = '', ...props }: TextAreaFieldProps) {
+  const id = useId();
+  const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
+  const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+
+  return (
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      <label htmlFor={id} className="font-medium">
+        {label}
+      </label>
+      <textarea
+        id={id}
+        rows={3}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        className="rounded-md border border-border bg-bg px-3 py-2 text-text aria-invalid:border-accent-text"
+        {...props}
+      />
+      {hint && (
+        <p id={hintId} className="text-sm text-muted">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={errorId} className="text-sm text-accent-text">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

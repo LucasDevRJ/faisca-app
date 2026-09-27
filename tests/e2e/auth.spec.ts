@@ -58,16 +58,19 @@ test('cadastro, confirmação pelo link do e-mail e primeiro login', async ({ pa
   await page.getByLabel('Senha', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Entrar' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Olá, Bia!' })).toBeVisible();
-  await expect(page.getByText('Os registros dos seus pacientes vão aparecer nesta tela.')).toBeVisible();
+  // Só o perfil de terapeuta: o início leva para "Meus pacientes".
+  await expect(page).toHaveURL(/\/pacientes$/);
+  await expect(page.getByRole('heading', { name: 'Meus pacientes' })).toBeVisible();
 });
 
 test('esqueci a senha: link do e-mail, senha nova e login', async ({ page, request }) => {
   // Conta própria deste teste, para não trocar a senha dos usuários fixos.
   const email = `reset-${Date.now()}@faisca.test`;
-  await request.post('/api/auth/signup', {
+  const signup = await request.post('/api/auth/signup', {
     data: { name: 'Caio Fictício', email, password: 'senha-antiga-123', profiles: { patient: true, therapist: false } },
   });
+  // O cadastro tem rate limit (DEC-025): se estourar, o teste falha aqui, e não mais adiante.
+  expect(signup.status()).toBe(202);
 
   await page.goto('/esqueci-a-senha');
   await page.getByLabel('E-mail').fill(email);
