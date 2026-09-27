@@ -31,6 +31,8 @@ const SEED_USERS = [
   { name: 'Paciente Fictícia', email: 'paciente@faisca.test', patient: true, therapist: false },
   { name: 'Terapeuta Fictícia', email: 'terapeuta@faisca.test', patient: false, therapist: true },
   { name: 'Pessoa Fictícia', email: 'dois-perfis@faisca.test', patient: true, therapist: true },
+  // Só para os testes de atividades no navegador: não mistura dados com os testes de API.
+  { name: 'Dora Fictícia', email: 'registros@faisca.test', patient: true, therapist: false },
 ];
 
 await prisma.activity.deleteMany();
