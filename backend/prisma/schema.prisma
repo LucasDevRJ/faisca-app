@@ -1,4 +1,4 @@
-// Schema do Faísca. Os models entram por etapa (usuários agora; atividades e vínculos depois).
+// Schema do Faísca. Os models entram por etapa (usuários, atividades; vínculos depois).
 // A URL do banco fica no prisma.config.ts (CLI) e em src/lib/prisma.ts (runtime).
 
 generator client {
@@ -29,6 +29,7 @@ model User {
   updatedAt           DateTime  @updatedAt
 
   authTokens AuthToken[]
+  activities Activity[]
 }
 
 enum AuthTokenType {
@@ -49,4 +50,37 @@ model AuthToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, type])
+}
+
+// Estados da SPEC. CONCLUIDA e NAO_REALIZADA são finais (DEC-012).
+enum ActivityStatus {
+  PLANEJADA
+  PENDENTE
+  CONCLUIDA
+  NAO_REALIZADA
+}
+
+// Registro de atividade do paciente. Os campos exigidos por estado e a faixa das notas
+// (inteiros de 0 a 10) são garantidos por CHECK na migration, além do Zod (DEC-028).
+model Activity {
+  id           String         @id @default(uuid()) @db.Uuid
+  // O paciente dono do registro.
+  userId       String         @db.Uuid
+  name         String
+  // Dia da atividade, no fuso America/Sao_Paulo (DEC-007). Separado do createdAt.
+  activityDate DateTime       @db.Date
+  status       ActivityStatus
+  // Vontade antes (0–10): exigida a partir de PENDENTE.
+  wantBefore   Int?
+  // Prazer e realização (0–10): só na CONCLUIDA.
+  pleasure     Int?
+  achievement  Int?
+  // Só nos estados finais, e sempre opcional.
+  observation  String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, activityDate])
 }
