@@ -46,3 +46,17 @@ export function GuestOnly() {
   if (!isError && user) return <Navigate to={safeNextPath(searchParams.get('next'))} replace />;
   return <Outlet />;
 }
+
+// "Quem tem um perfil só nunca vê telas do outro" (SPEC): sem o perfil, volta para o início,
+// que escolhe a tela certa. Os dados continuam protegidos pelo 403 do backend.
+export function RequireProfile({ profile }: { profile: 'patient' | 'therapist' }) {
+  const { data: user } = useSession();
+  if (!user?.profiles[profile]) return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
+// A tela inicial depende do perfil: paciente vai para os registros; só terapeuta, para os pacientes.
+export function HomeRedirect() {
+  const { data: user } = useSession();
+  return <Navigate to={user?.profiles.patient ? '/registros' : '/pacientes'} replace />;
+}

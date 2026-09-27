@@ -1,14 +1,16 @@
 import { createBrowserRouter } from 'react-router';
-import { GuestOnly, RequireAuth } from '../features/auth/route-guards';
+import { GuestOnly, HomeRedirect, RequireAuth, RequireProfile } from '../features/auth/route-guards';
 import { CheckEmailPage } from '../pages/check-email-page';
 import { ConfirmEmailPage } from '../pages/confirm-email-page';
 import { ErrorPage } from '../pages/error-page';
 import { ForgotPasswordPage } from '../pages/forgot-password-page';
-import { HomePage } from '../pages/home-page';
 import { LoginPage } from '../pages/login-page';
 import { NotFoundPage } from '../pages/not-found-page';
+import { PatientsPage } from '../pages/patients-page';
+import { RecordsPage } from '../pages/records-page';
 import { ResetPasswordPage } from '../pages/reset-password-page';
 import { SignupPage } from '../pages/signup-page';
+import { AppLayout } from './app-layout';
 
 // Caminhos em pt-BR, os mesmos usados nos links dos e-mails (backend/src/modules/auth/auth.emails.ts).
 export const routes = [
@@ -18,7 +20,22 @@ export const routes = [
     children: [
       {
         element: <RequireAuth />,
-        children: [{ index: true, element: <HomePage /> }],
+        children: [
+          { index: true, element: <HomeRedirect /> },
+          {
+            element: <AppLayout />,
+            children: [
+              {
+                element: <RequireProfile profile="patient" />,
+                children: [{ path: 'registros', element: <RecordsPage /> }],
+              },
+              {
+                element: <RequireProfile profile="therapist" />,
+                children: [{ path: 'pacientes', element: <PatientsPage /> }],
+              },
+            ],
+          },
+        ],
       },
       {
         element: <GuestOnly />,

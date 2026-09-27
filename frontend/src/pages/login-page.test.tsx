@@ -27,7 +27,7 @@ describe('LoginPage', () => {
     await fillAndSubmit('  ana@faisca.test ', 'senha-ficticia-123');
 
     expect(await screen.findByRole('heading', { name: 'Olá, Ana!' })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/');
+    expect(router.state.location.pathname).toBe('/registros');
     expect(body).toEqual({ email: 'ana@faisca.test', password: 'senha-ficticia-123' });
   });
 
@@ -46,7 +46,7 @@ describe('LoginPage', () => {
 
     await fillAndSubmit('ana@faisca.test', 'senha-ficticia-123');
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/registros'));
   });
 
   it('mostra a mensagem da API quando a senha não confere', async () => {
@@ -118,7 +118,7 @@ describe('LoginPage', () => {
     const { router } = renderRoute('/entrar');
 
     expect(await screen.findByRole('heading', { name: 'Olá, Ana!' })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/');
+    expect(router.state.location.pathname).toBe('/registros');
   });
 
   it('o botão Mostrar exibe a senha digitada', async () => {
