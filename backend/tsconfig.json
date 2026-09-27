@@ -16,5 +16,5 @@
     "rootDir": ".",
     "sourceMap": true
   },
-  "include": ["src", "prisma.config.ts", "vitest.config.ts"]
+  "include": ["src", "scripts", "prisma.config.ts", "vitest.config.ts"]
 }

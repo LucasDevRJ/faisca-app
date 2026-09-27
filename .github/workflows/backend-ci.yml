@@ -26,6 +26,8 @@ jobs:
       FAISCA_MIGRATOR_PASSWORD: ci_migrator
       FAISCA_APP_PASSWORD: ci_app
       MIGRATION_DATABASE_URL: postgresql://faisca_migrator:ci_migrator@localhost:5432/faisca
+      # Os testes derivam daqui o banco faisca_test (backend/scripts/test-db.ts).
+      DATABASE_URL: postgresql://faisca_app:ci_app@localhost:5432/faisca
 
     services:
       postgres:
@@ -60,12 +62,6 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Testes
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
       # Mesmo script do docker compose local: cria faisca_migrator e faisca_app.
       - name: Criar usuários do banco
         env:
@@ -77,3 +73,9 @@ jobs:
 
       - name: Aplicar migrations
         run: npm run db:deploy
+
+      - name: Testes
+        run: npm test
+
+      - name: Build
+        run: npm run build
