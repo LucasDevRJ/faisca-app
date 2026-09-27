@@ -77,3 +77,26 @@ test('navegar para a semana anterior e voltar', async ({ page }) => {
   await page.getByRole('button', { name: 'Voltar para esta semana' }).click();
   await expect(page).toHaveURL(/\/registros$/);
 });
+
+test.describe('no celular (360px)', () => {
+  test.use({ viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true });
+
+  test('"Nova atividade" e "Salvar" ficam ao alcance, mesmo depois de rolar', async ({ page }) => {
+    await login(page, users.records);
+
+    // O botão flutua: continua na tela depois de rolar até o fim da semana.
+    await page.mouse.wheel(0, 5000);
+    const newActivity = page.getByRole('button', { name: 'Nova atividade' });
+    await expect(newActivity).toBeInViewport();
+
+    // O formulário mais longo ("Já fiz"): o Salvar fica visível sem rolar o painel.
+    await newActivity.click();
+    const create = page.getByRole('dialog', { name: 'Nova atividade' });
+    await create.getByRole('radio', { name: /Já fiz/ }).check();
+    await expect(create.getByRole('button', { name: 'Salvar' })).toBeInViewport();
+    await expect(create.getByRole('button', { name: 'Cancelar' })).toBeInViewport();
+
+    // Nada vaza para os lados.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  });
+});
