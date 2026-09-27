@@ -27,8 +27,9 @@ Frontend (rodar dentro de `frontend/`; detalhes em `frontend/README.md`):
 - `npm run build` · `npm run preview`: build com service worker e servidor local para testá-lo
 
 Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
-- `npm run test:api`: sobe a API de testes na porta 3334 (`faisca_test`) e roda o projeto `api`
-- `npm test`: todos os projetos · `npm run typecheck`
+- `npm test`: sobe a API de testes (porta 3334, `faisca_test`) e o front (porta 5174) e roda tudo
+- `npm run test:api` · `npm run test:e2e` · `npm run typecheck`
+- Na primeira vez: `npx playwright install chromium`
 
 ## Regras invioláveis
 1. **Autorização no backend.** No contexto de terapeuta, só GET e só de pacientes com vínculo
