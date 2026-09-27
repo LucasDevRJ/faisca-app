@@ -33,6 +33,7 @@ const SEED_USERS = [
   { name: 'Pessoa Fictícia', email: 'dois-perfis@faisca.test', patient: true, therapist: true },
 ];
 
+await prisma.activity.deleteMany();
 await prisma.authToken.deleteMany();
 await prisma.user.deleteMany();
 const passwordHash = await hashPassword(SEED_PASSWORD);
