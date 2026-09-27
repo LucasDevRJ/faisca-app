@@ -1,0 +1,20 @@
+{
+  "name": "faisca-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Testes de API e E2E do Faísca (Playwright), com foco em autorização",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.0",
+    "typescript": "~6.0"
+  }
+}
