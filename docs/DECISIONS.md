@@ -204,6 +204,32 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   sem validação deixaria usar o link do Faísca para mandar a pessoa a outro site. Os guardas
   só evitam telas vazias: quem protege os dados é o backend.
 
+## DEC-028 — API de atividades
+- **Decisão:**
+  - rotas do contexto de paciente em `/activities`, sempre com o id da sessão. Cada transição da
+    SPEC tem uma rota própria (`/start`, `/complete`, `/not-done`), com schema próprio, em vez de
+    um `PATCH` que aceite `status`. O `PATCH` edita só nome, data e, na PENDENTE, a vontade;
+  - schemas Zod estritos: campo que não pertence ao estado (ex.: prazer numa PLANEJADA) dá 400;
+  - respostas: 401 sem sessão; 403 para conta sem perfil de paciente ou atividade de outra
+    pessoa; 404 para id inexistente; 409 `ACTIVITY_FINALIZED` em registro final (DEC-012),
+    `INVALID_TRANSITION` em transição fora da SPEC e `DATE_IN_FUTURE` ao concluir ou marcar
+    "não aconteceu" um dia que ainda não chegou (400 com o mesmo código ao criar já concluída);
+  - imutabilidade à prova de corrida: update e delete condicionais (`updateMany`/`deleteMany`
+    com o status e a data lidos). Se outra requisição mudou o registro no meio, nada é gravado
+    e a resposta é 409;
+  - CHECKs no banco como segunda linha de defesa: notas inteiras de 0 a 10, campos exigidos
+    por estado, observação só nos estados finais, nome de 1 a 100 e observação até 1000
+    caracteres;
+  - sem trigger no banco para a imutabilidade: ele também bloquearia a exclusão da conta em
+    cascata (LGPD);
+  - a lista pede `from` e `to` (`AAAA-MM-DD`), com até 42 dias, e ordena por dia e depois por
+    `createdAt`;
+  - vontade, prazer e realização entram no `redact` do logger (DEC-022).
+- **Motivo:** uma rota por transição torna impossível pular um estado mandando o campo errado,
+  e os testes seguem a tabela da SPEC um para um. O update condicional fecha a janela entre ler
+  e gravar, que uma checagem só no código deixaria aberta. Os 42 dias cobrem a semana e um mês
+  com as semanas das pontas, sem permitir baixar o histórico inteiro de uma vez.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
