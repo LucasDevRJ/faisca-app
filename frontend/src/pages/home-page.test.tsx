@@ -1,10 +1,10 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it } from 'vitest';
 import { THEME_STORAGE_KEY } from '../app/theme-context';
 import { renderRoute } from '../test/render';
-import { server } from '../test/server';
+import { fakeUser, loggedIn, server } from '../test/server';
 
 afterEach(() => {
   localStorage.clear();
@@ -12,25 +12,58 @@ afterEach(() => {
 });
 
 describe('HomePage', () => {
-  it('mostra que está conectada quando a API responde', async () => {
-    renderRoute('/');
+  it('sem sessão, manda para a tela de entrar', async () => {
+    const { router } = renderRoute('/');
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Faísca');
-    expect(await screen.findByText('Conectado à API.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Que bom te ver' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/entrar');
   });
 
-  it('mostra uma mensagem calma quando a API falha', async () => {
-    server.use(http.get('*/api/health', () => new HttpResponse(null, { status: 500 })));
+  it('com sessão, cumprimenta pelo primeiro nome', async () => {
+    server.use(loggedIn);
     renderRoute('/');
 
-    expect(await screen.findByText('Não foi possível falar com a API agora.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Olá, Ana!' })).toBeInTheDocument();
+  });
+
+  it('sair encerra a sessão e volta para a tela de entrar', async () => {
+    let loggedOut = false;
+    server.use(
+      http.get('*/api/auth/me', () =>
+        loggedOut
+          ? HttpResponse.json({ error: { code: 'UNAUTHENTICATED' } }, { status: 401 })
+          : HttpResponse.json({ user: fakeUser }),
+      ),
+      http.post('*/api/auth/logout', () => {
+        loggedOut = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const user = userEvent.setup();
+    const { router } = renderRoute('/');
+
+    await user.click(await screen.findByRole('button', { name: 'Sair' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
+    expect(loggedOut).toBe(true);
+    expect(await screen.findByRole('heading', { name: 'Que bom te ver' })).toBeInTheDocument();
+  });
+
+  it('mostra uma mensagem calma quando não consegue checar a sessão', async () => {
+    server.use(http.get('*/api/auth/me', () => new HttpResponse(null, { status: 500 })));
+    renderRoute('/');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Não conseguimos abrir o Faísca agora' }),
+    ).toBeInTheDocument();
   });
 
   it('troca e guarda o tema escolhido', async () => {
+    server.use(loggedIn);
     const user = userEvent.setup();
     renderRoute('/');
 
-    await user.click(screen.getByRole('radio', { name: 'Escuro' }));
+    await user.click(await screen.findByRole('radio', { name: 'Escuro' }));
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
 
