@@ -276,6 +276,46 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   dia são raras, e a unicidade evita cadastrar a mesma consulta duas vezes. Calcular última e
   próxima na API deixa o "hoje" num lugar só, e a visão da terapeuta vai reaproveitar o cálculo.
 
+## DEC-031 — Vínculo paciente ↔ terapeuta
+- **Decisão:**
+  - quatro tabelas: `TherapistLink` (o vínculo, com `method`, `revokedAt` e `seenByPatientAt`),
+    `LinkInvite`, `LinkCode` e `LinkCodeAttempt`. No banco, índice único parcial para **um vínculo
+    ativo por paciente** e **um convite pendente por paciente**, e CHECK para ninguém se vincular
+    a si mesmo;
+  - a regra "terapeuta só GET" vale para os **dados de paciente**. Os dois POSTs que criam o
+    vínculo (`/links/redeem-code` e `/links/accept-invite`) são permitidos: não leem nem alteram
+    registros, e o consentimento veio do paciente (código ou convite). Os dados continuarão em
+    `/therapist/patients/:patientId/...`, só GET e só com vínculo ativo (etapa 4b);
+  - rotas do paciente em `/link` (situação, convite, cancelar convite, código, revogar, marcar o
+    aviso como visto), sempre com o id da sessão; da terapeuta em `/links` (resgatar código,
+    aceitar convite, listar pacientes). `POST /auth/profiles` ativa o perfil que faltava;
+  - código de 8 caracteres do alfabeto `23456789ABCDEFGHJKMNPQRSTVWXYZ` (sem 0/O, 1/I/L, U/V),
+    mostrado como `K7M4-P9QX`, gerado com `crypto.randomInt`. Guardado como **HMAC-SHA-256** com
+    a chave `LINK_CODE_SECRET`, fora do banco. A terapeuta pode digitar em minúsculas, com ou sem
+    traço; formato impossível dá 400 e não conta como tentativa;
+  - tentativas erradas ficam no banco (`LinkCodeAttempt`, só terapeuta e horário): 5 em 15 minutos
+    dão 429 até com o código certo. A contagem trava a linha da terapeuta (`SELECT ... FOR UPDATE`),
+    então tentativas simultâneas não passam do limite;
+  - gerar código, convidar e aceitar o convite apagam os códigos não usados do paciente: um
+    caminho aberto por vez;
+  - o convite pode ser aceito por uma conta com **outro e-mail** que não o convidado; o aceite
+    ativa o perfil de terapeuta se faltar. Quem se cadastra pelo link manda o `inviteToken` no
+    cadastro e o vínculo nasce quando confirmar o e-mail; se o convite deixou de valer, a conta
+    segue normal. Convidar o próprio e-mail, digitar o próprio código ou abrir o próprio convite
+    dá 400 `SELF_LINK` e não gasta o código nem o convite;
+  - o paciente é avisado **no app** (`seenByPatientAt`) **e por e-mail**, com nome e e-mail de quem
+    se vinculou. Os e-mails de vínculo nunca citam atividade, nota ou observação;
+  - convites limitados a 5 por hora por paciente (em memória), porque cada um manda e-mail para
+    um endereço escolhido.
+- **Motivo:** o índice parcial garante as regras da SPEC mesmo com duas requisições ao mesmo
+  tempo. O código tem só ~39 bits: um SHA-256 puro seria quebrado por força bruta por quem
+  tivesse uma cópia do banco, e o HMAC exige também a chave. O limite no banco sobrevive a
+  deploys, o que o contador em memória da DEC-025 não faz. Exigir o mesmo e-mail travaria a
+  terapeuta que usa outro endereço, e quem recebeu o link já é quem o paciente escolheu. O aviso
+  por e-mail cobre o caso de alguém se vincular sem o paciente perceber no app.
+- **Limitação conhecida:** sem domínio próprio, o e-mail de convite não chega a terceiros em dev
+  (veja "Em aberto"); o fluxo por código funciona inteiro.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

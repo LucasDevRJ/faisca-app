@@ -11,6 +11,7 @@ process.env.PORT = process.env.E2E_API_PORT ?? '3334';
 // Valores fictícios quando o .env não tiver (ex.: CI). Nenhum e-mail sai daqui: o mailer é em memória.
 process.env.FRONTEND_URL ??= 'http://localhost:5173';
 process.env.JWT_SECRET ??= 'segredo-ficticio-so-para-testes-e2e-0123456789';
+process.env.LINK_CODE_SECRET ??= 'segredo-ficticio-dos-codigos-e2e-0123456789';
 process.env.RESEND_API_KEY = 're_nao_usado_nos_testes';
 process.env.EMAIL_FROM ??= 'Faísca <testes@faisca.test>';
 process.env.LOG_LEVEL ??= 'warn';
@@ -33,11 +34,18 @@ const SEED_USERS = [
   { name: 'Pessoa Fictícia', email: 'dois-perfis@faisca.test', patient: true, therapist: true },
   // Só para os testes de atividades no navegador: não mistura dados com os testes de API.
   { name: 'Dora Fictícia', email: 'registros@faisca.test', patient: true, therapist: false },
+  // Só para os testes de vínculo: um vínculo ativo não interfere nos outros testes.
+  { name: 'Vera Fictícia', email: 'vinculo-paciente@faisca.test', patient: true, therapist: false },
+  { name: 'Tina Fictícia', email: 'vinculo-terapeuta@faisca.test', patient: false, therapist: true },
 ];
 
 await prisma.activity.deleteMany();
 await prisma.appointment.deleteMany();
 await prisma.authToken.deleteMany();
+await prisma.linkCodeAttempt.deleteMany();
+await prisma.linkCode.deleteMany();
+await prisma.linkInvite.deleteMany();
+await prisma.therapistLink.deleteMany();
 await prisma.user.deleteMany();
 const passwordHash = await hashPassword(SEED_PASSWORD);
 await prisma.user.createMany({

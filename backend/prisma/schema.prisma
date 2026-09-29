@@ -1,4 +1,4 @@
-// Schema do Faísca. Os models entram por etapa (usuários, atividades, consultas; vínculos depois).
+// Schema do Faísca. Os models entram por etapa (usuários, atividades, consultas, vínculos).
 // A URL do banco fica no prisma.config.ts (CLI) e em src/lib/prisma.ts (runtime).
 
 generator client {
@@ -31,6 +31,14 @@ model User {
   authTokens   AuthToken[]
   activities   Activity[]
   appointments Appointment[]
+
+  // Vínculo (DEC-015, DEC-031): o mesmo usuário pode estar dos dois lados, em vínculos diferentes.
+  linksAsPatient   TherapistLink[]   @relation("LinkPatient")
+  linksAsTherapist TherapistLink[]   @relation("LinkTherapist")
+  invitesSent      LinkInvite[]      @relation("InvitePatient")
+  invitesSignedUp  LinkInvite[]      @relation("InviteSignupUser")
+  linkCodes        LinkCode[]
+  linkCodeAttempts LinkCodeAttempt[]
 }
 
 enum AuthTokenType {
@@ -101,4 +109,76 @@ model Appointment {
 
   // Uma consulta por dia (DEC-030).
   @@unique([userId, appointmentDate])
+}
+
+enum LinkMethod {
+  INVITE
+  CODE
+}
+
+// Vínculo paciente ↔ terapeuta (SPEC, "Vínculo"). Revogar preenche revokedAt e o registro fica.
+// Escritos à mão na migration: no máximo um vínculo ativo por paciente (índice único parcial)
+// e ninguém se vincula a si mesmo (CHECK).
+model TherapistLink {
+  id              String     @id @default(uuid()) @db.Uuid
+  patientId       String     @db.Uuid
+  therapistId     String     @db.Uuid
+  method          LinkMethod
+  createdAt       DateTime   @default(now())
+  revokedAt       DateTime?
+  // null = o paciente ainda não viu o aviso de novo vínculo no app.
+  seenByPatientAt DateTime?
+
+  patient   User @relation("LinkPatient", fields: [patientId], references: [id], onDelete: Cascade)
+  therapist User @relation("LinkTherapist", fields: [therapistId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([therapistId])
+}
+
+// Convite por e-mail. Não expira e vale uma vez; o token em texto só existe no e-mail (regra 8).
+// Escrito à mão na migration: no máximo um convite pendente por paciente.
+model LinkInvite {
+  id             String    @id @default(uuid()) @db.Uuid
+  patientId      String    @db.Uuid
+  // Para onde o convite foi enviado. Quem aceita pode usar outra conta (DEC-031).
+  therapistEmail String
+  tokenHash      String    @unique
+  createdAt      DateTime  @default(now())
+  acceptedAt     DateTime?
+  canceledAt     DateTime?
+  // Conta criada pelo link do convite: o vínculo nasce quando ela confirmar o e-mail.
+  signupUserId   String?   @db.Uuid
+
+  patient    User  @relation("InvitePatient", fields: [patientId], references: [id], onDelete: Cascade)
+  signupUser User? @relation("InviteSignupUser", fields: [signupUserId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([signupUserId])
+}
+
+// Código de vínculo: 24 h, uma vez, invalidado ao gerar outro. Guardado como HMAC (DEC-031).
+model LinkCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  patientId String    @db.Uuid
+  codeHash  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  patient User @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+}
+
+// Tentativas erradas de código, por terapeuta: 5 em 15 minutos bloqueiam (SPEC). Fica no banco,
+// e não em memória, para o bloqueio sobreviver a um deploy.
+model LinkCodeAttempt {
+  id          String   @id @default(uuid()) @db.Uuid
+  therapistId String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  therapist User @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+
+  @@index([therapistId, createdAt])
 }

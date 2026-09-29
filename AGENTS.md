@@ -33,7 +33,9 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
 
 ## Regras invioláveis
 1. **Autorização no backend.** No contexto de terapeuta, só GET e só de pacientes com vínculo
-   ativo; qualquer outro caso retorna 403. No contexto de paciente, só os próprios dados.
+   ativo; qualquer outro caso retorna 403. Exceção: os POSTs que criam o vínculo
+   (`/links/redeem-code`, `/links/accept-invite`), que não tocam em dado de paciente (DEC-031).
+   No contexto de paciente, só os próprios dados.
    Toda rota nova com dado de paciente precisa de teste de autorização (caso permitido e negado).
 2. **Registros finais são imutáveis.** Editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA retorna 409.
 3. **Notificações neutras.** Push e e-mail de lembrete nunca contêm nome de atividade, notas ou observações.

@@ -8,7 +8,8 @@ import { logger } from '../lib/logger.js';
 type LimitOptions = {
   windowMinutes: number;
   limit: number;
-  key: 'ip' | 'email' | 'ip+email';
+  // 'user' só vale depois do requireAuth.
+  key: 'ip' | 'email' | 'ip+email' | 'user';
   // Conta só as tentativas que falharam (usado no login).
   onlyFailures?: boolean;
 };
@@ -34,6 +35,7 @@ export function createRateLimit({ windowMinutes, limit, key, onlyFailures = fals
     keyGenerator: (req) => {
       if (key === 'ip') return clientIp(req);
       if (key === 'email') return `email:${bodyEmail(req)}`;
+      if (key === 'user') return `user:${req.user?.id ?? clientIp(req)}`;
       return `${clientIp(req)}|${bodyEmail(req)}`;
     },
     handler: (_req, res) => {

@@ -29,6 +29,9 @@ export const signupSchema = z.object({
   profiles: z
     .object({ patient: z.boolean(), therapist: z.boolean() })
     .refine((p) => p.patient || p.therapist, { error: 'Escolha pelo menos um perfil.' }),
+  // Cadastro aberto pelo link de convite (SPEC, "Convite por e-mail"): o vínculo é criado quando
+  // o e-mail for confirmado, e o aceite ativa o perfil de terapeuta se faltar (DEC-031).
+  inviteToken: tokenSchema.optional(),
 });
 
 // No login a senha não passa pela política: contas antigas podem ter regras diferentes.
@@ -41,6 +44,9 @@ export const emailOnlySchema = z.object({ email: emailSchema });
 
 export const tokenOnlySchema = z.object({ token: tokenSchema });
 
+// Ativa o perfil que não foi escolhido no cadastro (SPEC, "Contas e perfis").
+export const addProfileSchema = z.strictObject({ profile: z.enum(['patient', 'therapist']) });
+
 export const resetPasswordSchema = z.object({
   token: tokenSchema,
   password: newPasswordSchema,
@@ -49,3 +55,4 @@ export const resetPasswordSchema = z.object({
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type AddProfileInput = z.infer<typeof addProfileSchema>;

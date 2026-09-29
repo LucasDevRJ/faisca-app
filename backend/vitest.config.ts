@@ -18,6 +18,7 @@ export default defineConfig({
       FRONTEND_URL: 'http://localhost:5173',
       DATABASE_URL: testDatabaseUrls().appUrl,
       JWT_SECRET: 'segredo-ficticio-so-para-testes-0123456789',
+      LINK_CODE_SECRET: 'segredo-ficticio-dos-codigos-de-vinculo-0123',
       RESEND_API_KEY: 're_ficticio_testes',
       EMAIL_FROM: 'Faísca <testes@faisca.test>',
     },

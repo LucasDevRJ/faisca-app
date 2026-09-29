@@ -2,6 +2,7 @@ import type { RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import { clearSessionCookie, setSessionCookie } from '../../lib/session.js';
 import {
+  addProfileSchema,
   emailOnlySchema,
   loginSchema,
   resetPasswordSchema,
@@ -44,6 +45,11 @@ export function createAuthController(service: AuthService) {
     res.status(200).json({ user: toPublicUser(getAuthUser(req)) });
   };
 
+  const addProfile: RequestHandler = async (req, res) => {
+    const user = await service.addProfile(getAuthUser(req).id, addProfileSchema.parse(req.body));
+    res.status(200).json({ user: toPublicUser(user) });
+  };
+
   const forgotPassword: RequestHandler = async (req, res) => {
     await service.forgotPassword(emailOnlySchema.parse(req.body).email);
     res.status(204).end();
@@ -54,5 +60,5 @@ export function createAuthController(service: AuthService) {
     res.status(204).end();
   };
 
-  return { signup, confirmEmail, resendConfirmation, login, logout, me, forgotPassword, resetPassword };
+  return { signup, confirmEmail, resendConfirmation, login, logout, me, addProfile, forgotPassword, resetPassword };
 }

@@ -6,18 +6,27 @@ export async function resetDatabase() {
   await prisma.activity.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.authToken.deleteMany();
+  await prisma.linkCodeAttempt.deleteMany();
+  await prisma.linkCode.deleteMany();
+  await prisma.linkInvite.deleteMany();
+  await prisma.therapistLink.deleteMany();
   await prisma.user.deleteMany();
 }
 
 // Usuário fictício já confirmado, para testes que não são sobre o cadastro.
 export async function createConfirmedUser(
-  overrides: Partial<{ email: string; password: string; patient: boolean; therapist: boolean }> = {},
+  overrides: Partial<{ name: string; email: string; password: string; patient: boolean; therapist: boolean }> = {},
 ) {
-  const { email = 'paciente@faisca.test', password = 'senha-ficticia-123', patient = true, therapist = false } =
-    overrides;
+  const {
+    name = 'Pessoa Fictícia',
+    email = 'paciente@faisca.test',
+    password = 'senha-ficticia-123',
+    patient = true,
+    therapist = false,
+  } = overrides;
   return prisma.user.create({
     data: {
-      name: 'Pessoa Fictícia',
+      name,
       email,
       passwordHash: await hashPassword(password),
       hasPatientProfile: patient,

@@ -8,14 +8,15 @@ Regras de organização e de domínio em [`CLAUDE.md`](CLAUDE.md); requisitos em
 Pré-requisitos: Node 24 e Docker Desktop ligado.
 
 ```bash
-cp .env.example .env     # preencha senhas, JWT_SECRET e Resend (CHANGE_ME)
+cp .env.example .env     # preencha senhas, JWT_SECRET, LINK_CODE_SECRET e Resend (CHANGE_ME)
 npm install              # também roda o `prisma generate`
 npm run db:up            # sobe o Postgres e cria faisca_migrator e faisca_app
 npm run db:migrate       # aplica as migrations (como faisca_migrator)
 npm run dev              # API em http://localhost:3333 (GET /health)
 ```
 
-Para o `JWT_SECRET`, gere um valor aleatório (ex.: `openssl rand -base64 48`). Sem domínio
+Para o `JWT_SECRET` e o `LINK_CODE_SECRET`, gere dois valores aleatórios diferentes
+(ex.: `openssl rand -base64 48`). Sem domínio
 próprio, o Resend só entrega e-mail para o dono da conta: use o remetente
 `onboarding@resend.dev` e cadastre-se com o seu e-mail para testar o fluxo de confirmação.
 

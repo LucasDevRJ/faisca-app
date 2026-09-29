@@ -9,6 +9,7 @@ import { notFound } from './middlewares/not-found.js';
 import { createActivitiesRoutes } from './modules/activities/activities.routes.js';
 import { createAppointmentsRoutes } from './modules/appointments/appointments.routes.js';
 import { createAuthRoutes } from './modules/auth/auth.routes.js';
+import { createLinksRoutes } from './modules/links/links.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 
 export type AppDependencies = {
@@ -34,6 +35,7 @@ export function createApp({ mailer = createResendMailer() }: AppDependencies = {
   app.use(createAuthRoutes(mailer));
   app.use(createActivitiesRoutes());
   app.use(createAppointmentsRoutes());
+  app.use(createLinksRoutes(mailer));
 
   app.use(notFound);
   app.use(errorHandler);

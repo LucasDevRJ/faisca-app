@@ -439,3 +439,32 @@ describe('e-mails', () => {
     expect(html).toContain('&lt;script&gt;');
   });
 });
+
+describe('POST /auth/profiles', () => {
+  it('ativa o perfil que faltava e devolve os dois', async () => {
+    await createConfirmedUser({ email: EMAIL, password: PASSWORD, patient: true, therapist: false });
+    const agent = await loginAgent();
+
+    const res = await agent.post('/auth/profiles').send({ profile: 'therapist' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.profiles).toEqual({ patient: true, therapist: true });
+    expect((await agent.get('/auth/me')).body.user.profiles).toEqual({ patient: true, therapist: true });
+  });
+
+  it('ativar um perfil que já existe não muda nada', async () => {
+    await createConfirmedUser({ email: EMAIL, password: PASSWORD, patient: true, therapist: false });
+
+    const res = await (await loginAgent()).post('/auth/profiles').send({ profile: 'patient' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.profiles).toEqual({ patient: true, therapist: false });
+  });
+
+  it('sem sessão: 401; perfil desconhecido: 400', async () => {
+    await createConfirmedUser({ email: EMAIL, password: PASSWORD });
+
+    expect((await request(app).post('/auth/profiles').send({ profile: 'therapist' })).status).toBe(401);
+    expect((await (await loginAgent()).post('/auth/profiles').send({ profile: 'admin' })).status).toBe(400);
+  });
+});

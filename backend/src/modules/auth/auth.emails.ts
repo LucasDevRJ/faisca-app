@@ -4,7 +4,7 @@ import type { EmailMessage } from '../../lib/mailer.js';
 // Textos dos e-mails de conta. Tom acolhedor e sem pressão (SPEC, "Tom e interface").
 // Nenhum deles cita atividade, nota ou observação.
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -13,7 +13,7 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;');
 }
 
-function layout(paragraphs: string[], button?: { label: string; url: string }): string {
+export function layout(paragraphs: string[], button?: { label: string; url: string }): string {
   const body = paragraphs.map((p) => `<p style="margin:0 0 16px">${p}</p>`).join('');
   const cta = button
     ? `<p style="margin:24px 0"><a href="${escapeHtml(button.url)}" style="background:#5b7f67;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block">${escapeHtml(button.label)}</a></p>`
