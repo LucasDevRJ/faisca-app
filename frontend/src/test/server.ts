@@ -46,6 +46,9 @@ export const handlers = [
   // Semana vazia e nenhuma consulta, por padrão.
   http.get('*/api/activities', () => HttpResponse.json({ activities: [] })),
   http.get('*/api/appointments', () => HttpResponse.json({ appointments: [], last: null, next: null })),
+  // Sem vínculo e sem pacientes, por padrão.
+  http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
+  http.get('*/api/links/patients', () => HttpResponse.json({ patients: [] })),
 ];
 
 export const server = setupServer(...handlers);

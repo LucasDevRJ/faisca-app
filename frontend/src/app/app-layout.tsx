@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
 import { Button } from '../components/ui/button';
 import { useLogout, useSession } from '../features/auth/use-session';
@@ -16,17 +16,23 @@ export function AppLayout() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-12">
       <header className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        {/* A marca leva ao início, que escolhe a tela do perfil: sempre há um caminho de volta. */}
+        <Link to="/" aria-label="Faísca, ir para o início" className="flex items-center gap-3 rounded-md">
           <img src="/icon.svg" alt="" className="size-10" />
           <span className="font-heading text-2xl font-bold">Faísca</span>
+        </Link>
+        <div className="flex items-center gap-1">
+          <NavLink to="/conta" className={navLinkClass}>
+            Conta
+          </NavLink>
+          <Button
+            variant="ghost"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate(undefined, { onSettled: () => navigate('/entrar', { replace: true }) })}
+          >
+            Sair
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          disabled={logout.isPending}
-          onClick={() => logout.mutate(undefined, { onSettled: () => navigate('/entrar', { replace: true }) })}
-        >
-          Sair
-        </Button>
       </header>
 
       {/* Só quem tem os dois perfis alterna entre eles (SPEC, Contas e perfis). */}

@@ -16,6 +16,7 @@ import {
 import { useWeekActivities } from '../features/activities/use-activities';
 import { AppointmentsCard } from '../features/appointments/appointments-card';
 import { useAppointments } from '../features/appointments/use-appointments';
+import { NewLinkNotice } from '../features/links/new-link-notice';
 import {
   addDays,
   formatDayHeading,
@@ -71,6 +72,8 @@ export function RecordsPage() {
         <h1 className="text-3xl font-bold sm:text-4xl">Olá, {firstName}!</h1>
         <p className="text-muted sm:text-lg">Um espaço calmo para registrar suas atividades, no seu ritmo.</p>
       </section>
+
+      <NewLinkNotice />
 
       <AppointmentsCard today={today} />
 

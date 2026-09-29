@@ -21,6 +21,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
+    "db:seed-dev": "tsx --env-file-if-exists=.env scripts/seed-dev.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

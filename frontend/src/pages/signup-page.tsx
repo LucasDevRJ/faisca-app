@@ -1,12 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { PasswordField, TextField } from '../components/ui/text-field';
 import { getApiError, signup } from '../features/auth/auth-api';
 import { AuthLayout } from '../features/auth/auth-layout';
 import { PASSWORD_MIN, validateEmail, validateNewPassword } from '../features/auth/validation';
+import { readInviteToken } from '../features/links/invite-state';
 
 type Errors = { name?: string; email?: string; password?: string; profiles?: string };
 
@@ -25,10 +26,12 @@ const profileOptions = [
 
 export function SignupPage() {
   const navigate = useNavigate();
+  // Cadastro pelo link do convite: "Acompanhar pacientes" já vem marcado (SPEC, "Convite por e-mail").
+  const inviteToken = readInviteToken(useLocation().state);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [profiles, setProfiles] = useState({ patient: false, therapist: false });
+  const [profiles, setProfiles] = useState({ patient: false, therapist: inviteToken !== null });
   const [errors, setErrors] = useState<Errors>({});
   const mutation = useMutation({ mutationFn: signup });
 
@@ -54,7 +57,7 @@ export function SignupPage() {
 
     const cleanEmail = email.trim();
     mutation.mutate(
-      { name: name.trim(), email: cleanEmail, password, profiles },
+      { name: name.trim(), email: cleanEmail, password, profiles, ...(inviteToken && { inviteToken }) },
       // O e-mail vai no state da navegação, não na URL, para não ficar no histórico.
       { onSuccess: () => navigate('/verifique-seu-email', { state: { email: cleanEmail } }) },
     );
@@ -63,6 +66,9 @@ export function SignupPage() {
   return (
     <AuthLayout title="Criar conta" description="Leva só um minutinho.">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+        {inviteToken && (
+          <Alert>Você está criando a conta pelo convite. Depois de confirmar o e-mail, o vínculo é feito sozinho.</Alert>
+        )}
         {apiError && apiError.code !== 'VALIDATION_ERROR' && (
           <Alert tone="attention">{apiError.message}</Alert>
         )}
