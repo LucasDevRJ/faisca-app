@@ -8,7 +8,7 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - No cadastro, a pessoa escolhe como vai usar o Faísca (um ou os dois perfis):
   - **Paciente**: registra atividades, consultas e lembretes; vincula e revoga sua terapeuta.
   - **Terapeuta**: apenas leitura dos dados dos pacientes com vínculo ativo.
-- O perfil não escolhido pode ser ativado depois, em Configurações.
+- O perfil não escolhido pode ser ativado depois, na tela Conta.
 - Quem tem os dois perfis alterna entre "Meus registros" e "Meus pacientes".
   Quem tem um perfil só nunca vê telas do outro.
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.

@@ -316,6 +316,34 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
 - **Limitação conhecida:** sem domínio próprio, o e-mail de convite não chega a terceiros em dev
   (veja "Em aberto"); o fluxo por código funciona inteiro.
 
+## DEC-032 — Telas do vínculo
+- **Decisão:**
+  - link **Conta** no topo, ao lado de Sair. A tela `/conta` tem "Minha terapeuta" (só para quem
+    é paciente) e "Perfis" (ativa o perfil que falta, via `POST /auth/profiles`);
+  - "Minha terapeuta" segue a situação da API: sem vínculo, **Gerar código** e **Convidar por
+    e-mail** (painel com o e-mail); convite pendente, o e-mail e **Cancelar convite**; vínculo
+    ativo, nome, e-mail, "desde" e **Desfazer vínculo**, com confirmação;
+  - o código aparece **uma vez só**, na resposta de quando é gerado, com **Copiar** e, quando o
+    navegador oferece, **Compartilhar** (Web Share). Se a pessoa sair da tela, a API diz que há um
+    código válido e a tela oferece gerar outro, que invalida o anterior;
+  - aviso de novo vínculo no topo de `/registros`, com nome e e-mail, até tocar em **Entendi**
+    (`POST /link/seen`);
+  - `/pacientes`: campo de código (aceita minúsculas e com ou sem traço, confere o formato antes
+    de enviar) e a lista de vinculados. Abrir os registros fica para a 4b;
+  - `/convite` funciona com ou sem sessão. Sem sessão, **Entrar** ou **Criar conta** levam o token
+    no state da navegação e voltam para `/convite`; o cadastro já vem com "Acompanhar pacientes"
+    marcado e envia o `inviteToken`. O guarda `GuestOnly` repassa esse state quando redireciona
+    logo depois do login;
+  - textos sem presumir o gênero de quem atende ("quem acompanha sua terapia");
+  - `npm run db:seed-dev` (backend) cria ou restaura `terapeuta.dev@faisca.test`, já confirmada,
+    com senha fictícia documentada no README do backend. Só roda com `NODE_ENV=development` e
+    não loga e-mail nem senha.
+- **Motivo:** o código só existe em texto na hora em que nasce, porque o banco guarda o HMAC
+  (DEC-031); mostrar de novo exigiria guardá-lo. O state da navegação sobrevive a recarregar a
+  página e não vai para histórico, favoritos nem capturas de tela, como já fazemos com o token
+  dos e-mails (DEC-027). Sem domínio próprio, o convite não chega a uma segunda pessoa em dev, e
+  a terapeuta fictícia permite testar os dois lados no navegador.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

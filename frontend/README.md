@@ -45,6 +45,16 @@ Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de te
 - Consultas (DEC-030) em `src/features/appointments/`: card de próxima/última consulta no topo de
   `/registros`, página `/consultas` e selo "consulta" no dia da semana.
 
+## Vínculo (DEC-031, DEC-032)
+
+- Tudo em `src/features/links/`: chamadas a `/link` e `/links`, hooks, a seção "Minha terapeuta",
+  os dialogs de convite e de desfazer, o aviso de novo vínculo e o campo de código.
+- `/conta`: "Minha terapeuta" (só para quem é paciente) e "Perfis". `/pacientes`: campo de código e
+  lista de vinculados. `/convite`: aberta pelo link do e-mail, com ou sem sessão.
+- O token do convite passa por `/convite`, `/entrar` e `/cadastro` no state da navegação
+  (`features/links/invite-state.ts`), nunca na URL nem no storage.
+- Para ver os dois lados em dev, use a terapeuta fictícia do `npm run db:seed-dev` (backend/README).
+
 ## Scripts
 
 | Script | O que faz |
