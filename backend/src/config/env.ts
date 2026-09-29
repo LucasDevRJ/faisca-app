@@ -19,6 +19,12 @@ const envSchema = z.object({
     .string()
     .min(32)
     .refine((value) => !value.startsWith('CHANGE_ME')),
+  // Chave do HMAC dos códigos de vínculo (DEC-031). Separada do JWT_SECRET: trocar uma não
+  // invalida a outra. Mesmas regras: 32 caracteres ou mais e nada de placeholder.
+  LINK_CODE_SECRET: z
+    .string()
+    .min(32)
+    .refine((value) => !value.startsWith('CHANGE_ME')),
   RESEND_API_KEY: z.string().min(1),
   // O domínio de exemplo nunca é aceito pelo Resend: melhor falhar ao subir do que no primeiro cadastro.
   EMAIL_FROM: z

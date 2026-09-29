@@ -4,7 +4,7 @@ import { env } from '../config/env.js';
 // Rede de segurança para a regra 7 do AGENTS.md: mesmo que um objeto com dado
 // sensível chegue ao log, estes campos saem como [REDACTED].
 // Não substitui o cuidado de não logar esses dados.
-// Revisar a lista quando novos models com dado sensível forem criados (vínculo).
+// Revisar a lista quando novos models com dado sensível forem criados.
 // Não use 'code' genérico: apagaria o err.code (ex.: P2002 do Prisma).
 const SENSITIVE_KEYS = [
   'password',
@@ -14,6 +14,9 @@ const SENSITIVE_KEYS = [
   'tokenHash',
   'inviteToken',
   'linkCode',
+  // Vínculo (DEC-031): hash do código e e-mail para onde o convite foi.
+  'codeHash',
+  'therapistEmail',
   'name',
   'notes',
   'observation',
