@@ -79,11 +79,13 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 
 ### Regras comuns
 - Com um vínculo ativo ou convite pendente, o paciente não gera outro convite nem outro código.
-- Quando um vínculo é criado, o paciente é avisado e vê o **nome e o e-mail** de quem se vinculou.
+- Quando um vínculo é criado, o paciente é avisado no app e por e-mail e vê o **nome e o e-mail** de quem se vinculou.
 - O paciente revoga a qualquer momento e o acesso cai na hora. O registro do vínculo é mantido (`revokedAt`).
 
 ## Autorização (regra inviolável)
 - No papel de terapeuta: somente requisições GET, e apenas de pacientes com vínculo ativo.
+  A exceção são os dois pedidos que criam o vínculo (digitar o código e aceitar o convite),
+  que não leem nem alteram dado de paciente (DEC-031).
 - No papel de paciente: acesso somente aos próprios dados.
 - Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado ou dado de outra pessoa.
 - Tudo isso é garantido no backend, nunca só na interface.
