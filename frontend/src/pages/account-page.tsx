@@ -1,0 +1,66 @@
+import { Alert } from '../components/ui/alert';
+import { Button } from '../components/ui/button';
+import { getApiError } from '../features/auth/auth-api';
+import { useAddProfile, useSession } from '../features/auth/use-session';
+import { TherapistLinkSection } from '../features/links/therapist-link-section';
+
+const profileInfo = {
+  patient: {
+    label: 'Registrar minhas atividades',
+    add: 'Também quero registrar minhas atividades',
+  },
+  therapist: {
+    label: 'Acompanhar pacientes',
+    add: 'Também quero acompanhar pacientes',
+  },
+} as const;
+
+// "Conta": a terapeuta vinculada (só para quem é paciente) e os perfis (SPEC, "Contas e perfis").
+export function AccountPage() {
+  const { data: user } = useSession();
+  if (!user) return null;
+
+  return (
+    <>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-4xl font-bold">Conta</h1>
+        <p className="text-muted">
+          {user.name} · <span className="break-all">{user.email}</span>
+        </p>
+      </div>
+
+      {user.profiles.patient && <TherapistLinkSection />}
+
+      <ProfilesSection profiles={user.profiles} />
+    </>
+  );
+}
+
+function ProfilesSection({ profiles }: { profiles: { patient: boolean; therapist: boolean } }) {
+  const addProfile = useAddProfile();
+  const active = (['patient', 'therapist'] as const).filter((key) => profiles[key]);
+  const missing = (['patient', 'therapist'] as const).filter((key) => !profiles[key]);
+
+  return (
+    <section aria-labelledby="profiles-title" className="flex flex-col gap-4">
+      <h2 id="profiles-title" className="text-2xl font-semibold">
+        Perfis
+      </h2>
+      <ul className="flex flex-col gap-2">
+        {active.map((key) => (
+          <li key={key} className="rounded-md border border-border bg-surface px-4 py-3">
+            {profileInfo[key].label}
+          </li>
+        ))}
+      </ul>
+      {addProfile.isError && <Alert tone="attention">{getApiError(addProfile.error).message}</Alert>}
+      {missing.map((key) => (
+        <div key={key}>
+          <Button variant="secondary" disabled={addProfile.isPending} onClick={() => addProfile.mutate(key)}>
+            {profileInfo[key].add}
+          </Button>
+        </div>
+      ))}
+    </section>
+  );
+}

@@ -20,13 +20,18 @@ export function AppLayout() {
           <img src="/icon.svg" alt="" className="size-10" />
           <span className="font-heading text-2xl font-bold">Faísca</span>
         </div>
-        <Button
-          variant="ghost"
-          disabled={logout.isPending}
-          onClick={() => logout.mutate(undefined, { onSettled: () => navigate('/entrar', { replace: true }) })}
-        >
-          Sair
-        </Button>
+        <div className="flex items-center gap-1">
+          <NavLink to="/conta" className={navLinkClass}>
+            Conta
+          </NavLink>
+          <Button
+            variant="ghost"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate(undefined, { onSettled: () => navigate('/entrar', { replace: true }) })}
+          >
+            Sair
+          </Button>
+        </div>
       </header>
 
       {/* Só quem tem os dois perfis alterna entre eles (SPEC, Contas e perfis). */}

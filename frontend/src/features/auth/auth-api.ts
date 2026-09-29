@@ -16,6 +16,8 @@ export type SignupInput = {
   email: string;
   password: string;
   profiles: { patient: boolean; therapist: boolean };
+  // Cadastro aberto pelo link de convite: o vínculo nasce quando o e-mail for confirmado (DEC-031).
+  inviteToken?: string;
 };
 
 export type ApiErrorInfo = {
@@ -78,6 +80,12 @@ export async function confirmEmail(token: string): Promise<void> {
 
 export async function resendConfirmation(email: string): Promise<void> {
   await api.post('/auth/resend-confirmation', { email });
+}
+
+// Ativa o perfil que não foi escolhido no cadastro (SPEC, "Contas e perfis").
+export async function addProfile(profile: 'patient' | 'therapist'): Promise<SessionUser> {
+  const { data } = await api.post<{ user: SessionUser }>('/auth/profiles', { profile });
+  return data.user;
 }
 
 export async function forgotPassword(email: string): Promise<void> {

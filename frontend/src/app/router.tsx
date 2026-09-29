@@ -2,7 +2,9 @@ import { createBrowserRouter } from 'react-router';
 import { GuestOnly, HomeRedirect, RequireAuth, RequireProfile } from '../features/auth/route-guards';
 import { CheckEmailPage } from '../pages/check-email-page';
 import { AppointmentsPage } from '../pages/appointments-page';
+import { AccountPage } from '../pages/account-page';
 import { ConfirmEmailPage } from '../pages/confirm-email-page';
+import { InvitePage } from '../pages/invite-page';
 import { ErrorPage } from '../pages/error-page';
 import { ForgotPasswordPage } from '../pages/forgot-password-page';
 import { LoginPage } from '../pages/login-page';
@@ -26,6 +28,7 @@ export const routes = [
           {
             element: <AppLayout />,
             children: [
+              { path: 'conta', element: <AccountPage /> },
               {
                 element: <RequireProfile profile="patient" />,
                 children: [
@@ -53,6 +56,7 @@ export const routes = [
       { path: 'verifique-seu-email', element: <CheckEmailPage /> },
       { path: 'confirmar-email', element: <ConfirmEmailPage /> },
       { path: 'redefinir-senha', element: <ResetPasswordPage /> },
+      { path: 'convite', element: <InvitePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

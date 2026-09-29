@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { PasswordField, TextField } from '../components/ui/text-field';
@@ -8,12 +8,15 @@ import { getApiError, resendConfirmation } from '../features/auth/auth-api';
 import { AuthLayout } from '../features/auth/auth-layout';
 import { safeNextPath, useLogin } from '../features/auth/use-session';
 import { validateEmail } from '../features/auth/validation';
+import { inviteState, readInviteToken } from '../features/links/invite-state';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  // Vindo do convite: o token volta para /convite junto com a pessoa, depois do login.
+  const invite = inviteState(readInviteToken(useLocation().state));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -35,7 +38,7 @@ export function LoginPage() {
     resend.reset();
     login.mutate(
       { email: email.trim(), password },
-      { onSuccess: () => navigate(safeNextPath(searchParams.get('next')), { replace: true }) },
+      { onSuccess: () => navigate(safeNextPath(searchParams.get('next')), { replace: true, state: invite }) },
     );
   }
 
@@ -94,7 +97,7 @@ export function LoginPage() {
         </Link>
         <p className="text-muted">
           Ainda não tem conta?{' '}
-          <Link to="/cadastro" className={linkClass}>
+          <Link to="/cadastro" state={invite} className={linkClass}>
             Criar conta
           </Link>
         </p>

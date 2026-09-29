@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchSession, login, logout } from './auth-api';
+import { addProfile, fetchSession, login, logout } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
 
@@ -31,6 +31,15 @@ export function useLogout() {
       queryClient.clear();
       queryClient.setQueryData(SESSION_QUERY_KEY, null);
     },
+  });
+}
+
+// A resposta já traz a conta com os perfis novos: atualiza a sessão sem outra ida à API.
+export function useAddProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addProfile,
+    onSuccess: (user) => queryClient.setQueryData(SESSION_QUERY_KEY, user),
   });
 }
 

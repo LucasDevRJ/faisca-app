@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router';
+import { inviteState, readInviteToken } from '../links/invite-state';
 import { safeNextPath, useSession } from './use-session';
 
 // A interface não é barreira de segurança (frontend/CLAUDE.md): estes guardas só evitam
@@ -40,10 +41,16 @@ export function RequireAuth() {
 export function GuestOnly() {
   const { data: user, isPending, isError } = useSession();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   if (isPending) return <SessionLoading />;
   // Sem conseguir checar a sessão, mostra a tela: o formulário mostra o erro se a API seguir fora.
-  if (!isError && user) return <Navigate to={safeNextPath(searchParams.get('next'))} replace />;
+  // Logo depois do login este redirecionamento acontece antes do da tela, então também leva
+  // o token do convite, se houver (DEC-032).
+  if (!isError && user) {
+    const state = inviteState(readInviteToken(location.state));
+    return <Navigate to={safeNextPath(searchParams.get('next'))} replace state={state} />;
+  }
   return <Outlet />;
 }
 
