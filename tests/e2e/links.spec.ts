@@ -2,7 +2,8 @@ import { expect, test, type Browser, type Page } from '@playwright/test';
 import { users } from '../fixtures/users.js';
 
 // Vínculo por código no navegador, com duas pessoas em janelas separadas (DEC-032):
-// o paciente gera, a terapeuta digita, o paciente vê o aviso e desfaz o vínculo.
+// o paciente gera, a terapeuta digita e vê os registros (DEC-033), o paciente vê o aviso e
+// desfaz o vínculo, e a terapeuta perde o acesso.
 
 type Credentials = (typeof users)[keyof typeof users];
 
@@ -17,9 +18,22 @@ async function signIn(browser: Browser, who: Credentials): Promise<Page> {
   return page;
 }
 
-test('paciente gera o código, terapeuta vincula, paciente vê o aviso e desfaz', async ({ browser }) => {
+// O dia de hoje em São Paulo, no formato da API.
+function todayInSaoPaulo(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+}
+
+test('paciente gera o código, terapeuta vincula e lê os registros, paciente desfaz e o acesso cai', async ({
+  browser,
+}) => {
   const patient = await signIn(browser, users.linkPatient);
   const therapist = await signIn(browser, users.linkTherapist);
+
+  // Paciente: uma atividade de hoje, direto pela API (a tela de registro já tem o próprio e2e).
+  const created = await patient.request.post('/api/activities', {
+    data: { name: 'Leitura no fim de tarde', activityDate: todayInSaoPaulo(), status: 'PLANEJADA' },
+  });
+  expect(created.status()).toBe(201);
 
   // Paciente: Conta → Gerar código.
   await patient.getByRole('link', { name: 'Conta' }).click();
@@ -35,6 +49,16 @@ test('paciente gera o código, terapeuta vincula, paciente vê o aviso e desfaz'
   await expect(therapist.getByText(/Agora você acompanha os registros de Vera Fictícia/)).toBeVisible();
   await expect(therapist.getByRole('listitem').filter({ hasText: 'Vera Fictícia' })).toBeVisible();
 
+  // Terapeuta: abre os registros da paciente. Só leitura: o card não tem nenhum botão.
+  await therapist.getByRole('link', { name: /Vera Fictícia/ }).click();
+  await expect(therapist).toHaveURL(/\/pacientes\/[0-9a-f-]{36}$/);
+  const patientUrl = therapist.url();
+  await expect(therapist.getByRole('heading', { level: 1, name: 'Vera Fictícia' })).toBeVisible();
+  await expect(therapist.getByText(/Em destaque:/)).toBeVisible();
+  const card = therapist.getByRole('article', { name: 'Leitura no fim de tarde' });
+  await expect(card.getByText(/Registrado em/)).toBeVisible();
+  await expect(card.getByRole('button')).toHaveCount(0);
+
   // Paciente: o aviso aparece em Meus registros até tocar em "Entendi".
   await patient.goto('/registros');
   const notice = patient.getByRole('region', { name: 'Novo vínculo' });
@@ -49,8 +73,10 @@ test('paciente gera o código, terapeuta vincula, paciente vê o aviso e desfaz'
   await patient.getByRole('dialog', { name: 'Desfazer o vínculo?' }).getByRole('button', { name: 'Desfazer' }).click();
   await expect(section.getByRole('button', { name: 'Gerar código' })).toBeVisible();
 
-  // Terapeuta: o paciente sai da lista.
-  await therapist.reload();
+  // Terapeuta: os registros ficam indisponíveis e o paciente sai da lista.
+  await therapist.goto(patientUrl);
+  await expect(therapist.getByRole('heading', { name: 'Registros indisponíveis' })).toBeVisible();
+  await therapist.getByRole('link', { name: 'Voltar para Meus pacientes' }).click();
   await expect(therapist.getByText(/Ninguém por aqui ainda/)).toBeVisible();
 
   await patient.context().close();

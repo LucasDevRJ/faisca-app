@@ -5,7 +5,8 @@ import { useAppointments } from './use-appointments';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
-function AppointmentLine({ label, appointment, today }: { label: string; appointment: Appointment; today: string }) {
+// Também usada na visão da terapeuta (pacientes/:id), dentro de um <dl>.
+export function AppointmentLine({ label, appointment, today }: { label: string; appointment: Appointment; today: string }) {
   return (
     <div className="flex flex-col">
       <dt className="text-sm text-muted">{label}</dt>

@@ -9,6 +9,7 @@ import { ErrorPage } from '../pages/error-page';
 import { ForgotPasswordPage } from '../pages/forgot-password-page';
 import { LoginPage } from '../pages/login-page';
 import { NotFoundPage } from '../pages/not-found-page';
+import { PatientPage } from '../pages/patient-page';
 import { PatientsPage } from '../pages/patients-page';
 import { RecordsPage } from '../pages/records-page';
 import { ResetPasswordPage } from '../pages/reset-password-page';
@@ -38,7 +39,10 @@ export const routes = [
               },
               {
                 element: <RequireProfile profile="therapist" />,
-                children: [{ path: 'pacientes', element: <PatientsPage /> }],
+                children: [
+                  { path: 'pacientes', element: <PatientsPage /> },
+                  { path: 'pacientes/:patientId', element: <PatientPage /> },
+                ],
               },
             ],
           },

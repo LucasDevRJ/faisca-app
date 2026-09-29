@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Button } from '../../components/ui/button';
+import { formatDateTime } from '../links/link-format';
 import { isFinal, type Activity } from './activities-api';
 import { SCORE_TEXT, STATUS_LABEL } from './activity-labels';
 
@@ -8,19 +9,25 @@ const HALF_WIDTH = 'px-2 text-sm whitespace-nowrap sm:px-5 sm:text-base';
 
 export type ActivityAction = 'start' | 'complete' | 'notDone' | 'edit' | 'delete';
 
-type ActivityCardProps = {
-  activity: Activity;
-  today: string;
-  onAction: (action: ActivityAction, activity: Activity) => void;
-};
+// readOnly: visão da terapeuta (DEC-033). Sem botões e com a hora em que o registro foi feito,
+// porque a SPEC mostra à terapeuta as duas datas (a do dia vem no título do dia).
+type ActivityCardProps =
+  | {
+      activity: Activity;
+      today: string;
+      onAction: (action: ActivityAction, activity: Activity) => void;
+      readOnly?: false;
+    }
+  | { activity: Activity; readOnly: true };
 
 // Os botões seguem o estado (tabela da SPEC). Registro final não tem ações: ele é imutável
 // e o backend responderia 409. Esconder os botões é conforto, não segurança.
-export function ActivityCard({ activity, today, onAction }: ActivityCardProps) {
+export function ActivityCard(props: ActivityCardProps) {
+  const { activity } = props;
   const titleId = useId();
   const final = isFinal(activity.status);
   // Concluir ou marcar "não aconteceu" só a partir do dia da atividade (DEC-028).
-  const dayArrived = activity.activityDate <= today;
+  const dayArrived = !props.readOnly && activity.activityDate <= props.today;
 
   const scores = (['wantBefore', 'pleasure', 'achievement'] as const)
     .filter((key) => activity[key] !== null)
@@ -51,13 +58,15 @@ export function ActivityCard({ activity, today, onAction }: ActivityCardProps) {
 
       {activity.observation && <p className="text-muted whitespace-pre-line">{activity.observation}</p>}
 
-      {!final && (
+      {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(activity.createdAt)}</p>}
+
+      {!props.readOnly && !final && (
         <div className="flex flex-col gap-2">
           {/* No celular, grade de duas colunas: a ação principal ocupa a linha toda.
               A partir do sm, uma linha só. */}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {dayArrived && (
-              <Button className="col-span-2 sm:col-auto" onClick={() => onAction('complete', activity)}>
+              <Button className="col-span-2 sm:col-auto" onClick={() => props.onAction('complete', activity)}>
                 Conta como foi?
               </Button>
             )}
@@ -65,7 +74,7 @@ export function ActivityCard({ activity, today, onAction }: ActivityCardProps) {
               <Button
                 variant={dayArrived ? 'secondary' : 'primary'}
                 className={dayArrived ? HALF_WIDTH : 'col-span-2 sm:col-auto'}
-                onClick={() => onAction('start', activity)}
+                onClick={() => props.onAction('start', activity)}
               >
                 Registrar vontade
               </Button>
@@ -74,7 +83,7 @@ export function ActivityCard({ activity, today, onAction }: ActivityCardProps) {
               <Button
                 variant="secondary"
                 className={activity.status === 'PLANEJADA' ? HALF_WIDTH : 'col-span-2 sm:col-auto'}
-                onClick={() => onAction('notDone', activity)}
+                onClick={() => props.onAction('notDone', activity)}
               >
                 Não aconteceu
               </Button>
@@ -82,10 +91,10 @@ export function ActivityCard({ activity, today, onAction }: ActivityCardProps) {
           </div>
           {/* Editar e excluir ficam à parte, mais discretos que as ações do dia a dia. */}
           <div className="flex gap-1">
-            <Button variant="ghost" className="px-3" onClick={() => onAction('edit', activity)}>
+            <Button variant="ghost" className="px-3" onClick={() => props.onAction('edit', activity)}>
               Editar
             </Button>
-            <Button variant="ghost" className="px-3" onClick={() => onAction('delete', activity)}>
+            <Button variant="ghost" className="px-3" onClick={() => props.onAction('delete', activity)}>
               Excluir
             </Button>
           </div>

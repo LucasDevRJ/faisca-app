@@ -368,6 +368,25 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   se alguém usa o Faísca. Calcular o destaque na API mantém o "hoje" num lugar só (como na
   DEC-030). Os 92 dias cobrem o intervalo comum entre consultas sem baixar o histórico inteiro.
 
+## DEC-034 — Telas da visão da terapeuta
+- **Decisão:**
+  - cada item de `/pacientes` leva a `/pacientes/:id`: nome, e-mail, "vinculado desde", as
+    consultas (próxima e última) e uma faixa que diz qual período está **em destaque** e por quê;
+  - o período fica na URL, como em `/registros` (DEC-029): `?semana=AAAA-MM-DD` ou
+    `?periodo=desde-a-ultima-consulta`. Na semana aparecem os 7 dias; no filtro "desde a última
+    consulta" aparecem **só os dias com registro**. Sem consulta passada, o filtro fica
+    desabilitado, com a explicação;
+  - dias do destaque com borda e selo âmbar (destaque pontual, frontend/CLAUDE.md), além dos selos
+    "hoje" e "consulta";
+  - o `ActivityCard` ganha o modo `readOnly`: sem botões e com "Registrado em" (`createdAt`), já
+    que a SPEC mostra as duas datas. O gráfico da semana é o mesmo;
+  - 403 em qualquer chamada (vínculo desfeito, inclusive com a tela aberta): "Registros
+    indisponíveis", com texto acolhedor e volta para a lista, que é recarregada. Não tenta de novo
+    em 403.
+- **Motivo:** com até 92 dias, listar todos os dias encheria a tela de dias vazios; na semana, os
+  dias vazios mostram o ritmo. A URL guarda o período ao recarregar e voltar. Esconder os botões é
+  só conforto: quem barra a escrita é o 403 da API (DEC-033).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

@@ -67,6 +67,11 @@ export function formatDayHeading(value: string): string {
   return `${weekdayLong.format(date)}, ${dayMonthNumeric.format(date)}`;
 }
 
+// "21/09"
+export function formatDayMonth(value: string): string {
+  return dayMonthNumeric.format(toUtcDate(value));
+}
+
 // Quantos dias de `from` até `to` (negativo se `to` vem antes).
 export function daysBetween(from: string, to: string): number {
   return Math.round((toUtcDate(to).getTime() - toUtcDate(from).getTime()) / DAY_MS);

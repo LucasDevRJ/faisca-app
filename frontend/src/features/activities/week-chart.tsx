@@ -24,7 +24,8 @@ function shortName(name: string) {
   return name.length > 14 ? `${name.slice(0, 13)}…` : name;
 }
 
-export function WeekChart({ activities }: { activities: Activity[] }) {
+// period completa a legenda da tabela: "na semana" (padrão) ou outro período, na visão da terapeuta.
+export function WeekChart({ activities, period = 'na semana' }: { activities: Activity[]; period?: string }) {
   const done = activities.filter((a) => a.status === 'CONCLUIDA');
   if (done.length === 0) return null;
 
@@ -79,7 +80,7 @@ export function WeekChart({ activities }: { activities: Activity[] }) {
       {/* sr-only numa div: uma tabela ignora a largura de 1px e vazaria para fora da tela. */}
       <div className="sr-only">
         <table>
-          <caption>Notas das atividades feitas na semana</caption>
+          <caption>Notas das atividades feitas {period}</caption>
           <thead>
             <tr>
               <th scope="col">Atividade</th>

@@ -13,7 +13,8 @@ import {
 } from './links-api';
 
 const LINK_KEY = ['link'] as const;
-const PATIENTS_KEY = ['linked-patients'] as const;
+// Exportada para a tela do paciente recarregar a lista quando o vínculo cai (403).
+export const PATIENTS_KEY = ['linked-patients'] as const;
 
 // ——— Paciente ———
 
