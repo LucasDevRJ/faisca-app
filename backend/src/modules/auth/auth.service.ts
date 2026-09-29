@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
 import type { LinksService } from '../links/links.service.js';
-import { accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
+import { accountDeletedEmail, accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
 import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -175,6 +175,20 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
         where: { id: userId },
         data: input.profile === 'patient' ? { hasPatientProfile: true } : { hasTherapistProfile: true },
       });
+    },
+
+    // SPEC ("Privacidade"), DEC-035: apaga a conta e, em cascata no banco, atividades, consultas,
+    // vínculos, convites, códigos e tokens. As sessões abertas caem porque o requireAuth não
+    // acha mais o usuário.
+    async deleteAccount(userId: string, password: string): Promise<void> {
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+      if (!(await verifyPassword(password, user.passwordHash))) {
+        throw new AppError(400, 'INVALID_PASSWORD', 'A senha não confere.');
+      }
+      // deleteMany: se dois pedidos chegarem juntos, o segundo não quebra.
+      await prisma.user.deleteMany({ where: { id: userId } });
+      logger.info({ userId }, 'Conta excluída');
+      await sendSafely('account-deleted', accountDeletedEmail(user.email, user.name));
     },
 
     async forgotPassword(email: string): Promise<void> {

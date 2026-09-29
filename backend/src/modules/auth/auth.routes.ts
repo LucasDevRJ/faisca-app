@@ -19,6 +19,9 @@ export function createAuthRoutes(mailer: Mailer) {
     key: 'ip+email',
     onlyFailures: true,
   });
+  // Excluir a conta confere a senha: mesmo limite do login, por conta, para ninguém testar
+  // senhas por aqui com uma sessão aberta.
+  const deleteAccountLimit = createRateLimit({ windowMinutes: 15, limit: 10, key: 'user', onlyFailures: true });
   const emailLimits = () => [
     createRateLimit({ windowMinutes: 60, limit: 3, key: 'email' }),
     createRateLimit({ windowMinutes: 60, limit: 10, key: 'ip' }),
@@ -31,6 +34,7 @@ export function createAuthRoutes(mailer: Mailer) {
   router.post('/auth/logout', controller.logout);
   router.get('/auth/me', requireAuth, controller.me);
   router.post('/auth/profiles', requireAuth, controller.addProfile);
+  router.post('/auth/delete-account', requireAuth, deleteAccountLimit, controller.deleteAccount);
   router.post('/auth/forgot-password', ...emailLimits(), controller.forgotPassword);
   router.post('/auth/reset-password', controller.resetPassword);
 

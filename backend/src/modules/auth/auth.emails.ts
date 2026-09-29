@@ -63,6 +63,25 @@ export function accountExistsEmail(to: string): EmailMessage {
   };
 }
 
+// Enviado depois de excluir a conta (DEC-035): se não foi a própria pessoa, ela fica sabendo.
+// Sem link: não há mais conta para entrar.
+export function accountDeletedEmail(to: string, name: string): EmailMessage {
+  return {
+    to,
+    subject: 'Sua conta no Faísca foi excluída',
+    html: layout([
+      `Olá, ${escapeHtml(name)}.`,
+      'Sua conta no Faísca foi excluída, junto com os registros, as consultas e os vínculos.',
+      'Obrigado por ter usado o Faísca. Se quiser voltar um dia, é só criar uma conta nova.',
+    ]),
+    text: `Olá, ${name}.
+
+Sua conta no Faísca foi excluída, junto com os registros, as consultas e os vínculos.
+
+Obrigado por ter usado o Faísca. Se quiser voltar um dia, é só criar uma conta nova.`,
+  };
+}
+
 export function passwordResetEmail(to: string, name: string, token: string): EmailMessage {
   const url = link('/redefinir-senha', token);
   return {
