@@ -29,7 +29,7 @@ describe('/pacientes', () => {
     expect(await screen.findByText(/Ninguém por aqui ainda/)).toBeInTheDocument();
   });
 
-  it('lista os pacientes vinculados com nome, e-mail e desde quando', async () => {
+  it('lista os pacientes vinculados com nome, e-mail e desde quando, com link para os registros', async () => {
     server.use(http.get('*/api/links/patients', () => HttpResponse.json({ patients: [patient] })));
     renderRoute('/pacientes');
 
@@ -37,6 +37,7 @@ describe('/pacientes', () => {
     expect(within(item).getByText('Paula Fictícia')).toBeInTheDocument();
     expect(within(item).getByText('paula@faisca.test')).toBeInTheDocument();
     expect(within(item).getByText('Vinculado desde 28/09/2026')).toBeInTheDocument();
+    expect(within(item).getByRole('link')).toHaveAttribute('href', `/pacientes/${patient.id}`);
   });
 
   it('digita o código, vincula e o paciente entra na lista', async () => {

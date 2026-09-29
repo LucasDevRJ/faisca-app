@@ -3,6 +3,7 @@ import {
   addDays,
   daysBetween,
   formatDayHeading,
+  formatDayMonth,
   formatRelativeDay,
   formatWeekRange,
   isValidDateOnly,
@@ -52,6 +53,7 @@ describe('week', () => {
 
   it('formata o título do dia', () => {
     expect(formatDayHeading('2026-09-21')).toBe('segunda-feira, 21/09');
+    expect(formatDayMonth('2026-10-05')).toBe('05/10');
   });
 });
 
