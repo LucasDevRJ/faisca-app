@@ -102,7 +102,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 ## Privacidade (LGPD)
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.
 - Nenhum documento pessoal é solicitado.
-- A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos.
+- A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos. A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída.
 - Nenhum dado real em seeds, fixtures ou testes.
 
 ## Tom e interface

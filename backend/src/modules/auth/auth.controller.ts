@@ -3,6 +3,7 @@ import { getAuthUser } from '../../middlewares/require-auth.js';
 import { clearSessionCookie, setSessionCookie } from '../../lib/session.js';
 import {
   addProfileSchema,
+  deleteAccountSchema,
   emailOnlySchema,
   loginSchema,
   resetPasswordSchema,
@@ -50,6 +51,13 @@ export function createAuthController(service: AuthService) {
     res.status(200).json({ user: toPublicUser(user) });
   };
 
+  const deleteAccount: RequestHandler = async (req, res) => {
+    const { password } = deleteAccountSchema.parse(req.body);
+    await service.deleteAccount(getAuthUser(req).id, password);
+    clearSessionCookie(res);
+    res.status(204).end();
+  };
+
   const forgotPassword: RequestHandler = async (req, res) => {
     await service.forgotPassword(emailOnlySchema.parse(req.body).email);
     res.status(204).end();
@@ -60,5 +68,16 @@ export function createAuthController(service: AuthService) {
     res.status(204).end();
   };
 
-  return { signup, confirmEmail, resendConfirmation, login, logout, me, addProfile, forgotPassword, resetPassword };
+  return {
+    signup,
+    confirmEmail,
+    resendConfirmation,
+    login,
+    logout,
+    me,
+    addProfile,
+    deleteAccount,
+    forgotPassword,
+    resetPassword,
+  };
 }

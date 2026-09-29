@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addProfile, fetchSession, login, logout } from './auth-api';
+import { addProfile, deleteAccount, fetchSession, login, logout } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
 
@@ -28,6 +28,18 @@ export function useLogout() {
     mutationFn: logout,
     // Apaga tudo o que estava em memória: nada da conta anterior fica para a próxima pessoa.
     onSettled: () => {
+      queryClient.clear();
+      queryClient.setQueryData(SESSION_QUERY_KEY, null);
+    },
+  });
+}
+
+// Como no logout: nada da conta apagada fica em memória.
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
       queryClient.clear();
       queryClient.setQueryData(SESSION_QUERY_KEY, null);
     },

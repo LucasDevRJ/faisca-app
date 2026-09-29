@@ -387,6 +387,27 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   dias vazios mostram o ritmo. A URL guarda o período ao recarregar e voltar. Esconder os botões é
   só conforto: quem barra a escrita é o 403 da API (DEC-033).
 
+## DEC-035 — Excluir a própria conta
+- **Decisão:**
+  - `POST /auth/delete-account` com `{ password }`, atrás do `requireAuth` e com limite de 10
+    senhas erradas em 15 minutos por conta. A conta apagada é sempre a da sessão. Com a senha
+    errada, a resposta é 400 `INVALID_PASSWORD` e nada é apagado;
+  - exclusão definitiva (hard delete) do usuário. Atividades, consultas, vínculos (inclusive os
+    revogados), convites, códigos e tokens saem em cascata no banco; só o `signupUser` de um
+    convite de outra pessoa vira `null`. Não há migration nova;
+  - as sessões abertas caem na hora, porque o `requireAuth` busca o usuário a cada requisição. O
+    cookie da sessão atual é limpo na resposta;
+  - depois de apagar, um e-mail neutro avisa que a conta foi excluída, sem link. Se o envio falhar,
+    nada é desfeito. O log leva só o id;
+  - o outro lado do vínculo não é avisado: a terapeuta deixa de ver a pessoa na lista, e a
+    paciente fica sem vínculo em **Conta**;
+  - no front, a seção **Excluir conta** fica no fim de `/conta`. O dialog diz o que some e pede a
+    senha, e depois a pessoa vai para `/entrar` com o aviso de conta excluída;
+  - excluir só um dos perfis fica fora do escopo por ora.
+- **Motivo:** a SPEC pede que a exclusão apague todos os dados e vínculos (LGPD). A senha protege
+  contra quem pega o celular desbloqueado, e o limite impede testar senhas por essa rota. O
+  e-mail avisa a dona da conta se não foi ela quem excluiu.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

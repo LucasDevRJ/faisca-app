@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { getApiError } from '../features/auth/auth-api';
+import { DeleteAccountSection } from '../features/auth/delete-account-section';
 import { useAddProfile, useSession } from '../features/auth/use-session';
 import { TherapistLinkSection } from '../features/links/therapist-link-section';
 
@@ -16,7 +17,8 @@ const profileInfo = {
   },
 } as const;
 
-// "Conta": a terapeuta vinculada (só para quem é paciente) e os perfis (SPEC, "Contas e perfis").
+// "Conta": a terapeuta vinculada (só para quem é paciente), os perfis (SPEC, "Contas e perfis")
+// e, no fim, excluir a conta (SPEC, "Privacidade").
 export function AccountPage() {
   const { data: user } = useSession();
   if (!user) return null;
@@ -40,6 +42,8 @@ export function AccountPage() {
       {user.profiles.patient && <TherapistLinkSection />}
 
       <ProfilesSection profiles={user.profiles} />
+
+      <DeleteAccountSection isPatient={user.profiles.patient} />
     </>
   );
 }

@@ -47,6 +47,9 @@ export const tokenOnlySchema = z.object({ token: tokenSchema });
 // Ativa o perfil que não foi escolhido no cadastro (SPEC, "Contas e perfis").
 export const addProfileSchema = z.strictObject({ profile: z.enum(['patient', 'therapist']) });
 
+// Excluir a conta pede a senha de novo (DEC-035). Como no login, sem a política de senha nova.
+export const deleteAccountSchema = z.strictObject({ password: z.string().min(1).max(200) });
+
 export const resetPasswordSchema = z.object({
   token: tokenSchema,
   password: newPasswordSchema,

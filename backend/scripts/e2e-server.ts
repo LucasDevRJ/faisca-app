@@ -37,6 +37,8 @@ const SEED_USERS = [
   // Só para os testes de vínculo: um vínculo ativo não interfere nos outros testes.
   { name: 'Vera Fictícia', email: 'vinculo-paciente@faisca.test', patient: true, therapist: false },
   { name: 'Tina Fictícia', email: 'vinculo-terapeuta@faisca.test', patient: false, therapist: true },
+  // Só para o teste de excluir a conta: some no meio da execução.
+  { name: 'Edu Fictício', email: 'excluir@faisca.test', patient: true, therapist: false },
 ];
 
 await prisma.activity.deleteMany();

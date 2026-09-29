@@ -10,4 +10,6 @@ export const users = {
   // Usadas só nos testes de vínculo (api/links.spec.ts).
   linkPatient: { email: 'vinculo-paciente@faisca.test', password: SEED_PASSWORD },
   linkTherapist: { email: 'vinculo-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usada só no teste de excluir a conta (e2e/account.spec.ts): some durante o teste.
+  toDelete: { email: 'excluir@faisca.test', password: SEED_PASSWORD },
 } as const;

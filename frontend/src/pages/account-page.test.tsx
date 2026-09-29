@@ -239,3 +239,80 @@ describe('/conta: caminho de volta', () => {
     expect(await screen.findByRole('link', { name: '‹ Meus pacientes' })).toHaveAttribute('href', '/pacientes');
   });
 });
+
+describe('/conta: excluir conta', () => {
+  it('confirma com a senha, apaga e leva para entrar com o aviso', async () => {
+    const user = userEvent.setup();
+    const sent: unknown[] = [];
+    server.use(
+      http.post('*/api/auth/delete-account', async ({ request }) => {
+        sent.push(await request.json());
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { router } = renderRoute('/conta');
+
+    await user.click(await screen.findByRole('button', { name: 'Excluir minha conta' }));
+    const dialog = screen.getByRole('dialog', { name: 'Excluir sua conta?' });
+    expect(dialog).toHaveTextContent('suas atividades, notas e observações');
+    await user.type(within(dialog).getByLabelText('Sua senha'), 'senha-ficticia-123');
+    await user.click(within(dialog).getByRole('button', { name: 'Excluir minha conta' }));
+
+    expect(await screen.findByText('Sua conta foi excluída. Obrigado por ter usado o Faísca.')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/entrar');
+    expect(sent).toEqual([{ password: 'senha-ficticia-123' }]);
+  });
+
+  it('sem senha, avisa no campo e não chama a API', async () => {
+    const user = userEvent.setup();
+    const calls = vi.fn();
+    server.use(
+      http.post('*/api/auth/delete-account', () => {
+        calls();
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderRoute('/conta');
+
+    await user.click(await screen.findByRole('button', { name: 'Excluir minha conta' }));
+    const dialog = screen.getByRole('dialog', { name: 'Excluir sua conta?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Excluir minha conta' }));
+
+    expect(within(dialog).getByLabelText('Sua senha')).toHaveAccessibleDescription('Digite sua senha para confirmar.');
+    expect(calls).not.toHaveBeenCalled();
+  });
+
+  it('senha errada: a mensagem aparece no campo e a conta continua', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post('*/api/auth/delete-account', () => apiError(400, 'INVALID_PASSWORD', 'A senha não confere.')),
+    );
+    const { router } = renderRoute('/conta');
+
+    await user.click(await screen.findByRole('button', { name: 'Excluir minha conta' }));
+    const dialog = screen.getByRole('dialog', { name: 'Excluir sua conta?' });
+    await user.type(within(dialog).getByLabelText('Sua senha'), 'senha-errada');
+    await user.click(within(dialog).getByRole('button', { name: 'Excluir minha conta' }));
+
+    await waitFor(() =>
+      expect(within(dialog).getByLabelText('Sua senha')).toHaveAccessibleDescription('A senha não confere.'),
+    );
+    expect(router.state.location.pathname).toBe('/conta');
+  });
+
+  it('quem é só terapeuta não vê a lista de atividades e consultas no aviso', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true } } }),
+      ),
+    );
+    renderRoute('/conta');
+
+    await user.click(await screen.findByRole('button', { name: 'Excluir minha conta' }));
+    const dialog = screen.getByRole('dialog', { name: 'Excluir sua conta?' });
+
+    expect(dialog).not.toHaveTextContent('suas atividades');
+    expect(dialog).toHaveTextContent('seus vínculos');
+  });
+});

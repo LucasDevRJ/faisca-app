@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { PasswordField, TextField } from '../components/ui/text-field';
 import { getApiError, resendConfirmation } from '../features/auth/auth-api';
 import { AuthLayout } from '../features/auth/auth-layout';
+import { readAccountDeleted } from '../features/auth/account-deleted';
 import { safeNextPath, useLogin } from '../features/auth/use-session';
 import { validateEmail } from '../features/auth/validation';
 import { inviteState, readInviteToken } from '../features/links/invite-state';
@@ -16,11 +17,14 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   // Vindo do convite: o token volta para /convite junto com a pessoa, depois do login.
-  const invite = inviteState(readInviteToken(useLocation().state));
+  const location = useLocation();
+  const invite = inviteState(readInviteToken(location.state));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const login = useLogin();
+  // Acabou de excluir a conta (DEC-035): o aviso some quando a pessoa tenta entrar.
+  const accountDeleted = readAccountDeleted(location.state) && login.isIdle;
   const resend = useMutation({ mutationFn: resendConfirmation });
 
   const apiError = login.error ? getApiError(login.error) : null;
@@ -45,6 +49,7 @@ export function LoginPage() {
   return (
     <AuthLayout title="Que bom te ver" description="Entre para continuar seus registros.">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+        {accountDeleted && <Alert>Sua conta foi excluída. Obrigado por ter usado o Faísca.</Alert>}
         {apiError && !notConfirmed && <Alert tone="attention">{apiError.message}</Alert>}
 
         {notConfirmed && (
