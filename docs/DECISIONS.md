@@ -344,6 +344,30 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   dos e-mails (DEC-027). Sem domínio próprio, o convite não chega a uma segunda pessoa em dev, e
   a terapeuta fictícia permite testar os dois lados no navegador.
 
+## DEC-033 — API da visão da terapeuta
+- **Decisão:**
+  - rotas só de leitura sob `/therapist/patients/:patientId`: o resumo (nome, e-mail, desde quando,
+    última e próxima consulta, o "hoje" e o período de destaque), `/activities?from&to` e
+    `/appointments`. As respostas têm o mesmo formato das rotas do paciente, com notas,
+    observações, `activityDate` e `createdAt`, e sem o `userId`;
+  - uma cadeia única no prefixo: `onlyReads` (método que não seja GET/HEAD é **403 antes de tudo**,
+    até do login e em caminhos que não existem) → sessão → perfil de terapeuta → **vínculo
+    ativo**, conferido a cada requisição. Sem vínculo, vínculo revogado, paciente de outra
+    terapeuta, id inexistente ou inválido: o mesmo 403 `FORBIDDEN`;
+  - os services de atividades e consultas do paciente são reaproveitados, com o id do paciente
+    vindo da URL só depois do vínculo conferido;
+  - destaque calculado na API: da próxima consulta −7 até a véspera (sem o dia da consulta); sem
+    próxima consulta, de hoje −6 até hoje;
+  - a terapeuta pede até **92 dias** de atividades por vez (o paciente segue com 42). O filtro
+    "desde a última consulta" vai do dia da última consulta até hoje; se passar de 92 dias, a
+    tela mostra os 92 mais recentes e avisa. Sem consulta passada, o filtro fica desabilitado;
+  - `db:seed-dev` ganha a `paciente.dev@faisca.test`, vinculada à terapeuta dev, com atividades e
+    consultas fictícias em volta de hoje.
+- **Motivo:** o 403 antes do login deixa impossível qualquer escrita pela porta da terapeuta, sem
+  depender de cada rota lembrar da regra. A resposta igual para todos os casos negados não revela
+  se alguém usa o Faísca. Calcular o destaque na API mantém o "hoje" num lugar só (como na
+  DEC-030). Os 92 dias cobrem o intervalo comum entre consultas sem baixar o histórico inteiro.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
