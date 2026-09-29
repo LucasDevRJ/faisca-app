@@ -208,3 +208,34 @@ describe('/conta: perfis', () => {
     expect(screen.queryByRole('button', { name: 'Também quero acompanhar pacientes' })).not.toBeInTheDocument();
   });
 });
+
+describe('/conta: caminho de volta', () => {
+  it('paciente volta para "Meus registros" pelo link da tela', async () => {
+    const user = userEvent.setup();
+    renderRoute('/conta');
+
+    await user.click(await screen.findByRole('link', { name: '‹ Meus registros' }));
+
+    expect(await screen.findByRole('heading', { name: /Olá/ })).toBeInTheDocument();
+  });
+
+  it('a marca no topo leva ao início', async () => {
+    const user = userEvent.setup();
+    const { router } = renderRoute('/conta');
+
+    await user.click(await screen.findByRole('link', { name: 'Faísca, ir para o início' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/registros'));
+  });
+
+  it('quem é só terapeuta volta para "Meus pacientes"', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true } } }),
+      ),
+    );
+    renderRoute('/conta');
+
+    expect(await screen.findByRole('link', { name: '‹ Meus pacientes' })).toHaveAttribute('href', '/pacientes');
+  });
+});

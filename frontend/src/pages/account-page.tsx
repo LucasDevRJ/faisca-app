@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { getApiError } from '../features/auth/auth-api';
@@ -22,7 +23,14 @@ export function AccountPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
+        {/* Volta para a tela principal do perfil (quem tem um só não vê a alternância no topo). */}
+        <Link
+          to={user.profiles.patient ? '/registros' : '/pacientes'}
+          className="self-start font-medium text-primary-text underline underline-offset-4"
+        >
+          {user.profiles.patient ? '‹ Meus registros' : '‹ Meus pacientes'}
+        </Link>
         <h1 className="text-4xl font-bold">Conta</h1>
         <p className="text-muted">
           {user.name} · <span className="break-all">{user.email}</span>
