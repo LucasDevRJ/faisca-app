@@ -40,6 +40,18 @@ O `docker/init-db.sh` só roda com o volume vazio. Para recriar o banco do zero:
 | `db:migrate` | cria e aplica migration em dev (`prisma migrate dev`) |
 | `db:deploy` | aplica migrations pendentes, sem criar nova (produção e CI) |
 | `db:generate` | regera o Prisma Client em `src/generated/prisma` (fora do Git) |
+| `db:seed-dev` | cria a terapeuta fictícia de dev (só com `NODE_ENV=development`) |
+
+## Terapeuta fictícia para testar o vínculo (DEC-032)
+
+Sem domínio próprio, o Resend não entrega e-mail para uma segunda pessoa. Para ver os dois
+lados do vínculo em dev, `npm run db:seed-dev` cria (ou restaura) uma conta já confirmada:
+
+- e-mail: `terapeuta.dev@faisca.test`
+- senha: `senha-ficticia-123`
+
+Gere o código em **Conta** com a sua conta de paciente e digite-o em **Meus pacientes** com a
+terapeuta fictícia, numa janela anônima. A conta só existe no seu banco local.
 
 ## Banco de testes (DEC-026)
 
