@@ -53,8 +53,8 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - Por paciente:
   - linha do tempo com notas e observações (nada é privado);
   - gráficos;
-  - filtro "desde a última consulta".
-- **Destaque**: as atividades dos 7 dias antes da próxima consulta aparecem em evidência. Sem próxima consulta cadastrada, o destaque cobre os últimos 7 dias até hoje.
+  - filtro "desde a última consulta" (do dia da última consulta até hoje, com no máximo 92 dias).
+- **Destaque**: as atividades dos 7 dias antes da próxima consulta aparecem em evidência (da consulta −7 até a véspera, sem o dia da consulta). Sem próxima consulta cadastrada, o destaque cobre os últimos 7 dias até hoje.
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta
