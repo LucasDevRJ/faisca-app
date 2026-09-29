@@ -70,6 +70,11 @@ export async function logout(): Promise<void> {
   await api.post('/auth/logout');
 }
 
+// Pede a senha de novo (DEC-035). A conta apagada é sempre a da sessão.
+export async function deleteAccount(password: string): Promise<void> {
+  await api.post('/auth/delete-account', { password });
+}
+
 export async function signup(input: SignupInput): Promise<void> {
   await api.post('/auth/signup', input);
 }
