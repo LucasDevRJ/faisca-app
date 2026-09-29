@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { getApiError } from '../features/auth/auth-api';
 import { formatDate } from '../features/links/link-format';
@@ -5,7 +6,7 @@ import { RedeemCodeForm } from '../features/links/redeem-code-form';
 import { useLinkedPatients } from '../features/links/use-links';
 
 // "Meus pacientes" (SPEC, "Visão da terapeuta"): o campo de código e a lista de quem tem
-// vínculo ativo. Os registros de cada paciente chegam na etapa 4b.
+// vínculo ativo. Cada item leva aos registros do paciente (/pacientes/:id, DEC-033).
 export function PatientsPage() {
   const patients = useLinkedPatients();
 
@@ -29,13 +30,20 @@ export function PatientsPage() {
         {patients.data && patients.data.length > 0 && (
           <ul className="flex flex-col gap-3">
             {patients.data.map((patient) => (
-              <li
-                key={patient.id}
-                className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4 shadow-soft"
-              >
-                <span className="text-lg font-semibold">{patient.name}</span>
-                <span className="break-all text-muted">{patient.email}</span>
-                <span className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</span>
+              <li key={patient.id}>
+                <Link
+                  to={`/pacientes/${patient.id}`}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft transition hover:border-primary"
+                >
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="text-lg font-semibold text-primary-text">{patient.name}</span>
+                    <span className="break-all text-muted">{patient.email}</span>
+                    <span className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</span>
+                  </span>
+                  <span aria-hidden="true" className="text-2xl text-muted">
+                    ›
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
