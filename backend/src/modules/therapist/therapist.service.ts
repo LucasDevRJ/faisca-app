@@ -1,0 +1,53 @@
+import { addDays, todayInAppZone } from '../../lib/dates.js';
+import { prisma } from '../../lib/prisma.js';
+import type { ActivitiesService } from '../activities/activities.service.js';
+import type { ListActivitiesQuery } from '../activities/activities.schema.js';
+import type { AppointmentsService } from '../appointments/appointments.service.js';
+
+export type Highlight = {
+  from: string;
+  to: string;
+  // Por que esse período: a semana antes da próxima consulta ou, sem ela, os últimos 7 dias.
+  reason: 'NEXT_APPOINTMENT' | 'LAST_7_DAYS';
+};
+
+// SPEC ("Destaque"), DEC-033: os 7 dias antes da próxima consulta, sem o dia dela.
+// Sem próxima consulta, os últimos 7 dias até hoje. Função pura, para testar as bordas sem banco.
+export function highlightWindow(nextAppointment: string | null, today: string): Highlight {
+  if (nextAppointment) {
+    return { from: addDays(nextAppointment, -7), to: addDays(nextAppointment, -1), reason: 'NEXT_APPOINTMENT' };
+  }
+  return { from: addDays(today, -6), to: today, reason: 'LAST_7_DAYS' };
+}
+
+// Só leitura, sempre atrás do requireActiveLink. Reaproveita os services do paciente para as
+// regras (ordem, formato, última e próxima consulta) ficarem num lugar só.
+export function createTherapistService(activities: ActivitiesService, appointments: AppointmentsService) {
+  return {
+    async summary(therapistId: string, patientId: string) {
+      const link = await prisma.therapistLink.findFirstOrThrow({
+        where: { therapistId, patientId, revokedAt: null },
+        include: { patient: { select: { id: true, name: true, email: true } } },
+      });
+      const today = todayInAppZone();
+      const { last, next } = await appointments.list(patientId);
+      return {
+        patient: { ...link.patient, linkedAt: link.createdAt.toISOString() },
+        today,
+        lastAppointment: last,
+        nextAppointment: next,
+        highlight: highlightWindow(next?.appointmentDate ?? null, today),
+      };
+    },
+
+    listActivities(patientId: string, query: ListActivitiesQuery) {
+      return activities.list(patientId, query);
+    },
+
+    listAppointments(patientId: string) {
+      return appointments.list(patientId);
+    },
+  };
+}
+
+export type TherapistService = ReturnType<typeof createTherapistService>;

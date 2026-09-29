@@ -6,6 +6,8 @@ export const NAME_MAX = 100;
 export const OBSERVATION_MAX = 1000;
 // Uma semana cabe folgada; um mês inteiro com as semanas das pontas também.
 export const LIST_MAX_DAYS = 42;
+// Terapeuta: o filtro "desde a última consulta" cobre até ~3 meses (DEC-033).
+export const THERAPIST_LIST_MAX_DAYS = 92;
 
 const nameSchema = z
   .string()
@@ -69,13 +71,19 @@ export const completeActivitySchema = z.strictObject({
 
 export const notDoneActivitySchema = z.strictObject({ observation: observationSchema });
 
-export const listActivitiesQuerySchema = z
-  .object({ from: dateSchema, to: dateSchema })
-  .refine(({ from, to }) => from <= to, { error: 'A data final vem depois da inicial.', path: ['to'] })
-  .refine(({ from, to }) => daysBetween(from, to) < LIST_MAX_DAYS, {
-    error: `O intervalo pode ter até ${LIST_MAX_DAYS} dias.`,
-    path: ['to'],
-  });
+// Intervalo de dias (inclusivo) com um teto, para ninguém baixar o histórico inteiro de uma vez.
+function listQuerySchema(maxDays: number) {
+  return z
+    .object({ from: dateSchema, to: dateSchema })
+    .refine(({ from, to }) => from <= to, { error: 'A data final vem depois da inicial.', path: ['to'] })
+    .refine(({ from, to }) => daysBetween(from, to) < maxDays, {
+      error: `O intervalo pode ter até ${maxDays} dias.`,
+      path: ['to'],
+    });
+}
+
+export const listActivitiesQuerySchema = listQuerySchema(LIST_MAX_DAYS);
+export const therapistActivitiesQuerySchema = listQuerySchema(THERAPIST_LIST_MAX_DAYS);
 
 export const activityIdSchema = z.object({ id: z.uuid({ error: 'Atividade inválida.' }) });
 
