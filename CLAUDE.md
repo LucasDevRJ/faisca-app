@@ -18,3 +18,4 @@
 ## Ao terminar uma mudança
 - Rode lint, typecheck e os testes relevantes e relate o resultado como ele foi, inclusive falhas.
 - Se a mudança afetar requisito ou decisão, atualize SPEC/DECISIONS no mesmo PR.
+- Antes de abrir PR que toque em `backend/`, rode o subagente `revisor-regras` e relate o veredito.
