@@ -17,10 +17,11 @@ npm run dev              # http://localhost:5173
 
 O front chama sempre **`/api/...` no próprio domínio**. Quem repassa para a API é:
 - em dev, o proxy do Vite (`vite.config.ts`, destino em `API_PROXY_TARGET`);
-- em produção, o `vercel.json`, que repassa `/api/*` para o Railway.
+- em produção, o `vercel.json`, que repassa `/api/*` para `api.minhafaisca.com.br` (Railway).
 
 Assim o cookie de sessão é first-party e não cai no bloqueio de cookies de terceiros.
-**No deploy:** troque `CHANGE-ME.up.railway.app` no `vercel.json` pela URL real da API.
+O `vercel.json` também define os cabeçalhos de segurança e só gera build da `main`.
+Passo a passo do deploy: `docs/DEPLOY.md`.
 
 ## Sessão e telas de conta (DEC-025, DEC-027)
 

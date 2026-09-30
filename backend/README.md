@@ -72,24 +72,14 @@ Os dados são apagados antes de cada teste; nada de dev é tocado.
 
 ### Railway (produção)
 
-O Railway entrega um superusuário. Ele é usado **uma única vez**, para criar os dois usuários,
-e nunca pela aplicação. No console SQL do Postgres do Railway, rode com senhas fortes
-(o banco padrão do Railway se chama `railway`):
-
-```sql
-CREATE ROLE faisca_migrator LOGIN PASSWORD '<senha forte>';
-CREATE ROLE faisca_app LOGIN PASSWORD '<outra senha forte>';
-ALTER DATABASE railway OWNER TO faisca_migrator;
-REVOKE ALL ON DATABASE railway FROM PUBLIC;
-GRANT CONNECT ON DATABASE railway TO faisca_app;
-```
-
-Depois configure as variáveis do serviço da API (`DATABASE_URL` com o faisca_app e
-`MIGRATION_DATABASE_URL` com o faisca_migrator) e rode `npm run db:deploy` no pre-deploy.
-
-Na API, defina também `TRUST_PROXY_HOPS` com o número de proxies entre o usuário e a API
-(Vercel + borda do Railway). Sem isso o rate limit enxerga o IP do proxy e bloqueia todo mundo
-junto. Confira no deploy: o `req.ip` precisa ser o IP público de quem acessa.
+O passo a passo completo está em `docs/DEPLOY.md`. Em resumo:
+- o superusuário do Railway é usado **uma única vez**, para criar o faisca_migrator e o faisca_app,
+  e nunca pela aplicação;
+- o `railway.json` roda `npm run db:deploy` (faisca_migrator) no pre-deploy de cada versão. Por
+  isso o `prisma` fica em `dependencies`;
+- o `TRUST_PROXY_HOPS` é confirmado com `LOG_LEVEL=debug`: o log `Proxies na frente da API` mostra
+  quantos endereços chegam no `X-Forwarded-For`, sem mostrar os IPs. Com o valor errado, o rate
+  limit trata todo mundo como uma pessoa só.
 
 ## Observações de versões
 

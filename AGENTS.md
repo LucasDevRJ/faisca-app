@@ -11,7 +11,7 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 
 ## Estrutura
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
-- `docs/`: SPEC e DECISIONS.
+- `docs/`: SPEC, DECISIONS e DEPLOY (passo a passo do deploy).
 
 ## Comandos
 Backend (rodar dentro de `backend/`; detalhes em `backend/README.md`):
