@@ -429,11 +429,37 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
 - **Pendente no deploy:** confirmar o prazo das cópias de segurança do Railway e, se for o caso,
   deixar o texto de retenção mais preciso.
 
+## DEC-037 — Deploy: Railway, Vercel e o domínio
+- **Decisão:**
+  - o app fica em `minhafaisca.com.br` (Vercel), e a API em **`api.minhafaisca.com.br`** (domínio
+    próprio apontado para o Railway). O `vercel.json` já nasce com o destino certo e não depende da
+    URL gerada pelo Railway, e trocar de hospedagem não mexe no front. O cookie continua first-party
+    pelo proxy `/api` (DEC-023);
+  - Railway e Resend na região **US East**, a mais próxima do Brasil entre as do Railway e a mesma
+    que o aviso de privacidade cita;
+  - `backend/railway.json` versionado: build, start, **pre-deploy com `npm run db:deploy`** (as
+    migrations rodam antes de a versão entrar; se falharem, a anterior continua), healthcheck em
+    `/health` e deploy só quando algo muda em `backend/`. O `prisma` foi para `dependencies`, porque
+    a CLI roda em produção;
+  - deploy automático da `main`, com **Wait for CI** no Railway. Na Vercel, o `ignoreCommand` só
+    deixa a `main` gerar build: um preview de PR usaria a API e o banco de produção;
+  - cabeçalhos de segurança no front (`HSTS`, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`
+    e `Permissions-Policy`). A **CSP fica para depois**, porque precisa ser testada com o service
+    worker e as fontes;
+  - `TRUST_PROXY_HOPS` confirmado no deploy com um log de nível `debug` que conta as entradas do
+    `X-Forwarded-For`, sem registrar os IPs (regra 7);
+  - backups automáticos do Postgres ligados no Railway, com a retenção informada no aviso de
+    privacidade;
+  - o passo a passo dos painéis fica em `docs/DEPLOY.md`, e os READMEs apontam para ele.
+- **Motivo:** o uso real (o autor e a psicóloga dele) pede e-mail entregue a terceiros, HTTPS e
+  PWA instalável no celular. Versionar a configuração evita depender de cliques nos painéis. O
+  pre-deploy e o Wait for CI evitam subir uma versão quebrada ou com migration pela metade.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
 
 ## Em aberto
-- **Domínio do app e do remetente de e-mail:** resolvido pela DEC-036 (`minhafaisca.com.br`),
-  falta configurar no deploy. Até lá, o e-mail só funciona em desenvolvimento, com o remetente de
-  teste do Resend, que entrega apenas para o dono da conta.
+- **Domínio do app e do remetente de e-mail:** comprado (DEC-036) e configurado pelo passo a
+  passo da DEC-037 (`docs/DEPLOY.md`). Sai desta lista quando o deploy for validado.
+- **CSP (Content-Security-Policy) no front:** adiada na DEC-037.
