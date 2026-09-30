@@ -5,13 +5,14 @@ import { describe, expect, it } from 'vitest';
 import { renderRoute } from '../test/render';
 import { apiError, server } from '../test/server';
 
-async function fillForm({ password = 'senha-ficticia-123', patient = true, therapist = false } = {}) {
+async function fillForm({ password = 'senha-ficticia-123', patient = true, therapist = false, privacy = true } = {}) {
   const user = userEvent.setup();
   await user.type(await screen.findByLabelText('Como podemos te chamar?'), 'Ana Fictícia');
   await user.type(screen.getByLabelText('E-mail'), 'ana@faisca.test');
   await user.type(screen.getByLabelText('Senha'), password);
   if (patient) await user.click(screen.getByRole('checkbox', { name: /Registrar minhas atividades/ }));
   if (therapist) await user.click(screen.getByRole('checkbox', { name: /Acompanhar pacientes/ }));
+  if (privacy) await user.click(screen.getByRole('checkbox', { name: /aviso de privacidade/ }));
   return user;
 }
 
@@ -38,7 +39,30 @@ describe('SignupPage', () => {
       email: 'ana@faisca.test',
       password: 'senha-ficticia-123',
       profiles: { patient: true, therapist: true },
+      acceptPrivacy: true,
     });
+  });
+
+  it('exige concordar com o aviso de privacidade, que abre em outra aba', async () => {
+    let called = false;
+    server.use(
+      http.post('*/api/auth/signup', () => {
+        called = true;
+        return HttpResponse.json({}, { status: 202 });
+      }),
+    );
+    renderRoute('/cadastro');
+
+    const user = await fillForm({ privacy: false });
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+
+    const checkbox = screen.getByRole('checkbox', { name: /aviso de privacidade/ });
+    expect(checkbox).toHaveAccessibleDescription(
+      'Para criar a conta, é preciso concordar com o aviso de privacidade.',
+    );
+    expect(checkbox).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('link', { name: 'aviso de privacidade' })).toHaveAttribute('target', '_blank');
+    expect(called).toBe(false);
   });
 
   it('exige escolher pelo menos um perfil', async () => {

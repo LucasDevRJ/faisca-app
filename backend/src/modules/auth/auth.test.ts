@@ -7,6 +7,7 @@ import { hashToken } from '../../lib/secure-token.js';
 import { SESSION_COOKIE } from '../../lib/session.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
+import { PRIVACY_VERSION } from './auth.service.js';
 
 // Dados fictícios (regra 5 do AGENTS.md).
 const EMAIL = 'ana.teste@faisca.test';
@@ -16,6 +17,7 @@ const signupBody = {
   email: EMAIL,
   password: PASSWORD,
   profiles: { patient: true, therapist: false },
+  acceptPrivacy: true,
 };
 
 let mailer: FakeMailer;
@@ -50,9 +52,26 @@ describe('POST /auth/signup', () => {
     expect(user.hasPatientProfile).toBe(true);
     expect(user.hasTherapistProfile).toBe(false);
     expect(user.passwordHash).not.toContain(PASSWORD);
+    // Prova do consentimento com o aviso de privacidade (DEC-036).
+    expect(user.privacyAcceptedAt).toBeInstanceOf(Date);
+    expect(user.privacyVersion).toBe(PRIVACY_VERSION);
 
     expect(mailer.lastTo(EMAIL)?.subject).toMatch(/confirme/i);
     expect(mailer.lastTo(EMAIL)?.text).toContain('http://localhost:5173/confirmar-email?token=');
+  });
+
+  it('sem concordar com o aviso de privacidade, não cria a conta', async () => {
+    const missing = await request(app).post('/auth/signup').send({ ...signupBody, acceptPrivacy: undefined });
+    const refused = await request(app).post('/auth/signup').send({ ...signupBody, acceptPrivacy: false });
+
+    for (const res of [missing, refused]) {
+      expect(res.status).toBe(400);
+      expect(res.body.error.issues).toContainEqual(
+        expect.objectContaining({ path: 'acceptPrivacy', message: expect.stringContaining('aviso de privacidade') }),
+      );
+    }
+    expect(await prisma.user.count()).toBe(0);
+    expect(mailer.sent).toHaveLength(0);
   });
 
   it('guarda só o hash do token do link', async () => {

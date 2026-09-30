@@ -42,6 +42,10 @@ test('cadastro, confirmação pelo link do e-mail e primeiro login', async ({ pa
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha', { exact: true }).fill(password);
   await page.getByRole('checkbox', { name: /Acompanhar pacientes/ }).check();
+  // Sem o aceite do aviso de privacidade (DEC-036), o cadastro não sai.
+  await page.getByRole('button', { name: 'Criar conta' }).click();
+  await expect(page.getByText('Para criar a conta, é preciso concordar com o aviso de privacidade.')).toBeVisible();
+  await page.getByRole('checkbox', { name: /aviso de privacidade/ }).check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
 
   await expect(page.getByRole('heading', { name: 'Confira seu e-mail' })).toBeVisible();
@@ -67,7 +71,13 @@ test('esqueci a senha: link do e-mail, senha nova e login', async ({ page, reque
   // Conta própria deste teste, para não trocar a senha dos usuários fixos.
   const email = `reset-${Date.now()}@faisca.test`;
   const signup = await request.post('/api/auth/signup', {
-    data: { name: 'Caio Fictício', email, password: 'senha-antiga-123', profiles: { patient: true, therapist: false } },
+    data: {
+      name: 'Caio Fictício',
+      email,
+      password: 'senha-antiga-123',
+      profiles: { patient: true, therapist: false },
+      acceptPrivacy: true,
+    },
   });
   // O cadastro tem rate limit (DEC-025): se estourar, o teste falha aqui, e não mais adiante.
   expect(signup.status()).toBe(202);
