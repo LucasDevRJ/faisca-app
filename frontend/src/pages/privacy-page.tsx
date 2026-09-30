@@ -84,8 +84,8 @@ export function PrivacyPage() {
 
         <Section title="Onde ficam">
           <p>
-            Nos servidores do Railway (banco de dados e API), da Vercel (site) e do Resend (envio de e-mails),
-            nos <strong>Estados Unidos</strong>.
+            Nos servidores do Railway (banco de dados e API) e da Vercel (site), nos{' '}
+            <strong>Estados Unidos</strong>. Os e-mails saem pelo Resend, a partir de servidores em São Paulo.
           </p>
         </Section>
 
@@ -98,8 +98,8 @@ export function PrivacyPage() {
 
         <Section title="Por quanto tempo">
           <p>
-            Até você excluir a conta. A exclusão, em <strong>Conta</strong>, apaga tudo na hora. As cópias de
-            segurança automáticas do banco ainda podem guardar os dados por alguns dias, até serem substituídas.
+            Até você excluir a conta. A exclusão, em <strong>Conta</strong>, apaga tudo na hora. Não guardamos
+            cópias de segurança.
           </p>
         </Section>
 
