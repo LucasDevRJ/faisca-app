@@ -106,6 +106,9 @@ export function LoginPage() {
             Criar conta
           </Link>
         </p>
+        <Link to="/privacidade" className={`${linkClass} self-start`}>
+          Aviso de privacidade
+        </Link>
       </div>
     </AuthLayout>
   );

@@ -10,6 +10,7 @@ import { ForgotPasswordPage } from '../pages/forgot-password-page';
 import { LoginPage } from '../pages/login-page';
 import { NotFoundPage } from '../pages/not-found-page';
 import { PatientPage } from '../pages/patient-page';
+import { PrivacyPage } from '../pages/privacy-page';
 import { PatientsPage } from '../pages/patients-page';
 import { RecordsPage } from '../pages/records-page';
 import { ResetPasswordPage } from '../pages/reset-password-page';
@@ -61,6 +62,8 @@ export const routes = [
       { path: 'confirmar-email', element: <ConfirmEmailPage /> },
       { path: 'redefinir-senha', element: <ResetPasswordPage /> },
       { path: 'convite', element: <InvitePage /> },
+      // Pública: o cadastro linka para cá antes de existir conta (DEC-036).
+      { path: 'privacidade', element: <PrivacyPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

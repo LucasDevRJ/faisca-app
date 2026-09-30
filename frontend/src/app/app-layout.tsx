@@ -56,6 +56,9 @@ export function AppLayout() {
       <footer className="mt-auto flex flex-wrap items-center gap-3 border-t border-border pt-6 pb-20 sm:pb-0">
         <span className="text-sm text-muted">Tema</span>
         <ThemeSwitcher />
+        <Link to="/privacidade" className="ml-auto text-sm font-medium text-primary-text underline underline-offset-4">
+          Privacidade
+        </Link>
       </footer>
     </div>
   );
