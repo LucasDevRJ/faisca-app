@@ -14,6 +14,8 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 - `docs/`: SPEC, DECISIONS e DEPLOY (passo a passo do deploy).
 - `.claude/skills/`: skills do projeto (ex.: `nova-rota-api`).
 - `.claude/agents/`: subagentes do projeto (ex.: `revisor-regras`).
+- `.claude/settings.json` e `.claude/hooks/`: permissões e hooks do Claude Code (bloqueiam `.env`,
+  `--no-verify`, force push e `prisma db push`; pedem confirmação em push, PR e merge).
 
 ## Comandos
 Backend (rodar dentro de `backend/`; detalhes em `backend/README.md`):
