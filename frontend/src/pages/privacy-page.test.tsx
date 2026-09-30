@@ -15,6 +15,9 @@ describe('/privacidade', () => {
       'mailto:lucaspereiradelima2020@gmail.com',
     );
     expect(screen.getByText(/Estados Unidos/)).toBeInTheDocument();
+    // Fatos do deploy (DEC-038): e-mails saem de São Paulo e não há backup.
+    expect(screen.getByText(/servidores em São Paulo/)).toBeInTheDocument();
+    expect(screen.getByText(/Não guardamos\s+cópias de segurança/)).toBeInTheDocument();
     expect(screen.getByText(/CVV, no 188/)).toBeInTheDocument();
   });
 

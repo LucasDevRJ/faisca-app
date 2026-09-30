@@ -455,11 +455,43 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   PWA instalável no celular. Versionar a configuração evita depender de cliques nos painéis. O
   pre-deploy e o Wait for CI evitam subir uma versão quebrada ou com migration pela metade.
 
+## DEC-038 — Ajustes depois do primeiro deploy
+O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy real mostrou:
+- **Decisão:**
+  - **sem backup do banco:** o plano Hobby do Railway não tem backups (só o Pro, cerca de US$ 20
+    por mês). Com dois usuários, o custo não se justifica. O volume do Postgres persiste
+    normalmente; o que falta é uma cópia para um acidente raro. Um backup manual no computador do
+    autor criaria uma cópia de dados de saúde fora do controle do app. O aviso de privacidade diz
+    "Não guardamos cópias de segurança", e a exclusão de conta não deixa rastro. Revisar se o uso
+    crescer. Substitui o item de backups da DEC-037;
+  - **Resend em São Paulo:** o Resend escolheu a região sozinho (`sa-east-1`). O aviso diz que os
+    e-mails saem de servidores em São Paulo; o Railway e a Vercel seguem nos EUA. A versão do aviso
+    continua `2026-10`, porque ninguém tinha se cadastrado em produção antes da correção;
+  - **`PORT=3333` obrigatória** no Railway, igual à porta do domínio `api.`. Sem ela, a API sobe na
+    8080, o healthcheck passa e o domínio responde 502;
+  - **`TRUST_PROXY_HOPS=2`**, confirmado pelo log de debug: pela Vercel chegam 2 entradas no
+    `X-Forwarded-For`;
+  - **limite de login por e-mail**, além do de IP + e-mail (DEC-025): 20 senhas erradas em 15
+    minutos no mesmo e-mail bloqueiam, venham de qualquer IP. Quem chama `api.minhafaisca.com.br`
+    direto, sem a Vercel, pode forjar o `X-Forwarded-For` e trocar de "IP" a cada tentativa. Os
+    outros limites já não dependem só do IP: a exclusão de conta conta por usuário, o código de
+    vínculo por terapeuta, no banco, e a recuperação de senha por e-mail;
+  - start em produção com `node dist/server.js` (no `railway.json`). O `npm start` fica para uso
+    local, com o `.env`, e o log de produção deixa de mostrar ".env not found";
+  - `overrides` no `backend/package.json` para `deepmerge-ts` (^8.0.2) e `mysql2` (^3.24.5). As 4
+    vulnerabilidades altas vinham de versões fixadas pela CLI do Prisma 7.10, e o conserto sugerido
+    pelo npm era voltar para o Prisma 6. Nenhuma era alcançável pelo app (o `mysql2` só serve para
+    MySQL, e o `deepmerge-ts` só lê o `prisma.config.ts`). Validar, gerar o client e aplicar as
+    migrations continuam funcionando. Remover os `overrides` quando o Prisma atualizar as duas;
+  - o `docs/DEPLOY.md` registra os tropeços do primeiro deploy: o TCP Proxy para o `psql` (e
+    removê-lo depois), as referências `${{...}}` do Railway, a espera de ~2 h do DNS no Registro.br,
+    o sentido do redirecionamento do `www` na Vercel e a espera do certificado.
+- **Motivo:** deixar o aviso de privacidade fiel ao que acontece de fato antes do primeiro cadastro
+  real, fechar o drible do rate limit e fazer o próximo deploy não tropeçar nos mesmos pontos.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
 
 ## Em aberto
-- **Domínio do app e do remetente de e-mail:** comprado (DEC-036) e configurado pelo passo a
-  passo da DEC-037 (`docs/DEPLOY.md`). Sai desta lista quando o deploy for validado.
 - **CSP (Content-Security-Policy) no front:** adiada na DEC-037.
