@@ -5,6 +5,7 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 
 ## Contas e perfis
 - Cadastro com **nome, e-mail e senha**; o e-mail precisa ser confirmado antes do primeiro uso.
+- O cadastro exige concordar com o **aviso de privacidade** (caixa de marcar, não marcada por padrão).
 - No cadastro, a pessoa escolhe como vai usar o Faísca (um ou os dois perfis):
   - **Paciente**: registra atividades, consultas e lembretes; vincula e revoga sua terapeuta.
   - **Terapeuta**: apenas leitura dos dados dos pacientes com vínculo ativo.
@@ -101,6 +102,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 
 ## Privacidade (LGPD)
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.
+- Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
+- Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
 - Nenhum documento pessoal é solicitado.
 - A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos. A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída.
 - Nenhum dado real em seeds, fixtures ou testes.

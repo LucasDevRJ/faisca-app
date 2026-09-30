@@ -9,7 +9,7 @@ import { AuthLayout } from '../features/auth/auth-layout';
 import { PASSWORD_MIN, validateEmail, validateNewPassword } from '../features/auth/validation';
 import { readInviteToken } from '../features/links/invite-state';
 
-type Errors = { name?: string; email?: string; password?: string; profiles?: string };
+type Errors = { name?: string; email?: string; password?: string; profiles?: string; acceptPrivacy?: string };
 
 const profileOptions = [
   {
@@ -32,6 +32,7 @@ export function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [profiles, setProfiles] = useState({ patient: false, therapist: inviteToken !== null });
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const mutation = useMutation({ mutationFn: signup });
 
@@ -42,6 +43,7 @@ export function SignupPage() {
     email: errors.email ?? apiError?.fields.email,
     password: errors.password ?? apiError?.fields.password,
     profiles: errors.profiles ?? apiError?.fields.profiles,
+    acceptPrivacy: errors.acceptPrivacy ?? apiError?.fields.acceptPrivacy,
   };
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -51,13 +53,21 @@ export function SignupPage() {
       email: validateEmail(email),
       password: validateNewPassword(password),
       profiles: profiles.patient || profiles.therapist ? undefined : 'Escolha pelo menos uma opção.',
+      acceptPrivacy: acceptPrivacy ? undefined : 'Para criar a conta, é preciso concordar com o aviso de privacidade.',
     };
     setErrors(next);
     if (Object.values(next).some(Boolean)) return;
 
     const cleanEmail = email.trim();
     mutation.mutate(
-      { name: name.trim(), email: cleanEmail, password, profiles, ...(inviteToken && { inviteToken }) },
+      {
+        name: name.trim(),
+        email: cleanEmail,
+        password,
+        profiles,
+        acceptPrivacy: true,
+        ...(inviteToken && { inviteToken }),
+      },
       // O e-mail vai no state da navegação, não na URL, para não ficar no histórico.
       { onSuccess: () => navigate('/verifique-seu-email', { state: { email: cleanEmail } }) },
     );
@@ -127,6 +137,38 @@ export function SignupPage() {
             </p>
           )}
         </fieldset>
+
+        {/* Consentimento específico e destacado para dado de saúde (LGPD, art. 11; DEC-036).
+            O link abre em outra aba para não perder o que já foi digitado. */}
+        <div className="flex flex-col gap-1.5">
+          <label className="flex cursor-pointer gap-3 rounded-md border border-border p-3 has-checked:border-primary">
+            <input
+              type="checkbox"
+              checked={acceptPrivacy}
+              onChange={(e) => setAcceptPrivacy(e.target.checked)}
+              aria-invalid={shownErrors.acceptPrivacy ? true : undefined}
+              aria-describedby={shownErrors.acceptPrivacy ? 'privacy-error' : undefined}
+              className="mt-1 size-4 shrink-0 accent-primary"
+            />
+            <span>
+              Li o{' '}
+              <Link
+                to="/privacidade"
+                target="_blank"
+                rel="noopener"
+                className="font-medium text-primary-text underline underline-offset-4"
+              >
+                aviso de privacidade
+              </Link>{' '}
+              e concordo com o uso dos meus dados, inclusive os de saúde, para os fins descritos nele.
+            </span>
+          </label>
+          {shownErrors.acceptPrivacy && (
+            <p id="privacy-error" className="text-sm text-accent-text">
+              {shownErrors.acceptPrivacy}
+            </p>
+          )}
+        </div>
 
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? 'Criando…' : 'Criar conta'}

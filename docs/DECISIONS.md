@@ -408,11 +408,32 @@ Formato: decisão → motivo. Uma decisão só muda com uma nova entrada que sub
   contra quem pega o celular desbloqueado, e o limite impede testar senhas por essa rota. O
   e-mail avisa a dona da conta se não foi ela quem excluiu.
 
+## DEC-036 — Aviso de privacidade, consentimento e domínio
+- **Decisão:**
+  - o app passa a ter uso real (o autor e a psicóloga dele), com dados de saúde reais. Antes disso,
+    entra um aviso de privacidade público em `/privacidade`, com o responsável (Lucas Pereira de
+    Lima), o contato, o que é guardado (inclusive o IP só em memória, no rate limit), a finalidade,
+    quem vê, os serviços e o país (Railway, Vercel e Resend, nos EUA), a proteção, a retenção, os
+    direitos na LGPD, o aviso de que não é prontuário e o CVV (188);
+  - no cadastro, uma caixa de marcar **obrigatória e desmarcada**. A API recusa `acceptPrivacy`
+    diferente de `true` (400) e grava `privacyAcceptedAt` e `privacyVersion` no usuário (migration
+    `privacy_consent`). Refazer o cadastro de uma conta ainda não confirmada atualiza o aceite;
+  - a versão é `2026-10`, em `PRIVACY_VERSION` (backend) e no texto da página (front). Mudar o
+    texto exige mudar as duas e avisar no app;
+  - o link do aviso no cadastro abre em outra aba, para não perder o formulário;
+  - domínio comprado: **`minhafaisca.com.br`** (Registro.br). É configurado no deploy, tanto para o
+    app quanto para o remetente do Resend.
+- **Motivo:** dado de saúde é sensível na LGPD e pede consentimento específico e destacado (art. 11,
+  I), e cabe ao responsável provar o consentimento (art. 8º, § 2º), por isso a data e a versão.
+  Sem domínio próprio, o Resend não entrega e-mail para uma segunda pessoa (a psicóloga).
+- **Pendente no deploy:** confirmar o prazo das cópias de segurança do Railway e, se for o caso,
+  deixar o texto de retenção mais preciso.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
 
 ## Em aberto
-- **Domínio do app e do remetente de e-mail:** ainda não comprado. Até lá, o e-mail
-  só funciona em desenvolvimento (remetente de teste do Resend, enviando apenas
-  para o dono da conta). Pré-requisito para convites e cadastros de terceiros.
+- **Domínio do app e do remetente de e-mail:** resolvido pela DEC-036 (`minhafaisca.com.br`),
+  falta configurar no deploy. Até lá, o e-mail só funciona em desenvolvimento, com o remetente de
+  teste do Resend, que entrega apenas para o dono da conta.

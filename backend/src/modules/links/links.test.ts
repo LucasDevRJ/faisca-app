@@ -429,6 +429,7 @@ describe('convite por e-mail', () => {
           email: NEW_THERAPIST,
           password: PASSWORD,
           profiles: { patient: false, therapist: true },
+          acceptPrivacy: true,
           inviteToken,
         });
 

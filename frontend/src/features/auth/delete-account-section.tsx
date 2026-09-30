@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { Dialog, DialogFooter, DialogForm } from '../../components/ui/dialog';
 import { PasswordField } from '../../components/ui/text-field';
@@ -17,7 +17,13 @@ export function DeleteAccountSection({ isPatient }: { isPatient: boolean }) {
       <h2 id="delete-account-title" className="text-2xl font-semibold">
         Excluir conta
       </h2>
-      <p className="text-muted">Apaga sua conta e tudo o que está nela. Não dá para desfazer.</p>
+      <p className="text-muted">
+        Apaga sua conta e tudo o que está nela. Não dá para desfazer. Veja também o{' '}
+        <Link to="/privacidade" className="font-medium text-primary-text underline underline-offset-4">
+          aviso de privacidade
+        </Link>
+        .
+      </p>
       <div>
         <Button variant="secondary" onClick={() => setOpen(true)}>
           Excluir minha conta

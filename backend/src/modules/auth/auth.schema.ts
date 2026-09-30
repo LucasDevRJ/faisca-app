@@ -29,6 +29,8 @@ export const signupSchema = z.object({
   profiles: z
     .object({ patient: z.boolean(), therapist: z.boolean() })
     .refine((p) => p.patient || p.therapist, { error: 'Escolha pelo menos um perfil.' }),
+  // Consentimento específico com o aviso de privacidade (LGPD, dado de saúde; DEC-036).
+  acceptPrivacy: z.literal(true, { error: 'Para criar a conta, é preciso concordar com o aviso de privacidade.' }),
   // Cadastro aberto pelo link de convite (SPEC, "Convite por e-mail"): o vínculo é criado quando
   // o e-mail for confirmado, e o aceite ativa o perfil de terapeuta se faltar (DEC-031).
   inviteToken: tokenSchema.optional(),

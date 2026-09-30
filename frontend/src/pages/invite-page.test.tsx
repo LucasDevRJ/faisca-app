@@ -114,6 +114,7 @@ describe('/convite', () => {
     await user.type(screen.getByLabelText('Como podemos te chamar?'), 'Nina Fictícia');
     await user.type(screen.getByLabelText('E-mail'), 'nina@faisca.test');
     await user.type(screen.getByLabelText('Senha'), 'senha-ficticia-123');
+    await user.click(screen.getByRole('checkbox', { name: /aviso de privacidade/ }));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     await screen.findByRole('heading', { name: 'Confira seu e-mail' });
@@ -135,6 +136,7 @@ describe('/convite', () => {
     await user.type(screen.getByLabelText('E-mail'), 'nina@faisca.test');
     await user.type(screen.getByLabelText('Senha'), 'senha-ficticia-123');
     await user.click(screen.getByRole('checkbox', { name: /Registrar minhas atividades/ }));
+    await user.click(screen.getByRole('checkbox', { name: /aviso de privacidade/ }));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     await screen.findByRole('heading', { name: 'Confira seu e-mail' });

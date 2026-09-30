@@ -16,6 +16,8 @@ export type SignupInput = {
   email: string;
   password: string;
   profiles: { patient: boolean; therapist: boolean };
+  // Consentimento com o aviso de privacidade (DEC-036): a API recusa o cadastro sem ele.
+  acceptPrivacy: true;
   // Cadastro aberto pelo link de convite: o vínculo nasce quando o e-mail for confirmado (DEC-031).
   inviteToken?: string;
 };

@@ -60,7 +60,7 @@ test('cadastro → confirmação por e-mail → login', async ({ request }) => {
   const password = 'senha-ficticia-456';
 
   const signup = await request.post('/auth/signup', {
-    data: { name: 'Nova Pessoa Fictícia', email, password, profiles: { patient: true, therapist: true } },
+    data: { name: 'Nova Pessoa Fictícia', email, password, profiles: { patient: true, therapist: true }, acceptPrivacy: true },
   });
   expect(signup.status()).toBe(202);
 
