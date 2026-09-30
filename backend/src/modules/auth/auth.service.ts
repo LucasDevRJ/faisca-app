@@ -9,6 +9,10 @@ import type { LinksService } from '../links/links.service.js';
 import { accountDeletedEmail, accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
 import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 
+// Versão do aviso de privacidade aceita no cadastro (DEC-036). Muda junto com o texto da página
+// /privacidade no front (frontend/src/pages/privacy-page.tsx).
+export const PRIVACY_VERSION = '2026-10';
+
 const HOUR_MS = 60 * 60 * 1000;
 const TOKEN_TTL_MS: Record<AuthTokenType, number> = {
   EMAIL_CONFIRMATION: 24 * HOUR_MS,
@@ -105,6 +109,11 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
         // Conta não confirmada: reenvia a confirmação sem alterar nome nem senha.
         // Conta confirmada que veio por convite: entra e aceita pela tela do convite.
         if (!existing.emailConfirmedAt) {
+          // Quem refaz o cadastro aceitou o aviso de novo: guarda o aceite mais recente.
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { privacyAcceptedAt: new Date(), privacyVersion: PRIVACY_VERSION },
+          });
           await attachInvite(existing.id, input.inviteToken);
           await sendConfirmation(existing);
         } else {
@@ -122,6 +131,8 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
             passwordHash,
             hasPatientProfile: input.profiles.patient,
             hasTherapistProfile: input.profiles.therapist,
+            privacyAcceptedAt: new Date(),
+            privacyVersion: PRIVACY_VERSION,
           },
         });
       } catch (err) {

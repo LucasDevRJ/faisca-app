@@ -25,6 +25,10 @@ model User {
   emailConfirmedAt    DateTime?
   // Vai dentro do JWT. Ao redefinir a senha, sobe e derruba as sessões abertas (DEC-025).
   sessionVersion      Int       @default(0)
+  // Consentimento com o aviso de privacidade (LGPD, dado de saúde; DEC-036): quando e qual versão.
+  // null só em contas criadas antes do aviso existir.
+  privacyAcceptedAt   DateTime?
+  privacyVersion      String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
