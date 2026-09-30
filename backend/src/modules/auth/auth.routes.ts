@@ -19,6 +19,10 @@ export function createAuthRoutes(mailer: Mailer) {
     key: 'ip+email',
     onlyFailures: true,
   });
+  // Teto por e-mail, venha de onde vier (DEC-038): quem chama a API direto, sem a Vercel, pode
+  // forjar o X-Forwarded-For e trocar de "IP" a cada tentativa. Mais folgado que o de cima, para
+  // não travar a dona da conta por causa de tentativas de outra pessoa.
+  const loginEmailLimit = createRateLimit({ windowMinutes: 15, limit: 20, key: 'email', onlyFailures: true });
   // Excluir a conta confere a senha: mesmo limite do login, por conta, para ninguém testar
   // senhas por aqui com uma sessão aberta.
   const deleteAccountLimit = createRateLimit({ windowMinutes: 15, limit: 10, key: 'user', onlyFailures: true });
@@ -30,7 +34,7 @@ export function createAuthRoutes(mailer: Mailer) {
   router.post('/auth/signup', signupLimit, controller.signup);
   router.post('/auth/confirm-email', controller.confirmEmail);
   router.post('/auth/resend-confirmation', ...emailLimits(), controller.resendConfirmation);
-  router.post('/auth/login', loginLimit, controller.login);
+  router.post('/auth/login', loginEmailLimit, loginLimit, controller.login);
   router.post('/auth/logout', controller.logout);
   router.get('/auth/me', requireAuth, controller.me);
   router.post('/auth/profiles', requireAuth, controller.addProfile);

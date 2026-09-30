@@ -288,6 +288,33 @@ describe('POST /auth/login', () => {
 
     expect(blocked.status).toBe(429);
   });
+
+  it('trocar de IP não dribla o limite: 20 erros no mesmo e-mail bloqueiam (DEC-038)', async () => {
+    await createConfirmedUser({ email: EMAIL, password: PASSWORD });
+    // Simula quem chama a API direto e forja o X-Forwarded-For a cada tentativa.
+    app.set('trust proxy', 1);
+    const from = (i: number) => `203.0.113.${i + 1}`;
+
+    for (let i = 0; i < 20; i++) {
+      const res = await request(app)
+        .post('/auth/login')
+        .set('X-Forwarded-For', from(i))
+        .send({ email: EMAIL, password: 'errada-123' });
+      expect(res.status).toBe(401);
+    }
+    const blocked = await request(app)
+      .post('/auth/login')
+      .set('X-Forwarded-For', from(99))
+      .send({ email: EMAIL, password: PASSWORD });
+    const otherAccount = await request(app)
+      .post('/auth/login')
+      .set('X-Forwarded-For', from(99))
+      .send({ email: 'outra@faisca.test', password: 'errada-123' });
+
+    expect(blocked.status).toBe(429);
+    // O bloqueio é só daquele e-mail.
+    expect(otherAccount.status).toBe(401);
+  });
 });
 
 describe('GET /auth/me e POST /auth/logout', () => {
