@@ -13,6 +13,7 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
 - `docs/`: SPEC, DECISIONS e DEPLOY (passo a passo do deploy).
 - `.claude/skills/`: skills do projeto (ex.: `nova-rota-api`).
+- `.claude/agents/`: subagentes do projeto (ex.: `revisor-regras`).
 
 ## Comandos
 Backend (rodar dentro de `backend/`; detalhes em `backend/README.md`):
