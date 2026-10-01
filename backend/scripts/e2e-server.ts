@@ -42,6 +42,9 @@ const SEED_USERS = [
   // Só para o Registro de Pensamentos (api/thought-records.spec.ts): vínculo e aceite próprios.
   { name: 'Rita Fictícia', email: 'rpd-paciente@faisca.test', patient: true, therapist: false },
   { name: 'Lia Fictícia', email: 'rpd-terapeuta@faisca.test', patient: false, therapist: true },
+  // Só para as telas do Registro de Pensamentos (e2e/thought-records.spec.ts).
+  { name: 'Nina Fictícia', email: 'rpd-tela-paciente@faisca.test', patient: true, therapist: false },
+  { name: 'Olga Fictícia', email: 'rpd-tela-terapeuta@faisca.test', patient: false, therapist: true },
 ];
 
 await prisma.activity.deleteMany();

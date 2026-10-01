@@ -1,6 +1,11 @@
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { getApiError } from '../auth/auth-api';
-import { fetchPatientActivities, fetchPatientAppointments, fetchPatientSummary } from './therapist-api';
+import {
+  fetchPatientActivities,
+  fetchPatientAppointments,
+  fetchPatientSummary,
+  fetchPatientThoughtRecords,
+} from './therapist-api';
 
 const THERAPIST_KEY = ['therapist'] as const;
 
@@ -26,6 +31,15 @@ export function usePatientActivities(patientId: string, range: { from: string; t
   return useQuery({
     queryKey: [...THERAPIST_KEY, patientId, 'activities', range?.from, range?.to],
     queryFn: range ? () => fetchPatientActivities(patientId, range.from, range.to) : skipToken,
+    retry: retryUnlessForbidden,
+  });
+}
+
+// range null = aba fechada ou sem o aceite do aviso: não pergunta à API.
+export function usePatientThoughtRecords(patientId: string, range: { from: string; to: string } | null) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'thought-records', range?.from, range?.to],
+    queryFn: range ? () => fetchPatientThoughtRecords(patientId, range.from, range.to) : skipToken,
     retry: retryUnlessForbidden,
   });
 }

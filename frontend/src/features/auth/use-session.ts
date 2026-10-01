@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addProfile, deleteAccount, fetchSession, login, logout } from './auth-api';
+import { acceptPrivacy, addProfile, deleteAccount, fetchSession, login, logout } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
 
@@ -52,6 +52,19 @@ export function useAddProfile() {
   return useMutation({
     mutationFn: addProfile,
     onSuccess: (user) => queryClient.setQueryData(SESSION_QUERY_KEY, user),
+  });
+}
+
+// Mesmo caso do perfil: a resposta já traz a sessão com o aceite em dia. O resto é recarregado,
+// porque alguma tela pode ter recebido 403 PRIVACY_CONSENT_REQUIRED antes do aceite.
+export function useAcceptPrivacy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: acceptPrivacy,
+    onSuccess: (user) => {
+      queryClient.setQueryData(SESSION_QUERY_KEY, user);
+      void queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] !== SESSION_QUERY_KEY[0] });
+    },
   });
 }
 

@@ -3,16 +3,32 @@
 // Uso: npm run db:seed-dev (com a API de dev configurada no .env).
 //
 // - terapeuta.dev@faisca.test: terapeuta, sem dados;
-// - paciente.dev@faisca.test: paciente vinculada à terapeuta dev, com ~3 semanas de atividades e
-//   consultas fictícias em volta de hoje (última há 7 dias, próxima daqui a 3).
+// - paciente.dev@faisca.test: paciente vinculada à terapeuta dev, com ~3 semanas de atividades,
+//   Registros de Pensamentos e consultas fictícias em volta de hoje (última há 7 dias, próxima daqui a 3);
+// - aviso-antigo.dev@faisca.test: paciente que só aceitou o aviso de privacidade anterior, para
+//   testar o pedido do novo aceite no Registro de Pensamentos (DEC-039).
+// As duas primeiras já aceitaram a versão atual do aviso.
 // Rodar de novo recria os registros da paciente dev (as datas acompanham o dia de hoje).
 
-import type { ActivityStatus } from '../src/generated/prisma/client.js';
+import type { ActivityStatus, Emotion } from '../src/generated/prisma/client.js';
 
 // Dados fictícios (regra 5). A senha é pública de propósito: as contas só existem no banco local.
 const PASSWORD = 'senha-ficticia-123';
 const DEV_THERAPIST = { name: 'Terapeuta Dev (fictícia)', email: 'terapeuta.dev@faisca.test' };
 const DEV_PATIENT = { name: 'Paciente Dev (fictícia)', email: 'paciente.dev@faisca.test' };
+const DEV_OLD_PRIVACY = { name: 'Aviso Antigo Dev (fictícia)', email: 'aviso-antigo.dev@faisca.test' };
+// Versão do aviso de antes do Registro de Pensamentos.
+const OLD_PRIVACY_VERSION = '2026-10';
+
+// Registros de Pensamentos fictícios: [dias a partir de hoje, situação, pensamento, crença,
+// emoções, comportamento, consequência].
+const THOUGHT_RECORDS: [number, string, string, number, [string, number, string?][], string, string][] = [
+  [-12, 'Reunião em que pediram minha opinião', 'Vou falar besteira', 8, [['ANSIEDADE', 8], ['VERGONHA', 5]], 'Fiquei em silêncio', 'Saí com a sensação de não ter contribuído'],
+  [-9, 'Mensagem sem resposta de uma amiga', 'Ela não gosta mais de mim', 6, [['TRISTEZA', 7], ['SOLIDAO', 6]], 'Não mandei mais nada', 'Passei a tarde desanimada'],
+  [-5, 'Esqueci de pagar uma conta', 'Eu não dou conta de nada', 7, [['CULPA', 6], ['FRUSTRACAO', 7]], 'Paguei com multa e fiquei remoendo', 'Dormi mal'],
+  [-2, 'Elogio inesperado no trabalho', 'Foi só sorte', 5, [['ALEGRIA', 6], ['OUTRA', 4, 'Desconfiança']], 'Agradeci e mudei de assunto', 'Fiquei mais leve no fim do dia'],
+  [0, 'Trânsito parado a caminho da consulta', 'Vou chegar atrasada e vão me julgar', 6, [['ANSIEDADE', 7], ['RAIVA', 4]], 'Avisei por mensagem', 'Cheguei e ninguém se importou'],
+];
 
 const ACTIVITY_NAMES = [
   'Caminhada no parque',
@@ -37,16 +53,23 @@ const { prisma } = await import('../src/lib/prisma.js');
 const { hashPassword } = await import('../src/lib/password.js');
 const { logger } = await import('../src/lib/logger.js');
 const { addDays, dateOnlyToDate, todayInAppZone } = await import('../src/lib/dates.js');
+const { PRIVACY_VERSION } = await import('../src/modules/auth/auth.service.js');
 
 const passwordHash = await hashPassword(PASSWORD);
 
 // Rodar de novo devolve as contas ao estado conhecido (senha, perfil, e-mail confirmado).
-async function upsertUser(user: { name: string; email: string }, profiles: { patient: boolean; therapist: boolean }) {
+async function upsertUser(
+  user: { name: string; email: string },
+  profiles: { patient: boolean; therapist: boolean },
+  privacyVersion: string = PRIVACY_VERSION,
+) {
   const data = {
     passwordHash,
     hasPatientProfile: profiles.patient,
     hasTherapistProfile: profiles.therapist,
     emailConfirmedAt: new Date(),
+    privacyAcceptedAt: new Date(),
+    privacyVersion,
   };
   return prisma.user.upsert({
     where: { email: user.email },
@@ -77,6 +100,7 @@ function activityFor(userId: string, day: string, index: number, today: string) 
 
 const therapist = await upsertUser(DEV_THERAPIST, { patient: false, therapist: true });
 const patient = await upsertUser(DEV_PATIENT, { patient: true, therapist: false });
+await upsertUser(DEV_OLD_PRIVACY, { patient: true, therapist: false }, OLD_PRIVACY_VERSION);
 const today = todayInAppZone();
 
 // De 20 dias atrás até 2 dias à frente: 1 ou 2 atividades por dia.
@@ -92,6 +116,28 @@ await prisma.$transaction(async (tx) => {
   await tx.activity.deleteMany({ where: { userId: patient.id } });
   await tx.appointment.deleteMany({ where: { userId: patient.id } });
   await tx.activity.createMany({ data: activities });
+  // As emoções saem em cascata.
+  await tx.thoughtRecord.deleteMany({ where: { userId: patient.id } });
+  for (const [offset, situation, automaticThought, beliefLevel, emotions, behavior, consequence] of THOUGHT_RECORDS) {
+    await tx.thoughtRecord.create({
+      data: {
+        userId: patient.id,
+        situationDate: dateOnlyToDate(addDays(today, offset)),
+        situation,
+        automaticThought,
+        beliefLevel,
+        behavior,
+        consequence,
+        emotions: {
+          create: emotions.map(([emotion, intensity, otherLabel]) => ({
+            emotion: emotion as Emotion,
+            intensity,
+            otherLabel: otherLabel ?? null,
+          })),
+        },
+      },
+    });
+  }
   await tx.appointment.createMany({
     data: [-21, -7, 3].map((offset) => ({ userId: patient.id, appointmentDate: dateOnlyToDate(addDays(today, offset)) })),
   });
@@ -106,4 +152,4 @@ await prisma.$transaction(async (tx) => {
 await prisma.$disconnect();
 
 // Sem e-mail nem senha no log (regra 7): estão no backend/README.md.
-logger.info({ activities: activities.length }, 'Contas fictícias prontas (e-mails e senha no backend/README.md)');
+logger.info({ activities: activities.length, thoughtRecords: THOUGHT_RECORDS.length }, 'Contas fictícias prontas (e-mails e senha no backend/README.md)');

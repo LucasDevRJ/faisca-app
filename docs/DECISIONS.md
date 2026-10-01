@@ -526,6 +526,39 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   campos mantém o registro completo para a sessão, e o prazo de um dia deixa corrigir um erro de
   digitação sem reescrever o que a terapeuta já pode ter lido.
 
+## DEC-040 — Telas do Registro de Pensamentos
+- **Decisão:**
+  - as telas principais do paciente ganham **abas**: **Atividades** (`/registros`) e **Pensamentos**
+    (`/pensamentos`). Quem tem os dois perfis continua com "Meus registros / Meus pacientes" acima,
+    e "Meus registros" fica marcado também em Pensamentos e Consultas;
+  - `/pensamentos` navega por semana, como `/registros` (`?semana=AAAA-MM-DD`), mas mostra **só os
+    dias com registro**, porque o RPD não é diário. O cartão mostra todos os campos, a crença e as
+    emoções com a intensidade numa cor só, que varia o preenchimento (sem vermelho/verde);
+  - o formulário fica em **página própria** (`/pensamentos/novo?dia=AAAA-MM-DD` e
+    `/pensamentos/:id/editar`), e não num dialog: são sete campos, e as emoções abrem um slider
+    cada. Para editar, a API ganha `GET /thought-records/:id` (mesma cadeia e mesma conferência de
+    dono das outras rotas do paciente). Ao salvar, a pessoa volta para a semana do dia da situação
+    com o aviso "Registro salvo.";
+  - editar e excluir aparecem só com `editable`. Fora do prazo, o cartão mostra "Registrado em", e a
+    página de edição explica que o registro ficou como está. O 409 da API leva à mesma mensagem;
+  - visão da terapeuta: os botões **Atividades | Registro de Pensamentos** em `/pacientes/:id`, com a
+    aba na URL (`?aba=pensamentos`) junto do período. O seletor de período e o destaque valem para as
+    duas abas, e cada aba só pergunta à API quando está aberta. Os cartões são os mesmos, só leitura;
+  - novo aceite do aviso (DEC-039): sem ele, `/pensamentos`, as páginas do formulário e a aba da
+    terapeuta mostram o pedido de aceite no lugar do conteúdo (caixa desmarcada e link para
+    `/privacidade` em outra aba) e nem chamam a API. O mesmo pedido aparece se a API responder 403
+    `PRIVACY_CONSENT_REQUIRED`. Depois do aceite, a sessão é atualizada e as telas recarregam;
+  - uma **faixa discreta** em Atividades e em Meus pacientes avisa que o aviso mudou, com "Ver o que
+    mudou", enquanto o aceite não for feito. Não bloqueia nada;
+  - textos: a exclusão de conta lista o Registro de Pensamentos, e o vínculo em Conta diz que a
+    terapeuta lê "atividades, Registro de Pensamentos e consultas";
+  - `db:seed-dev` grava a versão atual do aviso nas contas dev, cria 5 RPDs fictícios para a
+    `paciente.dev` e a conta `aviso-antigo.dev@faisca.test`, com a versão anterior.
+- **Motivo:** abas deixam o RPD a um toque, sem esconder as atividades. Uma página própria aguenta
+  um formulário longo no celular melhor que um dialog, e guarda o lugar ao recarregar. A faixa
+  cumpre o "avisamos no app antes" do aviso de privacidade sem obrigar ninguém a aceitar para
+  continuar usando o resto.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

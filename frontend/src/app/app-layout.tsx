@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
 import { Button } from '../components/ui/button';
 import { useLogout, useSession } from '../features/auth/use-session';
@@ -12,6 +12,11 @@ export function AppLayout() {
   const logout = useLogout();
   const navigate = useNavigate();
   const bothProfiles = user?.profiles.patient && user.profiles.therapist;
+  // "Meus registros" segue marcado nas telas de Pensamentos e de Consultas, que são do mesmo perfil.
+  const { pathname } = useLocation();
+  const inPatientArea = ['/registros', '/pensamentos', '/consultas'].some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-12">
@@ -38,7 +43,7 @@ export function AppLayout() {
       {/* Só quem tem os dois perfis alterna entre eles (SPEC, Contas e perfis). */}
       {bothProfiles && (
         <nav aria-label="Perfis" className="flex gap-2">
-          <NavLink to="/registros" className={navLinkClass}>
+          <NavLink to="/registros" className={({ isActive }) => navLinkClass({ isActive: isActive || inPatientArea })}>
             Meus registros
           </NavLink>
           <NavLink to="/pacientes" className={navLinkClass}>
