@@ -2,6 +2,7 @@ import type { RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import { clearSessionCookie, setSessionCookie } from '../../lib/session.js';
 import {
+  acceptPrivacySchema,
   addProfileSchema,
   deleteAccountSchema,
   emailOnlySchema,
@@ -51,6 +52,12 @@ export function createAuthController(service: AuthService) {
     res.status(200).json({ user: toPublicUser(user) });
   };
 
+  const acceptPrivacy: RequestHandler = async (req, res) => {
+    acceptPrivacySchema.parse(req.body);
+    const user = await service.acceptPrivacy(getAuthUser(req).id);
+    res.status(200).json({ user: toPublicUser(user) });
+  };
+
   const deleteAccount: RequestHandler = async (req, res) => {
     const { password } = deleteAccountSchema.parse(req.body);
     await service.deleteAccount(getAuthUser(req).id, password);
@@ -76,6 +83,7 @@ export function createAuthController(service: AuthService) {
     logout,
     me,
     addProfile,
+    acceptPrivacy,
     deleteAccount,
     forgotPassword,
     resetPassword,

@@ -38,6 +38,7 @@ export function createAuthRoutes(mailer: Mailer) {
   router.post('/auth/logout', controller.logout);
   router.get('/auth/me', requireAuth, controller.me);
   router.post('/auth/profiles', requireAuth, controller.addProfile);
+  router.post('/auth/accept-privacy', requireAuth, controller.acceptPrivacy);
   router.post('/auth/delete-account', requireAuth, deleteAccountLimit, controller.deleteAccount);
   router.post('/auth/forgot-password', ...emailLimits(), controller.forgotPassword);
   router.post('/auth/reset-password', controller.resetPassword);

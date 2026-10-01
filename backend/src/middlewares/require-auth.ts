@@ -15,6 +15,8 @@ export type AuthUser = {
   email: string;
   hasPatientProfile: boolean;
   hasTherapistProfile: boolean;
+  // Versão do aviso de privacidade aceita (DEC-036); a área de RPD exige a atual (DEC-039).
+  privacyVersion: string | null;
 };
 
 function unauthenticated() {
@@ -38,6 +40,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
           hasTherapistProfile: true,
           emailConfirmedAt: true,
           sessionVersion: true,
+          privacyVersion: true,
         },
       })
     : null;
@@ -58,6 +61,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     email: user.email,
     hasPatientProfile: user.hasPatientProfile,
     hasTherapistProfile: user.hasTherapistProfile,
+    privacyVersion: user.privacyVersion,
   };
   next();
 };

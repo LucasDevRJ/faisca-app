@@ -72,7 +72,7 @@ export const completeActivitySchema = z.strictObject({
 export const notDoneActivitySchema = z.strictObject({ observation: observationSchema });
 
 // Intervalo de dias (inclusivo) com um teto, para ninguém baixar o histórico inteiro de uma vez.
-function listQuerySchema(maxDays: number) {
+export function listQuerySchema(maxDays: number) {
   return z
     .object({ from: dateSchema, to: dateSchema })
     .refine(({ from, to }) => from <= to, { error: 'A data final vem depois da inicial.', path: ['to'] })

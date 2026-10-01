@@ -32,9 +32,10 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  authTokens   AuthToken[]
-  activities   Activity[]
-  appointments Appointment[]
+  authTokens     AuthToken[]
+  activities     Activity[]
+  appointments   Appointment[]
+  thoughtRecords ThoughtRecord[]
 
   // Vínculo (DEC-015, DEC-031): o mesmo usuário pode estar dos dois lados, em vínculos diferentes.
   linksAsPatient   TherapistLink[]   @relation("LinkPatient")
@@ -113,6 +114,60 @@ model Appointment {
 
   // Uma consulta por dia (DEC-030).
   @@unique([userId, appointmentDate])
+}
+
+// Emoções do Registro de Pensamentos (SPEC, "Registro de Pensamentos"; DEC-039).
+// OUTRA vem com o nome escrito pelo paciente (otherLabel).
+enum Emotion {
+  TRISTEZA
+  ANSIEDADE
+  MEDO
+  RAIVA
+  CULPA
+  VERGONHA
+  FRUSTRACAO
+  SOLIDAO
+  ALEGRIA
+  ALIVIO
+  OUTRA
+}
+
+// Registro de Pensamentos (RPD) do paciente. Todos os campos são obrigatórios; tamanhos e a
+// faixa da crença (0–10) são garantidos por CHECK na migration, além do Zod (DEC-039).
+// Editar e excluir só no dia (São Paulo) em que foi registrado, conferido pelo createdAt.
+model ThoughtRecord {
+  id               String   @id @default(uuid()) @db.Uuid
+  // O paciente dono do registro.
+  userId           String   @db.Uuid
+  // Dia da situação, no fuso America/Sao_Paulo (DEC-007). Só até hoje; separado do createdAt.
+  situationDate    DateTime @db.Date
+  situation        String
+  automaticThought String
+  // O quanto acredita no pensamento (0–10).
+  beliefLevel      Int
+  behavior         String
+  consequence      String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emotions ThoughtRecordEmotion[]
+
+  @@index([userId, situationDate])
+}
+
+// Emoções de um registro: uma ou mais, sem repetir, cada uma com intensidade de 0 a 10.
+model ThoughtRecordEmotion {
+  id         String   @id @default(uuid()) @db.Uuid
+  recordId   String   @db.Uuid
+  emotion    Emotion
+  intensity  Int
+  // Só na OUTRA, e obrigatório nela (CHECK na migration).
+  otherLabel String?
+
+  record ThoughtRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@unique([recordId, emotion])
 }
 
 enum LinkMethod {

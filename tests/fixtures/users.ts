@@ -12,4 +12,8 @@ export const users = {
   linkTherapist: { email: 'vinculo-terapeuta@faisca.test', password: SEED_PASSWORD },
   // Usada só no teste de excluir a conta (e2e/account.spec.ts): some durante o teste.
   toDelete: { email: 'excluir@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nos testes do Registro de Pensamentos (api/thought-records.spec.ts). Começam sem o
+  // aceite da versão atual do aviso de privacidade, como as contas de antes do RPD.
+  rpdPatient: { email: 'rpd-paciente@faisca.test', password: SEED_PASSWORD },
+  rpdTherapist: { email: 'rpd-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;

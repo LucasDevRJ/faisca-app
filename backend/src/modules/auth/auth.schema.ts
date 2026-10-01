@@ -52,6 +52,11 @@ export const addProfileSchema = z.strictObject({ profile: z.enum(['patient', 'th
 // Excluir a conta pede a senha de novo (DEC-035). Como no login, sem a política de senha nova.
 export const deleteAccountSchema = z.strictObject({ password: z.string().min(1).max(200) });
 
+// Novo aceite do aviso de privacidade (DEC-039): o mesmo consentimento explícito do cadastro.
+export const acceptPrivacySchema = z.strictObject({
+  acceptPrivacy: z.literal(true, { error: 'Para continuar, é preciso concordar com o aviso de privacidade.' }),
+});
+
 export const resetPasswordSchema = z.object({
   token: tokenSchema,
   password: newPasswordSchema,
