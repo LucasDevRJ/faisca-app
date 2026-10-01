@@ -13,9 +13,12 @@ import { PatientPage } from '../pages/patient-page';
 import { PrivacyPage } from '../pages/privacy-page';
 import { PatientsPage } from '../pages/patients-page';
 import { RecordsPage } from '../pages/records-page';
+import { EditThoughtRecordPage, NewThoughtRecordPage } from '../pages/thought-record-form-page';
+import { ThoughtsPage } from '../pages/thoughts-page';
 import { ResetPasswordPage } from '../pages/reset-password-page';
 import { SignupPage } from '../pages/signup-page';
 import { AppLayout } from './app-layout';
+import { PatientTabsLayout } from './patient-tabs-layout';
 
 // Caminhos em pt-BR, os mesmos usados nos links dos e-mails (backend/src/modules/auth/auth.emails.ts).
 export const routes = [
@@ -34,7 +37,16 @@ export const routes = [
               {
                 element: <RequireProfile profile="patient" />,
                 children: [
-                  { path: 'registros', element: <RecordsPage /> },
+                  // Atividades e Pensamentos em abas (DEC-040).
+                  {
+                    element: <PatientTabsLayout />,
+                    children: [
+                      { path: 'registros', element: <RecordsPage /> },
+                      { path: 'pensamentos', element: <ThoughtsPage /> },
+                    ],
+                  },
+                  { path: 'pensamentos/novo', element: <NewThoughtRecordPage /> },
+                  { path: 'pensamentos/:id/editar', element: <EditThoughtRecordPage /> },
                   { path: 'consultas', element: <AppointmentsPage /> },
                 ],
               },

@@ -72,7 +72,7 @@ function LinkState({ status, generated, generating, generateError, onGenerate, o
           <dt className="sr-only">Vínculo desde</dt>
           <dd className="text-sm text-muted">Acompanha seus registros desde {formatDate(createdAt)}</dd>
         </dl>
-        <p className="text-sm text-muted">O acesso é só de leitura: registros e consultas, sem alterar nada.</p>
+        <p className="text-sm text-muted">O acesso é só de leitura: atividades, Registro de Pensamentos e consultas, sem alterar nada.</p>
         <div>
           <Button variant="secondary" onClick={onRevoke}>
             Desfazer vínculo

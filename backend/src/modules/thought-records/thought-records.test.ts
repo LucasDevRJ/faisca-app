@@ -79,6 +79,7 @@ describe('autorização (regra 1)', () => {
     const { id } = await seedRecord(patientId);
     const calls = [
       request(app).get('/thought-records').query({ from: today(), to: today() }),
+      request(app).get(`/thought-records/${id}`),
       request(app).post('/thought-records').send(body()),
       request(app).patch(`/thought-records/${id}`).send({ beliefLevel: 1 }),
       request(app).delete(`/thought-records/${id}`),
@@ -87,15 +88,18 @@ describe('autorização (regra 1)', () => {
   });
 
   it('conta só de terapeuta: 403 no contexto de paciente, nada gravado', async () => {
+    const { id } = await seedRecord(patientId);
     const agent = await loginAgent(THERAPIST);
 
     const list = await agent.get('/thought-records').query({ from: today(), to: today() });
+    const one = await agent.get(`/thought-records/${id}`);
     const create = await agent.post('/thought-records').send(body());
 
     expect(list.status).toBe(403);
     expect(list.body.error.code).toBe('PATIENT_PROFILE_REQUIRED');
+    expect(one.status).toBe(403);
     expect(create.status).toBe(403);
-    expect(await prisma.thoughtRecord.count()).toBe(0);
+    expect(await prisma.thoughtRecord.count()).toBe(1);
   });
 
   it('a lista traz só os registros da própria paciente, sem userId', async () => {
@@ -109,9 +113,14 @@ describe('autorização (regra 1)', () => {
     expect(res.body.thoughtRecords[0]).not.toHaveProperty('userId');
   });
 
-  it('registro de outra paciente: 403 em editar e excluir, sem alterar nada', async () => {
-    const theirs = await seedRecord(otherPatientId);
+  it('registro de outra paciente: 403 em ler, editar e excluir, sem alterar nada', async () => {
+    const theirs = await seedRecord(otherPatientId, { situation: 'Situação da outra' });
     const agent = await loginAgent();
+
+    const read = await agent.get(`/thought-records/${theirs.id}`);
+    expect(read.status).toBe(403);
+    expect(read.body.error.code).toBe('FORBIDDEN');
+    expect(JSON.stringify(read.body)).not.toContain('Situação da outra');
 
     const edit = await agent.patch(`/thought-records/${theirs.id}`).send({ beliefLevel: 1 });
     const remove = await agent.delete(`/thought-records/${theirs.id}`);
@@ -245,6 +254,30 @@ describe('POST /thought-records', () => {
 
     expect(res.status).toBe(400);
     expect(JSON.stringify(res.body)).not.toContain('segredo-ficticio');
+  });
+});
+
+describe('GET /thought-records/:id', () => {
+  it('devolve o próprio registro, sem userId; inexistente é 404', async () => {
+    const record = await seedRecord(patientId, { situation: 'Minha situação' });
+    const agent = await loginAgent();
+
+    const res = await agent.get(`/thought-records/${record.id}`);
+    const unknown = await agent.get('/thought-records/00000000-0000-4000-8000-000000000999');
+
+    expect(res.status).toBe(200);
+    expect(res.body.thoughtRecord).toMatchObject({ id: record.id, situation: 'Minha situação', editable: true });
+    expect(res.body.thoughtRecord).not.toHaveProperty('userId');
+    expect(unknown.status).toBe(404);
+  });
+
+  it('sem o aceite da versão atual do aviso: 403', async () => {
+    const record = await seedRecord(patientId);
+
+    const res = await (await loginAgent(OLD_PRIVACY)).get(`/thought-records/${record.id}`);
+
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');
   });
 });
 

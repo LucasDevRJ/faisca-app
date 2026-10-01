@@ -122,6 +122,15 @@ export function createThoughtRecordsService() {
     return records.map((record) => toPublicThoughtRecord(record, now));
   }
 
+  // Um registro só, para a página de edição (DEC-040).
+  // Uma leitura só: se o registro sumir no meio (excluído em outra aba), é 404, e não 500.
+  async function get(userId: string, id: string) {
+    const record = await prisma.thoughtRecord.findUnique({ where: { id }, include: withEmotions });
+    if (!record) throw notFound();
+    if (record.userId !== userId) throw forbidden();
+    return toPublicThoughtRecord(record);
+  }
+
   async function create(userId: string, input: CreateThoughtRecordInput) {
     if (isFutureDate(input.situationDate, todayInAppZone())) throw futureDate();
 
@@ -174,7 +183,7 @@ export function createThoughtRecordsService() {
     if (count === 0) throw await conflictAfterRace(id);
   }
 
-  return { list, create, update, remove };
+  return { list, get, create, update, remove };
 }
 
 export type ThoughtRecordsService = ReturnType<typeof createThoughtRecordsService>;

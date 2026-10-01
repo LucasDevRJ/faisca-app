@@ -45,7 +45,8 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - Uma consulta por dia, registrada só com a data (sem horário).
 
 ## Registro de Pensamentos (RPD)
-Registro da TCC, independente das atividades, com tela própria para o paciente.
+Registro da TCC, independente das atividades. O paciente alterna entre as abas **Atividades** e
+**Pensamentos**, e o formulário fica numa página própria.
 - Campos, **todos obrigatórios**:
   - **dia da situação** (sem horário, até hoje), separado de quando foi registrado;
   - **situação**, **pensamento automático**, **comportamento** e **consequência**: texto de 1 a 1000 caracteres;

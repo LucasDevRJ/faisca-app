@@ -16,4 +16,7 @@ export const users = {
   // aceite da versão atual do aviso de privacidade, como as contas de antes do RPD.
   rpdPatient: { email: 'rpd-paciente@faisca.test', password: SEED_PASSWORD },
   rpdTherapist: { email: 'rpd-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nas telas do Registro de Pensamentos (e2e/thought-records.spec.ts), também sem o aceite.
+  rpdScreenPatient: { email: 'rpd-tela-paciente@faisca.test', password: SEED_PASSWORD },
+  rpdScreenTherapist: { email: 'rpd-tela-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;

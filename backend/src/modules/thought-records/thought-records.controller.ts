@@ -22,6 +22,11 @@ export function createThoughtRecordsController(service: ThoughtRecordsService) {
     res.status(200).json({ thoughtRecords: await service.list(getAuthUser(req).id, query) });
   };
 
+  const get: RequestHandler = async (req, res) => {
+    const { userId, id } = owner(req);
+    res.status(200).json({ thoughtRecord: await service.get(userId, id) });
+  };
+
   const create: RequestHandler = async (req, res) => {
     const thoughtRecord = await service.create(getAuthUser(req).id, createThoughtRecordSchema.parse(req.body));
     res.status(201).json({ thoughtRecord });
@@ -39,5 +44,5 @@ export function createThoughtRecordsController(service: ThoughtRecordsService) {
     res.status(204).end();
   };
 
-  return { list, create, update, remove };
+  return { list, get, create, update, remove };
 }

@@ -1,6 +1,7 @@
 import { api } from '../../lib/api';
 import type { Activity } from '../activities/activities-api';
 import type { Appointment, AppointmentsResponse } from '../appointments/appointments-api';
+import type { ThoughtRecord } from '../thought-records/thought-records-api';
 
 // Visão da terapeuta (DEC-033): só leitura, sob /therapist/patients/:patientId. O backend confere
 // o vínculo a cada chamada; sem vínculo ativo, tudo aqui volta 403.
@@ -36,6 +37,14 @@ export async function fetchPatientActivities(patientId: string, from: string, to
     params: { from, to },
   });
   return data.activities;
+}
+
+// Registro de Pensamentos (DEC-039): também pede a versão atual do aviso aceita pela terapeuta.
+export async function fetchPatientThoughtRecords(patientId: string, from: string, to: string): Promise<ThoughtRecord[]> {
+  const { data } = await api.get<{ thoughtRecords: ThoughtRecord[] }>(`${base(patientId)}/thought-records`, {
+    params: { from, to },
+  });
+  return data.thoughtRecords;
 }
 
 export async function fetchPatientAppointments(patientId: string): Promise<AppointmentsResponse> {

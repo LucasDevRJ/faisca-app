@@ -9,6 +9,9 @@ export type SessionUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
+  // Aceitou a versão atual do aviso de privacidade? Sem isso, o Registro de Pensamentos fica
+  // bloqueado (DEC-039); o resto do app funciona.
+  privacyUpToDate: boolean;
 };
 
 export type SignupInput = {
@@ -92,6 +95,12 @@ export async function resendConfirmation(email: string): Promise<void> {
 // Ativa o perfil que não foi escolhido no cadastro (SPEC, "Contas e perfis").
 export async function addProfile(profile: 'patient' | 'therapist'): Promise<SessionUser> {
   const { data } = await api.post<{ user: SessionUser }>('/auth/profiles', { profile });
+  return data.user;
+}
+
+// Novo aceite do aviso de privacidade (DEC-039), com o mesmo consentimento explícito do cadastro.
+export async function acceptPrivacy(): Promise<SessionUser> {
+  const { data } = await api.post<{ user: SessionUser }>('/auth/accept-privacy', { acceptPrivacy: true });
   return data.user;
 }
 

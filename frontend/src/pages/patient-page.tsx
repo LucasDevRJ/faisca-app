@@ -17,6 +17,7 @@ import {
 } from '../features/activities/week';
 import { WeekChart } from '../features/activities/week-chart';
 import { AppointmentLine } from '../features/appointments/appointments-card';
+import { useSession } from '../features/auth/use-session';
 import { formatDate } from '../features/links/link-format';
 import { PATIENTS_KEY } from '../features/links/use-links';
 import {
@@ -32,9 +33,16 @@ import {
   usePatientActivities,
   usePatientAppointments,
   usePatientSummary,
+  usePatientThoughtRecords,
 } from '../features/therapist/use-therapist';
+import { PrivacyConsentGate } from '../features/thought-records/privacy-consent';
+import { ThoughtRecordCard } from '../features/thought-records/thought-record-card';
+import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
+import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 const SINCE_PARAM = 'desde-a-ultima-consulta';
+// Aba do Registro de Pensamentos na URL (?aba=pensamentos), junto com o período (DEC-040).
+const THOUGHTS_TAB = 'pensamentos';
 const backLinkClass = 'self-start font-medium text-primary-text underline underline-offset-4';
 
 // Registros de um paciente vinculado (SPEC, "Visão da terapeuta"; DEC-033). Só leitura: nenhum
@@ -100,7 +108,11 @@ function NoAccess() {
 
 function PatientRecords({ patientId, summary }: { patientId: string; summary: PatientSummary }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { data: user } = useSession();
   const { patient, today, lastAppointment, nextAppointment, highlight } = summary;
+  const thoughtsTab = searchParams.get('aba') === THOUGHTS_TAB;
+  // Trocar de período mantém a aba aberta.
+  const tabParam: Record<string, string> = thoughtsTab ? { aba: THOUGHTS_TAB } : {};
 
   const currentMonday = startOfWeek(today);
   const weekParam = searchParams.get('semana');
@@ -112,18 +124,29 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
       : null;
   const range: DateRange = since ?? { from: monday, to: addDays(monday, 6) };
 
-  const activities = usePatientActivities(patientId, range);
+  // Só a aba aberta pergunta à API. O RPD também espera o aceite da versão atual do aviso (DEC-039).
+  const activities = usePatientActivities(patientId, thoughtsTab ? null : range);
+  const consented = Boolean(user?.privacyUpToDate);
+  const thoughts = usePatientThoughtRecords(patientId, thoughtsTab && consented ? range : null);
   const appointmentDays = new Set(
     usePatientAppointments(patientId).data?.appointments.map((a) => a.appointmentDate),
   );
 
   // Vínculo desfeito enquanto a tela estava aberta.
   if (activities.isError && isForbidden(activities.error)) return <NoAccess />;
+  if (thoughts.isError && isForbidden(thoughts.error) && !needsPrivacyConsent(thoughts.error)) return <NoAccess />;
 
   const firstName = patient.name.split(' ')[0];
 
   function showWeek(target: string) {
-    setSearchParams(target === currentMonday ? {} : { semana: target });
+    setSearchParams(target === currentMonday ? tabParam : { semana: target, ...tabParam });
+  }
+
+  function selectTab(thoughts: boolean) {
+    const next = new URLSearchParams(searchParams);
+    if (thoughts) next.set('aba', THOUGHTS_TAB);
+    else next.delete('aba');
+    setSearchParams(next);
   }
 
   return (
@@ -157,12 +180,14 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
 
       <HighlightNote highlight={highlight} />
 
+      <RecordTabs thoughts={thoughtsTab} onSelect={selectTab} />
+
       <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
         <PeriodSwitch
           since={since !== null}
           canFilter={lastAppointment !== null}
-          onWeek={() => setSearchParams({})}
-          onSince={() => setSearchParams({ periodo: SINCE_PARAM })}
+          onWeek={() => setSearchParams(tabParam)}
+          onSince={() => setSearchParams({ periodo: SINCE_PARAM, ...tabParam })}
         />
 
         {since ? (
@@ -208,42 +233,55 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
           </div>
         )}
 
-        {activities.isPending && (
-          <p className="text-muted" aria-busy="true">
-            Carregando os registros…
-          </p>
-        )}
-
-        {activities.isError && (
-          <Alert tone="attention">
-            <div className="flex flex-col gap-3">
-              <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
-              <div>
-                <Button variant="secondary" onClick={() => activities.refetch()}>
-                  Tentar de novo
-                </Button>
-              </div>
-            </div>
-          </Alert>
-        )}
-
-        {activities.isSuccess && (
+        {thoughtsTab ? (
+          <ThoughtsTab
+            consented={consented && !(thoughts.isError && needsPrivacyConsent(thoughts.error))}
+            query={thoughts}
+            range={range}
+            since={since !== null}
+            today={today}
+            highlight={highlight}
+          />
+        ) : (
           <>
-            {activities.data.length === 0 && (
-              <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-                Nada registrado {since ? 'neste período' : 'nesta semana'}.
+            {activities.isPending && (
+              <p className="text-muted" aria-busy="true">
+                Carregando os registros…
               </p>
             )}
 
-            <WeekChart activities={activities.data} period={since ? 'desde a última consulta' : 'na semana'} />
+            {activities.isError && (
+              <Alert tone="attention">
+                <div className="flex flex-col gap-3">
+                  <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
+                  <div>
+                    <Button variant="secondary" onClick={() => activities.refetch()}>
+                      Tentar de novo
+                    </Button>
+                  </div>
+                </div>
+              </Alert>
+            )}
 
-            <DayList
-              days={since ? daysWithRecords(since, activities.data) : weekDays(monday)}
-              activities={activities.data}
-              today={today}
-              highlight={highlight}
-              appointmentDays={appointmentDays}
-            />
+            {activities.isSuccess && (
+              <>
+                {activities.data.length === 0 && (
+                  <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+                    Nada registrado {since ? 'neste período' : 'nesta semana'}.
+                  </p>
+                )}
+
+                <WeekChart activities={activities.data} period={since ? 'desde a última consulta' : 'na semana'} />
+
+                <DayList
+                  days={since ? daysWithRecords(since, activities.data) : weekDays(monday)}
+                  activities={activities.data}
+                  today={today}
+                  highlight={highlight}
+                  appointmentDays={appointmentDays}
+                />
+              </>
+            )}
           </>
         )}
       </section>
@@ -349,5 +387,110 @@ function DayList({ days, activities, today, highlight, appointmentDays }: DayLis
         );
       })}
     </ol>
+  );
+}
+
+function RecordTabs({ thoughts, onSelect }: { thoughts: boolean; onSelect: (thoughts: boolean) => void }) {
+  return (
+    <div role="group" aria-label="Tipo de registro" className="grid grid-cols-2 gap-2 sm:flex">
+      <Button variant={thoughts ? 'secondary' : 'primary'} aria-pressed={!thoughts} onClick={() => onSelect(false)}>
+        Atividades
+      </Button>
+      <Button
+        variant={thoughts ? 'primary' : 'secondary'}
+        aria-pressed={thoughts}
+        className="px-2 text-sm sm:px-5 sm:text-base"
+        onClick={() => onSelect(true)}
+      >
+        Registro de Pensamentos
+      </Button>
+    </div>
+  );
+}
+
+type ThoughtsTabProps = {
+  consented: boolean;
+  query: ReturnType<typeof usePatientThoughtRecords>;
+  range: DateRange;
+  since: boolean;
+  today: string;
+  highlight: DateRange;
+};
+
+// Registro de Pensamentos do paciente, só leitura (DEC-040). Só os dias com registro aparecem.
+function ThoughtsTab({ consented, query, range, since, today, highlight }: ThoughtsTabProps) {
+  if (!consented) return <PrivacyConsentGate />;
+
+  if (query.isPending) {
+    return (
+      <p className="text-muted" aria-busy="true">
+        Carregando os registros…
+      </p>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <Alert tone="attention">
+        <div className="flex flex-col gap-3">
+          <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
+          <div>
+            <Button variant="secondary" onClick={() => query.refetch()}>
+              Tentar de novo
+            </Button>
+          </div>
+        </div>
+      </Alert>
+    );
+  }
+
+  const records = query.data;
+  if (records.length === 0) {
+    return (
+      <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+        Nenhum registro de pensamentos {since ? 'neste período' : 'nesta semana'}.
+      </p>
+    );
+  }
+
+  const recorded = new Set(records.map((r) => r.situationDate));
+  const days = daysInRange(range).filter((day) => recorded.has(day));
+  return (
+    <ol className="flex flex-col gap-4 sm:gap-6">
+      {days.map((day) => (
+        <ThoughtsDay
+          key={day}
+          day={day}
+          records={records.filter((r) => r.situationDate === day)}
+          today={today}
+          highlighted={isInRange(day, highlight)}
+        />
+      ))}
+    </ol>
+  );
+}
+
+type ThoughtsDayProps = { day: string; records: ThoughtRecord[]; today: string; highlighted: boolean };
+
+function ThoughtsDay({ day, records, today, highlighted }: ThoughtsDayProps) {
+  return (
+    <li className={`flex flex-col gap-2 sm:gap-3 ${highlighted ? 'rounded-md border-l-4 border-accent pl-3' : ''}`}>
+      <h3 className="font-semibold first-letter:uppercase sm:text-lg">
+        {formatDayHeading(day)}
+        {day === today && (
+          <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">hoje</span>
+        )}
+        {highlighted && (
+          <span className="ml-2 rounded-sm border border-accent px-2 py-0.5 text-sm font-medium text-accent-text">
+            destaque
+          </span>
+        )}
+      </h3>
+      <div className="flex flex-col gap-3">
+        {records.map((record) => (
+          <ThoughtRecordCard key={record.id} record={record} readOnly />
+        ))}
+      </div>
+    </li>
   );
 }

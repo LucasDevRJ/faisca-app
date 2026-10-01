@@ -4,6 +4,7 @@ import { getApiError } from '../features/auth/auth-api';
 import { formatDate } from '../features/links/link-format';
 import { RedeemCodeForm } from '../features/links/redeem-code-form';
 import { useLinkedPatients } from '../features/links/use-links';
+import { PrivacyUpdateBanner } from '../features/thought-records/privacy-consent';
 
 // "Meus pacientes" (SPEC, "Visão da terapeuta"): o campo de código e a lista de quem tem
 // vínculo ativo. Cada item leva aos registros do paciente (/pacientes/:id, DEC-033).
@@ -13,6 +14,7 @@ export function PatientsPage() {
   return (
     <>
       <h1 className="text-4xl font-bold">Meus pacientes</h1>
+      <PrivacyUpdateBanner />
 
       <RedeemCodeForm />
 

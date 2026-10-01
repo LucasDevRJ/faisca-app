@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { Activity } from '../features/activities/activities-api';
 import type { SessionUser } from '../features/auth/auth-api';
+import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 
 // Pessoa fictícia usada nos testes (regra 5 do AGENTS.md).
 export const fakeUser: SessionUser = {
@@ -9,6 +10,7 @@ export const fakeUser: SessionUser = {
   name: 'Ana Fictícia',
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
+  privacyUpToDate: true,
 };
 
 // Atividade fictícia com valores padrão; cada teste troca só o que importa.
@@ -30,6 +32,26 @@ export function fakeActivity(overrides: Partial<Activity> = {}): Activity {
   };
 }
 
+// Registro de Pensamentos fictício, do dia de hoje dos testes e ainda editável.
+let thoughtSeq = 0;
+export function fakeThoughtRecord(overrides: Partial<ThoughtRecord> = {}): ThoughtRecord {
+  thoughtSeq += 1;
+  return {
+    id: `00000000-0000-4000-9000-${String(thoughtSeq).padStart(12, '0')}`,
+    situationDate: '2026-09-24',
+    situation: 'Situação fictícia',
+    automaticThought: 'Pensamento fictício',
+    beliefLevel: 7,
+    emotions: [{ emotion: 'ANSIEDADE', intensity: 8, otherLabel: null }],
+    behavior: 'Comportamento fictício',
+    consequence: 'Consequência fictícia',
+    editable: true,
+    createdAt: '2026-09-24T15:00:00.000Z',
+    updatedAt: '2026-09-24T15:00:00.000Z',
+    ...overrides,
+  };
+}
+
 export function apiError(status: number, code: string, message: string) {
   return HttpResponse.json({ error: { code, message } }, { status });
 }
@@ -45,6 +67,7 @@ export const handlers = [
   http.get('*/api/auth/me', () => apiError(401, 'UNAUTHENTICATED', 'Entre na sua conta para continuar.')),
   // Semana vazia e nenhuma consulta, por padrão.
   http.get('*/api/activities', () => HttpResponse.json({ activities: [] })),
+  http.get('*/api/thought-records', () => HttpResponse.json({ thoughtRecords: [] })),
   http.get('*/api/appointments', () => HttpResponse.json({ appointments: [], last: null, next: null })),
   // Sem vínculo e sem pacientes, por padrão.
   http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
