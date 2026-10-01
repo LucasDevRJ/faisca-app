@@ -6,7 +6,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // link do cadastro, da tela de entrar, do rodapé do app e de Conta.
 // Mudou o texto? Troque também o PRIVACY_VERSION do backend (auth.service.ts): é a versão que
 // fica gravada no aceite de cada cadastro.
-const VERSION_LABEL = 'versão de outubro de 2026';
+// Versão 2026-10.2 (DEC-039): entra o Registro de Pensamentos, com novo aceite para usá-lo.
+const VERSION_LABEL = 'versão 2, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -53,6 +54,11 @@ export function PrivacyPage() {
               Da sua conta: nome, e-mail e senha. A senha é guardada de um jeito que nem nós conseguimos ler.
             </li>
             <li>O que você registra: atividades, datas, notas de 0 a 10, observações e datas de consultas.</li>
+            <li>
+              No Registro de Pensamentos (RPD): as situações que você descreve e, para cada uma, o pensamento
+              automático, o quanto você acredita nele, as emoções e a intensidade de cada uma, o comportamento e
+              a consequência.
+            </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No seu aparelho: só o cookie de sessão e a preferência de tema claro ou escuro.</li>
             <li>
@@ -64,7 +70,8 @@ export function PrivacyPage() {
 
         <Section title="Para quê">
           <p>
-            Para você registrar suas atividades e, se quiser, compartilhá-las com a sua terapeuta. Também usamos
+            Para você registrar suas atividades e o seu Registro de Pensamentos e, se quiser, compartilhá-los
+            com a sua terapeuta. Também usamos
             o seu e-mail para mensagens da conta: confirmação, nova senha e aviso de exclusão. Não vendemos
             dados, não mostramos anúncios e não usamos ferramentas de rastreamento.
           </p>
@@ -74,7 +81,8 @@ export function PrivacyPage() {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li>Você vê tudo o que registrou.</li>
             <li>
-              A terapeuta vinculada vê tudo, inclusive notas e observações, enquanto o vínculo existir. Você
+              A terapeuta vinculada vê tudo, inclusive notas, observações e o Registro de Pensamentos, enquanto o
+              vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
               hora.
             </li>
@@ -119,7 +127,10 @@ export function PrivacyPage() {
         </Section>
 
         <Section title="Mudanças">
-          <p>Se este aviso mudar, avisamos no app antes.</p>
+          <p>
+            Se este aviso mudar, avisamos no app antes. Quando a mudança envolver dados novos, pedimos o seu
+            aceite de novo antes de você usar a parte nova.
+          </p>
         </Section>
       </article>
 

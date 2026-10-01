@@ -489,6 +489,43 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Motivo:** deixar o aviso de privacidade fiel ao que acontece de fato antes do primeiro cadastro
   real, fechar o drible do rate limit e fazer o próximo deploy não tropeçar nos mesmos pontos.
 
+## DEC-039 — API do Registro de Pensamentos (RPD) e novo aceite do aviso
+- **Decisão:**
+  - o Registro de Pensamentos da TCC entra como registro **independente** das atividades (issue
+    #48): dia da situação, situação, pensamento automático, o quanto acredita nele (0–10), uma ou
+    mais emoções com intensidade (0–10), comportamento e consequência. **Todos obrigatórios**;
+    textos de 1 a 1000 caracteres;
+  - emoções de uma **lista fechada** (enum `Emotion`): tristeza, ansiedade, medo, raiva, culpa,
+    vergonha, frustração, solidão, alegria, alívio e **outra**, que leva um nome livre de 1 a 50
+    caracteres. Cada emoção aparece uma vez por registro. Ficam em `ThoughtRecordEmotion`, uma linha
+    por emoção, e saem na ordem da lista;
+  - termos clínicos suaves na interface: "Registro de Pensamentos (RPD)" e "pensamento automático",
+    e não "pensamentos disfuncionais". É vocabulário técnico correto e não julga o que a pessoa
+    escreveu. É a exceção ao "sem aparência clínica" da SPEC;
+  - o dia da situação é DATE, **só até hoje** (400 `DATE_IN_FUTURE`), separado do `createdAt`;
+  - **editar e excluir só no dia em que o registro foi feito** (São Paulo, pelo `createdAt`).
+    Depois, 409 `THOUGHT_RECORD_LOCKED`, como a atividade finalizada (DEC-012). A escrita é
+    condicional (`createdAt` ≥ início de hoje, como na DEC-028), e a resposta traz `editable`, para
+    o "hoje" ficar só na API. Na edição, a lista de emoções que vier substitui a anterior inteira;
+  - rotas do paciente em `/thought-records` (`GET ?from&to` com até 42 dias, `POST`, `PATCH /:id`,
+    `DELETE /:id`), ordenadas por dia da situação e depois por `createdAt`. A terapeuta lê em
+    `GET /therapist/patients/:patientId/thought-records`, com até 92 dias, atrás da mesma cadeia da
+    DEC-033. Tudo sai em cascata ao excluir a conta;
+  - **nova versão do aviso de privacidade, `2026-10.2`**, que cita o RPD. Quem aceitou a versão
+    anterior aceita de novo por `POST /auth/accept-privacy` (`{ acceptPrivacy: true }`, com data e
+    versão gravadas, como no cadastro). O `/auth/me` devolve `privacyUpToDate`. Sem o aceite, só a
+    área de RPD responde 403 `PRIVACY_CONSENT_REQUIRED`, **para paciente e para terapeuta**; o resto
+    do app segue igual;
+  - os textos, a crença, as emoções e as intensidades entram no `redact` do logger (regra 7). Os
+    lembretes não mudam (regra 3);
+  - fora do escopo por ora: as colunas de reestruturação ("pensamento alternativo" e "como me sinto
+    agora").
+- **Motivo:** pensamentos e emoções são dados de saúde ainda mais sensíveis que as notas, e o
+  consentimento na LGPD é para finalidades determinadas (art. 8º, § 4º, e art. 11, I). Por isso o
+  aceite é renovado antes do uso, sem tirar o acesso ao que a pessoa já usava. Exigir todos os
+  campos mantém o registro completo para a sessão, e o prazo de um dia deixa corrigir um erro de
+  digitação sem reescrever o que a terapeuta já pode ter lido.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

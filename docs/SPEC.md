@@ -44,6 +44,20 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - **Próxima consulta** = a mais próxima com data a partir de amanhã.
 - Uma consulta por dia, registrada só com a data (sem horário).
 
+## Registro de Pensamentos (RPD)
+Registro da TCC, independente das atividades, com tela própria para o paciente.
+- Campos, **todos obrigatórios**:
+  - **dia da situação** (sem horário, até hoje), separado de quando foi registrado;
+  - **situação**, **pensamento automático**, **comportamento** e **consequência**: texto de 1 a 1000 caracteres;
+  - **o quanto acredito nesse pensamento**: inteiro de 0 a 10;
+  - **emoções**: uma ou mais, cada uma com **intensidade** inteira de 0 a 10, sem repetir.
+    Lista: tristeza, ansiedade, medo, raiva, culpa, vergonha, frustração, solidão, alegria, alívio e
+    **outra** (com o nome escrito pelo paciente, de 1 a 50 caracteres).
+- Editar e excluir só até o fim do dia em que o registro foi feito; depois, **409**.
+- Pode haver vários registros no mesmo dia, na ordem em que foram feitos.
+- Termos clínicos suaves: "Registro de Pensamentos (RPD)", "pensamento automático".
+- Usar o RPD exige ter aceitado a versão atual do aviso de privacidade (veja "Privacidade").
+
 ## Tela semanal (paciente e terapeuta)
 - A semana vai de segunda a domingo e dá para navegar entre semanas.
 - Mostra a lista de atividades e um gráfico comparando vontade × prazer × realização.
@@ -53,6 +67,7 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - Lista de pacientes com vínculo ativo. Os dados do paciente (nome etc.) vêm da conta dele, nada é digitado pela terapeuta.
 - Por paciente:
   - linha do tempo com notas e observações (nada é privado);
+  - aba **Registro de Pensamentos**, só leitura, com todos os campos e as duas datas;
   - gráficos;
   - filtro "desde a última consulta" (do dia da última consulta até hoje, com no máximo 92 dias).
 - **Destaque**: as atividades dos 7 dias antes da próxima consulta aparecem em evidência (da consulta −7 até a véspera, sem o dia da consulta). Sem próxima consulta cadastrada, o destaque cobre os últimos 7 dias até hoje.
@@ -104,12 +119,13 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
+- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Hoje isso vale para o RPD: sem o aceite da versão atual, a área de RPD fica bloqueada (para paciente e terapeuta) e o resto do app funciona.
 - Nenhum documento pessoal é solicitado.
 - A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos. A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída.
 - Nenhum dado real em seeds, fixtures ou testes.
 
 ## Tom e interface
-- Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro.
+- Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
 - Textos acolhedores ("Conta como foi?"), sem gamificação nem mensagens que gerem culpa.
 - PWA instalável; usar o app exige conexão.
 
@@ -119,3 +135,4 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Uso offline com sincronização
 - Mais de uma terapeuta por paciente
 - Verificação de CRP
+- Colunas de reestruturação do RPD ("pensamento alternativo" e "como me sinto agora")

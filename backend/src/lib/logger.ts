@@ -24,6 +24,15 @@ const SENSITIVE_KEYS = [
   'wantBefore',
   'pleasure',
   'achievement',
+  // Registro de Pensamentos (DEC-039): os textos, a crença, as emoções e as intensidades.
+  'situation',
+  'automaticThought',
+  'beliefLevel',
+  'behavior',
+  'consequence',
+  'emotions',
+  'intensity',
+  'otherLabel',
   'cookie',
   'authorization',
 ];

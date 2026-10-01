@@ -32,7 +32,8 @@ async function loginAgent(email: string) {
   return agent;
 }
 
-// Um pouco de tudo o que pertence à paciente: atividade, consulta, vínculo, convite e código.
+// Um pouco de tudo o que pertence à paciente: atividade, consulta, vínculo, convite, código e
+// Registro de Pensamentos.
 async function seedPatientData() {
   const date = dateOnlyToDate(todayInAppZone());
   await prisma.activity.create({
@@ -45,6 +46,18 @@ async function seedPatientData() {
   });
   await prisma.linkCode.create({
     data: { patientId, codeHash: 'hash-ficticio-codigo', expiresAt: new Date(Date.now() + 60_000) },
+  });
+  await prisma.thoughtRecord.create({
+    data: {
+      userId: patientId,
+      situationDate: date,
+      situation: 'Situação fictícia',
+      automaticThought: 'Pensamento fictício',
+      beliefLevel: 6,
+      behavior: 'Comportamento fictício',
+      consequence: 'Consequência fictícia',
+      emotions: { create: [{ emotion: 'ANSIEDADE', intensity: 7 }] },
+    },
   });
 }
 
@@ -64,6 +77,8 @@ describe('POST /auth/delete-account', () => {
     expect(await prisma.therapistLink.count()).toBe(0);
     expect(await prisma.linkInvite.count()).toBe(0);
     expect(await prisma.linkCode.count()).toBe(0);
+    expect(await prisma.thoughtRecord.count()).toBe(0);
+    expect(await prisma.thoughtRecordEmotion.count()).toBe(0);
     // A terapeuta continua existindo.
     expect(await prisma.user.findUnique({ where: { id: therapistId } })).not.toBeNull();
 

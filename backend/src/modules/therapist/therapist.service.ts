@@ -3,6 +3,8 @@ import { prisma } from '../../lib/prisma.js';
 import type { ActivitiesService } from '../activities/activities.service.js';
 import type { ListActivitiesQuery } from '../activities/activities.schema.js';
 import type { AppointmentsService } from '../appointments/appointments.service.js';
+import type { ListThoughtRecordsQuery } from '../thought-records/thought-records.schema.js';
+import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
 
 export type Highlight = {
   from: string;
@@ -22,7 +24,11 @@ export function highlightWindow(nextAppointment: string | null, today: string): 
 
 // Só leitura, sempre atrás do requireActiveLink. Reaproveita os services do paciente para as
 // regras (ordem, formato, última e próxima consulta) ficarem num lugar só.
-export function createTherapistService(activities: ActivitiesService, appointments: AppointmentsService) {
+export function createTherapistService(
+  activities: ActivitiesService,
+  appointments: AppointmentsService,
+  thoughtRecords: ThoughtRecordsService,
+) {
   return {
     async summary(therapistId: string, patientId: string) {
       const link = await prisma.therapistLink.findFirstOrThrow({
@@ -46,6 +52,10 @@ export function createTherapistService(activities: ActivitiesService, appointmen
 
     listAppointments(patientId: string) {
       return appointments.list(patientId);
+    },
+
+    listThoughtRecords(patientId: string, query: ListThoughtRecordsQuery) {
+      return thoughtRecords.list(patientId, query);
     },
   };
 }

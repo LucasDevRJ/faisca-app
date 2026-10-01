@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, dateOnlyToDate, dateToDateOnly, daysBetween, todayInAppZone } from './dates.js';
+import {
+  addDays,
+  dateOnlyToDate,
+  dateToDateOnly,
+  daysBetween,
+  startOfDayInAppZone,
+  todayInAppZone,
+} from './dates.js';
 
 describe('todayInAppZone', () => {
   it('usa o dia de São Paulo, não o de UTC', () => {
@@ -22,5 +29,17 @@ describe('conversão de datas', () => {
   it('conta os dias entre duas datas', () => {
     expect(daysBetween('2026-09-21', '2026-09-27')).toBe(6);
     expect(daysBetween('2026-09-27', '2026-09-27')).toBe(0);
+  });
+});
+
+describe('startOfDayInAppZone', () => {
+  it('é a meia-noite de São Paulo, em UTC', () => {
+    expect(startOfDayInAppZone('2026-10-01').toISOString()).toBe('2026-10-01T03:00:00.000Z');
+  });
+
+  it('um segundo antes ainda é o dia anterior em São Paulo', () => {
+    const start = startOfDayInAppZone('2026-10-01');
+    expect(todayInAppZone(start)).toBe('2026-10-01');
+    expect(todayInAppZone(new Date(start.getTime() - 1000))).toBe('2026-09-30');
   });
 });

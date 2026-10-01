@@ -39,9 +39,13 @@ const SEED_USERS = [
   { name: 'Tina Fictícia', email: 'vinculo-terapeuta@faisca.test', patient: false, therapist: true },
   // Só para o teste de excluir a conta: some no meio da execução.
   { name: 'Edu Fictício', email: 'excluir@faisca.test', patient: true, therapist: false },
+  // Só para o Registro de Pensamentos (api/thought-records.spec.ts): vínculo e aceite próprios.
+  { name: 'Rita Fictícia', email: 'rpd-paciente@faisca.test', patient: true, therapist: false },
+  { name: 'Lia Fictícia', email: 'rpd-terapeuta@faisca.test', patient: false, therapist: true },
 ];
 
 await prisma.activity.deleteMany();
+await prisma.thoughtRecord.deleteMany();
 await prisma.appointment.deleteMany();
 await prisma.authToken.deleteMany();
 await prisma.linkCodeAttempt.deleteMany();

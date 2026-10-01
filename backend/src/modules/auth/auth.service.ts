@@ -11,7 +11,9 @@ import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } fro
 
 // Versão do aviso de privacidade aceita no cadastro (DEC-036). Muda junto com o texto da página
 // /privacidade no front (frontend/src/pages/privacy-page.tsx).
-export const PRIVACY_VERSION = '2026-10';
+// 2026-10.2: entra o Registro de Pensamentos (DEC-039). Quem aceitou a anterior aceita de novo
+// pelo POST /auth/accept-privacy para usar a área de RPD.
+export const PRIVACY_VERSION = '2026-10.2';
 
 const HOUR_MS = 60 * 60 * 1000;
 const TOKEN_TTL_MS: Record<AuthTokenType, number> = {
@@ -24,16 +26,19 @@ export type PublicUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
+  // Aceitou a versão atual do aviso? Sem isso, a área de RPD fica bloqueada (DEC-039).
+  privacyUpToDate: boolean;
 };
 
 export function toPublicUser(
-  user: Pick<User, 'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile'>,
+  user: Pick<User, 'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile' | 'privacyVersion'>,
 ): PublicUser {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     profiles: { patient: user.hasPatientProfile, therapist: user.hasTherapistProfile },
+    privacyUpToDate: user.privacyVersion === PRIVACY_VERSION,
   };
 }
 
@@ -188,8 +193,17 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       });
     },
 
+    // Novo aceite do aviso, para quem aceitou uma versão anterior (DEC-039). Grava a data e a
+    // versão, como no cadastro (DEC-036).
+    async acceptPrivacy(userId: string): Promise<User> {
+      return prisma.user.update({
+        where: { id: userId },
+        data: { privacyAcceptedAt: new Date(), privacyVersion: PRIVACY_VERSION },
+      });
+    },
+
     // SPEC ("Privacidade"), DEC-035: apaga a conta e, em cascata no banco, atividades, consultas,
-    // vínculos, convites, códigos e tokens. As sessões abertas caem porque o requireAuth não
+    // vínculos, convites, códigos, tokens e o Registro de Pensamentos. As sessões abertas caem porque o requireAuth não
     // acha mais o usuário.
     async deleteAccount(userId: string, password: string): Promise<void> {
       const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
