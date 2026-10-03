@@ -559,6 +559,27 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   cumpre o "avisamos no app antes" do aviso de privacidade sem obrigar ninguém a aceitar para
   continuar usando o resto.
 
+## DEC-041 — Versão nova do app com "Atualizar" e aceite do aviso com o texto da terapeuta
+- **Decisão:**
+  - o service worker passa de `autoUpdate` para **`prompt`**. A versão nova é baixada e fica
+    esperando. No topo de qualquer tela, uma faixa avisa "Tem uma versão nova do Faísca" com
+    **Atualizar** (a versão nova assume e a página recarrega) e **Agora não** (ela assume sozinha
+    quando todas as abas do app forem fechadas). O app aberto procura versão nova **de hora em
+    hora** e **sempre que volta para a frente** (`visibilitychange`). O registro sai do
+    `registerSW.js` injetado e vai para o `src/app/update-prompt.tsx` (`virtual:pwa-register/react`);
+  - a faixa não recarrega sozinha: atualizar no meio de um formulário apagaria o que a pessoa
+    estava escrevendo;
+  - transição: as telas abertas na versão antiga não têm a faixa. A primeira versão com ela só
+    assume depois que o app for fechado de vez uma vez; dali em diante, a faixa aparece;
+  - o pedido de aceite do aviso (DEC-039 e DEC-040) ganha o **texto de quem aceita**. Na aba da
+    terapeuta: "Para ver o Registro de Pensamentos dos seus pacientes…" e "inclusive com o acesso
+    aos pensamentos e emoções dos meus pacientes como dados de saúde". O paciente segue com "o uso
+    dos meus pensamentos e emoções". A API e o aceite gravado não mudam.
+- **Motivo:** com `skipWaiting` imediato, a versão nova assumia em segundo plano, mas a tela aberta
+  continuava com o código antigo até recarregar. O PWA instalado fica dias assim, e a psicóloga não
+  via a aba de Pensamentos depois do deploy. O texto do paciente ("meus pensamentos") dava a
+  entender à terapeuta que o aceite não era com ela.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

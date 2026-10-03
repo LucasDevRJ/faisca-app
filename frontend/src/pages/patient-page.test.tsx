@@ -279,6 +279,9 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     renderRoute(`${path}?aba=pensamentos`);
 
     expect(await screen.findByRole('heading', { name: 'Antes de começar' })).toBeInTheDocument();
+    // Texto de quem lê, e não o do paciente (DEC-041).
+    expect(screen.getByRole('checkbox', { name: /acesso aos pensamentos e emoções dos meus pacientes/ })).not.toBeChecked();
+    expect(screen.queryByText(/meus pensamentos e emoções/)).not.toBeInTheDocument();
     expect(calls).toEqual([]);
   });
 

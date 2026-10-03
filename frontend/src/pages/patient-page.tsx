@@ -419,7 +419,7 @@ type ThoughtsTabProps = {
 
 // Registro de Pensamentos do paciente, só leitura (DEC-040). Só os dias com registro aparecem.
 function ThoughtsTab({ consented, query, range, since, today, highlight }: ThoughtsTabProps) {
-  if (!consented) return <PrivacyConsentGate />;
+  if (!consented) return <PrivacyConsentGate audience="therapist" />;
 
   if (query.isPending) {
     return (

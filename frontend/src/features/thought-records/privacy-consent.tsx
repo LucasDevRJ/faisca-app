@@ -7,9 +7,23 @@ import { useAcceptPrivacy, useSession } from '../auth/use-session';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
+// O mesmo aceite (DEC-039), com o texto de quem o faz: o paciente consente com o uso dos próprios
+// pensamentos; a terapeuta, com o acesso aos dos pacientes (DEC-041).
+const CONSENT_TEXT = {
+  patient: {
+    intro: 'Para usar esta parte, leia o que mudou e confirme.',
+    scope: 'inclusive com o uso dos meus pensamentos e emoções como dados de saúde.',
+  },
+  therapist: {
+    intro: 'Para ver o Registro de Pensamentos dos seus pacientes, leia o que mudou e confirme.',
+    scope: 'inclusive com o acesso aos pensamentos e emoções dos meus pacientes como dados de saúde.',
+  },
+} as const;
+
 // Novo aceite do aviso de privacidade (DEC-039), no lugar do Registro de Pensamentos.
 // Mesmo consentimento do cadastro: caixa desmarcada e explícita (DEC-036).
-export function PrivacyConsentGate() {
+export function PrivacyConsentGate({ audience = 'patient' }: { audience?: 'patient' | 'therapist' }) {
+  const text = CONSENT_TEXT[audience];
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const accept = useAcceptPrivacy();
@@ -33,8 +47,8 @@ export function PrivacyConsentGate() {
         Antes de começar
       </h2>
       <p>
-        Atualizamos o aviso de privacidade para incluir o Registro de Pensamentos. Para usar esta parte, leia o
-        que mudou e confirme. O resto do Faísca continua igual.
+        Atualizamos o aviso de privacidade para incluir o Registro de Pensamentos. {text.intro} O resto do
+        Faísca continua igual.
       </p>
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         {error && <Alert tone="attention">{error}</Alert>}
@@ -51,7 +65,7 @@ export function PrivacyConsentGate() {
             <Link to="/privacidade" target="_blank" rel="noopener" className={linkClass}>
               aviso de privacidade
             </Link>
-            , inclusive com o uso dos meus pensamentos e emoções como dados de saúde.
+            , {text.scope}
           </span>
         </label>
         <div>
