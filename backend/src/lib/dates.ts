@@ -64,3 +64,25 @@ export function startOfDayInAppZone(value: string): Date {
   );
   return new Date(utcMidnight.getTime() + (utcMidnight.getTime() - wallClockAsUtc));
 }
+
+const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: APP_TIME_ZONE,
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+// Hora de agora no relógio de São Paulo, como 'HH:MM'.
+export function nowTimeInAppZone(now: Date = new Date()): string {
+  return timeFormatter.format(now);
+}
+
+// Um TIME do Postgres chega ao Prisma como Date em 1970-01-01, no UTC. Como no DATE, a conversão
+// entre 'HH:MM' e Date é feita em UTC: a hora guardada é a do relógio de São Paulo, sem fuso.
+export function timeOnlyToDate(value: string): Date {
+  return new Date(`1970-01-01T${value}:00.000Z`);
+}
+
+export function dateToTimeOnly(value: Date): string {
+  return value.toISOString().slice(11, 16);
+}

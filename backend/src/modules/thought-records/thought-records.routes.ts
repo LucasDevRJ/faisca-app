@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middlewares/require-auth.js';
-import { requireCurrentPrivacy } from '../../middlewares/require-current-privacy.js';
+import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requirePatient } from '../../middlewares/require-patient.js';
 import { createThoughtRecordsController } from './thought-records.controller.js';
 import { createThoughtRecordsService } from './thought-records.service.js';
@@ -10,8 +10,8 @@ import { createThoughtRecordsService } from './thought-records.service.js';
 export function createThoughtRecordsRoutes() {
   const controller = createThoughtRecordsController(createThoughtRecordsService());
   const router = Router();
-  // Sem o aceite da versão atual do aviso, só esta área fica bloqueada (SPEC, "Privacidade").
-  const patient = [requireAuth, requirePatient, requireCurrentPrivacy];
+  // Sem o aceite de uma versão do aviso que cite o RPD, só esta área fica bloqueada (SPEC, "Privacidade").
+  const patient = [requireAuth, requirePatient, requirePrivacy('thoughtRecords')];
 
   router.get('/thought-records', ...patient, controller.list);
   router.get('/thought-records/:id', ...patient, controller.get);

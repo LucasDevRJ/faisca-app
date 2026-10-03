@@ -7,7 +7,7 @@ import type { Appointment } from '../features/appointments/appointments-api';
 import type { PatientSummary } from '../features/therapist/therapist-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { renderRoute } from '../test/render';
-import { apiError, fakeActivity, fakeThoughtRecord, fakeUser, server } from '../test/server';
+import { apiError, fakeActivity, fakeThoughtRecord, fakeUser, outdatedPrivacy, server } from '../test/server';
 
 // Terapeuta e paciente fictícios (regra 5). "Hoje" fixo: quinta, 24/09/2026.
 const PATIENT_ID = '00000000-0000-4000-8000-00000000000a';
@@ -271,7 +271,7 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
   it('terapeuta sem o aceite da versão atual: pedido de aceite, sem buscar os registros', async () => {
     server.use(
       http.get('*/api/auth/me', () =>
-        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true }, privacyUpToDate: false } }),
+        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true }, ...outdatedPrivacy } }),
       ),
     );
     patientApi();

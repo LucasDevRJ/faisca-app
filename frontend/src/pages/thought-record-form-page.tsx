@@ -58,7 +58,7 @@ export function NewThoughtRecordPage() {
   const day = searchParams.get('dia');
   const initialDate = isValidDateOnly(day) && day <= today ? day : today;
 
-  if (!user?.privacyUpToDate || (create.isError && needsPrivacyConsent(create.error))) {
+  if (!user?.privacyAreas.thoughtRecords || (create.isError && needsPrivacyConsent(create.error))) {
     return (
       <Frame title="Novo registro">
         <PrivacyConsentGate />
@@ -84,7 +84,7 @@ export function NewThoughtRecordPage() {
 export function EditThoughtRecordPage() {
   const { id = '' } = useParams();
   const { data: user } = useSession();
-  const consented = Boolean(user?.privacyUpToDate);
+  const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const record = useThoughtRecord(id, consented);
   const update = useUpdateThoughtRecord();
   const backToWeek = useBackToWeek();

@@ -580,6 +580,40 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   via a aba de Pensamentos depois do deploy. O texto do paciente ("meus pensamentos") dava a
   entender à terapeuta que o aceite não era com ela.
 
+## DEC-042 — API dos Episódios de tensão e aceite do aviso por área
+- **Decisão:**
+  - os **Episódios de tensão** entram como registro independente das atividades e do RPD (issue
+    #52): dia, hora opcional, situação, tensão (0–10), vontade de vocalizar (0–10), o que fez e o que
+    aconteceu depois. Tudo obrigatório, **menos a hora**; textos de 1 a 1000 caracteres. Na tela, as
+    duas notas vão de "nenhuma" a "muito forte", e a vontade de vocalizar leva a dica "falar, gritar,
+    se movimentar…", porque cobre o tique vocal ou de ansiedade, e não só a voz;
+  - tabela `TensionEpisode`: `episodeDate` (DATE, **só até hoje**, 400 `DATE_IN_FUTURE`) e
+    `episodeTime` (TIME sem segundos, **opcional**, no relógio de São Paulo, como `'HH:MM'` na API).
+    Se o dia for hoje, a hora não pode ser depois de agora (400 `TIME_IN_FUTURE`); a edição confere
+    o dia e a hora juntos, com o que já estava gravado. Notas e tamanhos também têm CHECK no banco;
+  - **editar e excluir só no dia em que o registro foi feito**, como o RPD: depois, 409
+    `TENSION_EPISODE_LOCKED`, com escrita condicional e `editable` na resposta. `episodeTime: null`
+    apaga a hora;
+  - ordem: dia, depois hora, com os **sem hora no fim** do dia, na ordem em que foram registrados;
+  - rotas do paciente em `/tension-episodes` (`GET ?from&to` com até 42 dias, `GET /:id`, `POST`,
+    `PATCH /:id`, `DELETE /:id`). A terapeuta lê em `GET /therapist/patients/:patientId/tension-episodes`,
+    com até 92 dias, atrás da mesma cadeia da DEC-033. Tudo sai em cascata ao excluir a conta;
+  - nova versão do aviso de privacidade, **`2026-10.3`**, que cita os episódios. O aceite passa a ser
+    **por área**: cada área exige a versão que passou a citá-la (RPD a partir da `2026-10.2`,
+    episódios a partir da `2026-10.3`), comparando pela posição numa lista ordenada de versões
+    (`PRIVACY_VERSIONS`), e não como texto. O middleware vira `requirePrivacy(area)`. O `/auth/me`
+    mantém `privacyUpToDate` (para a faixa "o aviso mudou") e ganha `privacyAreas`; os bloqueios do
+    RPD no front passam a usar `privacyAreas.thoughtRecords`;
+  - as duas notas entram no `redact` do logger (regra 7); os textos já estavam. Os lembretes não
+    mudam (regra 3);
+  - deploy: esta etapa vai para produção junto com a das telas, porque a faixa e o pedido de aceite
+    do app ainda falam só do RPD.
+- **Motivo:** o tique e a tensão são dados de saúde novos, e o consentimento na LGPD é para
+  finalidades determinadas: por isso um novo aceite antes do uso. Exigir só "a versão atual" faria
+  cada versão nova bloquear de novo o RPD de quem acabou de aceitá-lo; com a versão mínima por área,
+  o novo aceite só é pedido para o que é novo. A hora ajuda a ver padrões, mas é o campo mais fácil
+  de esquecer: obrigá-la levaria a horários inventados.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

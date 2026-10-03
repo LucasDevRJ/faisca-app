@@ -126,7 +126,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
 
   // Só a aba aberta pergunta à API. O RPD também espera o aceite da versão atual do aviso (DEC-039).
   const activities = usePatientActivities(patientId, thoughtsTab ? null : range);
-  const consented = Boolean(user?.privacyUpToDate);
+  const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const thoughts = usePatientThoughtRecords(patientId, thoughtsTab && consented ? range : null);
   const appointmentDays = new Set(
     usePatientAppointments(patientId).data?.appointments.map((a) => a.appointmentDate),

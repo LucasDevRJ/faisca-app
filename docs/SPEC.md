@@ -57,7 +57,24 @@ Registro da TCC, independente das atividades. O paciente alterna entre as abas *
 - Editar e excluir só até o fim do dia em que o registro foi feito; depois, **409**.
 - Pode haver vários registros no mesmo dia, na ordem em que foram feitos.
 - Termos clínicos suaves: "Registro de Pensamentos (RPD)", "pensamento automático".
-- Usar o RPD exige ter aceitado a versão atual do aviso de privacidade (veja "Privacidade").
+- Usar o RPD exige ter aceitado uma versão do aviso de privacidade que o cite (veja "Privacidade").
+
+## Episódios de tensão
+Registro de episódios de tensão, independente das atividades e do RPD. O paciente ganha a aba
+**Tensão**, ao lado de **Atividades** e **Pensamentos**, e o formulário fica numa página própria.
+- Campos, **todos obrigatórios, menos a hora**:
+  - **dia** do episódio (até hoje), separado de quando foi registrado;
+  - **hora** (opcional, no relógio de São Paulo): a pessoa pode não lembrar. Se o dia for hoje, a
+    hora não pode ser depois de agora;
+  - **situação** (o que estava acontecendo), **o que fez** e **o que aconteceu depois**: texto de 1 a
+    1000 caracteres;
+  - **tensão**: inteiro de 0 a 10 ("nenhuma" a "muito forte");
+  - **vontade de vocalizar**: inteiro de 0 a 10 ("nenhuma" a "muito forte"). Cobre o tique vocal ou
+    de ansiedade, a forma de expressar a ansiedade: falando, gritando ou se movimentando.
+- Editar e excluir só até o fim do dia em que o registro foi feito; depois, **409**.
+- Pode haver vários episódios no mesmo dia: pela hora e, no fim, os sem hora, na ordem em que foram
+  registrados.
+- Usar os episódios exige ter aceitado uma versão do aviso de privacidade que os cite.
 
 ## Tela semanal (paciente e terapeuta)
 - A semana vai de segunda a domingo e dá para navegar entre semanas.
@@ -69,6 +86,8 @@ Registro da TCC, independente das atividades. O paciente alterna entre as abas *
 - Por paciente:
   - linha do tempo com notas e observações (nada é privado);
   - aba **Registro de Pensamentos**, só leitura, com todos os campos e as duas datas;
+  - aba **Episódios de tensão**, só leitura, com todos os campos e um gráfico da tensão e da
+    vontade de vocalizar no período;
   - gráficos;
   - filtro "desde a última consulta" (do dia da última consulta até hoje, com no máximo 92 dias).
 - **Destaque**: as atividades dos 7 dias antes da próxima consulta aparecem em evidência (da consulta −7 até a véspera, sem o dia da consulta). Sem próxima consulta cadastrada, o destaque cobre os últimos 7 dias até hoje.
@@ -120,7 +139,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
-- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Hoje isso vale para o RPD: sem o aceite da versão atual, a área de RPD fica bloqueada (para paciente e terapeuta) e o resto do app funciona.
+- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas.
 - Nenhum documento pessoal é solicitado.
 - A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos. A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída.
 - Nenhum dado real em seeds, fixtures ou testes.

@@ -3,6 +3,7 @@ import { getAuthUser } from '../../middlewares/require-auth.js';
 import {
   patientParamsSchema,
   therapistActivitiesQuerySchema,
+  therapistTensionEpisodesQuerySchema,
   therapistThoughtRecordsQuerySchema,
 } from './therapist.schema.js';
 import type { TherapistService } from './therapist.service.js';
@@ -31,5 +32,11 @@ export function createTherapistController(service: TherapistService) {
     res.status(200).json({ thoughtRecords: await service.listThoughtRecords(patientId, query) });
   };
 
-  return { summary, activities, appointments, thoughtRecords };
+  const tensionEpisodes: RequestHandler = async (req, res) => {
+    const { patientId } = patientParamsSchema.parse(req.params);
+    const query = therapistTensionEpisodesQuerySchema.parse(req.query);
+    res.status(200).json({ tensionEpisodes: await service.listTensionEpisodes(patientId, query) });
+  };
+
+  return { summary, activities, appointments, thoughtRecords, tensionEpisodes };
 }

@@ -11,7 +11,14 @@ export const fakeUser: SessionUser = {
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
+  privacyAreas: { thoughtRecords: true, tensionEpisodes: true },
 };
+
+// Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
+export const outdatedPrivacy = {
+  privacyUpToDate: false,
+  privacyAreas: { thoughtRecords: false, tensionEpisodes: false },
+} satisfies Partial<SessionUser>;
 
 // Atividade fictícia com valores padrão; cada teste troca só o que importa.
 let activitySeq = 0;

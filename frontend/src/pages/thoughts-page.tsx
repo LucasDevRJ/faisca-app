@@ -36,7 +36,7 @@ export function ThoughtsPage() {
   const [toDelete, setToDelete] = useState<ThoughtRecord | null>(null);
   const [notice, setNotice] = useState<string | null>((location.state as ThoughtsPageState)?.notice ?? null);
 
-  const consented = Boolean(user?.privacyUpToDate);
+  const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const today = todayInAppZone();
   const currentMonday = startOfWeek(today);
   const param = searchParams.get('semana');

@@ -28,7 +28,8 @@ const { FakeMailer } = await import('../src/test/fake-mailer.js');
 
 // Usuários fictícios (regra 5). As mesmas credenciais estão em tests/fixtures/users.ts.
 const SEED_PASSWORD = 'senha-ficticia-123';
-const SEED_USERS = [
+// privacyVersion: versão do aviso já aceita. Sem ela, a conta é de antes do aviso (null).
+const SEED_USERS: { name: string; email: string; patient: boolean; therapist: boolean; privacyVersion?: string }[] = [
   { name: 'Paciente Fictícia', email: 'paciente@faisca.test', patient: true, therapist: false },
   { name: 'Terapeuta Fictícia', email: 'terapeuta@faisca.test', patient: false, therapist: true },
   { name: 'Pessoa Fictícia', email: 'dois-perfis@faisca.test', patient: true, therapist: true },
@@ -45,10 +46,15 @@ const SEED_USERS = [
   // Só para as telas do Registro de Pensamentos (e2e/thought-records.spec.ts).
   { name: 'Nina Fictícia', email: 'rpd-tela-paciente@faisca.test', patient: true, therapist: false },
   { name: 'Olga Fictícia', email: 'rpd-tela-terapeuta@faisca.test', patient: false, therapist: true },
+  // Só para os Episódios de tensão (api/tension-episodes.spec.ts): já aceitaram a versão do RPD,
+  // mas não a que cita os episódios (DEC-042).
+  { name: 'Bia Fictícia', email: 'tensao-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.2' },
+  { name: 'Cora Fictícia', email: 'tensao-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.2' },
 ];
 
 await prisma.activity.deleteMany();
 await prisma.thoughtRecord.deleteMany();
+await prisma.tensionEpisode.deleteMany();
 await prisma.appointment.deleteMany();
 await prisma.authToken.deleteMany();
 await prisma.linkCodeAttempt.deleteMany();
@@ -65,6 +71,8 @@ await prisma.user.createMany({
     hasPatientProfile: u.patient,
     hasTherapistProfile: u.therapist,
     emailConfirmedAt: new Date(),
+    privacyAcceptedAt: u.privacyVersion ? new Date() : null,
+    privacyVersion: u.privacyVersion ?? null,
   })),
 });
 

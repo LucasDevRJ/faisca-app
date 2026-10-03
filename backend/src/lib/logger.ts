@@ -33,6 +33,9 @@ const SENSITIVE_KEYS = [
   'emotions',
   'intensity',
   'otherLabel',
+  // Episódios de tensão (DEC-042): as duas notas (situation, behavior e consequence já estão acima).
+  'tensionLevel',
+  'vocalizeUrge',
   'cookie',
   'authorization',
 ];

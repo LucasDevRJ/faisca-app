@@ -7,6 +7,7 @@ export async function resetDatabase() {
   await prisma.activity.deleteMany();
   // As emoções saem em cascata.
   await prisma.thoughtRecord.deleteMany();
+  await prisma.tensionEpisode.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.authToken.deleteMany();
   await prisma.linkCodeAttempt.deleteMany();
