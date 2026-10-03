@@ -74,6 +74,8 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
 - Editar e excluir só até o fim do dia em que o registro foi feito; depois, **409**.
 - Pode haver vários episódios no mesmo dia: pela hora e, no fim, os sem hora, na ordem em que foram
   registrados.
+- A tela mostra, por semana, só os dias com episódio e, no fim, um **gráfico** da tensão e da vontade
+  de vocalizar ao longo da semana, com os dias de consulta marcados.
 - Usar os episódios exige ter aceitado uma versão do aviso de privacidade que os cite.
 
 ## Tela semanal (paciente e terapeuta)
@@ -85,9 +87,10 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
 - Lista de pacientes com vínculo ativo. Os dados do paciente (nome etc.) vêm da conta dele, nada é digitado pela terapeuta.
 - Por paciente:
   - linha do tempo com notas e observações (nada é privado);
-  - aba **Registro de Pensamentos**, só leitura, com todos os campos e as duas datas;
-  - aba **Episódios de tensão**, só leitura, com todos os campos e um gráfico da tensão e da
-    vontade de vocalizar no período;
+  - abas **Atividades | Pensamentos | Tensão**;
+  - **Pensamentos**: o Registro de Pensamentos, só leitura, com todos os campos e as duas datas;
+  - **Tensão**: os Episódios de tensão, só leitura, com todos os campos, as duas datas e um gráfico
+    da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
   - filtro "desde a última consulta" (do dia da última consulta até hoje, com no máximo 92 dias).
 - **Destaque**: as atividades dos 7 dias antes da próxima consulta aparecem em evidência (da consulta −7 até a véspera, sem o dia da consulta). Sem próxima consulta cadastrada, o destaque cobre os últimos 7 dias até hoje.

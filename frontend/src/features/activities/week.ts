@@ -17,6 +17,18 @@ export function todayInAppZone(now: Date = new Date()): string {
   return todayFormatter.format(now);
 }
 
+const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: APP_TIME_ZONE,
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+// Hora de agora no relógio de São Paulo, como 'HH:MM' (a mesma conta do backend).
+export function nowTimeInAppZone(now: Date = new Date()): string {
+  return timeFormatter.format(now);
+}
+
 function toUtcDate(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
 }

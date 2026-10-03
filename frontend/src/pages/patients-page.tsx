@@ -4,7 +4,7 @@ import { getApiError } from '../features/auth/auth-api';
 import { formatDate } from '../features/links/link-format';
 import { RedeemCodeForm } from '../features/links/redeem-code-form';
 import { useLinkedPatients } from '../features/links/use-links';
-import { PrivacyUpdateBanner } from '../features/thought-records/privacy-consent';
+import { PrivacyUpdateBanner } from '../features/auth/privacy-consent';
 
 // "Meus pacientes" (SPEC, "Visão da terapeuta"): o campo de código e a lista de quem tem
 // vínculo ativo. Cada item leva aos registros do paciente (/pacientes/:id, DEC-033).

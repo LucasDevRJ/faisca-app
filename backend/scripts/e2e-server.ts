@@ -50,6 +50,9 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   // mas não a que cita os episódios (DEC-042).
   { name: 'Bia Fictícia', email: 'tensao-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.2' },
   { name: 'Cora Fictícia', email: 'tensao-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.2' },
+  // Só para as telas dos Episódios de tensão (e2e/tension-episodes.spec.ts), também com a versão do RPD.
+  { name: 'Duda Fictícia', email: 'tensao-tela-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.2' },
+  { name: 'Eva Fictícia', email: 'tensao-tela-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.2' },
 ];
 
 await prisma.activity.deleteMany();

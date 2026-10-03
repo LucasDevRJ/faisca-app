@@ -614,6 +614,48 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   o novo aceite só é pedido para o que é novo. A hora ajuda a ver padrões, mas é o campo mais fácil
   de esquecer: obrigá-la levaria a horários inventados.
 
+## DEC-043 — Telas dos Episódios de tensão
+- **Decisão:**
+  - as telas do paciente ganham a terceira aba: **Atividades | Pensamentos | Tensão** (`/tensao`).
+    Num celular de 360px, as três abas usam texto menor e menos espaço interno; no computador, nada
+    muda. "Meus registros" fica marcado também em `/tensao`;
+  - `/tensao` navega por semana (`?semana=AAAA-MM-DD`) e mostra **só os dias com episódio**, como
+    `/pensamentos`. O cartão mostra a hora ("às 14:30" ou **"sem horário"**), as duas notas em barras
+    numa cor só e os três textos. Editar e excluir só com `editable`; depois, "Registrado em";
+  - formulário em **página própria** (`/tensao/novo?dia=AAAA-MM-DD` e `/tensao/:id/editar`): dia,
+    hora (opcional, "Pode deixar em branco se não lembrar"), o que estava acontecendo, tensão e
+    vontade de vocalizar ("nenhuma" a "muito forte", com a dica "Falar, gritar, se movimentar…"), o
+    que fez e o que aconteceu depois. A tela avisa antes de enviar uma hora de hoje que ainda não
+    chegou. Ao salvar, volta para a semana do episódio com "Registro salvo.". O `ScoreField` ganha
+    uma dica opcional embaixo do rótulo;
+  - visão da terapeuta: os botões passam a ter **nomes curtos, iguais às abas do paciente**
+    (**Atividades | Pensamentos | Tensão**), no lugar de "Registro de Pensamentos" da DEC-040, que
+    não cabia com três botões no celular. A aba `?aba=tensao` usa o mesmo período e o mesmo destaque,
+    com os cartões só leitura;
+  - **gráfico da tensão** para a terapeuta (acima dos cartões) e **também para o paciente** (no fim
+    da semana). Eixo do tempo contínuo: cada episódio é um ponto, posicionado pelo dia e pela hora
+    (sem hora, no meio do dia), ligado ao seguinte na ordem do tempo. Um eixo só, de 0 a 10. Os
+    **dias de consulta** aparecem como uma faixa "consulta". Toque ou mouse no ponto mostra o dia, a
+    hora e as duas notas, e uma tabela com os mesmos dados fica para leitor de tela;
+  - cores do gráfico: sálvia em dois tons (`--color-score-10` para a tensão, `--color-score-6` para a
+    vontade de vocalizar). Passam no validador de paleta da skill de visualização (separação para
+    daltonismo e visão normal, contraste ≥ 3:1, nos dois temas). As checagens de croma e faixa de
+    luminosidade, pensadas para paletas de matizes diferentes, não se aplicam à regra de cor única do
+    `frontend/CLAUDE.md`, e a leitura não depende só da cor: linha contínua × tracejada, círculo ×
+    quadrado, legenda e tabela;
+  - aviso de privacidade: o pedido de aceite recebe a **área** e quem aceita (textos próprios para o
+    paciente e a terapeuta em cada área) e passa para `features/auth/`. A faixa "o aviso mudou" cita
+    **só as áreas que faltam liberar** e sai da tela em que o pedido da área já aparece;
+  - textos: a exclusão de conta lista os Episódios de tensão, e o vínculo em Conta diz que a
+    terapeuta lê "atividades, Registro de Pensamentos, Episódios de tensão e consultas";
+  - `db:seed-dev` cria 6 episódios fictícios para a `paciente.dev` (alguns sem hora, um no dia da
+    última consulta) e a conta `aviso-rpd.dev@faisca.test`, só com a versão do aviso do RPD.
+- **Motivo:** repetir o desenho do RPD deixa a parte nova familiar para quem já usa o app. O eixo de
+  tempo contínuo mostra quando os episódios se concentram sem inventar uma nota para os dias sem
+  episódio, e a faixa de consulta ajuda a terapeuta a ligar a tensão às sessões. O paciente também vê
+  o gráfico, como já vê o das atividades: perceber o próprio padrão antes da sessão faz parte do
+  acompanhamento.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

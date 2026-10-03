@@ -45,14 +45,17 @@ O `docker/init-db.sh` só roda com o volume vazio. Para recriar o banco do zero:
 ## Contas fictícias de dev (DEC-032, DEC-033)
 
 Sem domínio próprio, o Resend não entrega e-mail para uma segunda pessoa. Para ver os dois
-lados do vínculo em dev, `npm run db:seed-dev` cria (ou restaura) três contas já confirmadas,
+lados do vínculo em dev, `npm run db:seed-dev` cria (ou restaura) quatro contas já confirmadas,
 todas com a senha `senha-ficticia-123`:
 
 - `terapeuta.dev@faisca.test`: terapeuta;
 - `paciente.dev@faisca.test`: paciente já vinculada à terapeuta dev, com ~3 semanas de atividades,
-  Registros de Pensamentos e consultas fictícias em volta de hoje (última há 7 dias, próxima daqui a 3);
-- `aviso-antigo.dev@faisca.test`: paciente que só aceitou o aviso de privacidade anterior, para ver
-  o pedido do novo aceite no Registro de Pensamentos (DEC-039).
+  Registros de Pensamentos, Episódios de tensão e consultas fictícias em volta de hoje (última há 7
+  dias, próxima daqui a 3);
+- `aviso-antigo.dev@faisca.test`: paciente que só aceitou o aviso de privacidade de antes do RPD, para
+  ver o pedido do novo aceite no Registro de Pensamentos (DEC-039);
+- `aviso-rpd.dev@faisca.test`: paciente que aceitou a versão do RPD, mas não a dos episódios, para ver
+  o aceite por área: o RPD aberto e a Tensão pedindo o aceite (DEC-042).
 
 As duas primeiras já aceitaram a versão atual do aviso.
 
