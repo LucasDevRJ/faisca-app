@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { Activity } from '../features/activities/activities-api';
 import type { SessionUser } from '../features/auth/auth-api';
+import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 
 // Pessoa fictícia usada nos testes (regra 5 do AGENTS.md).
@@ -59,6 +60,26 @@ export function fakeThoughtRecord(overrides: Partial<ThoughtRecord> = {}): Thoug
   };
 }
 
+// Episódio de tensão fictício (DEC-042); cada teste troca só o que importa.
+let tensionSeq = 0;
+export function fakeTensionEpisode(overrides: Partial<TensionEpisode> = {}): TensionEpisode {
+  tensionSeq += 1;
+  return {
+    id: `00000000-0000-4000-a000-${String(tensionSeq).padStart(12, '0')}`,
+    episodeDate: '2026-09-24',
+    episodeTime: '14:30',
+    situation: 'Situação fictícia de tensão',
+    tensionLevel: 8,
+    vocalizeUrge: 6,
+    behavior: 'Comportamento fictício',
+    consequence: 'Consequência fictícia',
+    editable: true,
+    createdAt: '2026-09-24T18:00:00.000Z',
+    updatedAt: '2026-09-24T18:00:00.000Z',
+    ...overrides,
+  };
+}
+
 export function apiError(status: number, code: string, message: string) {
   return HttpResponse.json({ error: { code, message } }, { status });
 }
@@ -75,6 +96,7 @@ export const handlers = [
   // Semana vazia e nenhuma consulta, por padrão.
   http.get('*/api/activities', () => HttpResponse.json({ activities: [] })),
   http.get('*/api/thought-records', () => HttpResponse.json({ thoughtRecords: [] })),
+  http.get('*/api/tension-episodes', () => HttpResponse.json({ tensionEpisodes: [] })),
   http.get('*/api/appointments', () => HttpResponse.json({ appointments: [], last: null, next: null })),
   // Sem vínculo e sem pacientes, por padrão.
   http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),

@@ -4,9 +4,12 @@
 //
 // - terapeuta.dev@faisca.test: terapeuta, sem dados;
 // - paciente.dev@faisca.test: paciente vinculada à terapeuta dev, com ~3 semanas de atividades,
-//   Registros de Pensamentos e consultas fictícias em volta de hoje (última há 7 dias, próxima daqui a 3);
-// - aviso-antigo.dev@faisca.test: paciente que só aceitou o aviso de privacidade anterior, para
-//   testar o pedido do novo aceite no Registro de Pensamentos (DEC-039).
+//   Registros de Pensamentos, Episódios de tensão (um deles no dia da última consulta, para aparecer
+//   no gráfico) e consultas fictícias em volta de hoje (última há 7 dias, próxima daqui a 3);
+// - aviso-antigo.dev@faisca.test: paciente que só aceitou o aviso de privacidade de antes do RPD,
+//   para testar o pedido do novo aceite no Registro de Pensamentos (DEC-039);
+// - aviso-rpd.dev@faisca.test: paciente que aceitou a versão do RPD, mas não a dos episódios, para
+//   testar o aceite por área (DEC-042): o RPD aberto e a Tensão pedindo o aceite.
 // As duas primeiras já aceitaram a versão atual do aviso.
 // Rodar de novo recria os registros da paciente dev (as datas acompanham o dia de hoje).
 
@@ -17,8 +20,11 @@ const PASSWORD = 'senha-ficticia-123';
 const DEV_THERAPIST = { name: 'Terapeuta Dev (fictícia)', email: 'terapeuta.dev@faisca.test' };
 const DEV_PATIENT = { name: 'Paciente Dev (fictícia)', email: 'paciente.dev@faisca.test' };
 const DEV_OLD_PRIVACY = { name: 'Aviso Antigo Dev (fictícia)', email: 'aviso-antigo.dev@faisca.test' };
+const DEV_RPD_PRIVACY = { name: 'Aviso RPD Dev (fictícia)', email: 'aviso-rpd.dev@faisca.test' };
 // Versão do aviso de antes do Registro de Pensamentos.
 const OLD_PRIVACY_VERSION = '2026-10';
+// Versão do aviso do RPD, de antes dos Episódios de tensão.
+const RPD_PRIVACY_VERSION = '2026-10.2';
 
 // Registros de Pensamentos fictícios: [dias a partir de hoje, situação, pensamento, crença,
 // emoções, comportamento, consequência].
@@ -28,6 +34,17 @@ const THOUGHT_RECORDS: [number, string, string, number, [string, number, string?
   [-5, 'Esqueci de pagar uma conta', 'Eu não dou conta de nada', 7, [['CULPA', 6], ['FRUSTRACAO', 7]], 'Paguei com multa e fiquei remoendo', 'Dormi mal'],
   [-2, 'Elogio inesperado no trabalho', 'Foi só sorte', 5, [['ALEGRIA', 6], ['OUTRA', 4, 'Desconfiança']], 'Agradeci e mudei de assunto', 'Fiquei mais leve no fim do dia'],
   [0, 'Trânsito parado a caminho da consulta', 'Vou chegar atrasada e vão me julgar', 6, [['ANSIEDADE', 7], ['RAIVA', 4]], 'Avisei por mensagem', 'Cheguei e ninguém se importou'],
+];
+
+// Episódios de tensão fictícios: [dias a partir de hoje, hora ou null, situação, tensão,
+// vontade de vocalizar, o que fez, o que aconteceu depois]. O de -7 cai no dia da última consulta.
+const TENSION_EPISODES: [number, string | null, string, number, number, string, string][] = [
+  [-7, '18:40', 'Sala de espera cheia antes da consulta', 7, 6, 'Fiquei mexendo as mãos', 'Aliviou quando fui chamada'],
+  [-5, null, 'Discussão alta na casa do vizinho', 8, 8, 'Saí para caminhar', 'Voltei mais calma'],
+  [-3, '08:15', 'Ônibus lotado e atrasado', 6, 4, 'Coloquei uma música', 'A tensão foi baixando'],
+  [-3, '21:00', 'Prazo apertado de um trabalho', 9, 7, 'Fiz uma pausa e respirei', 'Consegui terminar uma parte'],
+  [-1, null, 'Barulho de obra a tarde toda', 5, 5, 'Usei fone de ouvido', 'Deu para seguir o dia'],
+  [0, null, 'Fila longa no mercado', 4, 3, 'Conversei com quem estava atrás', 'Passou rápido'],
 ];
 
 const ACTIVITY_NAMES = [
@@ -52,7 +69,7 @@ if (process.env.NODE_ENV !== 'development') {
 const { prisma } = await import('../src/lib/prisma.js');
 const { hashPassword } = await import('../src/lib/password.js');
 const { logger } = await import('../src/lib/logger.js');
-const { addDays, dateOnlyToDate, todayInAppZone } = await import('../src/lib/dates.js');
+const { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } = await import('../src/lib/dates.js');
 const { PRIVACY_VERSION } = await import('../src/modules/auth/auth.service.js');
 
 const passwordHash = await hashPassword(PASSWORD);
@@ -101,6 +118,7 @@ function activityFor(userId: string, day: string, index: number, today: string) 
 const therapist = await upsertUser(DEV_THERAPIST, { patient: false, therapist: true });
 const patient = await upsertUser(DEV_PATIENT, { patient: true, therapist: false });
 await upsertUser(DEV_OLD_PRIVACY, { patient: true, therapist: false }, OLD_PRIVACY_VERSION);
+await upsertUser(DEV_RPD_PRIVACY, { patient: true, therapist: false }, RPD_PRIVACY_VERSION);
 const today = todayInAppZone();
 
 // De 20 dias atrás até 2 dias à frente: 1 ou 2 atividades por dia.
@@ -138,6 +156,19 @@ await prisma.$transaction(async (tx) => {
       },
     });
   }
+  await tx.tensionEpisode.deleteMany({ where: { userId: patient.id } });
+  await tx.tensionEpisode.createMany({
+    data: TENSION_EPISODES.map(([offset, time, situation, tensionLevel, vocalizeUrge, behavior, consequence]) => ({
+      userId: patient.id,
+      episodeDate: dateOnlyToDate(addDays(today, offset)),
+      episodeTime: time ? timeOnlyToDate(time) : null,
+      situation,
+      tensionLevel,
+      vocalizeUrge,
+      behavior,
+      consequence,
+    })),
+  });
   await tx.appointment.createMany({
     data: [-21, -7, 3].map((offset) => ({ userId: patient.id, appointmentDate: dateOnlyToDate(addDays(today, offset)) })),
   });
@@ -152,4 +183,7 @@ await prisma.$transaction(async (tx) => {
 await prisma.$disconnect();
 
 // Sem e-mail nem senha no log (regra 7): estão no backend/README.md.
-logger.info({ activities: activities.length, thoughtRecords: THOUGHT_RECORDS.length }, 'Contas fictícias prontas (e-mails e senha no backend/README.md)');
+logger.info(
+  { activities: activities.length, thoughtRecords: THOUGHT_RECORDS.length, tensionEpisodes: TENSION_EPISODES.length },
+  'Contas fictícias prontas (e-mails e senha no backend/README.md)',
+);

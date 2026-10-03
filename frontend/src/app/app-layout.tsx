@@ -12,9 +12,9 @@ export function AppLayout() {
   const logout = useLogout();
   const navigate = useNavigate();
   const bothProfiles = user?.profiles.patient && user.profiles.therapist;
-  // "Meus registros" segue marcado nas telas de Pensamentos e de Consultas, que são do mesmo perfil.
+  // "Meus registros" segue marcado nas telas de Pensamentos, Tensão e Consultas, que são do mesmo perfil.
   const { pathname } = useLocation();
-  const inPatientArea = ['/registros', '/pensamentos', '/consultas'].some(
+  const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/consultas'].some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 

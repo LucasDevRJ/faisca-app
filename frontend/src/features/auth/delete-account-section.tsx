@@ -65,6 +65,7 @@ function DeleteAccountDialog({ isPatient, onClose }: { isPatient: boolean; onClo
           <ul className="list-disc pl-5">
             {isPatient && <li>suas atividades, notas e observações;</li>}
             {isPatient && <li>seu Registro de Pensamentos;</li>}
+            {isPatient && <li>seus Episódios de tensão;</li>}
             {isPatient && <li>suas consultas;</li>}
             <li>seus vínculos: quem acompanha você, ou quem você acompanha, perde o acesso na hora.</li>
           </ul>

@@ -59,7 +59,7 @@ test('paciente aceita o aviso e registra; terapeuta vinculada aceita e lê na ab
   // Terapeuta: abre a paciente, vai para a aba e aceita o aviso.
   await therapist.goto('/pacientes');
   await therapist.getByRole('link', { name: /Nina Fictícia/ }).click();
-  await therapist.getByRole('button', { name: 'Registro de Pensamentos' }).click();
+  await therapist.getByRole('button', { name: 'Pensamentos' }).click();
   await expect(therapist).toHaveURL(/aba=pensamentos/);
   await acceptPrivacy(therapist);
 

@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { buttonClasses } from '../components/ui/button-styles';
 import { Dialog, DialogActions, DialogForm } from '../components/ui/dialog';
 import { getApiError } from '../features/auth/auth-api';
+import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { useSession } from '../features/auth/use-session';
 import {
   addDays,
@@ -15,38 +16,37 @@ import {
   todayInAppZone,
   weekDays,
 } from '../features/activities/week';
-import { PrivacyConsentGate } from '../features/auth/privacy-consent';
-import { ThoughtRecordCard } from '../features/thought-records/thought-record-card';
-import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
-import {
-  needsPrivacyConsent,
-  useDeleteThoughtRecord,
-  useWeekThoughtRecords,
-} from '../features/thought-records/use-thought-records';
+import { useAppointments } from '../features/appointments/use-appointments';
+import { TensionChart } from '../features/tension-episodes/tension-chart';
+import { TensionEpisodeCard } from '../features/tension-episodes/tension-episode-card';
+import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
+import { useDeleteTensionEpisode, useWeekTensionEpisodes } from '../features/tension-episodes/use-tension-episodes';
+import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 // Aviso vindo de outra página (ex.: "Registro salvo."), por navigate(..., { state }).
-export type ThoughtsPageState = { notice?: string } | null;
+export type TensionPageState = { notice?: string } | null;
 
-// "Pensamentos": o Registro de Pensamentos do paciente (SPEC, "Registro de Pensamentos"; DEC-040).
-// A semana fica na URL (?semana=AAAA-MM-DD), como em /registros (DEC-029).
-export function ThoughtsPage() {
+// "Tensão": os Episódios de tensão do paciente (SPEC, "Episódios de tensão"; DEC-043).
+// A semana fica na URL (?semana=AAAA-MM-DD), como em /registros e /pensamentos.
+export function TensionPage() {
   const { data: user } = useSession();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [toDelete, setToDelete] = useState<ThoughtRecord | null>(null);
-  const [notice, setNotice] = useState<string | null>((location.state as ThoughtsPageState)?.notice ?? null);
+  const [toDelete, setToDelete] = useState<TensionEpisode | null>(null);
+  const [notice, setNotice] = useState<string | null>((location.state as TensionPageState)?.notice ?? null);
 
-  const consented = Boolean(user?.privacyAreas.thoughtRecords);
+  const consented = Boolean(user?.privacyAreas.tensionEpisodes);
   const today = todayInAppZone();
   const currentMonday = startOfWeek(today);
   const param = searchParams.get('semana');
   const monday = isValidDateOnly(param) ? startOfWeek(param) : currentMonday;
-  const week = useWeekThoughtRecords(monday, consented);
-  const records = week.data ?? [];
-  // Sem registro, o dia não aparece: o RPD não é diário.
-  const days = weekDays(monday).filter((day) => records.some((r) => r.situationDate === day));
-  // O novo registro sugere hoje ou, numa semana passada, o domingo dela.
   const sunday = addDays(monday, 6);
+  const week = useWeekTensionEpisodes(monday, consented);
+  const appointmentDays = useAppointments().data?.appointments.map((a) => a.appointmentDate) ?? [];
+  const episodes = week.data ?? [];
+  // Sem episódio, o dia não aparece.
+  const days = weekDays(monday).filter((day) => episodes.some((e) => e.episodeDate === day));
+  // O novo registro sugere hoje ou, numa semana passada, o domingo dela.
   const newDate = sunday < today ? sunday : today;
 
   function goToWeek(target: string) {
@@ -56,9 +56,10 @@ export function ThoughtsPage() {
 
   const header = (
     <section className="flex flex-col gap-2">
-      <h1 className="text-3xl font-bold sm:text-4xl">Registro de Pensamentos</h1>
+      <h1 className="text-3xl font-bold sm:text-4xl">Episódios de tensão</h1>
       <p className="text-muted sm:text-lg">
-        Quando algo mexer com você, anote a situação, o que pensou, o que sentiu, o que fez e o que veio depois.
+        Quando a tensão aparecer, anote o que estava acontecendo, o quanto ficou tenso, a vontade de vocalizar, o
+        que fez e o que veio depois.
       </p>
     </section>
   );
@@ -67,7 +68,7 @@ export function ThoughtsPage() {
     return (
       <>
         {header}
-        <PrivacyConsentGate area="thoughtRecords" />
+        <PrivacyConsentGate area="tensionEpisodes" />
       </>
     );
   }
@@ -107,7 +108,7 @@ export function ThoughtsPage() {
             )}
             {/* No celular, o botão flutua no canto de baixo, como "Nova atividade". */}
             <Link
-              to={`/pensamentos/novo?dia=${newDate}`}
+              to={`/tensao/novo?dia=${newDate}`}
               className={buttonClasses(
                 'primary',
                 'fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 shadow-soft sm:static sm:shadow-none',
@@ -116,7 +117,7 @@ export function ThoughtsPage() {
               <span aria-hidden="true" className="text-xl leading-none sm:hidden">
                 +
               </span>
-              Novo registro
+              Novo episódio
             </Link>
           </div>
         </div>
@@ -142,47 +143,57 @@ export function ThoughtsPage() {
           </Alert>
         )}
 
-        {week.isSuccess && records.length === 0 && (
+        {week.isSuccess && episodes.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-            Nada anotado nesta semana. Quando algo mexer com você, dá para anotar aqui.
+            Nenhum episódio nesta semana. Quando a tensão aparecer, dá para anotar aqui.
           </p>
         )}
 
-        {week.isSuccess && records.length > 0 && (
-          <ol className="flex flex-col gap-4 sm:gap-6">
-            {days.map((day) => (
-              <li key={day} className="flex flex-col gap-2 sm:gap-3">
-                <h3 className="font-semibold first-letter:uppercase sm:text-lg">
-                  {formatDayHeading(day)}
-                  {day === today && (
-                    <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">
-                      hoje
-                    </span>
-                  )}
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {records
-                    .filter((r) => r.situationDate === day)
-                    .map((record) => (
-                      <ThoughtRecordCard
-                        key={record.id}
-                        record={record}
-                        onDelete={(r) => {
-                          setNotice(null);
-                          setToDelete(r);
-                        }}
-                      />
-                    ))}
-                </div>
-              </li>
-            ))}
-          </ol>
+        {week.isSuccess && episodes.length > 0 && (
+          <>
+            <ol className="flex flex-col gap-4 sm:gap-6">
+              {days.map((day) => (
+                <li key={day} className="flex flex-col gap-2 sm:gap-3">
+                  <h3 className="font-semibold first-letter:uppercase sm:text-lg">
+                    {formatDayHeading(day)}
+                    {day === today && (
+                      <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">
+                        hoje
+                      </span>
+                    )}
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {episodes
+                      .filter((e) => e.episodeDate === day)
+                      .map((episode) => (
+                        <TensionEpisodeCard
+                          key={episode.id}
+                          episode={episode}
+                          onDelete={(e) => {
+                            setNotice(null);
+                            setToDelete(e);
+                          }}
+                        />
+                      ))}
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            {/* O gráfico fica no fim: primeiro o que a pessoa escreveu, depois os números (DEC-043). */}
+            <TensionChart
+              episodes={episodes}
+              range={{ from: monday, to: sunday }}
+              appointmentDays={appointmentDays}
+              period="na semana"
+            />
+          </>
         )}
       </section>
 
       {toDelete && (
-        <DeleteThoughtRecordDialog
-          record={toDelete}
+        <DeleteTensionEpisodeDialog
+          episode={toDelete}
           onClose={() => setToDelete(null)}
           onDone={(message) => {
             setToDelete(null);
@@ -194,23 +205,23 @@ export function ThoughtsPage() {
   );
 }
 
-function DeleteThoughtRecordDialog({
-  record,
+function DeleteTensionEpisodeDialog({
+  episode,
   onClose,
   onDone,
 }: {
-  record: ThoughtRecord;
+  episode: TensionEpisode;
   onClose: () => void;
   onDone: (notice: string) => void;
 }) {
-  const remove = useDeleteThoughtRecord();
+  const remove = useDeleteTensionEpisode();
   const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    remove.mutate(record.id, {
-      onSuccess: () => onDone('Registro excluído.'),
+    remove.mutate(episode.id, {
+      onSuccess: () => onDone('Episódio excluído.'),
       // 409: passou o dia do registro. A lista é recarregada e o card fica sem botões.
       onError: (e) => {
         const apiError = getApiError(e);
@@ -222,8 +233,8 @@ function DeleteThoughtRecordDialog({
 
   return (
     <Dialog
-      title="Excluir este registro?"
-      description="Ele some do seu Registro de Pensamentos, e não dá para desfazer."
+      title="Excluir este episódio?"
+      description="Ele some dos seus Episódios de tensão, e não dá para desfazer."
       onClose={onClose}
     >
       <DialogForm onSubmit={handleSubmit} error={error}>

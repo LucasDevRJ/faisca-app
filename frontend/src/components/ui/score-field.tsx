@@ -7,15 +7,18 @@ type ScoreFieldProps = {
   onChange: (value: number) => void;
   minLabel: string;
   maxLabel: string;
+  // Explicação curta embaixo do rótulo (ex.: o que a nota cobre).
+  hint?: string;
   error?: string;
 };
 
 // Nota inteira de 0 a 10 (SPEC). Slider grande com legendas nos extremos (frontend/CLAUDE.md).
 // A cor do número varia só em intensidade, na escala de sálvia; nunca vermelho/verde.
-export function ScoreField({ label, value, onChange, minLabel, maxLabel, error }: ScoreFieldProps) {
+export function ScoreField({ label, value, onChange, minLabel, maxLabel, hint, error }: ScoreFieldProps) {
   const id = useId();
   const errorId = `${id}-error`;
   const legendId = `${id}-legend`;
+  const hintId = `${id}-hint`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -27,6 +30,11 @@ export function ScoreField({ label, value, onChange, minLabel, maxLabel, error }
           {value ?? '—'}
         </output>
       </div>
+      {hint && (
+        <p id={hintId} className="-mt-2 text-sm text-muted">
+          {hint}
+        </p>
+      )}
       <input
         id={id}
         type="range"
@@ -41,7 +49,7 @@ export function ScoreField({ label, value, onChange, minLabel, maxLabel, error }
         onPointerUp={(e) => value === null && onChange(Number(e.currentTarget.value))}
         aria-valuetext={value === null ? 'ainda não escolhida' : `${value} de 10`}
         aria-invalid={error ? true : undefined}
-        aria-describedby={[legendId, error && errorId].filter(Boolean).join(' ')}
+        aria-describedby={[hint && hintId, legendId, error && errorId].filter(Boolean).join(' ')}
         data-empty={value === null ? '' : undefined}
         // Quanto do trilho aparece preenchido (ver .score-range no index.css).
         style={{ '--fill': `${(value ?? 0) * 10}%` } as CSSProperties}

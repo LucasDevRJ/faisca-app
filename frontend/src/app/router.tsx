@@ -15,6 +15,8 @@ import { PatientsPage } from '../pages/patients-page';
 import { RecordsPage } from '../pages/records-page';
 import { EditThoughtRecordPage, NewThoughtRecordPage } from '../pages/thought-record-form-page';
 import { ThoughtsPage } from '../pages/thoughts-page';
+import { EditTensionEpisodePage, NewTensionEpisodePage } from '../pages/tension-episode-form-page';
+import { TensionPage } from '../pages/tension-page';
 import { ResetPasswordPage } from '../pages/reset-password-page';
 import { SignupPage } from '../pages/signup-page';
 import { AppLayout } from './app-layout';
@@ -37,16 +39,19 @@ export const routes = [
               {
                 element: <RequireProfile profile="patient" />,
                 children: [
-                  // Atividades e Pensamentos em abas (DEC-040).
+                  // Atividades, Pensamentos e Tensão em abas (DEC-040, DEC-043).
                   {
                     element: <PatientTabsLayout />,
                     children: [
                       { path: 'registros', element: <RecordsPage /> },
                       { path: 'pensamentos', element: <ThoughtsPage /> },
+                      { path: 'tensao', element: <TensionPage /> },
                     ],
                   },
                   { path: 'pensamentos/novo', element: <NewThoughtRecordPage /> },
                   { path: 'pensamentos/:id/editar', element: <EditThoughtRecordPage /> },
+                  { path: 'tensao/novo', element: <NewTensionEpisodePage /> },
+                  { path: 'tensao/:id/editar', element: <EditTensionEpisodePage /> },
                   { path: 'consultas', element: <AppointmentsPage /> },
                 ],
               },

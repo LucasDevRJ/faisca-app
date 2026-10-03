@@ -5,7 +5,7 @@ import { buttonClasses } from '../components/ui/button-styles';
 import { getApiError, type ApiErrorInfo } from '../features/auth/auth-api';
 import { useSession } from '../features/auth/use-session';
 import { isValidDateOnly, startOfWeek, todayInAppZone } from '../features/activities/week';
-import { PrivacyConsentGate } from '../features/thought-records/privacy-consent';
+import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { ThoughtRecordForm } from '../features/thought-records/thought-record-form';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import {
@@ -61,7 +61,7 @@ export function NewThoughtRecordPage() {
   if (!user?.privacyAreas.thoughtRecords || (create.isError && needsPrivacyConsent(create.error))) {
     return (
       <Frame title="Novo registro">
-        <PrivacyConsentGate />
+        <PrivacyConsentGate area="thoughtRecords" />
       </Frame>
     );
   }
@@ -92,7 +92,7 @@ export function EditThoughtRecordPage() {
   if (!consented || (record.isError && needsPrivacyConsent(record.error))) {
     return (
       <Frame title="Editar registro">
-        <PrivacyConsentGate />
+        <PrivacyConsentGate area="thoughtRecords" />
       </Frame>
     );
   }
