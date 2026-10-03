@@ -176,7 +176,7 @@ describe('novo aceite do aviso de privacidade (DEC-039)', () => {
     renderRoute('/pensamentos');
 
     expect(await screen.findByRole('heading', { name: 'Antes de começar' })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox')).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /uso dos meus pensamentos e emoções/ })).not.toBeChecked();
     expect(screen.getByRole('link', { name: 'aviso de privacidade' })).toHaveAttribute('target', '_blank');
     expect(calls).toEqual([]);
     // Em /pensamentos o próprio pedido explica: sem a faixa repetida.

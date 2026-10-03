@@ -16,8 +16,10 @@ export default defineConfig(({ mode }) => {
         strategies: 'injectManifest',
         srcDir: 'src',
         filename: 'sw.ts',
-        registerType: 'autoUpdate',
-        injectRegister: 'auto',
+        // Versão nova pede confirmação antes de assumir (DEC-041). O registro fica no
+        // src/app/update-prompt.tsx, que mostra a faixa "Atualizar".
+        registerType: 'prompt',
+        injectRegister: false,
         injectManifest: {
           // Só o shell do app. Respostas da API nunca entram em cache.
           globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
