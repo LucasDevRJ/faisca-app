@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
-import { addDays, dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
+import { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
@@ -319,7 +319,7 @@ describe('Registro de Pensamentos da terapeuta (DEC-039)', () => {
     expect(res.body.error.code).toBe('THERAPIST_PROFILE_REQUIRED');
   });
 
-  it('terapeuta sem o aceite da versão atual do aviso: 403, e o resto da visão funciona', async () => {
+  it('terapeuta sem o aceite de uma versão do aviso que cite o RPD: 403, e o resto da visão funciona', async () => {
     await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-10' } });
     const agent = await loginAgent(THERAPIST);
 
@@ -328,6 +328,111 @@ describe('Registro de Pensamentos da terapeuta (DEC-039)', () => {
     expect(records.status).toBe(403);
     expect(records.body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');
     expect((await agent.get(`${base()}/activities`).query(week())).status).toBe(200);
+  });
+
+  it('aceita até 92 dias e recusa 93', async () => {
+    const agent = await loginAgent(THERAPIST);
+
+    expect((await agent.get(path()).query({ from: addDays(today(), -91), to: today() })).status).toBe(200);
+    expect((await agent.get(path()).query({ from: addDays(today(), -92), to: today() })).status).toBe(400);
+  });
+});
+
+describe('Episódios de tensão da terapeuta (DEC-042)', () => {
+  function seedTensionEpisode(userId: string, situation: string) {
+    return prisma.tensionEpisode.create({
+      data: {
+        userId,
+        episodeDate: dateOnlyToDate(today()),
+        episodeTime: timeOnlyToDate('09:40'),
+        situation,
+        tensionLevel: 7,
+        vocalizeUrge: 5,
+        behavior: 'Comportamento fictício',
+        consequence: 'Consequência fictícia',
+      },
+    });
+  }
+
+  const path = (id = patientId) => `${base(id)}/tension-episodes`;
+
+  it('com vínculo ativo: lê tudo, só do paciente vinculado, sem userId', async () => {
+    await seedTensionEpisode(patientId, 'Situação do paciente');
+    await seedTensionEpisode(otherPatientId, 'Situação de outra pessoa');
+
+    const res = await (await loginAgent(THERAPIST)).get(path()).query(week());
+
+    expect(res.status).toBe(200);
+    // Nada é privado (SPEC): todos os campos e as duas datas.
+    expect(res.body.tensionEpisodes).toEqual([
+      expect.objectContaining({
+        episodeDate: today(),
+        episodeTime: '09:40',
+        situation: 'Situação do paciente',
+        tensionLevel: 7,
+        vocalizeUrge: 5,
+        behavior: 'Comportamento fictício',
+        consequence: 'Consequência fictícia',
+        createdAt: expect.any(String),
+      }),
+    ]);
+    expect(res.body.tensionEpisodes[0]).not.toHaveProperty('userId');
+  });
+
+  it('escrita é 403 mesmo com vínculo ativo, e nada muda', async () => {
+    const episode = await seedTensionEpisode(patientId, 'Situação do paciente');
+    const agent = await loginAgent(THERAPIST);
+
+    const calls = [
+      agent.post(path()).send({ situation: 'Invasão' }),
+      agent.patch(`${path()}/${episode.id}`).send({ tensionLevel: 0 }),
+      agent.delete(`${path()}/${episode.id}`),
+      // Nem pela rota do paciente: a terapeuta não tem perfil de paciente.
+      agent.patch(`/tension-episodes/${episode.id}`).send({ tensionLevel: 0 }),
+      agent.delete(`/tension-episodes/${episode.id}`),
+    ];
+    for (const res of await Promise.all(calls)) expect(res.status).toBe(403);
+    expect(await prisma.tensionEpisode.findUniqueOrThrow({ where: { id: episode.id } })).toEqual(episode);
+  });
+
+  it('sem sessão: GET 401 e escrita 403', async () => {
+    expect((await request(app).get(path()).query(week())).status).toBe(401);
+    expect((await request(app).post(path()).send({})).status).toBe(403);
+  });
+
+  it('sem vínculo, vínculo revogado, outra terapeuta ou id inválido: 403', async () => {
+    await seedTensionEpisode(otherPatientId, 'Situação de outra pessoa');
+    const agent = await loginAgent(THERAPIST);
+
+    const noLink = await agent.get(path(otherPatientId)).query(week());
+    const invalid = await agent.get(path('nao-e-uuid')).query(week());
+    const otherTherapist = await (await loginAgent(OTHER_THERAPIST)).get(path()).query(week());
+    await prisma.therapistLink.updateMany({ data: { revokedAt: new Date() } });
+    const revoked = await agent.get(path()).query(week());
+
+    for (const res of [noLink, invalid, otherTherapist, revoked]) {
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe('FORBIDDEN');
+      expect(JSON.stringify(res.body)).not.toContain('Situação de outra pessoa');
+    }
+  });
+
+  it('conta sem perfil de terapeuta: 403', async () => {
+    const res = await (await loginAgent(PATIENT)).get(path()).query(week());
+
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('THERAPIST_PROFILE_REQUIRED');
+  });
+
+  it('terapeuta que só aceitou a versão do RPD: 403 nos episódios, e o RPD segue liberado', async () => {
+    await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-10.2' } });
+    const agent = await loginAgent(THERAPIST);
+
+    const episodes = await agent.get(path()).query(week());
+
+    expect(episodes.status).toBe(403);
+    expect(episodes.body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');
+    expect((await agent.get(`${base()}/thought-records`).query(week())).status).toBe(200);
   });
 
   it('aceita até 92 dias e recusa 93', async () => {

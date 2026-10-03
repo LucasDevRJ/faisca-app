@@ -3,6 +3,8 @@ import { prisma } from '../../lib/prisma.js';
 import type { ActivitiesService } from '../activities/activities.service.js';
 import type { ListActivitiesQuery } from '../activities/activities.schema.js';
 import type { AppointmentsService } from '../appointments/appointments.service.js';
+import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
+import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ListThoughtRecordsQuery } from '../thought-records/thought-records.schema.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
 
@@ -28,6 +30,7 @@ export function createTherapistService(
   activities: ActivitiesService,
   appointments: AppointmentsService,
   thoughtRecords: ThoughtRecordsService,
+  tensionEpisodes: TensionEpisodesService,
 ) {
   return {
     async summary(therapistId: string, patientId: string) {
@@ -56,6 +59,10 @@ export function createTherapistService(
 
     listThoughtRecords(patientId: string, query: ListThoughtRecordsQuery) {
       return thoughtRecords.list(patientId, query);
+    },
+
+    listTensionEpisodes(patientId: string, query: ListTensionEpisodesQuery) {
+      return tensionEpisodes.list(patientId, query);
     },
   };
 }

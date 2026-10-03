@@ -8,12 +8,10 @@ import { generateToken, hashToken } from '../../lib/secure-token.js';
 import type { LinksService } from '../links/links.service.js';
 import { accountDeletedEmail, accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
 import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
+import { PRIVACY_VERSION, privacyAreas, type PrivacyArea } from './privacy.js';
 
-// Versão do aviso de privacidade aceita no cadastro (DEC-036). Muda junto com o texto da página
-// /privacidade no front (frontend/src/pages/privacy-page.tsx).
-// 2026-10.2: entra o Registro de Pensamentos (DEC-039). Quem aceitou a anterior aceita de novo
-// pelo POST /auth/accept-privacy para usar a área de RPD.
-export const PRIVACY_VERSION = '2026-10.2';
+// A versão atual do aviso e as áreas que dependem dele ficam em ./privacy.ts (DEC-042).
+export { PRIVACY_VERSION };
 
 const HOUR_MS = 60 * 60 * 1000;
 const TOKEN_TTL_MS: Record<AuthTokenType, number> = {
@@ -26,8 +24,11 @@ export type PublicUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
-  // Aceitou a versão atual do aviso? Sem isso, a área de RPD fica bloqueada (DEC-039).
+  // Aceitou a versão atual do aviso? Serve para a faixa "o aviso mudou" no app.
   privacyUpToDate: boolean;
+  // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o RPD e os episódios de tensão
+  // ficam bloqueados; o resto do app funciona.
+  privacyAreas: Record<PrivacyArea, boolean>;
 };
 
 export function toPublicUser(
@@ -39,6 +40,7 @@ export function toPublicUser(
     email: user.email,
     profiles: { patient: user.hasPatientProfile, therapist: user.hasTherapistProfile },
     privacyUpToDate: user.privacyVersion === PRIVACY_VERSION,
+    privacyAreas: privacyAreas(user.privacyVersion),
   };
 }
 

@@ -580,6 +580,82 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   via a aba de Pensamentos depois do deploy. O texto do paciente ("meus pensamentos") dava a
   entender à terapeuta que o aceite não era com ela.
 
+## DEC-042 — API dos Episódios de tensão e aceite do aviso por área
+- **Decisão:**
+  - os **Episódios de tensão** entram como registro independente das atividades e do RPD (issue
+    #52): dia, hora opcional, situação, tensão (0–10), vontade de vocalizar (0–10), o que fez e o que
+    aconteceu depois. Tudo obrigatório, **menos a hora**; textos de 1 a 1000 caracteres. Na tela, as
+    duas notas vão de "nenhuma" a "muito forte", e a vontade de vocalizar leva a dica "falar, gritar,
+    se movimentar…", porque cobre o tique vocal ou de ansiedade, e não só a voz;
+  - tabela `TensionEpisode`: `episodeDate` (DATE, **só até hoje**, 400 `DATE_IN_FUTURE`) e
+    `episodeTime` (TIME sem segundos, **opcional**, no relógio de São Paulo, como `'HH:MM'` na API).
+    Se o dia for hoje, a hora não pode ser depois de agora (400 `TIME_IN_FUTURE`); a edição confere
+    o dia e a hora juntos, com o que já estava gravado. Notas e tamanhos também têm CHECK no banco;
+  - **editar e excluir só no dia em que o registro foi feito**, como o RPD: depois, 409
+    `TENSION_EPISODE_LOCKED`, com escrita condicional e `editable` na resposta. `episodeTime: null`
+    apaga a hora;
+  - ordem: dia, depois hora, com os **sem hora no fim** do dia, na ordem em que foram registrados;
+  - rotas do paciente em `/tension-episodes` (`GET ?from&to` com até 42 dias, `GET /:id`, `POST`,
+    `PATCH /:id`, `DELETE /:id`). A terapeuta lê em `GET /therapist/patients/:patientId/tension-episodes`,
+    com até 92 dias, atrás da mesma cadeia da DEC-033. Tudo sai em cascata ao excluir a conta;
+  - nova versão do aviso de privacidade, **`2026-10.3`**, que cita os episódios. O aceite passa a ser
+    **por área**: cada área exige a versão que passou a citá-la (RPD a partir da `2026-10.2`,
+    episódios a partir da `2026-10.3`), comparando pela posição numa lista ordenada de versões
+    (`PRIVACY_VERSIONS`), e não como texto. O middleware vira `requirePrivacy(area)`. O `/auth/me`
+    mantém `privacyUpToDate` (para a faixa "o aviso mudou") e ganha `privacyAreas`; os bloqueios do
+    RPD no front passam a usar `privacyAreas.thoughtRecords`;
+  - as duas notas entram no `redact` do logger (regra 7); os textos já estavam. Os lembretes não
+    mudam (regra 3);
+  - deploy: esta etapa vai para produção junto com a das telas, porque a faixa e o pedido de aceite
+    do app ainda falam só do RPD.
+- **Motivo:** o tique e a tensão são dados de saúde novos, e o consentimento na LGPD é para
+  finalidades determinadas: por isso um novo aceite antes do uso. Exigir só "a versão atual" faria
+  cada versão nova bloquear de novo o RPD de quem acabou de aceitá-lo; com a versão mínima por área,
+  o novo aceite só é pedido para o que é novo. A hora ajuda a ver padrões, mas é o campo mais fácil
+  de esquecer: obrigá-la levaria a horários inventados.
+
+## DEC-043 — Telas dos Episódios de tensão
+- **Decisão:**
+  - as telas do paciente ganham a terceira aba: **Atividades | Pensamentos | Tensão** (`/tensao`).
+    Num celular de 360px, as três abas usam texto menor e menos espaço interno; no computador, nada
+    muda. "Meus registros" fica marcado também em `/tensao`;
+  - `/tensao` navega por semana (`?semana=AAAA-MM-DD`) e mostra **só os dias com episódio**, como
+    `/pensamentos`. O cartão mostra a hora ("às 14:30" ou **"sem horário"**), as duas notas em barras
+    numa cor só e os três textos. Editar e excluir só com `editable`; depois, "Registrado em";
+  - formulário em **página própria** (`/tensao/novo?dia=AAAA-MM-DD` e `/tensao/:id/editar`): dia,
+    hora (opcional, "Pode deixar em branco se não lembrar"), o que estava acontecendo, tensão e
+    vontade de vocalizar ("nenhuma" a "muito forte", com a dica "Falar, gritar, se movimentar…"), o
+    que fez e o que aconteceu depois. A tela avisa antes de enviar uma hora de hoje que ainda não
+    chegou. Ao salvar, volta para a semana do episódio com "Registro salvo.". O `ScoreField` ganha
+    uma dica opcional embaixo do rótulo;
+  - visão da terapeuta: os botões passam a ter **nomes curtos, iguais às abas do paciente**
+    (**Atividades | Pensamentos | Tensão**), no lugar de "Registro de Pensamentos" da DEC-040, que
+    não cabia com três botões no celular. A aba `?aba=tensao` usa o mesmo período e o mesmo destaque,
+    com os cartões só leitura;
+  - **gráfico da tensão** para a terapeuta (acima dos cartões) e **também para o paciente** (no fim
+    da semana). Eixo do tempo contínuo: cada episódio é um ponto, posicionado pelo dia e pela hora
+    (sem hora, no meio do dia), ligado ao seguinte na ordem do tempo. Um eixo só, de 0 a 10. Os
+    **dias de consulta** aparecem como uma faixa "consulta". Toque ou mouse no ponto mostra o dia, a
+    hora e as duas notas, e uma tabela com os mesmos dados fica para leitor de tela;
+  - cores do gráfico: sálvia em dois tons (`--color-score-10` para a tensão, `--color-score-6` para a
+    vontade de vocalizar). Passam no validador de paleta da skill de visualização (separação para
+    daltonismo e visão normal, contraste ≥ 3:1, nos dois temas). As checagens de croma e faixa de
+    luminosidade, pensadas para paletas de matizes diferentes, não se aplicam à regra de cor única do
+    `frontend/CLAUDE.md`, e a leitura não depende só da cor: linha contínua × tracejada, círculo ×
+    quadrado, legenda e tabela;
+  - aviso de privacidade: o pedido de aceite recebe a **área** e quem aceita (textos próprios para o
+    paciente e a terapeuta em cada área) e passa para `features/auth/`. A faixa "o aviso mudou" cita
+    **só as áreas que faltam liberar** e sai da tela em que o pedido da área já aparece;
+  - textos: a exclusão de conta lista os Episódios de tensão, e o vínculo em Conta diz que a
+    terapeuta lê "atividades, Registro de Pensamentos, Episódios de tensão e consultas";
+  - `db:seed-dev` cria 6 episódios fictícios para a `paciente.dev` (alguns sem hora, um no dia da
+    última consulta) e a conta `aviso-rpd.dev@faisca.test`, só com a versão do aviso do RPD.
+- **Motivo:** repetir o desenho do RPD deixa a parte nova familiar para quem já usa o app. O eixo de
+  tempo contínuo mostra quando os episódios se concentram sem inventar uma nota para os dias sem
+  episódio, e a faixa de consulta ajuda a terapeuta a ligar a tensão às sessões. O paciente também vê
+  o gráfico, como já vê o das atividades: perceber o próprio padrão antes da sessão faz parte do
+  acompanhamento.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

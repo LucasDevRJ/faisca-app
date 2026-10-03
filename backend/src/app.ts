@@ -11,6 +11,7 @@ import { createActivitiesRoutes } from './modules/activities/activities.routes.j
 import { createAppointmentsRoutes } from './modules/appointments/appointments.routes.js';
 import { createAuthRoutes } from './modules/auth/auth.routes.js';
 import { createLinksRoutes } from './modules/links/links.routes.js';
+import { createTensionEpisodesRoutes } from './modules/tension-episodes/tension-episodes.routes.js';
 import { createTherapistRoutes } from './modules/therapist/therapist.routes.js';
 import { createThoughtRecordsRoutes } from './modules/thought-records/thought-records.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
@@ -49,6 +50,7 @@ export function createApp({ mailer = createResendMailer() }: AppDependencies = {
   app.use(createActivitiesRoutes());
   app.use(createAppointmentsRoutes());
   app.use(createThoughtRecordsRoutes());
+  app.use(createTensionEpisodesRoutes());
   app.use(createLinksRoutes(mailer));
   app.use(createTherapistRoutes());
 

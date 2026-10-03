@@ -4,10 +4,11 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Activity } from '../features/activities/activities-api';
 import type { Appointment } from '../features/appointments/appointments-api';
+import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import type { PatientSummary } from '../features/therapist/therapist-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { renderRoute } from '../test/render';
-import { apiError, fakeActivity, fakeThoughtRecord, fakeUser, server } from '../test/server';
+import { apiError, fakeActivity, fakeTensionEpisode, fakeThoughtRecord, fakeUser, outdatedPrivacy, server } from '../test/server';
 
 // Terapeuta e paciente fictícios (regra 5). "Hoje" fixo: quinta, 24/09/2026.
 const PATIENT_ID = '00000000-0000-4000-8000-00000000000a';
@@ -246,7 +247,7 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     expect(within(card).queryByRole('button')).not.toBeInTheDocument();
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Registro de Pensamentos' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Pensamentos' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('destaque')).toBeInTheDocument();
     expect(calls[0]).toEqual({ from: '2026-09-21', to: '2026-09-27' });
     expect(writes).toEqual([]);
@@ -258,7 +259,7 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     const user = userEvent.setup();
     const { router } = renderRoute(path);
 
-    await user.click(await screen.findByRole('button', { name: 'Registro de Pensamentos' }));
+    await user.click(await screen.findByRole('button', { name: 'Pensamentos' }));
     expect(await screen.findByText('Nenhum registro de pensamentos nesta semana.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Desde a última consulta' }));
 
@@ -271,7 +272,7 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
   it('terapeuta sem o aceite da versão atual: pedido de aceite, sem buscar os registros', async () => {
     server.use(
       http.get('*/api/auth/me', () =>
-        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true }, privacyUpToDate: false } }),
+        HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true }, ...outdatedPrivacy } }),
       ),
     );
     patientApi();
@@ -293,6 +294,109 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
       ),
     );
     renderRoute(`${path}?aba=pensamentos`);
+
+    expect(await screen.findByRole('heading', { name: 'Registros indisponíveis' })).toBeInTheDocument();
+  });
+});
+
+describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
+  function tensionApi(episodes: TensionEpisode[]) {
+    const calls: { from: string | null; to: string | null }[] = [];
+    server.use(
+      http.get(`${BASE}/tension-episodes`, ({ request }) => {
+        const url = new URL(request.url);
+        const from = url.searchParams.get('from');
+        const to = url.searchParams.get('to');
+        calls.push({ from, to });
+        return HttpResponse.json({
+          tensionEpisodes: episodes.filter((e) => from && to && e.episodeDate >= from && e.episodeDate <= to),
+        });
+      }),
+    );
+    return calls;
+  }
+
+  it('mostra os episódios só para leitura, com a hora, o destaque e o gráfico com tabela', async () => {
+    const { writes } = patientApi();
+    const calls = tensionApi([
+      fakeTensionEpisode({ situation: 'Fila do mercado', episodeDate: '2026-09-22', episodeTime: '19:20' }),
+      fakeTensionEpisode({ situation: 'Reunião', episodeDate: '2026-09-23', episodeTime: null, tensionLevel: 3 }),
+    ]);
+    renderRoute(`${path}?aba=tensao`);
+
+    const card = await screen.findByRole('article', { name: 'Episódio: Fila do mercado' });
+    expect(within(card).getByText('às 19:20')).toBeInTheDocument();
+    expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
+    expect(within(screen.getByRole('article', { name: 'Episódio: Reunião' })).getByText('sem horário')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tensão' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getAllByText('destaque').length).toBeGreaterThan(0);
+
+    // O gráfico tem a versão em tabela para leitor de tela, na ordem do tempo.
+    const table = screen.getByRole('table', { name: 'Tensão e vontade de vocalizar dos episódios na semana' });
+    const rows = within(table).getAllByRole('row').slice(1);
+    expect(rows.map((row) => within(row).getAllByRole('cell').map((cell) => cell.textContent))).toEqual([
+      ['19:20', '8', '6'],
+      ['sem horário', '3', '6'],
+    ]);
+    expect(calls[0]).toEqual({ from: '2026-09-21', to: '2026-09-27' });
+    expect(writes).toEqual([]);
+  });
+
+  it('sem episódio no período: mensagem, sem gráfico', async () => {
+    patientApi();
+    tensionApi([]);
+    renderRoute(`${path}?aba=tensao`);
+
+    expect(await screen.findByText('Nenhum episódio de tensão nesta semana.')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('trocar de aba e de período mantém os dois na URL', async () => {
+    patientApi();
+    const calls = tensionApi([]);
+    const user = userEvent.setup();
+    const { router } = renderRoute(path);
+
+    await user.click(await screen.findByRole('button', { name: 'Tensão' }));
+    expect(await screen.findByText('Nenhum episódio de tensão nesta semana.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Desde a última consulta' }));
+
+    await waitFor(() => expect(router.state.location.search).toBe('?periodo=desde-a-ultima-consulta&aba=tensao'));
+    await waitFor(() => expect(calls.at(-1)).toEqual({ from: '2026-09-17', to: TODAY }));
+  });
+
+  it('terapeuta que só aceitou a versão do RPD: pedido de aceite com o texto dela, sem buscar', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({
+          user: {
+            ...fakeUser,
+            profiles: { patient: false, therapist: true },
+            privacyUpToDate: false,
+            privacyAreas: { thoughtRecords: true, tensionEpisodes: false },
+          },
+        }),
+      ),
+    );
+    patientApi();
+    const calls = tensionApi([fakeTensionEpisode()]);
+    renderRoute(`${path}?aba=tensao`);
+
+    expect(await screen.findByRole('heading', { name: 'Antes de começar' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /acesso aos episódios de tensão dos meus pacientes/ })).not.toBeChecked();
+    expect(calls).toEqual([]);
+  });
+
+  it('vínculo desfeito com a aba aberta (403): Registros indisponíveis', async () => {
+    patientApi();
+    server.use(
+      http.get(`${BASE}/tension-episodes`, () =>
+        apiError(403, 'FORBIDDEN', 'Você não tem acesso aos registros deste paciente.'),
+      ),
+    );
+    renderRoute(`${path}?aba=tensao`);
 
     expect(await screen.findByRole('heading', { name: 'Registros indisponíveis' })).toBeInTheDocument();
   });

@@ -4,6 +4,7 @@ import {
   fetchPatientActivities,
   fetchPatientAppointments,
   fetchPatientSummary,
+  fetchPatientTensionEpisodes,
   fetchPatientThoughtRecords,
 } from './therapist-api';
 
@@ -40,6 +41,15 @@ export function usePatientThoughtRecords(patientId: string, range: { from: strin
   return useQuery({
     queryKey: [...THERAPIST_KEY, patientId, 'thought-records', range?.from, range?.to],
     queryFn: range ? () => fetchPatientThoughtRecords(patientId, range.from, range.to) : skipToken,
+    retry: retryUnlessForbidden,
+  });
+}
+
+// range null = aba fechada ou sem o aceite do aviso: não pergunta à API.
+export function usePatientTensionEpisodes(patientId: string, range: { from: string; to: string } | null) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'tension-episodes', range?.from, range?.to],
+    queryFn: range ? () => fetchPatientTensionEpisodes(patientId, range.from, range.to) : skipToken,
     retry: retryUnlessForbidden,
   });
 }

@@ -33,16 +33,26 @@ import {
   usePatientActivities,
   usePatientAppointments,
   usePatientSummary,
+  usePatientTensionEpisodes,
   usePatientThoughtRecords,
 } from '../features/therapist/use-therapist';
-import { PrivacyConsentGate } from '../features/thought-records/privacy-consent';
+import { TensionChart } from '../features/tension-episodes/tension-chart';
+import { TensionEpisodeCard } from '../features/tension-episodes/tension-episode-card';
+import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
+import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { ThoughtRecordCard } from '../features/thought-records/thought-record-card';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 const SINCE_PARAM = 'desde-a-ultima-consulta';
-// Aba do Registro de Pensamentos na URL (?aba=pensamentos), junto com o período (DEC-040).
-const THOUGHTS_TAB = 'pensamentos';
+// Aba na URL (?aba=pensamentos ou ?aba=tensao), junto com o período (DEC-040, DEC-043).
+// Sem ?aba, Atividades.
+const TABS = ['pensamentos', 'tensao'] as const;
+type RecordTab = (typeof TABS)[number] | null;
+
+function parseTab(value: string | null): RecordTab {
+  return TABS.find((tab) => tab === value) ?? null;
+}
 const backLinkClass = 'self-start font-medium text-primary-text underline underline-offset-4';
 
 // Registros de um paciente vinculado (SPEC, "Visão da terapeuta"; DEC-033). Só leitura: nenhum
@@ -110,9 +120,9 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: user } = useSession();
   const { patient, today, lastAppointment, nextAppointment, highlight } = summary;
-  const thoughtsTab = searchParams.get('aba') === THOUGHTS_TAB;
+  const tab = parseTab(searchParams.get('aba'));
   // Trocar de período mantém a aba aberta.
-  const tabParam: Record<string, string> = thoughtsTab ? { aba: THOUGHTS_TAB } : {};
+  const tabParam: Record<string, string> = tab ? { aba: tab } : {};
 
   const currentMonday = startOfWeek(today);
   const weekParam = searchParams.get('semana');
@@ -124,17 +134,20 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
       : null;
   const range: DateRange = since ?? { from: monday, to: addDays(monday, 6) };
 
-  // Só a aba aberta pergunta à API. O RPD também espera o aceite da versão atual do aviso (DEC-039).
-  const activities = usePatientActivities(patientId, thoughtsTab ? null : range);
-  const consented = Boolean(user?.privacyUpToDate);
-  const thoughts = usePatientThoughtRecords(patientId, thoughtsTab && consented ? range : null);
-  const appointmentDays = new Set(
-    usePatientAppointments(patientId).data?.appointments.map((a) => a.appointmentDate),
-  );
+  // Só a aba aberta pergunta à API. O RPD e os episódios também esperam o aceite da versão do
+  // aviso que os cita (DEC-039, DEC-042).
+  const activities = usePatientActivities(patientId, tab ? null : range);
+  const consented = Boolean(user?.privacyAreas.thoughtRecords);
+  const thoughts = usePatientThoughtRecords(patientId, tab === 'pensamentos' && consented ? range : null);
+  const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
+  const tension = usePatientTensionEpisodes(patientId, tab === 'tensao' && tensionConsented ? range : null);
+  const appointmentList = usePatientAppointments(patientId).data?.appointments.map((a) => a.appointmentDate) ?? [];
+  const appointmentDays = new Set(appointmentList);
 
   // Vínculo desfeito enquanto a tela estava aberta.
   if (activities.isError && isForbidden(activities.error)) return <NoAccess />;
   if (thoughts.isError && isForbidden(thoughts.error) && !needsPrivacyConsent(thoughts.error)) return <NoAccess />;
+  if (tension.isError && isForbidden(tension.error) && !needsPrivacyConsent(tension.error)) return <NoAccess />;
 
   const firstName = patient.name.split(' ')[0];
 
@@ -142,9 +155,9 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
     setSearchParams(target === currentMonday ? tabParam : { semana: target, ...tabParam });
   }
 
-  function selectTab(thoughts: boolean) {
+  function selectTab(target: RecordTab) {
     const next = new URLSearchParams(searchParams);
-    if (thoughts) next.set('aba', THOUGHTS_TAB);
+    if (target) next.set('aba', target);
     else next.delete('aba');
     setSearchParams(next);
   }
@@ -180,7 +193,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
 
       <HighlightNote highlight={highlight} />
 
-      <RecordTabs thoughts={thoughtsTab} onSelect={selectTab} />
+      <RecordTabs tab={tab} onSelect={selectTab} />
 
       <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
         <PeriodSwitch
@@ -233,7 +246,17 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
           </div>
         )}
 
-        {thoughtsTab ? (
+        {tab === 'tensao' ? (
+          <TensionTab
+            consented={tensionConsented && !(tension.isError && needsPrivacyConsent(tension.error))}
+            query={tension}
+            range={range}
+            since={since !== null}
+            today={today}
+            highlight={highlight}
+            appointmentDays={appointmentList}
+          />
+        ) : tab === 'pensamentos' ? (
           <ThoughtsTab
             consented={consented && !(thoughts.isError && needsPrivacyConsent(thoughts.error))}
             query={thoughts}
@@ -390,20 +413,28 @@ function DayList({ days, activities, today, highlight, appointmentDays }: DayLis
   );
 }
 
-function RecordTabs({ thoughts, onSelect }: { thoughts: boolean; onSelect: (thoughts: boolean) => void }) {
+// Nomes curtos, iguais às abas do paciente: com três botões, "Registro de Pensamentos" não cabe
+// num celular (DEC-043).
+const TAB_LABELS: { tab: RecordTab; label: string }[] = [
+  { tab: null, label: 'Atividades' },
+  { tab: 'pensamentos', label: 'Pensamentos' },
+  { tab: 'tensao', label: 'Tensão' },
+];
+
+function RecordTabs({ tab, onSelect }: { tab: RecordTab; onSelect: (tab: RecordTab) => void }) {
   return (
-    <div role="group" aria-label="Tipo de registro" className="grid grid-cols-2 gap-2 sm:flex">
-      <Button variant={thoughts ? 'secondary' : 'primary'} aria-pressed={!thoughts} onClick={() => onSelect(false)}>
-        Atividades
-      </Button>
-      <Button
-        variant={thoughts ? 'primary' : 'secondary'}
-        aria-pressed={thoughts}
-        className="px-2 text-sm sm:px-5 sm:text-base"
-        onClick={() => onSelect(true)}
-      >
-        Registro de Pensamentos
-      </Button>
+    <div role="group" aria-label="Tipo de registro" className="grid grid-cols-3 gap-2 sm:flex">
+      {TAB_LABELS.map((item) => (
+        <Button
+          key={item.label}
+          variant={tab === item.tab ? 'primary' : 'secondary'}
+          aria-pressed={tab === item.tab}
+          className="px-2 text-sm sm:px-5 sm:text-base"
+          onClick={() => onSelect(item.tab)}
+        >
+          {item.label}
+        </Button>
+      ))}
     </div>
   );
 }
@@ -419,7 +450,7 @@ type ThoughtsTabProps = {
 
 // Registro de Pensamentos do paciente, só leitura (DEC-040). Só os dias com registro aparecem.
 function ThoughtsTab({ consented, query, range, since, today, highlight }: ThoughtsTabProps) {
-  if (!consented) return <PrivacyConsentGate audience="therapist" />;
+  if (!consented) return <PrivacyConsentGate area="thoughtRecords" audience="therapist" />;
 
   if (query.isPending) {
     return (
@@ -489,6 +520,103 @@ function ThoughtsDay({ day, records, today, highlighted }: ThoughtsDayProps) {
       <div className="flex flex-col gap-3">
         {records.map((record) => (
           <ThoughtRecordCard key={record.id} record={record} readOnly />
+        ))}
+      </div>
+    </li>
+  );
+}
+
+type TensionTabProps = {
+  consented: boolean;
+  query: ReturnType<typeof usePatientTensionEpisodes>;
+  range: DateRange;
+  since: boolean;
+  today: string;
+  highlight: DateRange;
+  appointmentDays: string[];
+};
+
+// Episódios de tensão do paciente, só leitura (DEC-043): o gráfico do período e, embaixo, os dias
+// com episódio.
+function TensionTab({ consented, query, range, since, today, highlight, appointmentDays }: TensionTabProps) {
+  if (!consented) return <PrivacyConsentGate area="tensionEpisodes" audience="therapist" />;
+
+  if (query.isPending) {
+    return (
+      <p className="text-muted" aria-busy="true">
+        Carregando os registros…
+      </p>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <Alert tone="attention">
+        <div className="flex flex-col gap-3">
+          <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
+          <div>
+            <Button variant="secondary" onClick={() => query.refetch()}>
+              Tentar de novo
+            </Button>
+          </div>
+        </div>
+      </Alert>
+    );
+  }
+
+  const episodes = query.data;
+  if (episodes.length === 0) {
+    return (
+      <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+        Nenhum episódio de tensão {since ? 'neste período' : 'nesta semana'}.
+      </p>
+    );
+  }
+
+  const recorded = new Set(episodes.map((e) => e.episodeDate));
+  const days = daysInRange(range).filter((day) => recorded.has(day));
+  return (
+    <>
+      <TensionChart
+        episodes={episodes}
+        range={range}
+        appointmentDays={appointmentDays}
+        period={since ? 'desde a última consulta' : 'na semana'}
+      />
+      <ol className="flex flex-col gap-4 sm:gap-6">
+        {days.map((day) => (
+          <TensionDay
+            key={day}
+            day={day}
+            episodes={episodes.filter((e) => e.episodeDate === day)}
+            today={today}
+            highlighted={isInRange(day, highlight)}
+          />
+        ))}
+      </ol>
+    </>
+  );
+}
+
+type TensionDayProps = { day: string; episodes: TensionEpisode[]; today: string; highlighted: boolean };
+
+function TensionDay({ day, episodes, today, highlighted }: TensionDayProps) {
+  return (
+    <li className={`flex flex-col gap-2 sm:gap-3 ${highlighted ? 'rounded-md border-l-4 border-accent pl-3' : ''}`}>
+      <h3 className="font-semibold first-letter:uppercase sm:text-lg">
+        {formatDayHeading(day)}
+        {day === today && (
+          <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">hoje</span>
+        )}
+        {highlighted && (
+          <span className="ml-2 rounded-sm border border-accent px-2 py-0.5 text-sm font-medium text-accent-text">
+            destaque
+          </span>
+        )}
+      </h3>
+      <div className="flex flex-col gap-3">
+        {episodes.map((episode) => (
+          <TensionEpisodeCard key={episode.id} episode={episode} readOnly />
         ))}
       </div>
     </li>

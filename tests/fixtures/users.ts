@@ -19,4 +19,11 @@ export const users = {
   // Usadas só nas telas do Registro de Pensamentos (e2e/thought-records.spec.ts), também sem o aceite.
   rpdScreenPatient: { email: 'rpd-tela-paciente@faisca.test', password: SEED_PASSWORD },
   rpdScreenTherapist: { email: 'rpd-tela-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nos testes dos Episódios de tensão (api/tension-episodes.spec.ts). Já aceitaram a
+  // versão do aviso do RPD, mas não a que cita os episódios (DEC-042).
+  tensionPatient: { email: 'tensao-paciente@faisca.test', password: SEED_PASSWORD },
+  tensionTherapist: { email: 'tensao-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nas telas dos Episódios de tensão (e2e/tension-episodes.spec.ts), também com a versão do RPD.
+  tensionScreenPatient: { email: 'tensao-tela-paciente@faisca.test', password: SEED_PASSWORD },
+  tensionScreenTherapist: { email: 'tensao-tela-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;

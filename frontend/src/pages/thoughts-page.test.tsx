@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { renderRoute } from '../test/render';
-import { apiError, fakeThoughtRecord, fakeUser, loggedIn, server } from '../test/server';
+import { apiError, fakeThoughtRecord, fakeUser, loggedIn, outdatedPrivacy, server } from '../test/server';
 
 // Registro de Pensamentos do paciente (DEC-039, DEC-040). Dados fictícios (regra 5).
 // "Hoje" fixo: quinta, 24/09/2026, 15h em São Paulo.
@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 const outdatedUser = http.get('*/api/auth/me', () =>
-  HttpResponse.json({ user: { ...fakeUser, privacyUpToDate: false } }),
+  HttpResponse.json({ user: { ...fakeUser, ...outdatedPrivacy } }),
 );
 
 // Responde a semana pedida e guarda os períodos de cada chamada.
@@ -186,13 +186,13 @@ describe('novo aceite do aviso de privacidade (DEC-039)', () => {
   it('sem marcar a caixa, não envia; marcando, aceita e libera a lista', async () => {
     let accepted = false;
     server.use(
-      http.get('*/api/auth/me', () => HttpResponse.json({ user: { ...fakeUser, privacyUpToDate: accepted } })),
+      http.get('*/api/auth/me', () => HttpResponse.json({ user: accepted ? fakeUser : { ...fakeUser, ...outdatedPrivacy } })),
     );
     weekHandler([fakeThoughtRecord({ situation: 'Depois do aceite' })]);
     const writes = recordWrites({
       'POST /auth/accept-privacy': () => {
         accepted = true;
-        return HttpResponse.json({ user: { ...fakeUser, privacyUpToDate: true } });
+        return HttpResponse.json({ user: fakeUser });
       },
     });
     const user = userEvent.setup();
@@ -226,6 +226,22 @@ describe('novo aceite do aviso de privacidade (DEC-039)', () => {
 
     expect(await screen.findByText(/Atualizamos o aviso de privacidade/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver o que mudou' })).toHaveAttribute('href', '/privacidade');
+  });
+
+  it('quem aceitou a versão do RPD segue usando o RPD quando sai uma versão mais nova (DEC-042)', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({
+          user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false } },
+        }),
+      ),
+    );
+    const calls = weekHandler([fakeThoughtRecord({ situation: 'Registro liberado' })]);
+    renderRoute('/pensamentos');
+
+    expect(await screen.findByRole('article', { name: 'Registro: Registro liberado' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Antes de começar' })).not.toBeInTheDocument();
+    expect(calls.length).toBeGreaterThan(0);
   });
 
   it('com o aceite em dia, não há faixa', async () => {

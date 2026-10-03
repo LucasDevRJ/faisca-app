@@ -1,6 +1,7 @@
 import { api } from '../../lib/api';
 import type { Activity } from '../activities/activities-api';
 import type { Appointment, AppointmentsResponse } from '../appointments/appointments-api';
+import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
 
 // Visão da terapeuta (DEC-033): só leitura, sob /therapist/patients/:patientId. O backend confere
@@ -50,4 +51,12 @@ export async function fetchPatientThoughtRecords(patientId: string, from: string
 export async function fetchPatientAppointments(patientId: string): Promise<AppointmentsResponse> {
   const { data } = await api.get<AppointmentsResponse>(`${base(patientId)}/appointments`);
   return data;
+}
+
+// Episódios de tensão (DEC-042): pedem a versão do aviso que os cita, aceita pela terapeuta.
+export async function fetchPatientTensionEpisodes(patientId: string, from: string, to: string): Promise<TensionEpisode[]> {
+  const { data } = await api.get<{ tensionEpisodes: TensionEpisode[] }>(`${base(patientId)}/tension-episodes`, {
+    params: { from, to },
+  });
+  return data.tensionEpisodes;
 }

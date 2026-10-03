@@ -4,10 +4,11 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 
 // Aviso de privacidade (SPEC, "Privacidade"; DEC-036). Pública: abre com ou sem sessão, pelo
 // link do cadastro, da tela de entrar, do rodapé do app e de Conta.
-// Mudou o texto? Troque também o PRIVACY_VERSION do backend (auth.service.ts): é a versão que
-// fica gravada no aceite de cada cadastro.
+// Mudou o texto? Acrescente também uma versão em PRIVACY_VERSIONS no backend
+// (src/modules/auth/privacy.ts): é a versão que fica gravada no aceite de cada cadastro.
 // Versão 2026-10.2 (DEC-039): entra o Registro de Pensamentos, com novo aceite para usá-lo.
-const VERSION_LABEL = 'versão 2, de outubro de 2026';
+// Versão 2026-10.3 (DEC-042): entram os Episódios de tensão, com novo aceite para usá-los.
+const VERSION_LABEL = 'versão 3, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -59,6 +60,10 @@ export function PrivacyPage() {
               automático, o quanto você acredita nele, as emoções e a intensidade de cada uma, o comportamento e
               a consequência.
             </li>
+            <li>
+              Nos Episódios de tensão: o dia e, se você informar, a hora de cada episódio, a situação, a nota de 0
+              a 10 da tensão e da vontade de vocalizar, o que você fez e o que aconteceu depois.
+            </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No seu aparelho: só o cookie de sessão e a preferência de tema claro ou escuro.</li>
             <li>
@@ -70,8 +75,8 @@ export function PrivacyPage() {
 
         <Section title="Para quê">
           <p>
-            Para você registrar suas atividades e o seu Registro de Pensamentos e, se quiser, compartilhá-los
-            com a sua terapeuta. Também usamos
+            Para você registrar suas atividades, o seu Registro de Pensamentos e os seus Episódios de tensão e,
+            se quiser, compartilhá-los com a sua terapeuta. Também usamos
             o seu e-mail para mensagens da conta: confirmação, nova senha e aviso de exclusão. Não vendemos
             dados, não mostramos anúncios e não usamos ferramentas de rastreamento.
           </p>
@@ -81,8 +86,8 @@ export function PrivacyPage() {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li>Você vê tudo o que registrou.</li>
             <li>
-              A terapeuta vinculada vê tudo, inclusive notas, observações e o Registro de Pensamentos, enquanto o
-              vínculo existir. Você
+              A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos e os
+              Episódios de tensão, enquanto o vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
               hora.
             </li>

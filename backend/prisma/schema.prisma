@@ -32,10 +32,11 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  authTokens     AuthToken[]
-  activities     Activity[]
-  appointments   Appointment[]
-  thoughtRecords ThoughtRecord[]
+  authTokens      AuthToken[]
+  activities      Activity[]
+  appointments    Appointment[]
+  thoughtRecords  ThoughtRecord[]
+  tensionEpisodes TensionEpisode[]
 
   // Vínculo (DEC-015, DEC-031): o mesmo usuário pode estar dos dois lados, em vínculos diferentes.
   linksAsPatient   TherapistLink[]   @relation("LinkPatient")
@@ -158,8 +159,8 @@ model ThoughtRecord {
 
 // Emoções de um registro: uma ou mais, sem repetir, cada uma com intensidade de 0 a 10.
 model ThoughtRecordEmotion {
-  id         String   @id @default(uuid()) @db.Uuid
-  recordId   String   @db.Uuid
+  id         String  @id @default(uuid()) @db.Uuid
+  recordId   String  @db.Uuid
   emotion    Emotion
   intensity  Int
   // Só na OUTRA, e obrigatório nela (CHECK na migration).
@@ -168,6 +169,32 @@ model ThoughtRecordEmotion {
   record ThoughtRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
 
   @@unique([recordId, emotion])
+}
+
+// Episódio de tensão do paciente (SPEC, "Episódios de tensão"; DEC-042). Tudo obrigatório, menos a
+// hora. Tamanhos e a faixa das notas (0–10) são garantidos por CHECK na migration, além do Zod.
+// Editar e excluir só no dia (São Paulo) em que foi registrado, conferido pelo createdAt.
+model TensionEpisode {
+  id           String    @id @default(uuid()) @db.Uuid
+  // O paciente dono do registro.
+  userId       String    @db.Uuid
+  // Dia do episódio, no fuso America/Sao_Paulo (DEC-007). Só até hoje; separado do createdAt.
+  episodeDate  DateTime  @db.Date
+  // Hora do episódio no relógio de São Paulo, sem segundos. Opcional: a pessoa pode não lembrar.
+  episodeTime  DateTime? @db.Time(0)
+  situation    String
+  // Tensão e vontade de vocalizar (tique vocal ou de ansiedade: falar, gritar, se mexer), 0–10.
+  tensionLevel Int
+  vocalizeUrge Int
+  // O que a pessoa fez e o que aconteceu depois.
+  behavior     String
+  consequence  String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, episodeDate])
 }
 
 enum LinkMethod {

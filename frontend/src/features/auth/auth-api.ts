@@ -9,9 +9,11 @@ export type SessionUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
-  // Aceitou a versão atual do aviso de privacidade? Sem isso, o Registro de Pensamentos fica
-  // bloqueado (DEC-039); o resto do app funciona.
+  // Aceitou a versão atual do aviso de privacidade? Serve para a faixa "o aviso mudou".
   privacyUpToDate: boolean;
+  // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o Registro de Pensamentos e os
+  // Episódios de tensão ficam bloqueados; o resto do app funciona.
+  privacyAreas: { thoughtRecords: boolean; tensionEpisodes: boolean };
 };
 
 export type SignupInput = {
