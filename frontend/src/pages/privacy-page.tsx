@@ -9,7 +9,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-10.2 (DEC-039): entra o Registro de Pensamentos, com novo aceite para usá-lo.
 // Versão 2026-10.3 (DEC-042): entram os Episódios de tensão, com novo aceite para usá-los.
 // Versão 2026-10.4 (DEC-045): entra a agenda (hora, motivos e pausas), com novo aceite para usá-la.
-const VERSION_LABEL = 'versão 4, de outubro de 2026';
+// Versão 2026-10.5 (DEC-051): entra a Ação, com novo aceite para usá-la.
+const VERSION_LABEL = 'versão 5, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -61,6 +62,11 @@ export function PrivacyPage() {
               escreve ao desmarcar ou remarcar uma sessão.
             </li>
             <li>
+              Na Ação: cada ação que você planeja (o dia, o nome e o tipo: prazer, conexão ou realização), a
+              nota de 0 a 10 do quanto esperava gostar, as notas de prazer e de realização depois e as
+              observações.
+            </li>
+            <li>
               No Registro de Pensamentos (RPD): as situações que você descreve e, para cada uma, o pensamento
               automático, o quanto você acredita nele, as emoções e a intensidade de cada uma, o comportamento e
               a consequência.
@@ -84,7 +90,8 @@ export function PrivacyPage() {
 
         <Section title="Para quê">
           <p>
-            Para você registrar suas atividades, o seu Registro de Pensamentos e os seus Episódios de tensão e,
+            Para você registrar suas atividades, o seu Registro de Pensamentos, os seus Episódios de tensão e as
+            suas ações e,
             se quiser, compartilhá-los com a sua terapeuta. Também usamos
             o seu e-mail para mensagens da conta: confirmação, nova senha e aviso de exclusão. Não vendemos
             dados, não mostramos anúncios e não usamos ferramentas de rastreamento.
@@ -96,7 +103,7 @@ export function PrivacyPage() {
             <li>Você vê tudo o que registrou.</li>
             <li>
               A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos, os
-              Episódios de tensão e a agenda com os motivos, enquanto o vínculo existir. Você
+              Episódios de tensão, a agenda com os motivos e a Ação, enquanto o vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
               hora.
             </li>

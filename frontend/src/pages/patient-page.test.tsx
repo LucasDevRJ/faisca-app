@@ -387,7 +387,7 @@ describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
             ...fakeUser,
             profiles: { patient: false, therapist: true },
             privacyUpToDate: false,
-            privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false },
+            privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false, actions: false },
           },
         }),
       ),
@@ -453,7 +453,7 @@ describe('/pacientes/:id: agenda (DEC-045)', () => {
             ...fakeUser,
             profiles: { patient: false, therapist: true },
             privacyUpToDate: false,
-            privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: false },
+            privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: false, actions: false },
           },
         }),
       ),
@@ -466,5 +466,61 @@ describe('/pacientes/:id: agenda (DEC-045)', () => {
     await user.click(within(card).getByRole('button', { name: 'Ver a agenda' }));
 
     expect(within(card).getByText(/Para ver a agenda dos seus pacientes/)).toBeInTheDocument();
+  });
+});
+
+describe('/pacientes/:id: aba Ação (DEC-052)', () => {
+  it('só leitura: a meta, o cartão com a expectativa e sem botões', async () => {
+    const { writes } = patientApi({ cycle: CYCLE });
+    server.use(
+      http.get(`${BASE}/actions`, () =>
+        HttpResponse.json({
+          actions: [
+            {
+              id: '00000000-0000-4000-a000-000000000001',
+              actionDate: '2026-09-23',
+              name: 'Café com amiga',
+              category: 'CONEXAO',
+              status: 'AVALIADA',
+              expectation: 2,
+              pleasure: 8,
+              achievement: 5,
+              observation: null,
+              createdAt: '2026-09-23T20:00:00.000Z',
+              updatedAt: '2026-09-23T20:00:00.000Z',
+            },
+          ],
+        }),
+      ),
+    );
+    renderRoute(`${path}?aba=acao`);
+
+    const card = await screen.findByRole('article', { name: 'Café com amiga' });
+    expect(card).toHaveTextContent('Esperava2');
+    expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Conexão: 1 de 1 feita' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ação' })).toHaveAttribute('aria-pressed', 'true');
+    expect(writes).toEqual([]);
+  });
+
+  it('sem o aceite da Ação: pedido de aceite com o texto da terapeuta', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({
+          user: {
+            ...fakeUser,
+            profiles: { patient: false, therapist: true },
+            privacyUpToDate: false,
+            privacyAreas: { ...fakeUser.privacyAreas, actions: false },
+          },
+        }),
+      ),
+    );
+    patientApi();
+    renderRoute(`${path}?aba=acao`);
+
+    expect(await screen.findByText(/Para ver a Ação dos seus pacientes/)).toBeInTheDocument();
   });
 });

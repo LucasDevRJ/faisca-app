@@ -5,6 +5,9 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { buttonClasses } from '../components/ui/button-styles';
 import type { Activity } from '../features/activities/activities-api';
+import { ActionCard } from '../features/actions/action-card';
+import { ActionChart } from '../features/actions/action-chart';
+import { CycleGoal } from '../features/actions/cycle-goal';
 import { ActivityCard } from '../features/activities/activity-card';
 import { formatDayHeading } from '../features/activities/week';
 import { TherapistCycleSummary } from '../features/cycle/cycle-summary';
@@ -23,6 +26,7 @@ import type { PatientSummary } from '../features/therapist/therapist-api';
 import {
   isForbidden,
   patientCycleQuery,
+  usePatientActions,
   usePatientActivities,
   usePatientAppointments,
   usePatientSummary,
@@ -39,7 +43,7 @@ import { needsPrivacyConsent } from '../features/thought-records/use-thought-rec
 
 // Aba na URL (?aba=pensamentos ou ?aba=tensao), junto com o período (DEC-040, DEC-043).
 // Sem ?aba, Atividades.
-const TABS = ['pensamentos', 'tensao'] as const;
+const TABS = ['pensamentos', 'tensao', 'acao'] as const;
 type RecordTab = (typeof TABS)[number] | null;
 
 function parseTab(value: string | null): RecordTab {
@@ -128,6 +132,8 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const thoughts = usePatientThoughtRecords(patientId, ready && tab === 'pensamentos' && consented ? range : null);
   const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
   const tension = usePatientTensionEpisodes(patientId, ready && tab === 'tensao' && tensionConsented ? range : null);
+  const actionsConsented = Boolean(user?.privacyAreas.actions);
+  const actions = usePatientActions(patientId, ready && tab === 'acao' && actionsConsented ? range : null);
   // Selo "consulta" nos dias com sessão. A agenda pede o aceite da versão que a cita (DEC-045);
   // sem ele, só a última e a próxima, que vêm no resumo.
   const agendaConsented = Boolean(user?.privacyAreas.appointmentSchedule);
@@ -142,6 +148,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   if (activities.isError && isForbidden(activities.error)) return <NoAccess />;
   if (thoughts.isError && isForbidden(thoughts.error) && !needsPrivacyConsent(thoughts.error)) return <NoAccess />;
   if (tension.isError && isForbidden(tension.error) && !needsPrivacyConsent(tension.error)) return <NoAccess />;
+  if (actions.isError && isForbidden(actions.error) && !needsPrivacyConsent(actions.error)) return <NoAccess />;
 
   const firstName = patient.name.split(' ')[0];
 
@@ -212,7 +219,15 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
           </p>
         )}
 
-        {tab === 'tensao' ? (
+        {tab === 'acao' ? (
+          <ActionsTab
+            consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
+            query={actions}
+            range={range}
+            inCycle={inCycle}
+            today={today}
+          />
+        ) : tab === 'tensao' ? (
           <TensionTab
             consented={tensionConsented && !(tension.isError && needsPrivacyConsent(tension.error))}
             query={tension}
@@ -316,17 +331,18 @@ function DayList({ days, activities, today, appointmentDays }: DayListProps) {
   );
 }
 
-// Nomes curtos, iguais às abas do paciente: com três botões, "Registro de Pensamentos" não cabe
-// num celular (DEC-043).
+// Nomes curtos, iguais às abas do paciente: "Registro de Pensamentos" não cabe num celular (DEC-043).
+// Com quatro, grade 2×2 no celular (DEC-052).
 const TAB_LABELS: { tab: RecordTab; label: string }[] = [
   { tab: null, label: 'Atividades' },
   { tab: 'pensamentos', label: 'Pensamentos' },
   { tab: 'tensao', label: 'Tensão' },
+  { tab: 'acao', label: 'Ação' },
 ];
 
 function RecordTabs({ tab, onSelect }: { tab: RecordTab; onSelect: (tab: RecordTab) => void }) {
   return (
-    <div role="group" aria-label="Tipo de registro" className="grid grid-cols-3 gap-2 sm:flex">
+    <div role="group" aria-label="Tipo de registro" className="grid grid-cols-2 gap-2 sm:flex">
       {TAB_LABELS.map((item) => (
         <Button
           key={item.label}
@@ -509,5 +525,76 @@ function TensionDay({ day, episodes, today }: TensionDayProps) {
         ))}
       </div>
     </li>
+  );
+}
+
+type ActionsTabProps = {
+  consented: boolean;
+  query: ReturnType<typeof usePatientActions>;
+  range: DateRange;
+  inCycle: boolean;
+  today: string;
+};
+
+// Ação do paciente, só leitura (DEC-052): a meta do ciclo, os dias com ação e o gráfico.
+function ActionsTab({ consented, query, range, inCycle, today }: ActionsTabProps) {
+  if (!consented) return <PrivacyConsentGate area="actions" audience="therapist" />;
+
+  if (query.isPending) {
+    return (
+      <p className="text-muted" aria-busy="true">
+        Carregando os registros…
+      </p>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <Alert tone="attention">
+        <div className="flex flex-col gap-3">
+          <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
+          <div>
+            <Button variant="secondary" onClick={() => query.refetch()}>
+              Tentar de novo
+            </Button>
+          </div>
+        </div>
+      </Alert>
+    );
+  }
+
+  const actions = query.data;
+  const recorded = new Set(actions.map((a) => a.actionDate));
+  const days = daysInRange(range).filter((day) => recorded.has(day));
+  return (
+    <>
+      {inCycle && <CycleGoal actions={actions} range={range} />}
+      {actions.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+          Nenhuma ação {inCycle ? 'neste ciclo' : 'nesta semana'}.
+        </p>
+      ) : (
+        <ol className="flex flex-col gap-4 sm:gap-6">
+          {days.map((day) => (
+            <li key={day} className="flex flex-col gap-2 sm:gap-3">
+              <h3 className="font-semibold first-letter:uppercase sm:text-lg">
+                {formatDayHeading(day)}
+                {day === today && (
+                  <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">hoje</span>
+                )}
+              </h3>
+              <div className="flex flex-col gap-3">
+                {actions
+                  .filter((a) => a.actionDate === day)
+                  .map((action) => (
+                    <ActionCard key={action.id} action={action} readOnly />
+                  ))}
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+      <ActionChart actions={actions} period={inCycle ? 'no ciclo' : 'na semana'} />
+    </>
   );
 }

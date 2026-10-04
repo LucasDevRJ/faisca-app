@@ -12,7 +12,7 @@ function plural(count: number, one: string, many: string) {
 // carregando) fica de fora.
 export function cycleSummaryText(
   range: { from: string; to: string },
-  counts: { activitiesDone?: number; thoughts?: number; tension?: number },
+  counts: { activitiesDone?: number; thoughts?: number; tension?: number; actionsDone?: number },
 ): string {
   const parts = [plural(daysBetween(range.from, range.to) + 1, 'dia', 'dias')];
   if (counts.activitiesDone !== undefined) {
@@ -23,6 +23,9 @@ export function cycleSummaryText(
   }
   if (counts.tension !== undefined) {
     parts.push(plural(counts.tension, 'episódio de tensão', 'episódios de tensão'));
+  }
+  if (counts.actionsDone !== undefined) {
+    parts.push(plural(counts.actionsDone, 'ação feita', 'ações feitas'));
   }
   return parts.join(' · ');
 }

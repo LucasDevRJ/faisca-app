@@ -112,6 +112,30 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   de vocalizar ao longo da semana, com os dias de consulta marcados.
 - Usar os episódios exige ter aceitado uma versão do aviso de privacidade que os cite.
 
+## Ação
+Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das atividades (DEC-051).
+- **Tipo** (obrigatório, um só): **Prazer** (algo que se gosta de fazer), **Conexão** (aproximar-se
+  de alguém) ou **Realização** (algo que dá sensação de propósito ou de dever cumprido).
+- **Planejar**: dia, nome (1 a 100 caracteres), tipo e **expectativa antes** (0 a 10, o quanto
+  espera gostar). O dia vai de hoje até 7 dias à frente.
+- **Contar como foi** (a partir do dia da ação): **prazer depois** e **realização depois** (0 a 10)
+  e uma observação opcional (até 1000). A ação vira **avaliada**.
+- **Não deu desta vez** (a partir do dia da ação): a ação fica registrada como **não realizada**,
+  com observação opcional. Nem sempre dá para fazer tudo, e ver os ciclos com mais e com menos
+  ações faz parte do acompanhamento.
+- Dá para registrar algo **já feito**, já avaliado, com o dia nos últimos 7 dias.
+- Uma ação planejada com o dia já passado continua pendente, sem prazo para contar como foi.
+- **Avaliada e não realizada são finais**: editar ou excluir retorna **409**. A planejada pode ser
+  editada (mudar o dia segue a janela de planejar) e excluída.
+- A meta é **uma de cada tipo por ciclo da consulta** (duas de cada no ciclo de 14 dias ou mais),
+  mostrada de forma neutra, sem placar.
+- Usar a Ação exige ter aceitado uma versão do aviso de privacidade que a cite.
+- A aba **Ação** fica ao lado de Atividades, Pensamentos e Tensão (no celular, as quatro em grade
+  2×2), com a explicação dos três tipos, a meta do ciclo, os dias com ação, o cartão com a
+  expectativa ao lado do resultado ("Esperava 3 · Prazer 7 · Realização 6") e um gráfico de
+  expectativa × prazer × realização. O formulário fica numa página própria, com um exemplo de cada
+  tipo, e dá para repetir uma ação do ciclo passado. A terapeuta vê a aba **Ação**, só leitura.
+
 ## Tela de registros: ciclo ou semana (paciente e terapeuta)
 - A tela abre no **ciclo da consulta** atual, com o título "Consulta de dd/mm", o período, quantos
   dias faltam para a consulta e um resumo neutro (dias, atividades feitas, pensamentos e episódios
@@ -182,7 +206,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
-- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas.
+- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas.
 - Nenhum documento pessoal é solicitado.
 - A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos. A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída.
 - Nenhum dado real em seeds, fixtures ou testes.

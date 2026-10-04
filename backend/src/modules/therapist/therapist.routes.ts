@@ -3,6 +3,7 @@ import { onlyReads, requireActiveLink } from '../../middlewares/require-patient-
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
+import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesService } from '../activities/activities.service.js';
 import { createAppointmentsService } from '../appointments/appointments.service.js';
 import { createTensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
@@ -21,6 +22,7 @@ export function createTherapistRoutes() {
       createAppointmentsService(),
       createThoughtRecordsService(),
       createTensionEpisodesService(),
+      createActionsService(),
     ),
   );
   const router = Router();
@@ -38,6 +40,8 @@ export function createTherapistRoutes() {
   router.get(`${PREFIX}/appointments`, requirePrivacy('appointmentSchedule'), controller.appointments);
   router.get(`${PREFIX}/thought-records`, requirePrivacy('thoughtRecords'), controller.thoughtRecords);
   router.get(`${PREFIX}/tension-episodes`, requirePrivacy('tensionEpisodes'), controller.tensionEpisodes);
+  // Ação (DEC-051): também pede o aceite da versão do aviso que a cita.
+  router.get(`${PREFIX}/actions`, requirePrivacy('actions'), controller.actions);
 
   return router;
 }

@@ -232,7 +232,7 @@ describe('novo aceite do aviso de privacidade (DEC-039)', () => {
     server.use(
       http.get('*/api/auth/me', () =>
         HttpResponse.json({
-          user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false } },
+          user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false, actions: false } },
         }),
       ),
     );

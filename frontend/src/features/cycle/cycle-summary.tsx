@@ -1,7 +1,9 @@
+import { useRangeActions } from '../actions/use-actions';
 import { useRangeActivities } from '../activities/use-activities';
 import { useSession } from '../auth/use-session';
 import { useRangeTensionEpisodes } from '../tension-episodes/use-tension-episodes';
 import {
+  usePatientActions,
   usePatientActivities,
   usePatientTensionEpisodes,
   usePatientThoughtRecords,
@@ -25,12 +27,14 @@ export function PatientCycleSummary({ range }: { range: Range }) {
   const activities = useRangeActivities(range);
   const thoughts = useRangeThoughtRecords(range, Boolean(user?.privacyAreas.thoughtRecords));
   const tension = useRangeTensionEpisodes(range, Boolean(user?.privacyAreas.tensionEpisodes));
+  const actions = useRangeActions(range, Boolean(user?.privacyAreas.actions));
   return (
     <SummaryLine
       text={cycleSummaryText(range, {
         activitiesDone: activities.data?.filter((a) => a.status === 'CONCLUIDA').length,
         thoughts: thoughts.data?.length,
         tension: tension.data?.length,
+        actionsDone: actions.data?.filter((a) => a.status === 'AVALIADA').length,
       })}
     />
   );
@@ -42,12 +46,14 @@ export function TherapistCycleSummary({ patientId, range }: { patientId: string;
   const activities = usePatientActivities(patientId, range);
   const thoughts = usePatientThoughtRecords(patientId, user?.privacyAreas.thoughtRecords ? range : null);
   const tension = usePatientTensionEpisodes(patientId, user?.privacyAreas.tensionEpisodes ? range : null);
+  const actions = usePatientActions(patientId, user?.privacyAreas.actions ? range : null);
   return (
     <SummaryLine
       text={cycleSummaryText(range, {
         activitiesDone: activities.data?.filter((a) => a.status === 'CONCLUIDA').length,
         thoughts: thoughts.data?.length,
         tension: tension.data?.length,
+        actionsDone: actions.data?.filter((a) => a.status === 'AVALIADA').length,
       })}
     />
   );
