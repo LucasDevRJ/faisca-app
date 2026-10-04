@@ -3,25 +3,19 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Activity } from '../features/activities/activities-api';
-import type { Appointment } from '../features/appointments/appointments-api';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
-import type { PatientSummary } from '../features/therapist/therapist-api';
+import type { PatientSummary, SessionWhen } from '../features/therapist/therapist-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { renderRoute } from '../test/render';
-import { apiError, fakeActivity, fakeTensionEpisode, fakeThoughtRecord, fakeUser, outdatedPrivacy, server } from '../test/server';
+import { apiError, fakeActivity, fakeAgenda, fakeSession, fakeTensionEpisode, fakeThoughtRecord, fakeUser, outdatedPrivacy, server } from '../test/server';
 
 // Terapeuta e paciente fictícios (regra 5). "Hoje" fixo: quinta, 24/09/2026.
 const PATIENT_ID = '00000000-0000-4000-8000-00000000000a';
 const BASE = `*/api/therapist/patients/${PATIENT_ID}`;
 const TODAY = '2026-09-24';
 
-function appointment(appointmentDate: string): Appointment {
-  return {
-    id: `00000000-0000-4000-8000-0000000${appointmentDate.replaceAll('-', '').slice(3)}`,
-    appointmentDate,
-    createdAt: '2026-09-01T12:00:00.000Z',
-    updatedAt: '2026-09-01T12:00:00.000Z',
-  };
+function appointment(date: string): SessionWhen {
+  return { date, time: '14:00', kind: 'RECORRENTE' };
 }
 
 function summary(overrides: Partial<PatientSummary> = {}): PatientSummary {
@@ -30,6 +24,8 @@ function summary(overrides: Partial<PatientSummary> = {}): PatientSummary {
     today: TODAY,
     lastAppointment: appointment('2026-09-17'),
     nextAppointment: appointment('2026-09-28'),
+    agendaStatus: 'ATIVA',
+    pause: null,
     highlight: { from: '2026-09-21', to: '2026-09-27', reason: 'NEXT_APPOINTMENT' },
     ...overrides,
   };
@@ -52,11 +48,12 @@ function patientApi({ data = summary(), activities = [] as Activity[] } = {}) {
       });
     }),
     http.get(`${BASE}/appointments`, () =>
-      HttpResponse.json({
-        appointments: [data.lastAppointment, data.nextAppointment].filter(Boolean),
-        last: data.lastAppointment,
-        next: data.nextAppointment,
-      }),
+      HttpResponse.json(
+        fakeAgenda({
+          status: data.agendaStatus,
+          sessions: [data.lastAppointment, data.nextAppointment].flatMap((s) => (s ? [fakeSession(s.date)] : [])),
+        }),
+      ),
     ),
     http.all('*/api/*', ({ request }) => {
       if (request.method !== 'GET') writes.push(`${request.method} ${new URL(request.url).pathname}`);
@@ -375,7 +372,7 @@ describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
             ...fakeUser,
             profiles: { patient: false, therapist: true },
             privacyUpToDate: false,
-            privacyAreas: { thoughtRecords: true, tensionEpisodes: false },
+            privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false },
           },
         }),
       ),
@@ -399,5 +396,60 @@ describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
     renderRoute(`${path}?aba=tensao`);
 
     expect(await screen.findByRole('heading', { name: 'Registros indisponíveis' })).toBeInTheDocument();
+  });
+});
+
+describe('/pacientes/:id: agenda (DEC-045)', () => {
+  it('selo da pausa e a agenda com os motivos, só para ler', async () => {
+    const { writes } = patientApi({
+      data: summary({ agendaStatus: 'PAUSADA', pause: { startDate: '2026-09-20', returnDate: '2026-10-12' } }),
+    });
+    server.use(
+      http.get(`${BASE}/appointments`, () =>
+        HttpResponse.json(
+          fakeAgenda({
+            status: 'PAUSADA',
+            schedule: { startDate: '2026-09-03', time: '14:00', frequency: 'SEMANAL' },
+            pause: { startDate: '2026-09-20', returnDate: '2026-10-12' },
+            sessions: [fakeSession('2026-09-17', { status: 'DESMARCADA', reason: 'Feriado fictício' })],
+            upcoming: [fakeSession('2026-10-15')],
+          }),
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderRoute(path);
+
+    const card = await screen.findByRole('region', { name: 'Consultas' });
+    expect(within(card).getByText('Em pausa até 12/10')).toBeInTheDocument();
+    await user.click(within(card).getByRole('button', { name: 'Ver a agenda' }));
+
+    expect(await within(card).findByText('Toda quinta-feira, às 14:00')).toBeInTheDocument();
+    expect(within(card).getByText('Motivo: Feriado fictício')).toBeInTheDocument();
+    expect(within(card).queryByRole('button', { name: /Desmarcar|Remarcar|Pausar/ })).not.toBeInTheDocument();
+    expect(writes).toEqual([]);
+  });
+
+  it('sem o aceite da agenda: pede o aceite no lugar da lista', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({
+          user: {
+            ...fakeUser,
+            profiles: { patient: false, therapist: true },
+            privacyUpToDate: false,
+            privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: false },
+          },
+        }),
+      ),
+    );
+    patientApi();
+    const user = userEvent.setup();
+    renderRoute(path);
+
+    const card = await screen.findByRole('region', { name: 'Consultas' });
+    await user.click(within(card).getByRole('button', { name: 'Ver a agenda' }));
+
+    expect(within(card).getByText(/Para ver a agenda dos seus pacientes/)).toBeInTheDocument();
   });
 });

@@ -16,7 +16,8 @@ import {
   todayInAppZone,
   weekDays,
 } from '../features/activities/week';
-import { useAppointments } from '../features/appointments/use-appointments';
+import { sessionDays } from '../features/appointments/appointments-api';
+import { useAgenda } from '../features/appointments/use-appointments';
 import { TensionChart } from '../features/tension-episodes/tension-chart';
 import { TensionEpisodeCard } from '../features/tension-episodes/tension-episode-card';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
@@ -42,7 +43,7 @@ export function TensionPage() {
   const monday = isValidDateOnly(param) ? startOfWeek(param) : currentMonday;
   const sunday = addDays(monday, 6);
   const week = useWeekTensionEpisodes(monday, consented);
-  const appointmentDays = useAppointments().data?.appointments.map((a) => a.appointmentDate) ?? [];
+  const appointmentDays = sessionDays(useAgenda({ from: monday, to: sunday }).data);
   const episodes = week.data ?? [];
   // Sem episódio, o dia não aparece.
   const days = weekDays(monday).filter((day) => episodes.some((e) => e.episodeDate === day));

@@ -54,10 +54,11 @@ export function usePatientTensionEpisodes(patientId: string, range: { from: stri
   });
 }
 
-export function usePatientAppointments(patientId: string) {
+// Sem o aceite da agenda, nem pergunta (a API responderia 403).
+export function usePatientAppointments(patientId: string, enabled: boolean, range?: { from: string; to: string }) {
   return useQuery({
-    queryKey: [...THERAPIST_KEY, patientId, 'appointments'],
-    queryFn: () => fetchPatientAppointments(patientId),
+    queryKey: [...THERAPIST_KEY, patientId, 'appointments', range?.from ?? null, range?.to ?? null],
+    queryFn: enabled ? () => fetchPatientAppointments(patientId, range) : skipToken,
     retry: retryUnlessForbidden,
   });
 }

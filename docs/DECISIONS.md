@@ -721,6 +721,35 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   encerrar sem apagar o histórico. O motivo obrigatório dá contexto à terapeuta sobre faltas e
   remarcações, e o arquivo `.ics` leva a agenda ao calendário do celular sem expor dado de saúde.
 
+## DEC-046 — Telas da agenda de consultas
+- **Decisão:**
+  - `/consultas` vira a página da agenda: o bloco **"Sua agenda"** com a regra por extenso ("Toda
+    quinta-feira, às 14:00" ou "A cada duas semanas, na quinta-feira, às 14:00"), a pausa, os botões
+    **Mudar**, **Pausar** (ou **Retomar agora**) e **Encerrar**, e o link **"Adicionar à agenda do
+    celular"** (`.ics`). Sem agenda, **Configurar agenda**; depois de encerrar, **Agendar de novo**;
+  - **Próximas** (as 6 da API) e **Anteriores** (as do período que já começaram, da mais recente para
+    a mais antiga). Cada sessão mostra dia, hora e distância, um selo (desmarcada, remarcada de dd/mm,
+    avulsa) e o motivo. Ações: **Remarcar** e **Desmarcar** nas próximas, **Registrar falta** nas
+    anteriores, **Desfazer** nas que mudaram, **Mudar** e **Excluir** nas avulsas. Desmarcar e
+    remarcar pedem o motivo (até 500 caracteres) no próprio diálogo;
+  - **Nova consulta avulsa** (dia e hora) no topo da página, no lugar de "Nova consulta";
+  - o card "Consultas" de `/registros` mostra a próxima e a última com a hora, "Configure sua
+    agenda" sem agenda, a pausa e o encerramento. O selo "consulta" da semana (Atividades e Tensão)
+    pede a agenda **do período aberto** e marca só as sessões agendadas;
+  - sem o aceite da `2026-10.4`, `/consultas` mostra o pedido de aceite e a lista só para ler, sem
+    nenhuma ação. A faixa "o aviso mudou" passa a citar a agenda;
+  - terapeuta: o card "Consultas" de `/pacientes/:id` ganha o selo da situação ("Em pausa até
+    12/10", "Terapia encerrada", "Sem agenda") e o botão **"Ver a agenda"**, que mostra a regra, a
+    pausa, as próximas e as 6 anteriores mais recentes com os motivos, só leitura, ou o pedido de
+    aceite dela. Sem o aceite, o selo "consulta" usa só a última e a próxima do resumo. Em
+    `/pacientes`, cada item ganha o mesmo selo, a partir do resumo de cada paciente;
+  - o aviso de privacidade passa à versão 4 (agenda, motivos, pausas e o arquivo `.ics`), e a exclusão
+    de conta cita a agenda.
+- **Motivo:** a agenda substitui o cadastro de datas soltas sem mudar onde a pessoa já procura as
+  consultas (card e `/consultas`). Mostrar a desmarcada riscada, com o motivo, em vez de sumir com
+  ela, mantém o histórico que a terapeuta usa para entender as faltas. O selo na lista poupa a
+  terapeuta de abrir cada paciente para saber quem está em pausa.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

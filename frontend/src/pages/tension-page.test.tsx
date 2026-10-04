@@ -22,7 +22,7 @@ afterEach(() => {
 // Aceitou a versão do aviso do RPD, mas não a que cita os episódios.
 const rpdOnlyUser = http.get('*/api/auth/me', () =>
   HttpResponse.json({
-    user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false } },
+    user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false } },
   }),
 );
 
@@ -189,15 +189,17 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     renderRoute('/pensamentos');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('para incluir os Episódios de tensão. Você só precisa aceitar a nova versão para usar essa parte.');
+    expect(banner).toHaveTextContent(
+      'para incluir os Episódios de tensão e a agenda de consultas. Você só precisa aceitar a nova versão para usar essas partes.',
+    );
   });
 
-  it('sem nenhum dos aceites, a faixa em Atividades cita as duas áreas', async () => {
+  it('sem nenhum dos aceites, a faixa em Atividades cita as três áreas', async () => {
     server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: { ...fakeUser, ...outdatedPrivacy } })));
     renderRoute('/registros');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('o Registro de Pensamentos e os Episódios de tensão');
+    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão e a agenda de consultas');
     expect(banner).toHaveTextContent('essas partes');
   });
 
@@ -208,7 +210,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
         HttpResponse.json({
           user: accepted
             ? fakeUser
-            : { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false } },
+            : { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false } },
         }),
       ),
     );
