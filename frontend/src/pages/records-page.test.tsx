@@ -168,13 +168,20 @@ describe('RecordsPage: ações por estado', () => {
 
   it('o gráfico traz as notas das atividades feitas (tabela acessível)', async () => {
     weekHandler([
-      fakeActivity({ name: 'Caminhada', status: 'CONCLUIDA', wantBefore: 2, pleasure: 7, achievement: 9 }),
+      fakeActivity({
+        name: 'Caminhada',
+        activityDate: '2026-09-24',
+        status: 'CONCLUIDA',
+        wantBefore: 2,
+        pleasure: 7,
+        achievement: 9,
+      }),
       fakeActivity({ name: 'Planejada', status: 'PLANEJADA' }),
     ]);
     renderRoute('/registros');
 
     const table = await screen.findByRole('table', { name: 'Notas das atividades feitas na semana' });
-    const row = within(table).getByRole('row', { name: /Caminhada/ });
+    const row = within(table).getByRole('row', { name: 'Caminhada, qui, 24/09 2 7 9'});
     expect(within(row).getAllByRole('cell').map((c) => c.textContent)).toEqual(['2', '7', '9']);
     expect(within(table).queryByText('Planejada')).not.toBeInTheDocument();
   });
