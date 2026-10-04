@@ -750,6 +750,15 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   ela, mantém o histórico que a terapeuta usa para entender as faltas. O selo na lista poupa a
   terapeuta de abrir cada paciente para saber quem está em pausa.
 
+## DEC-047 — Gráfico das atividades: colunas a partir do tablet
+- **Decisão:** o gráfico "Como foram as atividades feitas" escolhe o formato pela largura da tela:
+  abaixo de **768px**, as barras horizontais da DEC-044 (nome inteiro e dia); a partir de 768px
+  (tablet e computador), as **colunas lado a lado** do Recharts, como antes, com o nome cortado em
+  14 caracteres e rolagem lateral a partir de 9 atividades. A troca é feita por um hook
+  `useMediaQuery`, e só um dos dois formatos é montado. A tabela para leitor de tela não muda.
+- **Motivo:** o pedido do usuário. No tablet e no computador, as colunas cabem e deixam a comparação
+  entre atividades mais direta; o problema que levou às barras era só o celular estreito.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
