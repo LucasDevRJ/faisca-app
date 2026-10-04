@@ -130,6 +130,11 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 - A meta é **uma de cada tipo por ciclo da consulta** (duas de cada no ciclo de 14 dias ou mais),
   mostrada de forma neutra, sem placar.
 - Usar a Ação exige ter aceitado uma versão do aviso de privacidade que a cite.
+- A aba **Ação** fica ao lado de Atividades, Pensamentos e Tensão (no celular, as quatro em grade
+  2×2), com a explicação dos três tipos, a meta do ciclo, os dias com ação, o cartão com a
+  expectativa ao lado do resultado ("Esperava 3 · Prazer 7 · Realização 6") e um gráfico de
+  expectativa × prazer × realização. O formulário fica numa página própria, com um exemplo de cada
+  tipo, e dá para repetir uma ação do ciclo passado. A terapeuta vê a aba **Ação**, só leitura.
 
 ## Tela de registros: ciclo ou semana (paciente e terapeuta)
 - A tela abre no **ciclo da consulta** atual, com o título "Consulta de dd/mm", o período, quantos

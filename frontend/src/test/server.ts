@@ -129,6 +129,7 @@ export const handlers = [
   http.get('*/api/activities', () => HttpResponse.json({ activities: [] })),
   http.get('*/api/thought-records', () => HttpResponse.json({ thoughtRecords: [] })),
   http.get('*/api/tension-episodes', () => HttpResponse.json({ tensionEpisodes: [] })),
+  http.get('*/api/actions', () => HttpResponse.json({ actions: [] })),
   http.get('*/api/appointments', () => HttpResponse.json(fakeAgenda())),
   // Sem agenda, sem ciclo: as telas usam a semana (DEC-050).
   http.get('*/api/appointments/cycle', () => HttpResponse.json({ today: '2026-09-24', cycle: null })),

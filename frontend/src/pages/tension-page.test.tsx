@@ -71,7 +71,7 @@ function recordWrites(responses: Partial<Record<string, (body: unknown) => Respo
 }
 
 describe('/tensao', () => {
-  it('três abas; a semana mostra só os dias com episódio', async () => {
+  it('quatro abas; a semana mostra só os dias com episódio', async () => {
     const calls = weekHandler([
       fakeTensionEpisode({ situation: 'Fila do mercado', episodeDate: '2026-09-22' }),
       fakeTensionEpisode({ situation: 'Reunião', episodeDate: '2026-09-24' }),
@@ -84,6 +84,7 @@ describe('/tensao', () => {
       'Atividades',
       'Pensamentos',
       'Tensão',
+      'Ação',
     ]);
     expect(within(tabs).getByRole('link', { name: 'Tensão' })).toHaveAttribute('aria-current', 'page');
     expect(await screen.findByRole('article', { name: 'Episódio: Fila do mercado' })).toBeInTheDocument();

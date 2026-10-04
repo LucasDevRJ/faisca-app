@@ -848,6 +848,32 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   realizada registrada, em vez de excluí-la, mostra os ciclos com mais e com menos ações sem culpa.
   As janelas de 7 dias cobrem o planejamento até a próxima sessão semanal e o esquecimento comum.
 
+## DEC-052 — Telas da Ação
+- **Decisão:**
+  - quarta aba **Ação** (`/acao`) no paciente; no celular, as quatro abas passam a uma **grade 2×2**
+    (e os botões da terapeuta também), porque "Pensamentos" não cabe numa linha com quatro abas;
+  - a tela segue o período das outras abas (ciclo ou semana, DEC-050) e tem: o bloco recolhível **"O
+    que é a Ação?"** com os três tipos e exemplos; a **meta do ciclo** ("Neste ciclo"), com um espaço
+    por tipo (dois no ciclo de 14 dias ou mais) que se preenche com uma ação feita, sem número de
+    "faltam" nem cor de alerta; os dias com ação; o atalho **"Repetir do ciclo passado"**, com as
+    ações do ciclo anterior levando ao formulário já com o nome e o tipo; e o **gráfico** de
+    expectativa × prazer × realização no fim;
+  - o cartão mostra o tipo, o estado ("Planejada", "Feita", "Não deu desta vez") e a **expectativa ao
+    lado do resultado** ("Esperava 3 · Prazer 7 · Realização 6"). Na planejada: **"Conta como foi?"**
+    e **"Não deu desta vez"** a partir do dia da ação, **Editar** e **Excluir**;
+  - formulário em página própria (`/acao/nova?dia=&nome=&tipo=` e `/acao/:id/editar`): **"Vou fazer"
+    | "Já fiz"**, tipo com a descrição, nome com o **exemplo do tipo escolhido** no placeholder e na
+    dica, dia (com a janela de cada modo) e expectativa; no "Já fiz", também prazer, realização e
+    observação. Ao salvar, volta para o ciclo do dia com "Ação salva.";
+  - o gráfico das atividades vira um componente genérico (`ScoreChart`), usado pelas atividades e
+    pela Ação, com o mesmo desenho (barras no celular, colunas a partir do tablet);
+  - o resumo do ciclo ganha "N ações feitas"; a exclusão de conta cita as ações;
+  - terapeuta: aba **Ação** em `/pacientes/:id?aba=acao`, só leitura, com a meta, os cartões e o
+    gráfico, ou o pedido de aceite dela.
+- **Motivo:** repetir o desenho das outras áreas deixa a parte nova familiar. A meta em espaços mostra
+  o que já foi feito sem placar nem culpa (frontend/CLAUDE.md), e a expectativa ao lado do
+  resultado é o que dá sentido à Ação: perceber que muitas vezes foi melhor do que se esperava.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

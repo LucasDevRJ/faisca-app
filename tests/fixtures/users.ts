@@ -34,4 +34,6 @@ export const users = {
   // que cita a Ação (DEC-051).
   actionPatient: { email: 'acao-paciente@faisca.test', password: SEED_PASSWORD },
   actionTherapist: { email: 'acao-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usada só nas telas da Ação (e2e/actions.spec.ts), também sem o aceite da Ação.
+  actionScreenPatient: { email: 'acao-tela@faisca.test', password: SEED_PASSWORD },
 } as const;
