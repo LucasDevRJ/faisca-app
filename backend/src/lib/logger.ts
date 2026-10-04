@@ -36,6 +36,8 @@ const SENSITIVE_KEYS = [
   // Episódios de tensão (DEC-042): as duas notas (situation, behavior e consequence já estão acima).
   'tensionLevel',
   'vocalizeUrge',
+  // Agenda (DEC-045): motivo de desmarcar ou remarcar.
+  'reason',
   'cookie',
   'authorization',
 ];

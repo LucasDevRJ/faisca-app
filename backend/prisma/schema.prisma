@@ -35,6 +35,8 @@ model User {
   authTokens      AuthToken[]
   activities      Activity[]
   appointments    Appointment[]
+  schedules       AppointmentSchedule[]
+  therapyPauses   TherapyPause[]
   thoughtRecords  ThoughtRecord[]
   tensionEpisodes TensionEpisode[]
 
@@ -102,19 +104,97 @@ model Activity {
 
 // Datas das consultas, registradas pelo paciente (DEC-017). Servem para "última" e "próxima"
 // consulta e, na etapa de vínculo, para o filtro e o destaque da terapeuta.
+// Consulta avulsa (DEC-030): uma sessão fora da recorrência, ou as de antes da agenda (DEC-045).
 model Appointment {
-  id              String   @id @default(uuid()) @db.Uuid
+  id              String    @id @default(uuid()) @db.Uuid
   // O paciente dono do registro.
-  userId          String   @db.Uuid
+  userId          String    @db.Uuid
   // Só o dia, no fuso America/Sao_Paulo (DEC-007).
-  appointmentDate DateTime @db.Date
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  appointmentDate DateTime  @db.Date
+  // Hora no relógio de São Paulo, sem segundos (DEC-045). Obrigatória nas novas; vazia nas
+  // consultas registradas antes da agenda, que só tinham o dia.
+  appointmentTime DateTime? @db.Time(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Uma consulta por dia (DEC-030).
+  // Uma consulta avulsa por dia (DEC-030); o choque com a recorrência é conferido no service.
   @@unique([userId, appointmentDate])
+}
+
+enum AppointmentFrequency {
+  SEMANAL
+  QUINZENAL
+}
+
+// Por que uma regra terminou: o paciente mudou dia, hora ou frequência, ou encerrou a terapia.
+enum ScheduleEndReason {
+  MUDANCA
+  ENCERRAMENTO
+}
+
+// Regra da agenda (DEC-045): a primeira sessão, a hora e a frequência. As sessões são
+// calculadas a partir dela, sem uma linha por sessão. Regras antigas ficam como histórico.
+model AppointmentSchedule {
+  id        String               @id @default(uuid()) @db.Uuid
+  userId    String               @db.Uuid
+  // Primeira sessão: o dia da semana da recorrência sai dela.
+  startDate DateTime             @db.Date
+  // Hora no relógio de São Paulo, sem segundos.
+  time      DateTime             @db.Time(0)
+  frequency AppointmentFrequency
+  // Último dia em que a regra vale (inclusive). null = a regra em vigor. Pode ficar antes do
+  // startDate quando a regra termina sem nenhuma sessão.
+  endDate   DateTime?            @db.Date
+  endReason ScheduleEndReason?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exceptions AppointmentException[]
+
+  // Uma regra em vigor por paciente: índice único parcial na migration (WHERE "endDate" IS NULL).
+  @@index([userId])
+}
+
+enum AppointmentExceptionType {
+  DESMARCADA
+  REMARCADA
+}
+
+// O que mudou numa sessão específica da recorrência, sempre com o motivo (DEC-045).
+model AppointmentException {
+  id           String                   @id @default(uuid()) @db.Uuid
+  scheduleId   String                   @db.Uuid
+  // O dia em que a sessão cairia pela regra.
+  originalDate DateTime                 @db.Date
+  type         AppointmentExceptionType
+  // Só na remarcada: o novo dia e a nova hora.
+  newDate      DateTime?                @db.Date
+  newTime      DateTime?                @db.Time(0)
+  reason       String
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+
+  schedule AppointmentSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, originalDate])
+}
+
+// Pausa na terapia (DEC-045): sem sessões de startDate até a véspera do returnDate.
+// Sem returnDate, a pausa vale até o paciente retomar.
+model TherapyPause {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  startDate  DateTime  @db.Date
+  returnDate DateTime? @db.Date
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // Emoções do Registro de Pensamentos (SPEC, "Registro de Pensamentos"; DEC-039).

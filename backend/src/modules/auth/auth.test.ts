@@ -535,18 +535,21 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
     expect(saved.privacyAcceptedAt!.getTime()).toBeGreaterThan(Date.now() - 60_000);
   });
 
-  it('o /auth/me diz quais áreas a versão aceita libera (DEC-042)', async () => {
+  it('o /auth/me diz quais áreas a versão aceita libera (DEC-042, DEC-045)', async () => {
     const user = await createConfirmedUser({ email: EMAIL, password: PASSWORD, privacyVersion: null });
     const agent = await loginAgent();
     const areas = async () => (await agent.get('/auth/me')).body.user.privacyAreas;
 
-    expect(await areas()).toEqual({ thoughtRecords: false, tensionEpisodes: false });
+    const none = { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false };
+    expect(await areas()).toEqual(none);
     for (const [version, expected] of [
-      ['2026-10', { thoughtRecords: false, tensionEpisodes: false }],
-      ['2026-10.2', { thoughtRecords: true, tensionEpisodes: false }],
-      ['2026-10.3', { thoughtRecords: true, tensionEpisodes: true }],
+      ['2026-10', none],
+      ['2026-10.2', { ...none, thoughtRecords: true }],
+      ['2026-10.3', { ...none, thoughtRecords: true, tensionEpisodes: true }],
+      // Agenda (DEC-045).
+      ['2026-10.4', { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true }],
       // Versão que não está na lista não libera nada.
-      ['2099-01', { thoughtRecords: false, tensionEpisodes: false }],
+      ['2099-01', none],
     ] as const) {
       await prisma.user.update({ where: { id: user.id }, data: { privacyVersion: version } });
       expect(await areas(), version).toEqual(expected);

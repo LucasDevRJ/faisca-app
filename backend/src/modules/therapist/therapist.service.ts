@@ -2,11 +2,19 @@ import { addDays, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import type { ActivitiesService } from '../activities/activities.service.js';
 import type { ListActivitiesQuery } from '../activities/activities.schema.js';
+import type { ListAppointmentsQuery } from '../appointments/appointments.schema.js';
 import type { AppointmentsService } from '../appointments/appointments.service.js';
+import type { Session } from '../appointments/sessions.js';
 import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ListThoughtRecordsQuery } from '../thought-records/thought-records.schema.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
+
+// No resumo, só quando e de que tipo: o motivo de uma remarcada fica na rota da agenda, que pede o
+// aceite da 2026-10.4 (DEC-045).
+function withoutReason(session: Session | null) {
+  return session && { date: session.date, time: session.time, kind: session.kind };
+}
 
 export type Highlight = {
   from: string;
@@ -39,13 +47,17 @@ export function createTherapistService(
         include: { patient: { select: { id: true, name: true, email: true } } },
       });
       const today = todayInAppZone();
-      const { last, next } = await appointments.list(patientId);
+      const { last, next, status, pause } = await appointments.list(patientId);
       return {
         patient: { ...link.patient, linkedAt: link.createdAt.toISOString() },
         today,
-        lastAppointment: last,
-        nextAppointment: next,
-        highlight: highlightWindow(next?.appointmentDate ?? null, today),
+        lastAppointment: withoutReason(last),
+        nextAppointment: withoutReason(next),
+        // Situação da agenda (DEC-045): o selo "em pausa" ou "encerrada" na tela da terapeuta.
+        // Só a situação e as datas da pausa; os motivos ficam na rota da agenda, com o aceite.
+        agendaStatus: status,
+        pause,
+        highlight: highlightWindow(next?.date ?? null, today),
       };
     },
 
@@ -53,8 +65,8 @@ export function createTherapistService(
       return activities.list(patientId, query);
     },
 
-    listAppointments(patientId: string) {
-      return appointments.list(patientId);
+    listAppointments(patientId: string, query: ListAppointmentsQuery) {
+      return appointments.list(patientId, query);
     },
 
     listThoughtRecords(patientId: string, query: ListThoughtRecordsQuery) {

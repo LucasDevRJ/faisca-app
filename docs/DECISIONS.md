@@ -673,6 +673,54 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   e rolar para baixo é o gesto natural no celular. O dia liga a barra ao dia da lista logo abaixo e
   separa duas atividades com o mesmo nome na semana (ou no período da terapeuta).
 
+## DEC-045 — Agenda de consultas recorrentes (API)
+- **Decisão:**
+  - as consultas passam a ter uma **agenda** (issue #30): `AppointmentSchedule` guarda a primeira
+    sessão (`startDate`), a hora (`time`, TIME sem segundos, no relógio de São Paulo) e a frequência
+    (`SEMANAL | QUINZENAL`). As sessões são **calculadas** (`sessions.ts`, funções puras), sem uma
+    linha por sessão. Mudar a agenda fecha a regra em vigor (`endDate` na véspera da nova, `endReason`
+    `MUDANCA`) e cria outra; encerrar a terapia fecha com `ENCERRAMENTO`. Índice único parcial: uma
+    regra em vigor por paciente;
+  - `AppointmentException` muda uma sessão específica, identificada pelo dia em que cairia pela
+    regra: `DESMARCADA` ou `REMARCADA` (novo dia e hora), sempre com **motivo de 1 a 500
+    caracteres**. Dá para desfazer. Desmarcar vale para sessão passada (falta); remarcar, só para
+    sessão que ainda não começou e para um horário que ainda não chegou;
+  - `TherapyPause`: início (hoje ou depois) e volta opcional. Sem sessões de `startDate` até a véspera
+    do `returnDate`; "Retomar agora" encerra a pausa hoje (ou desfaz a que ainda não começou). Uma
+    pausa por vez, e só com agenda em vigor;
+  - a consulta **avulsa** (`Appointment`) continua, agora com `appointmentTime` obrigatório nas novas.
+    As de antes da agenda ficam sem hora e contam o dia todo para "última" e "próxima";
+  - **um horário por dia**: avulsa, remarcação, desfazer uma remarcação e agenda nova não podem cair
+    num dia com sessão agendada (409 `APPOINTMENT_EXISTS` ou `SCHEDULE_CONFLICT`), conferido no
+    service; a desmarcada libera o dia;
+  - última e próxima passam a considerar a hora: a sessão de hoje às 14:00 é a próxima até 14:00;
+  - datas: a primeira agenda pode começar até 365 dias atrás; mudanças, pausas e remarcações vão de
+    hoje até 365 dias à frente. Encerrar apaga as sessões que ainda não começaram, inclusive avulsas
+    e remarcações, e termina a pausa;
+  - rotas do paciente: `GET /appointments?from&to` (até 400 dias; sem período, de 91 dias atrás a 91
+    à frente) devolve `status` (`SEM_AGENDA | ATIVA | PAUSADA | ENCERRADA`), `schedule`, `pause`,
+    `sessions`, `upcoming` (as próximas 6, inclusive desmarcadas), `last` e `next`. Escrita em
+    `PUT /appointments/schedule`, `POST /appointments/schedule/end`, `POST /appointments/pause`,
+    `POST /appointments/pause/resume`, `POST /appointments/sessions/:date/cancel`,
+    `POST /appointments/sessions/:date/reschedule` e `DELETE /appointments/sessions/:date/change`;
+    as avulsas seguem em `POST`, `PATCH` e `DELETE /appointments/:id`;
+  - `GET /appointments/calendar.ics`: as sessões dos próximos 12 meses, um evento por sessão (e não
+    RRULE, para pausas e exceções saírem certas), duração de 1 hora, texto neutro "Consulta" e a
+    desmarcada como `CANCELLED`. O motivo nunca vai para o arquivo;
+  - terapeuta: `GET /therapist/patients/:patientId/appointments` devolve a mesma agenda, com os
+    motivos. O resumo do paciente ganha `agendaStatus` e `pause` (sem motivos), para o selo "em pausa"
+    ou "encerrada" na tela dela. A lista de pacientes não muda: o selo usa o resumo de cada um, sem
+    expor dado de paciente fora de `/therapist/patients/...`;
+  - aviso de privacidade **`2026-10.4`**, com a área `appointmentSchedule`. Sem ela, o paciente lê a
+    agenda, mas não grava hora, motivo nem pausa; excluir, encerrar e retomar seguem liberados. A
+    terapeuta precisa dela para ler a agenda com os motivos (o resumo segue aberto);
+  - `reason` entra no `redact` do logger (regra 7). O destaque da terapeuta não muda nesta etapa
+    (vem com o ciclo da consulta, issue #29), só passa a usar o dia da próxima sessão calculada.
+- **Motivo:** a terapia é semanal ou quinzenal, e cadastrar cada data à mão não reflete o uso real.
+  Calcular as sessões a partir da regra evita gerar linhas sem fim e deixa mudar a agenda, pausar e
+  encerrar sem apagar o histórico. O motivo obrigatório dá contexto à terapeuta sobre faltas e
+  remarcações, e o arquivo `.ics` leva a agenda ao calendário do celular sem expor dado de saúde.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

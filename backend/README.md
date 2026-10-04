@@ -50,8 +50,8 @@ todas com a senha `senha-ficticia-123`:
 
 - `terapeuta.dev@faisca.test`: terapeuta;
 - `paciente.dev@faisca.test`: paciente já vinculada à terapeuta dev, com ~3 semanas de atividades,
-  Registros de Pensamentos, Episódios de tensão e consultas fictícias em volta de hoje (última há 7
-  dias, próxima daqui a 3);
+  Registros de Pensamentos, Episódios de tensão e uma agenda fictícia: toda semana às 14:00, desde 3
+  semanas atrás, com uma sessão desmarcada, uma remarcada e uma consulta antiga sem hora (DEC-045);
 - `aviso-antigo.dev@faisca.test`: paciente que só aceitou o aviso de privacidade de antes do RPD, para
   ver o pedido do novo aceite no Registro de Pensamentos (DEC-039);
 - `aviso-rpd.dev@faisca.test`: paciente que aceitou a versão do RPD, mas não a dos episódios, para ver

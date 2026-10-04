@@ -169,9 +169,37 @@ await prisma.$transaction(async (tx) => {
       consequence,
     })),
   });
-  await tx.appointment.createMany({
-    data: [-21, -7, 3].map((offset) => ({ userId: patient.id, appointmentDate: dateOnlyToDate(addDays(today, offset)) })),
+  // Agenda (DEC-045): toda semana às 14:00, desde 3 semanas atrás, com uma sessão desmarcada, uma
+  // remarcada e uma consulta antiga, de antes da agenda, sem hora. As exceções saem em cascata.
+  await tx.appointmentSchedule.deleteMany({ where: { userId: patient.id } });
+  await tx.therapyPause.deleteMany({ where: { userId: patient.id } });
+  const schedule = await tx.appointmentSchedule.create({
+    data: {
+      userId: patient.id,
+      startDate: dateOnlyToDate(addDays(today, -21)),
+      time: timeOnlyToDate('14:00'),
+      frequency: 'SEMANAL',
+    },
   });
+  await tx.appointmentException.createMany({
+    data: [
+      {
+        scheduleId: schedule.id,
+        originalDate: dateOnlyToDate(addDays(today, -14)),
+        type: 'DESMARCADA',
+        reason: 'Feriado (fictício)',
+      },
+      {
+        scheduleId: schedule.id,
+        originalDate: dateOnlyToDate(addDays(today, 7)),
+        type: 'REMARCADA',
+        newDate: dateOnlyToDate(addDays(today, 8)),
+        newTime: timeOnlyToDate('10:00'),
+        reason: 'Viagem a trabalho (fictícia)',
+      },
+    ],
+  });
+  await tx.appointment.create({ data: { userId: patient.id, appointmentDate: dateOnlyToDate(addDays(today, -35)) } });
   // Um vínculo ativo por paciente (DEC-031): se a paciente dev estiver com outra pessoa, fica como está.
   const active = await tx.therapistLink.findFirst({ where: { patientId: patient.id, revokedAt: null } });
   if (!active) {

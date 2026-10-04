@@ -31,9 +31,9 @@ export function createTherapistRoutes() {
 
   router.get(PREFIX, controller.summary);
   router.get(`${PREFIX}/activities`, controller.activities);
-  router.get(`${PREFIX}/appointments`, controller.appointments);
-  // RPD (DEC-039) e episódios de tensão (DEC-042): a terapeuta também precisa ter aceitado uma
-  // versão do aviso de privacidade que fale desses registros.
+  // RPD (DEC-039), episódios de tensão (DEC-042) e agenda com motivos e pausas (DEC-045): a
+  // terapeuta também precisa ter aceitado uma versão do aviso de privacidade que fale deles.
+  router.get(`${PREFIX}/appointments`, requirePrivacy('appointmentSchedule'), controller.appointments);
   router.get(`${PREFIX}/thought-records`, requirePrivacy('thoughtRecords'), controller.thoughtRecords);
   router.get(`${PREFIX}/tension-episodes`, requirePrivacy('tensionEpisodes'), controller.tensionEpisodes);
 
