@@ -219,6 +219,7 @@ export function createAppointmentsService() {
     if (input.startDate > addDays(today, MAX_AHEAD_DAYS)) throw tooFarAhead();
 
     await prisma.$transaction(async (tx) => {
+      await undoTodaysSchedules(tx, userId, today);
       const agenda = await loadAgenda(tx, userId);
       // A primeira agenda pode começar no passado, para as sessões que já aconteceram entrarem no
       // histórico. Depois disso, o passado não é reescrito.
@@ -251,6 +252,13 @@ export function createAppointmentsService() {
       };
       const until = addDays(today, MAX_AHEAD_DAYS);
       const newDates = new Set(ruleDates(draft.schedules.at(-1)!, input.startDate, until));
+      // Consulta de antes da agenda (avulsa sem hora) num dia da regra nova é a mesma sessão: a regra
+      // a absorve, com a hora certa (DEC-048).
+      const absorbed = draft.extras.filter((e) => e.time === null && newDates.has(e.date));
+      if (absorbed.length > 0) {
+        await tx.appointment.deleteMany({ where: { userId, id: { in: absorbed.map((e) => e.id) } } });
+        draft.extras = draft.extras.filter((e) => !absorbed.includes(e));
+      }
       const clash = sessionsBetween({ ...draft, schedules: draft.schedules.slice(0, -1) }, input.startDate, until).find(
         (s) => s.status === 'AGENDADA' && newDates.has(s.date),
       );
@@ -276,6 +284,28 @@ export function createAppointmentsService() {
       );
     });
     return list(userId);
+  }
+
+  // Mudar a agenda no mesmo dia em que ela foi criada é uma correção, e não uma mudança (DEC-048):
+  // as regras criadas hoje saem inteiras, com as sessões delas, como se nunca tivessem existido. A
+  // regra anterior que uma delas tinha fechado volta a valer, e a mudança segue a partir dela.
+  async function undoTodaysSchedules(tx: Db, userId: string, today: string) {
+    const rows = await tx.appointmentSchedule.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } });
+    const fromToday = rows.filter((r) => todayInAppZone(r.createdAt) === today);
+    if (fromToday.length === 0) return;
+    const firstStart = dateToDateOnly(fromToday[0]!.startDate);
+    // As exceções saem em cascata.
+    await tx.appointmentSchedule.deleteMany({ where: { id: { in: fromToday.map((r) => r.id) } } });
+    const reopened = rows.find(
+      (r) =>
+        !fromToday.includes(r) &&
+        r.endReason === 'MUDANCA' &&
+        r.endDate !== null &&
+        dateToDateOnly(r.endDate) === addDays(firstStart, -1),
+    );
+    if (reopened) {
+      await tx.appointmentSchedule.update({ where: { id: reopened.id }, data: { endDate: null, endReason: null } });
+    }
   }
 
   // Encerrar a terapia (DEC-045): as sessões que ainda não começaram somem, inclusive as avulsas;
