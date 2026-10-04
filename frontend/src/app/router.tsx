@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { GuestOnly, HomeRedirect, RequireAuth, RequireProfile } from '../features/auth/route-guards';
+import { EditActionPage, NewActionPage } from '../pages/action-form-page';
+import { ActionsPage } from '../pages/actions-page';
 import { CheckEmailPage } from '../pages/check-email-page';
 import { AppointmentsPage } from '../pages/appointments-page';
 import { AccountPage } from '../pages/account-page';
@@ -39,19 +41,22 @@ export const routes = [
               {
                 element: <RequireProfile profile="patient" />,
                 children: [
-                  // Atividades, Pensamentos e Tensão em abas (DEC-040, DEC-043).
+                  // Atividades, Pensamentos, Tensão e Ação em abas (DEC-040, DEC-043, DEC-052).
                   {
                     element: <PatientTabsLayout />,
                     children: [
                       { path: 'registros', element: <RecordsPage /> },
                       { path: 'pensamentos', element: <ThoughtsPage /> },
                       { path: 'tensao', element: <TensionPage /> },
+                      { path: 'acao', element: <ActionsPage /> },
                     ],
                   },
                   { path: 'pensamentos/novo', element: <NewThoughtRecordPage /> },
                   { path: 'pensamentos/:id/editar', element: <EditThoughtRecordPage /> },
                   { path: 'tensao/novo', element: <NewTensionEpisodePage /> },
                   { path: 'tensao/:id/editar', element: <EditTensionEpisodePage /> },
+                  { path: 'acao/nova', element: <NewActionPage /> },
+                  { path: 'acao/:id/editar', element: <EditActionPage /> },
                   { path: 'consultas', element: <AppointmentsPage /> },
                 ],
               },

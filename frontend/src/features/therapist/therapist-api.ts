@@ -1,4 +1,5 @@
 import { api } from '../../lib/api';
+import type { Action } from '../actions/actions-api';
 import type { Activity } from '../activities/activities-api';
 import type { AgendaResponse, AgendaStatus, DateRange, Pause } from '../appointments/appointments-api';
 import type { CycleResponse } from '../cycle/cycle-api';
@@ -73,4 +74,10 @@ export async function fetchPatientTensionEpisodes(patientId: string, from: strin
 export async function fetchPatientCycle(patientId: string, date?: string): Promise<CycleResponse> {
   const { data } = await api.get<CycleResponse>(`${base(patientId)}/cycle`, { params: date ? { date } : undefined });
   return data;
+}
+
+// Ação (DEC-051): pede a versão do aviso que a cita, aceita pela terapeuta.
+export async function fetchPatientActions(patientId: string, from: string, to: string): Promise<Action[]> {
+  const { data } = await api.get<{ actions: Action[] }>(`${base(patientId)}/actions`, { params: { from, to } });
+  return data.actions;
 }

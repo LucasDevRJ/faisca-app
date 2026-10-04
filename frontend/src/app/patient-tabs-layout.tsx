@@ -1,9 +1,9 @@
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { PrivacyUpdateBanner, type PrivacyArea } from '../features/auth/privacy-consent';
 
-// Três abas num celular de 360px: texto menor e menos espaço interno; no computador, como antes.
+// Quatro abas: no celular, grade 2×2 com texto menor (DEC-052); no computador, uma linha só.
 const tabClass = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-11 flex-1 items-center justify-center rounded-md px-2 text-sm font-medium sm:flex-none sm:px-4 sm:text-base ${
+  `flex min-h-11 items-center justify-center rounded-md px-2 text-sm font-medium sm:px-4 sm:text-base ${
     isActive ? 'bg-primary text-on-primary' : 'border border-border bg-surface text-text hover:bg-bg'
   }`;
 
@@ -11,9 +11,10 @@ const tabClass = ({ isActive }: { isActive: boolean }) =>
 const GATED: Record<string, PrivacyArea> = {
   '/pensamentos': 'thoughtRecords',
   '/tensao': 'tensionEpisodes',
+  '/acao': 'actions',
 };
 
-// Telas principais do paciente: Atividades, Pensamentos e Tensão, em abas (DEC-040, DEC-043).
+// Telas principais do paciente: Atividades, Pensamentos, Tensão e Ação, em abas (DEC-040, DEC-043, DEC-052).
 // A faixa do aviso de privacidade aparece aqui enquanto falta algum aceite.
 export function PatientTabsLayout() {
   const location = useLocation();
@@ -28,7 +29,7 @@ export function PatientTabsLayout() {
   const search = kept.size ? `?${kept}` : '';
   return (
     <>
-      <nav aria-label="Registros" className="flex gap-2">
+      <nav aria-label="Registros" className="grid grid-cols-2 gap-2 sm:flex">
         <NavLink to={{ pathname: '/registros', search }} className={tabClass}>
           Atividades
         </NavLink>
@@ -37,6 +38,9 @@ export function PatientTabsLayout() {
         </NavLink>
         <NavLink to={{ pathname: '/tensao', search }} end className={tabClass}>
           Tensão
+        </NavLink>
+        <NavLink to={{ pathname: '/acao', search }} end className={tabClass}>
+          Ação
         </NavLink>
       </nav>
       <PrivacyUpdateBanner gatedArea={gatedArea} />

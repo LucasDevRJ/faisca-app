@@ -2,6 +2,7 @@ import { skipToken, useQuery, type UseQueryOptions } from '@tanstack/react-query
 import type { CycleResponse } from '../cycle/cycle-api';
 import { getApiError } from '../auth/auth-api';
 import {
+  fetchPatientActions,
   fetchPatientActivities,
   fetchPatientAppointments,
   fetchPatientCycle,
@@ -70,6 +71,15 @@ export function patientCycleQuery(patientId: string) {
   return (date: string | null): UseQueryOptions<CycleResponse> => ({
     queryKey: [...THERAPIST_KEY, patientId, 'cycle', date],
     queryFn: () => fetchPatientCycle(patientId, date ?? undefined),
+    retry: retryUnlessForbidden,
+  });
+}
+
+// range null = aba fechada ou sem o aceite do aviso: não pergunta à API.
+export function usePatientActions(patientId: string, range: { from: string; to: string } | null) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'actions', range?.from, range?.to],
+    queryFn: range ? () => fetchPatientActions(patientId, range.from, range.to) : skipToken,
     retry: retryUnlessForbidden,
   });
 }
