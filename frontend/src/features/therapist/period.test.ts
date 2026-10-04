@@ -1,31 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysInRange, isInRange, sinceLastAppointment } from './period';
-
-describe('sinceLastAppointment', () => {
-  it('vai do dia da última consulta até hoje', () => {
-    expect(sinceLastAppointment('2026-09-10', '2026-09-24')).toEqual({
-      from: '2026-09-10',
-      to: '2026-09-24',
-      truncated: false,
-    });
-  });
-
-  it('exatamente 92 dias cabem inteiros', () => {
-    expect(sinceLastAppointment('2026-06-25', '2026-09-24')).toEqual({
-      from: '2026-06-25',
-      to: '2026-09-24',
-      truncated: false,
-    });
-  });
-
-  it('com mais de 92 dias, fica com os 92 mais recentes e avisa', () => {
-    expect(sinceLastAppointment('2026-06-24', '2026-09-24')).toEqual({
-      from: '2026-06-25',
-      to: '2026-09-24',
-      truncated: true,
-    });
-  });
-});
+import { daysInRange, isInRange } from './period';
 
 describe('daysInRange e isInRange', () => {
   it('lista os dias em ordem, com as duas pontas, atravessando o mês', () => {

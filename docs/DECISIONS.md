@@ -795,6 +795,31 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   (e não um tamanho fixo de 7 ou 14 dias) não deixa buraco depois de uma desmarcação nem sobreposição
   numa remarcação. Calcular na API mantém o "hoje" e as regras da agenda num lugar só.
 
+## DEC-050 — Telas do ciclo da consulta
+- **Decisão:**
+  - as três abas do paciente (Atividades, Pensamentos, Tensão) e a visão da terapeuta abrem no
+    **ciclo da consulta** atual (`GET .../cycle`, DEC-049), com a alternância **Ciclo | Semana**. O
+    período fica na URL: `?ciclo=AAAA-MM-DD` (um dia do ciclo) ou `?semana=AAAA-MM-DD`; sem nenhum dos
+    dois, o ciclo de hoje. Sem nenhuma sessão na agenda, não aparece a alternância e vale a semana,
+    como antes. Trocar de aba mantém o período, e salvar um pensamento ou episódio volta para o ciclo
+    do dia registrado;
+  - cabeçalho do ciclo: "Consulta de 07/10" e "01/10 a 07/10" (no ciclo aberto, "Desde a última
+    consulta" e "até hoje"), setas para o ciclo anterior e o seguinte, "Voltar para o ciclo atual",
+    aviso quando o ciclo passa de 42 dias, **"Sua consulta é daqui a N dias"** ("A consulta é…" para a
+    terapeuta) e o **resumo do ciclo**: "7 dias · 5 atividades feitas · 2 pensamentos registrados ·
+    1 episódio de tensão", só números, sem meta; a área que a terapeuta ainda não liberou no aviso
+    fica de fora do resumo;
+  - no ciclo, todos os dias aparecem nas Atividades (como na semana); Pensamentos e Tensão seguem
+    mostrando só os dias com registro. Gráficos e textos dizem "no ciclo" e "neste ciclo";
+  - terapeuta: saem o **destaque âmbar** e o filtro **"desde a última consulta"** (DEC-033, DEC-034),
+    substituídos pelo ciclo; o `highlight` do resumo deixa de ser usado pelas telas;
+  - componentes compartilhados em `features/cycle/` (`usePeriod`, `PeriodNav`, resumos), e hooks das
+    listas por período (`useRange…`).
+- **Motivo:** a psicóloga discute o que aconteceu desde a sessão anterior; abrir as duas telas no
+  mesmo recorte deixa paciente e terapeuta olhando a mesma coisa. Manter a semana como alternativa
+  preserva o hábito de quem já usa o app. O resumo e a contagem dão contexto sem cobrança, seguindo o
+  tom do app.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

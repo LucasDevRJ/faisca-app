@@ -1,58 +1,48 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { buttonClasses } from '../components/ui/button-styles';
 import { Dialog, DialogActions, DialogForm } from '../components/ui/dialog';
 import { getApiError } from '../features/auth/auth-api';
 import { useSession } from '../features/auth/use-session';
-import {
-  addDays,
-  formatDayHeading,
-  formatWeekRange,
-  isValidDateOnly,
-  startOfWeek,
-  todayInAppZone,
-  weekDays,
-} from '../features/activities/week';
+import { formatDayHeading, todayInAppZone } from '../features/activities/week';
+import { PatientCycleSummary } from '../features/cycle/cycle-summary';
+import { PeriodNav } from '../features/cycle/period-nav';
+import { cycleQuery } from '../features/cycle/use-cycle';
+import { usePeriod } from '../features/cycle/use-period';
+import { daysInRange } from '../features/therapist/period';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { ThoughtRecordCard } from '../features/thought-records/thought-record-card';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import {
   needsPrivacyConsent,
   useDeleteThoughtRecord,
-  useWeekThoughtRecords,
+  useRangeThoughtRecords,
 } from '../features/thought-records/use-thought-records';
 
 // Aviso vindo de outra página (ex.: "Registro salvo."), por navigate(..., { state }).
 export type ThoughtsPageState = { notice?: string } | null;
 
 // "Pensamentos": o Registro de Pensamentos do paciente (SPEC, "Registro de Pensamentos"; DEC-040).
-// A semana fica na URL (?semana=AAAA-MM-DD), como em /registros (DEC-029).
+// O período (ciclo da consulta ou semana) fica na URL, como em /registros (DEC-029, DEC-050).
 export function ThoughtsPage() {
   const { data: user } = useSession();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [toDelete, setToDelete] = useState<ThoughtRecord | null>(null);
   const [notice, setNotice] = useState<string | null>((location.state as ThoughtsPageState)?.notice ?? null);
 
   const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const today = todayInAppZone();
-  const currentMonday = startOfWeek(today);
-  const param = searchParams.get('semana');
-  const monday = isValidDateOnly(param) ? startOfWeek(param) : currentMonday;
-  const week = useWeekThoughtRecords(monday, consented);
+  const { period, currentMonday, showCycle, showWeek } = usePeriod(cycleQuery, today);
+  const range = period ?? { from: today, to: today };
+  const here = period?.mode === 'cycle' ? 'neste ciclo' : 'nesta semana';
+  const week = useRangeThoughtRecords(range, consented && period !== null);
   const records = week.data ?? [];
   // Sem registro, o dia não aparece: o RPD não é diário.
-  const days = weekDays(monday).filter((day) => records.some((r) => r.situationDate === day));
-  // O novo registro sugere hoje ou, numa semana passada, o domingo dela.
-  const sunday = addDays(monday, 6);
-  const newDate = sunday < today ? sunday : today;
-
-  function goToWeek(target: string) {
-    setNotice(null);
-    setSearchParams(target === currentMonday ? {} : { semana: target });
-  }
+  const days = daysInRange(range).filter((day) => records.some((r) => r.situationDate === day));
+  // O novo registro sugere hoje ou, num período passado, o último dia dele.
+  const newDate = range.to < today ? range.to : today;
 
   const header = (
     <section className="flex flex-col gap-2">
@@ -76,63 +66,56 @@ export function ThoughtsPage() {
     <>
       {header}
 
-      <section aria-labelledby="week-title" className="flex flex-col gap-5 sm:gap-6">
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              className="px-3 text-2xl"
-              aria-label="Semana anterior"
-              onClick={() => goToWeek(addDays(monday, -7))}
-            >
-              ‹
-            </Button>
-            <h2 id="week-title" className="min-w-40 text-center text-2xl font-bold" aria-live="polite">
-              {formatWeekRange(monday)}
-            </h2>
-            <Button
-              variant="ghost"
-              className="px-3 text-2xl"
-              aria-label="Próxima semana"
-              onClick={() => goToWeek(addDays(monday, 7))}
-            >
-              ›
-            </Button>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {monday !== currentMonday && (
-              <Button variant="secondary" onClick={() => goToWeek(currentMonday)}>
-                Voltar para esta semana
-              </Button>
-            )}
-            {/* No celular, o botão flutua no canto de baixo, como "Nova atividade". */}
-            <Link
-              to={`/pensamentos/novo?dia=${newDate}`}
-              className={buttonClasses(
-                'primary',
-                'fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 shadow-soft sm:static sm:shadow-none',
-              )}
-            >
-              <span aria-hidden="true" className="text-xl leading-none sm:hidden">
-                +
-              </span>
-              Novo registro
-            </Link>
-          </div>
-        </div>
+      <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
+        {period ? (
+          <PeriodNav
+            period={period}
+            today={today}
+            audience="patient"
+            currentMonday={currentMonday}
+            onCycle={(date) => {
+              setNotice(null);
+              showCycle(date);
+            }}
+            onWeek={(target) => {
+              setNotice(null);
+              showWeek(target);
+            }}
+            summary={<PatientCycleSummary range={period} />}
+            actions={
+              // No celular, o botão flutua no canto de baixo, como "Nova atividade".
+              <Link
+                to={`/pensamentos/novo?dia=${newDate}`}
+                className={buttonClasses(
+                  'primary',
+                  'fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 shadow-soft sm:static sm:shadow-none',
+                )}
+              >
+                <span aria-hidden="true" className="text-xl leading-none sm:hidden">
+                  +
+                </span>
+                Novo registro
+              </Link>
+            }
+          />
+        ) : (
+          <p className="text-muted" aria-busy="true">
+            Carregando…
+          </p>
+        )}
 
         {notice && <Alert>{notice}</Alert>}
 
-        {week.isPending && (
+        {period && week.isPending && (
           <p className="text-muted" aria-busy="true">
-            Carregando a semana…
+            Carregando…
           </p>
         )}
 
         {week.isError && (
           <Alert tone="attention">
             <div className="flex flex-col gap-3">
-              <p>Não conseguimos carregar esta semana. Confira sua conexão e tente de novo.</p>
+              <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
               <div>
                 <Button variant="secondary" onClick={() => week.refetch()}>
                   Tentar de novo
@@ -144,7 +127,7 @@ export function ThoughtsPage() {
 
         {week.isSuccess && records.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-            Nada anotado nesta semana. Quando algo mexer com você, dá para anotar aqui.
+            Nada anotado {here}. Quando algo mexer com você, dá para anotar aqui.
           </p>
         )}
 

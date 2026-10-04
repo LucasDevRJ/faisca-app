@@ -18,13 +18,17 @@ function retryUnlessForbidden(failureCount: number, error: unknown) {
 }
 
 // enabled = false enquanto a pessoa não aceitou a versão do aviso que cita os episódios.
-export function useWeekTensionEpisodes(monday: string, enabled: boolean) {
-  const sunday = addDays(monday, 6);
+// Episódios de um período: a semana ou o ciclo da consulta (DEC-050).
+export function useRangeTensionEpisodes({ from, to }: { from: string; to: string }, enabled: boolean) {
   return useQuery({
-    queryKey: [...TENSION_EPISODES_KEY, 'week', monday, sunday],
-    queryFn: enabled ? () => fetchTensionEpisodes(monday, sunday) : skipToken,
+    queryKey: [...TENSION_EPISODES_KEY, 'week', from, to],
+    queryFn: enabled ? () => fetchTensionEpisodes(from, to) : skipToken,
     retry: retryUnlessForbidden,
   });
+}
+
+export function useWeekTensionEpisodes(monday: string, enabled: boolean) {
+  return useRangeTensionEpisodes({ from: monday, to: addDays(monday, 6) }, enabled);
 }
 
 export function useTensionEpisode(id: string, enabled: boolean) {

@@ -5,7 +5,7 @@ import { buttonClasses } from '../components/ui/button-styles';
 import { getApiError, type ApiErrorInfo } from '../features/auth/auth-api';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { useSession } from '../features/auth/use-session';
-import { isValidDateOnly, startOfWeek, todayInAppZone } from '../features/activities/week';
+import { isValidDateOnly, todayInAppZone } from '../features/activities/week';
 import { TensionEpisodeForm } from '../features/tension-episodes/tension-episode-form';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import {
@@ -18,12 +18,12 @@ import type { TensionPageState } from './tension-page';
 
 const backLinkClass = 'self-start font-medium text-primary-text underline underline-offset-4';
 
-// Volta para a semana do dia do episódio, com o aviso de que deu certo.
+// Volta para o período do dia do episódio, com o aviso de que deu certo.
 function useBackToWeek() {
   const navigate = useNavigate();
   return (episode: TensionEpisode, notice: string) => {
-    const monday = startOfWeek(episode.episodeDate);
-    const search = monday === startOfWeek(todayInAppZone()) ? '' : `?semana=${monday}`;
+    // O ciclo do dia registrado (DEC-050); sem agenda, a tela mostra a semana dele.
+    const search = episode.episodeDate === todayInAppZone() ? '' : `?ciclo=${episode.episodeDate}`;
     const state: TensionPageState = { notice };
     navigate(`/tensao${search}`, { state });
   };

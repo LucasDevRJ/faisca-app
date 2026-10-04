@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { buttonClasses } from '../components/ui/button-styles';
@@ -7,53 +7,43 @@ import { Dialog, DialogActions, DialogForm } from '../components/ui/dialog';
 import { getApiError } from '../features/auth/auth-api';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { useSession } from '../features/auth/use-session';
-import {
-  addDays,
-  formatDayHeading,
-  formatWeekRange,
-  isValidDateOnly,
-  startOfWeek,
-  todayInAppZone,
-  weekDays,
-} from '../features/activities/week';
+import { formatDayHeading, todayInAppZone } from '../features/activities/week';
+import { PatientCycleSummary } from '../features/cycle/cycle-summary';
+import { PeriodNav } from '../features/cycle/period-nav';
+import { cycleQuery } from '../features/cycle/use-cycle';
+import { usePeriod } from '../features/cycle/use-period';
+import { daysInRange } from '../features/therapist/period';
 import { sessionDays } from '../features/appointments/appointments-api';
 import { useAgenda } from '../features/appointments/use-appointments';
 import { TensionChart } from '../features/tension-episodes/tension-chart';
 import { TensionEpisodeCard } from '../features/tension-episodes/tension-episode-card';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
-import { useDeleteTensionEpisode, useWeekTensionEpisodes } from '../features/tension-episodes/use-tension-episodes';
+import { useDeleteTensionEpisode, useRangeTensionEpisodes } from '../features/tension-episodes/use-tension-episodes';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 // Aviso vindo de outra página (ex.: "Registro salvo."), por navigate(..., { state }).
 export type TensionPageState = { notice?: string } | null;
 
 // "Tensão": os Episódios de tensão do paciente (SPEC, "Episódios de tensão"; DEC-043).
-// A semana fica na URL (?semana=AAAA-MM-DD), como em /registros e /pensamentos.
+// O período (ciclo da consulta ou semana) fica na URL, como em /registros (DEC-050).
 export function TensionPage() {
   const { data: user } = useSession();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [toDelete, setToDelete] = useState<TensionEpisode | null>(null);
   const [notice, setNotice] = useState<string | null>((location.state as TensionPageState)?.notice ?? null);
 
   const consented = Boolean(user?.privacyAreas.tensionEpisodes);
   const today = todayInAppZone();
-  const currentMonday = startOfWeek(today);
-  const param = searchParams.get('semana');
-  const monday = isValidDateOnly(param) ? startOfWeek(param) : currentMonday;
-  const sunday = addDays(monday, 6);
-  const week = useWeekTensionEpisodes(monday, consented);
-  const appointmentDays = sessionDays(useAgenda({ from: monday, to: sunday }).data);
+  const { period, currentMonday, showCycle, showWeek } = usePeriod(cycleQuery, today);
+  const range = period ?? { from: today, to: today };
+  const inCycle = period?.mode === 'cycle';
+  const week = useRangeTensionEpisodes(range, consented && period !== null);
+  const appointmentDays = sessionDays(useAgenda(range).data);
   const episodes = week.data ?? [];
   // Sem episódio, o dia não aparece.
-  const days = weekDays(monday).filter((day) => episodes.some((e) => e.episodeDate === day));
-  // O novo registro sugere hoje ou, numa semana passada, o domingo dela.
-  const newDate = sunday < today ? sunday : today;
-
-  function goToWeek(target: string) {
-    setNotice(null);
-    setSearchParams(target === currentMonday ? {} : { semana: target });
-  }
+  const days = daysInRange(range).filter((day) => episodes.some((e) => e.episodeDate === day));
+  // O novo registro sugere hoje ou, num período passado, o último dia dele.
+  const newDate = range.to < today ? range.to : today;
 
   const header = (
     <section className="flex flex-col gap-2">
@@ -78,63 +68,56 @@ export function TensionPage() {
     <>
       {header}
 
-      <section aria-labelledby="week-title" className="flex flex-col gap-5 sm:gap-6">
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              className="px-3 text-2xl"
-              aria-label="Semana anterior"
-              onClick={() => goToWeek(addDays(monday, -7))}
-            >
-              ‹
-            </Button>
-            <h2 id="week-title" className="min-w-40 text-center text-2xl font-bold" aria-live="polite">
-              {formatWeekRange(monday)}
-            </h2>
-            <Button
-              variant="ghost"
-              className="px-3 text-2xl"
-              aria-label="Próxima semana"
-              onClick={() => goToWeek(addDays(monday, 7))}
-            >
-              ›
-            </Button>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {monday !== currentMonday && (
-              <Button variant="secondary" onClick={() => goToWeek(currentMonday)}>
-                Voltar para esta semana
-              </Button>
-            )}
-            {/* No celular, o botão flutua no canto de baixo, como "Nova atividade". */}
-            <Link
-              to={`/tensao/novo?dia=${newDate}`}
-              className={buttonClasses(
-                'primary',
-                'fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 shadow-soft sm:static sm:shadow-none',
-              )}
-            >
-              <span aria-hidden="true" className="text-xl leading-none sm:hidden">
-                +
-              </span>
-              Novo episódio
-            </Link>
-          </div>
-        </div>
+      <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
+        {period ? (
+          <PeriodNav
+            period={period}
+            today={today}
+            audience="patient"
+            currentMonday={currentMonday}
+            onCycle={(date) => {
+              setNotice(null);
+              showCycle(date);
+            }}
+            onWeek={(target) => {
+              setNotice(null);
+              showWeek(target);
+            }}
+            summary={<PatientCycleSummary range={period} />}
+            actions={
+              // No celular, o botão flutua no canto de baixo, como "Nova atividade".
+              <Link
+                to={`/tensao/novo?dia=${newDate}`}
+                className={buttonClasses(
+                  'primary',
+                  'fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 shadow-soft sm:static sm:shadow-none',
+                )}
+              >
+                <span aria-hidden="true" className="text-xl leading-none sm:hidden">
+                  +
+                </span>
+                Novo episódio
+              </Link>
+            }
+          />
+        ) : (
+          <p className="text-muted" aria-busy="true">
+            Carregando…
+          </p>
+        )}
 
         {notice && <Alert>{notice}</Alert>}
 
-        {week.isPending && (
+        {period && week.isPending && (
           <p className="text-muted" aria-busy="true">
-            Carregando a semana…
+            Carregando…
           </p>
         )}
 
         {week.isError && (
           <Alert tone="attention">
             <div className="flex flex-col gap-3">
-              <p>Não conseguimos carregar esta semana. Confira sua conexão e tente de novo.</p>
+              <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
               <div>
                 <Button variant="secondary" onClick={() => week.refetch()}>
                   Tentar de novo
@@ -146,7 +129,7 @@ export function TensionPage() {
 
         {week.isSuccess && episodes.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-            Nenhum episódio nesta semana. Quando a tensão aparecer, dá para anotar aqui.
+            Nenhum episódio {inCycle ? 'neste ciclo' : 'nesta semana'}. Quando a tensão aparecer, dá para anotar aqui.
           </p>
         )}
 
@@ -184,9 +167,9 @@ export function TensionPage() {
             {/* O gráfico fica no fim: primeiro o que a pessoa escreveu, depois os números (DEC-043). */}
             <TensionChart
               episodes={episodes}
-              range={{ from: monday, to: sunday }}
+              range={range}
               appointmentDays={appointmentDays}
-              period="na semana"
+              period={inCycle ? 'no ciclo' : 'na semana'}
             />
           </>
         )}

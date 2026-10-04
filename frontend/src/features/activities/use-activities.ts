@@ -17,12 +17,16 @@ import { addDays } from './week';
 
 const ACTIVITIES_KEY = ['activities'] as const;
 
-export function useWeekActivities(monday: string) {
-  const sunday = addDays(monday, 6);
+// Atividades de um período: a semana ou o ciclo da consulta (DEC-050).
+export function useRangeActivities({ from, to }: { from: string; to: string }) {
   return useQuery({
-    queryKey: [...ACTIVITIES_KEY, monday, sunday],
-    queryFn: () => fetchActivities(monday, sunday),
+    queryKey: [...ACTIVITIES_KEY, from, to],
+    queryFn: () => fetchActivities(from, to),
   });
+}
+
+export function useWeekActivities(monday: string) {
+  return useRangeActivities({ from: monday, to: addDays(monday, 6) });
 }
 
 // Erro da segunda chamada de um passo duplo (DEC-029): a primeira já gravou.

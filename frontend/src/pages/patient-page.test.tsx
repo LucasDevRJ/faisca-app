@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Activity } from '../features/activities/activities-api';
+import type { Cycle } from '../features/cycle/cycle-api';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import type { PatientSummary, SessionWhen } from '../features/therapist/therapist-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
@@ -33,9 +34,10 @@ function summary(overrides: Partial<PatientSummary> = {}): PatientSummary {
 
 // Responde o resumo, as atividades do período pedido e as consultas; guarda os períodos pedidos
 // e qualquer escrita (que não deveria existir).
-function patientApi({ data = summary(), activities = [] as Activity[] } = {}) {
+function patientApi({ data = summary(), activities = [] as Activity[], cycle = null as Cycle | null } = {}) {
   const calls: { from: string | null; to: string | null }[] = [];
   const writes: string[] = [];
+  const cycleDates: (string | null)[] = [];
   server.use(
     http.get(BASE, () => HttpResponse.json(data)),
     http.get(`${BASE}/activities`, ({ request }) => {
@@ -55,13 +57,29 @@ function patientApi({ data = summary(), activities = [] as Activity[] } = {}) {
         }),
       ),
     ),
+    // Ciclo da consulta (DEC-049): guarda o dia pedido de cada chamada.
+    http.get(`${BASE}/cycle`, ({ request }) => {
+      cycleDates.push(new URL(request.url).searchParams.get('date'));
+      return HttpResponse.json({ today: TODAY, cycle });
+    }),
+    http.get(`${BASE}/thought-records`, () => HttpResponse.json({ thoughtRecords: [] })),
+    http.get(`${BASE}/tension-episodes`, () => HttpResponse.json({ tensionEpisodes: [] })),
     http.all('*/api/*', ({ request }) => {
       if (request.method !== 'GET') writes.push(`${request.method} ${new URL(request.url).pathname}`);
       return undefined;
     }),
   );
-  return { calls, writes };
+  return { calls, writes, cycleDates };
 }
+
+const CYCLE: Cycle = {
+  from: '2026-09-18',
+  to: '2026-09-28',
+  session: { date: '2026-09-28', time: '14:00', kind: 'RECORRENTE' },
+  truncated: false,
+  previous: '2026-09-17',
+  next: '2026-09-29',
+};
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -80,7 +98,7 @@ afterEach(() => {
 const path = `/pacientes/${PATIENT_ID}`;
 
 describe('/pacientes/:id', () => {
-  it('mostra o paciente, as consultas, o destaque e a semana atual', async () => {
+  it('sem agenda: mostra o paciente, as consultas e a semana atual, sem a alternância', async () => {
     const { calls } = patientApi();
     renderRoute(path);
 
@@ -89,10 +107,8 @@ describe('/pacientes/:id', () => {
     expect(screen.getByText('Vinculado desde 01/09/2026')).toBeInTheDocument();
     expect(screen.getByText('Próxima').nextSibling).toHaveTextContent('segunda-feira, 28/09');
     expect(screen.getByText('Última').nextSibling).toHaveTextContent('quinta-feira, 17/09');
-    expect(screen.getByText(/Em destaque:/).parentElement).toHaveTextContent(
-      'Em destaque: 21/09 a 27/09, a semana antes da próxima consulta.',
-    );
     expect(await screen.findByRole('heading', { name: '21 a 27 de set.' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Período' })).not.toBeInTheDocument();
     expect(calls[0]).toEqual({ from: '2026-09-21', to: '2026-09-27' });
   });
 
@@ -127,19 +143,14 @@ describe('/pacientes/:id', () => {
     expect(writes).toEqual([]);
   });
 
-  it('marca os dias do destaque e o dia de consulta', async () => {
-    patientApi({ data: summary({ highlight: { from: '2026-09-18', to: '2026-09-24', reason: 'LAST_7_DAYS' } }) });
+  it('marca hoje e o dia de consulta', async () => {
+    patientApi();
     renderRoute(path);
 
     const days = await screen.findAllByRole('heading', { level: 3 });
     const text = (label: string) => days.find((d) => d.textContent?.startsWith(label))?.textContent;
-    expect(text('segunda-feira, 21/09')).toContain('destaque');
     expect(text('quinta-feira, 24/09')).toContain('hoje');
-    expect(text('quinta-feira, 24/09')).toContain('destaque');
-    expect(text('sexta-feira, 25/09')).not.toContain('destaque');
-    expect(screen.getByText(/Em destaque:/).parentElement).toHaveTextContent(
-      'os últimos 7 dias, porque não há próxima consulta cadastrada',
-    );
+    expect(text('quinta-feira, 24/09')).not.toContain('destaque');
   });
 
   it('navega entre semanas pela URL', async () => {
@@ -154,45 +165,51 @@ describe('/pacientes/:id', () => {
     expect(calls.at(-1)).toEqual({ from: '2026-09-14', to: '2026-09-20' });
   });
 
-  it('"desde a última consulta" pede da consulta até hoje e mostra só os dias com registro', async () => {
-    const user = userEvent.setup();
-    const { calls } = patientApi({
-      activities: [
-        fakeActivity({ name: 'Antes da consulta', activityDate: '2026-09-16' }),
-        fakeActivity({ name: 'Depois da consulta', activityDate: '2026-09-19' }),
-      ],
+  it('com agenda, abre no ciclo da próxima consulta (DEC-050): título, período, contagem e resumo', async () => {
+    const { calls, cycleDates } = patientApi({
+      cycle: CYCLE,
+      activities: [fakeActivity({ name: 'Caminhada no ciclo', activityDate: '2026-09-20', status: 'CONCLUIDA' })],
     });
+    renderRoute(path);
+
+    expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
+    expect(screen.getByText('18/09 a 28/09')).toBeInTheDocument();
+    expect(screen.getByText('A consulta é daqui a 4 dias.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ciclo' })).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByText(/^11 dias · 1 atividade feita/)).toBeInTheDocument();
+    expect(await screen.findByRole('article', { name: 'Caminhada no ciclo' })).toBeInTheDocument();
+    expect(calls).toContainEqual({ from: '2026-09-18', to: '2026-09-28' });
+    expect(cycleDates[0]).toBeNull();
+    // Sem destaque: o ciclo é o período.
+    expect(screen.queryByText(/Em destaque/)).not.toBeInTheDocument();
+  });
+
+  it('setas do ciclo e a semana ficam na URL', async () => {
+    const user = userEvent.setup();
+    const { cycleDates } = patientApi({ cycle: CYCLE });
     const { router } = renderRoute(path);
 
-    await user.click(await screen.findByRole('button', { name: 'Desde a última consulta' }));
+    await user.click(await screen.findByRole('button', { name: 'Ciclo anterior' }));
+    await waitFor(() => expect(router.state.location.search).toBe('?ciclo=2026-09-17'));
+    await waitFor(() => expect(cycleDates.at(-1)).toBe('2026-09-17'));
 
-    expect(await screen.findByRole('heading', { name: 'Desde 17/09' })).toBeInTheDocument();
-    expect(router.state.location.search).toBe('?periodo=desde-a-ultima-consulta');
-    expect(calls.at(-1)).toEqual({ from: '2026-09-17', to: '2026-09-24' });
-    expect(await screen.findByRole('article', { name: 'Depois da consulta' })).toBeInTheDocument();
-    // Só o dia com registro: o 16/09 é de antes da consulta e os dias vazios não aparecem.
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
-      expect.stringMatching(/^sábado, 19\/09/),
-    ]);
-    expect(screen.getByRole('button', { name: 'Desde a última consulta' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: 'Semana' }));
+    expect(await screen.findByRole('heading', { name: '21 a 27 de set.' })).toBeInTheDocument();
+    expect(router.state.location.search).toBe('?semana=2026-09-21');
   });
 
-  it('com a última consulta há mais de 92 dias, mostra os 92 mais recentes e avisa', async () => {
-    const { calls } = patientApi({ data: summary({ lastAppointment: appointment('2026-05-01') }) });
-    renderRoute(`${path}?periodo=desde-a-ultima-consulta`);
+  it('ciclo com mais de 42 dias: mostra os mais recentes e avisa', async () => {
+    patientApi({ cycle: { ...CYCLE, from: '2026-08-18', truncated: true } });
+    renderRoute(path);
 
-    expect(await screen.findByText(/Mostramos os 92 dias mais recentes/)).toBeInTheDocument();
-    expect(calls.at(-1)).toEqual({ from: '2026-06-25', to: '2026-09-24' });
+    expect(await screen.findByText(/Este ciclo passou de 42 dias/)).toBeInTheDocument();
   });
 
-  it('sem consulta passada, o filtro fica desabilitado e explica por quê', async () => {
+  it('sem consultas, explica', async () => {
     patientApi({ data: summary({ lastAppointment: null, nextAppointment: null }) });
     renderRoute(path);
 
-    const filter = await screen.findByRole('button', { name: 'Desde a última consulta' });
-    expect(filter).toBeDisabled();
-    expect(filter).toHaveAccessibleDescription('Este filtro aparece quando houver uma consulta passada cadastrada.');
-    expect(screen.getByText('Paula ainda não cadastrou consultas.')).toBeInTheDocument();
+    expect(await screen.findByText('Paula ainda não cadastrou consultas.')).toBeInTheDocument();
   });
 
   it('sem vínculo (403 no resumo): mensagem acolhedora e caminho de volta', async () => {
@@ -235,7 +252,7 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     return calls;
   }
 
-  it('mostra os registros só para leitura, com a hora do registro e o destaque', async () => {
+  it('mostra os registros só para leitura, com a hora do registro', async () => {
     const { writes } = patientApi();
     const calls = thoughtsApi([fakeThoughtRecord({ situation: 'Situação da paciente', situationDate: '2026-09-22' })]);
     renderRoute(`${path}?aba=pensamentos`);
@@ -245,7 +262,6 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pensamentos' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText('destaque')).toBeInTheDocument();
     expect(calls[0]).toEqual({ from: '2026-09-21', to: '2026-09-27' });
     expect(writes).toEqual([]);
   });
@@ -258,12 +274,12 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Pensamentos' }));
     expect(await screen.findByText('Nenhum registro de pensamentos nesta semana.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Desde a última consulta' }));
+    await user.click(screen.getByRole('button', { name: 'Semana anterior' }));
 
-    await waitFor(() => expect(router.state.location.search).toBe('?periodo=desde-a-ultima-consulta&aba=pensamentos'));
-    await waitFor(() => expect(calls.at(-1)).toEqual({ from: '2026-09-17', to: TODAY }));
+    await waitFor(() => expect(router.state.location.search).toBe('?aba=pensamentos&semana=2026-09-14'));
+    await waitFor(() => expect(calls.at(-1)).toEqual({ from: '2026-09-14', to: '2026-09-20' }));
     await user.click(screen.getByRole('button', { name: 'Atividades' }));
-    await waitFor(() => expect(router.state.location.search).toBe('?periodo=desde-a-ultima-consulta'));
+    await waitFor(() => expect(router.state.location.search).toBe('?semana=2026-09-14'));
   });
 
   it('terapeuta sem o aceite da versão atual: pedido de aceite, sem buscar os registros', async () => {
@@ -313,7 +329,7 @@ describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
     return calls;
   }
 
-  it('mostra os episódios só para leitura, com a hora, o destaque e o gráfico com tabela', async () => {
+  it('mostra os episódios só para leitura, com a hora e o gráfico com tabela', async () => {
     const { writes } = patientApi();
     const calls = tensionApi([
       fakeTensionEpisode({ situation: 'Fila do mercado', episodeDate: '2026-09-22', episodeTime: '19:20' }),
@@ -328,7 +344,6 @@ describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
     expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
     expect(within(screen.getByRole('article', { name: 'Episódio: Reunião' })).getByText('sem horário')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tensão' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getAllByText('destaque').length).toBeGreaterThan(0);
 
     // O gráfico tem a versão em tabela para leitor de tela, na ordem do tempo.
     const table = screen.getByRole('table', { name: 'Tensão e vontade de vocalizar dos episódios na semana' });
@@ -358,10 +373,10 @@ describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Tensão' }));
     expect(await screen.findByText('Nenhum episódio de tensão nesta semana.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Desde a última consulta' }));
+    await user.click(screen.getByRole('button', { name: 'Semana anterior' }));
 
-    await waitFor(() => expect(router.state.location.search).toBe('?periodo=desde-a-ultima-consulta&aba=tensao'));
-    await waitFor(() => expect(calls.at(-1)).toEqual({ from: '2026-09-17', to: TODAY }));
+    await waitFor(() => expect(router.state.location.search).toBe('?aba=tensao&semana=2026-09-14'));
+    await waitFor(() => expect(calls.at(-1)).toEqual({ from: '2026-09-14', to: '2026-09-20' }));
   });
 
   it('terapeuta que só aceitou a versão do RPD: pedido de aceite com o texto dela, sem buscar', async () => {

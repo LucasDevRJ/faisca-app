@@ -23,13 +23,17 @@ export function needsPrivacyConsent(error: unknown): boolean {
 }
 
 // enabled = false enquanto a pessoa não aceitou a versão atual do aviso: nem pergunta à API.
-export function useWeekThoughtRecords(monday: string, enabled: boolean) {
-  const sunday = addDays(monday, 6);
+// Registros de um período: a semana ou o ciclo da consulta (DEC-050).
+export function useRangeThoughtRecords({ from, to }: { from: string; to: string }, enabled: boolean) {
   return useQuery({
-    queryKey: [...THOUGHT_RECORDS_KEY, 'week', monday, sunday],
-    queryFn: enabled ? () => fetchThoughtRecords(monday, sunday) : skipToken,
+    queryKey: [...THOUGHT_RECORDS_KEY, 'week', from, to],
+    queryFn: enabled ? () => fetchThoughtRecords(from, to) : skipToken,
     retry: retryUnlessForbidden,
   });
+}
+
+export function useWeekThoughtRecords(monday: string, enabled: boolean) {
+  return useRangeThoughtRecords({ from: monday, to: addDays(monday, 6) }, enabled);
 }
 
 export function useThoughtRecord(id: string, enabled: boolean) {
