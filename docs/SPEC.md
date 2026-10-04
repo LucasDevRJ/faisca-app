@@ -45,7 +45,9 @@ sessões são calculadas a partir dela (DEC-045). Só o paciente mexe na agenda;
   **quinzenal**. O dia da semana sai da data; as sessões se repetem sem data de fim.
 - A primeira agenda pode começar no passado, para as sessões que já aconteceram entrarem no
   histórico. **Mudar** dia, hora ou frequência começa uma agenda nova a partir de hoje ou depois; a
-  anterior termina na véspera, e as sessões dela até ali continuam como estão.
+  anterior termina na véspera, e as sessões dela até ali continuam como estão. Mudar no mesmo dia
+  em que a agenda foi criada é uma **correção**: a agenda do dia sai inteira, sem deixar sessões. Uma
+  consulta antiga, sem hora, que cai num dia da agenda nova é absorvida por ela.
 - **Desmarcar** uma sessão, com **motivo obrigatório** (até 500 caracteres): ela continua na lista,
   marcada como desmarcada. Vale também para uma sessão que já passou (registrar a falta).
 - **Remarcar** uma sessão que ainda não começou para outro dia e hora que ainda não chegaram, com

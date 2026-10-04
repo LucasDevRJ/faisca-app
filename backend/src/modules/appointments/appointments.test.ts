@@ -58,6 +58,14 @@ function seedSchedule(userId: string, startDate = day(1), frequency: 'SEMANAL' |
 
 const schedule = (startDate = day(1), frequency = 'SEMANAL') => ({ startDate, time: '14:00', frequency });
 
+// Regras criadas em outro dia: mudar não é mais a correção do mesmo dia (DEC-048).
+async function backdateSchedules(userId: string, days = 10) {
+  await prisma.appointmentSchedule.updateMany({
+    where: { userId },
+    data: { createdAt: new Date(Date.now() - days * 24 * 60 * 60 * 1000) },
+  });
+}
+
 describe('autorização (regra 1)', () => {
   it('sem sessão: 401 em todas as rotas', async () => {
     const { id } = await seedExtra(patientId, day(3));
@@ -194,6 +202,7 @@ describe('agenda: agendar e mudar', () => {
 
     // Começa há 15 dias: nenhuma sessão cai hoje, e o teste não depende da hora em que roda.
     const first = await agent.put('/appointments/schedule').send(schedule(day(-15)));
+    await backdateSchedules(patientId);
     const change = await agent.put('/appointments/schedule').send(schedule(day(-7)));
 
     expect(first.status).toBe(200);
@@ -207,6 +216,7 @@ describe('agenda: agendar e mudar', () => {
     const agent = await loginAgent();
     await agent.put('/appointments/schedule').send(schedule(day(-14)));
     await agent.post(`/appointments/sessions/${day(14)}/cancel`).send({ reason: 'Motivo fictício' });
+    await backdateSchedules(patientId);
 
     const res = await agent.put('/appointments/schedule').send({ startDate: day(2), time: '18:30', frequency: 'SEMANAL' });
 
@@ -218,6 +228,53 @@ describe('agenda: agendar e mudar', () => {
     expect(await prisma.appointmentException.count()).toBe(0);
     const old = await prisma.appointmentSchedule.findFirstOrThrow({ where: { userId: patientId, endReason: 'MUDANCA' } });
     expect(old.endDate).toEqual(dateOnlyToDate(day(1)));
+  });
+
+  it('mudar no mesmo dia em que a agenda foi criada é correção: a regra errada some inteira', async () => {
+    const agent = await loginAgent();
+    // O engano: a primeira sessão hoje, à meia-noite (já passou).
+    await agent.put('/appointments/schedule').send({ startDate: today(), time: '00:00', frequency: 'SEMANAL' });
+    await agent.post(`/appointments/sessions/${day(7)}/cancel`).send({ reason: 'Motivo fictício' });
+
+    const res = await agent.put('/appointments/schedule').send(schedule(day(3)));
+
+    expect(res.status).toBe(200);
+    expect(sessionDates(res.body)).not.toContain(today());
+    expect(res.body.last).toBeNull();
+    expect(await prisma.appointmentSchedule.count()).toBe(1);
+    expect(await prisma.appointmentException.count()).toBe(0);
+  });
+
+  it('correção no mesmo dia: a regra antiga que tinha sido fechada hoje volta e é fechada de novo', async () => {
+    await seedSchedule(patientId, day(-21));
+    await backdateSchedules(patientId);
+    const agent = await loginAgent();
+    await agent.put('/appointments/schedule').send(schedule(day(2)));
+
+    const res = await agent.put('/appointments/schedule').send(schedule(day(4)));
+
+    expect(res.status).toBe(200);
+    const rows = await prisma.appointmentSchedule.findMany({ orderBy: { createdAt: 'asc' } });
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ endDate: dateOnlyToDate(day(3)), endReason: 'MUDANCA' });
+    expect(rows[1]).toMatchObject({ startDate: dateOnlyToDate(day(4)), endDate: null });
+    // As sessões da regra antiga até a véspera da nova voltam (a de day(0), por exemplo).
+    expect(sessionDates(res.body)).toEqual(expect.arrayContaining([day(-21), day(-14), day(-7), day(0), day(4)]));
+  });
+
+  it('consulta antiga, sem hora, num dia da agenda nova é absorvida por ela', async () => {
+    await seedExtra(patientId, day(-11), null);
+    await seedExtra(patientId, day(-10), null);
+    const agent = await loginAgent();
+
+    const res = await agent.put('/appointments/schedule').send(schedule(day(-18)));
+
+    expect(res.status).toBe(200);
+    const sessions = res.body.sessions as Session[];
+    expect(sessions.find((s) => s.date === day(-11))).toEqual(expect.objectContaining({ kind: 'RECORRENTE', time: '14:00' }));
+    // A que não cai num dia da agenda continua avulsa.
+    expect(sessions.find((s) => s.date === day(-10))).toEqual(expect.objectContaining({ kind: 'AVULSA', time: null }));
+    expect(await prisma.appointment.count()).toBe(1);
   });
 
   it('a nova agenda não pode cair num dia que já tem consulta avulsa: 409', async () => {
