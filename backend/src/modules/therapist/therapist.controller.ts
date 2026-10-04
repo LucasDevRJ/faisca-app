@@ -2,6 +2,7 @@ import type { RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import {
   patientParamsSchema,
+  therapistAppointmentsQuerySchema,
   therapistActivitiesQuerySchema,
   therapistTensionEpisodesQuerySchema,
   therapistThoughtRecordsQuerySchema,
@@ -23,7 +24,8 @@ export function createTherapistController(service: TherapistService) {
 
   const appointments: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
-    res.status(200).json(await service.listAppointments(patientId));
+    const query = therapistAppointmentsQuerySchema.parse(req.query);
+    res.status(200).json(await service.listAppointments(patientId, query));
   };
 
   const thoughtRecords: RequestHandler = async (req, res) => {

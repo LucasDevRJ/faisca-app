@@ -40,6 +40,27 @@ describe('/pacientes', () => {
     expect(within(item).getByRole('link')).toHaveAttribute('href', `/pacientes/${patient.id}`);
   });
 
+  it('selo da agenda no item: em pausa ou encerrada (DEC-045)', async () => {
+    server.use(
+      http.get('*/api/links/patients', () => HttpResponse.json({ patients: [patient] })),
+      http.get(`*/api/therapist/patients/${patient.id}`, () =>
+        HttpResponse.json({
+          patient: { ...patient },
+          today: '2026-09-24',
+          lastAppointment: null,
+          nextAppointment: null,
+          agendaStatus: 'ENCERRADA',
+          pause: null,
+          highlight: { from: '2026-09-18', to: '2026-09-24', reason: 'LAST_7_DAYS' },
+        }),
+      ),
+    );
+    renderRoute('/pacientes');
+
+    const item = await screen.findByRole('listitem');
+    expect(await within(item).findByText('Terapia encerrada')).toBeInTheDocument();
+  });
+
   it('digita o código, vincula e o paciente entra na lista', async () => {
     const user = userEvent.setup();
     const sent: unknown[] = [];

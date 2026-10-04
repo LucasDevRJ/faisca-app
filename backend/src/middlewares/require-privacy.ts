@@ -6,6 +6,7 @@ import { getAuthUser } from './require-auth.js';
 const AREA_NAMES: Record<PrivacyArea, string> = {
   thoughtRecords: 'o Registro de Pensamentos',
   tensionEpisodes: 'os Episódios de tensão',
+  appointmentSchedule: 'a agenda de consultas',
 };
 
 // Cada área de dado novo entrou no aviso de privacidade numa versão (DEC-039, DEC-042). Quem

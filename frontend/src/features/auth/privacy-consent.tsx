@@ -13,6 +13,7 @@ type Audience = 'patient' | 'therapist';
 const AREA_NAME: Record<PrivacyArea, string> = {
   thoughtRecords: 'o Registro de Pensamentos',
   tensionEpisodes: 'os Episódios de tensão',
+  appointmentSchedule: 'a agenda de consultas',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
@@ -36,6 +37,17 @@ const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope:
     therapist: {
       intro: 'Para ver os Episódios de tensão dos seus pacientes, leia o que mudou e confirme.',
       scope: 'inclusive com o acesso aos episódios de tensão dos meus pacientes como dados de saúde.',
+    },
+  },
+  // Agenda (DEC-045): hora das sessões, motivos de desmarcar e remarcar e pausas.
+  appointmentSchedule: {
+    patient: {
+      intro: 'Para montar sua agenda, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso da hora das sessões, dos motivos de desmarcar ou remarcar e das pausas.',
+    },
+    therapist: {
+      intro: 'Para ver a agenda dos seus pacientes, com os motivos, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso à agenda dos meus pacientes, com os motivos de desmarcar ou remarcar e as pausas.',
     },
   },
 };

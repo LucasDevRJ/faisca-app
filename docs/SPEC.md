@@ -39,10 +39,30 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - No mesmo dia, as atividades aparecem na ordem em que foram registradas.
 
 ## Consultas
-- O paciente registra as datas das consultas (passadas e futuras) e pode editar ou excluir essas datas.
-- **Última consulta** = a mais recente com data até hoje.
-- **Próxima consulta** = a mais próxima com data a partir de amanhã.
-- Uma consulta por dia, registrada só com a data (sem horário).
+A terapia costuma ser semanal ou quinzenal: o paciente monta uma **agenda** que se repete, e as
+sessões são calculadas a partir dela (DEC-045). Só o paciente mexe na agenda; a terapeuta lê.
+- **Agendar**: data da primeira sessão, **hora (obrigatória)** e frequência, **semanal** ou
+  **quinzenal**. O dia da semana sai da data; as sessões se repetem sem data de fim.
+- A primeira agenda pode começar no passado, para as sessões que já aconteceram entrarem no
+  histórico. **Mudar** dia, hora ou frequência começa uma agenda nova a partir de hoje ou depois; a
+  anterior termina na véspera, e as sessões dela até ali continuam como estão.
+- **Desmarcar** uma sessão, com **motivo obrigatório** (até 500 caracteres): ela continua na lista,
+  marcada como desmarcada. Vale também para uma sessão que já passou (registrar a falta).
+- **Remarcar** uma sessão que ainda não começou para outro dia e hora que ainda não chegaram, com
+  **motivo obrigatório**. Dá para **desfazer** a desmarcação ou a remarcação.
+- **Pausar**: a partir de hoje ou de uma data futura, com **data de volta opcional**. Sem sessões
+  durante a pausa; com data de volta, a agenda volta sozinha, e "Retomar agora" encerra a pausa a
+  qualquer momento. Uma pausa por vez. Os registros continuam liberados na pausa.
+- **Encerrar a terapia**: as sessões que ainda não começaram somem, inclusive as avulsas; o
+  histórico fica. Dá para agendar de novo depois.
+- **Consulta avulsa**: uma sessão extra, com dia e hora. As consultas de antes da agenda ficam como
+  avulsas, sem hora.
+- **Um horário por dia**: uma avulsa, uma remarcação ou uma agenda nova não pode cair num dia que já
+  tem sessão agendada (uma desmarcada libera o dia).
+- **Última consulta** = a sessão agendada mais recente que já começou (dia e hora); **próxima** = a
+  primeira que ainda não começou. Desmarcadas não contam. Uma consulta sem hora conta o dia todo.
+- O paciente pode baixar um arquivo de agenda (`.ics`) com as sessões dos próximos 12 meses, com o
+  texto neutro "Consulta", para importar no calendário do celular.
 
 ## Registro de Pensamentos (RPD)
 Registro da TCC, independente das atividades. O paciente alterna entre as abas **Atividades** e
@@ -89,6 +109,8 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   - linha do tempo com notas e observações (nada é privado);
   - abas **Atividades | Pensamentos | Tensão**;
   - **Pensamentos**: o Registro de Pensamentos, só leitura, com todos os campos e as duas datas;
+  - **Consultas**: a agenda, só leitura, com as sessões desmarcadas e remarcadas e os motivos, e a
+    pausa; na lista de pacientes, um selo quando a agenda está em pausa ou foi encerrada;
   - **Tensão**: os Episódios de tensão, só leitura, com todos os campos, as duas datas e um gráfico
     da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
@@ -142,7 +164,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
-- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas.
+- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas.
 - Nenhum documento pessoal é solicitado.
 - A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos. A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída.
 - Nenhum dado real em seeds, fixtures ou testes.

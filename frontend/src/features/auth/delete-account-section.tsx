@@ -66,7 +66,7 @@ function DeleteAccountDialog({ isPatient, onClose }: { isPatient: boolean; onClo
             {isPatient && <li>suas atividades, notas e observações;</li>}
             {isPatient && <li>seu Registro de Pensamentos;</li>}
             {isPatient && <li>seus Episódios de tensão;</li>}
-            {isPatient && <li>suas consultas;</li>}
+            {isPatient && <li>sua agenda de consultas, com as pausas e os motivos;</li>}
             <li>seus vínculos: quem acompanha você, ou quem você acompanha, perde o acesso na hora.</li>
           </ul>
           <p>Mandamos um e-mail avisando que a conta foi excluída.</p>

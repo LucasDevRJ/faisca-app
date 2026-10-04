@@ -53,12 +53,17 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   // Só para as telas dos Episódios de tensão (e2e/tension-episodes.spec.ts), também com a versão do RPD.
   { name: 'Duda Fictícia', email: 'tensao-tela-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.2' },
   { name: 'Eva Fictícia', email: 'tensao-tela-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.2' },
+  // Só para a agenda (api/appointments.spec.ts): começam só com a versão dos episódios (DEC-045).
+  { name: 'Ana Fictícia', email: 'agenda-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.3' },
+  { name: 'Clara Fictícia', email: 'agenda-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.3' },
 ];
 
 await prisma.activity.deleteMany();
 await prisma.thoughtRecord.deleteMany();
 await prisma.tensionEpisode.deleteMany();
 await prisma.appointment.deleteMany();
+await prisma.appointmentSchedule.deleteMany();
+await prisma.therapyPause.deleteMany();
 await prisma.authToken.deleteMany();
 await prisma.linkCodeAttempt.deleteMany();
 await prisma.linkCode.deleteMany();

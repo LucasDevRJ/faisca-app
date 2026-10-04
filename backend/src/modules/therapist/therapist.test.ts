@@ -86,7 +86,7 @@ describe('autorização (regra 1)', () => {
     ]);
     expect(activities.body.activities[0]).not.toHaveProperty('userId');
     expect(appointments.status).toBe(200);
-    expect(appointments.body.appointments).toHaveLength(1);
+    expect(appointments.body.sessions).toHaveLength(1);
   });
 
   it('qualquer método de escrita é 403 antes de tudo: sem sessão, com vínculo e em caminho inexistente', async () => {
@@ -202,8 +202,8 @@ describe('resumo e destaque', () => {
     const res = await (await loginAgent(THERAPIST)).get(base());
 
     expect(res.body.today).toBe(today());
-    expect(res.body.lastAppointment.appointmentDate).toBe(addDays(today(), -10));
-    expect(res.body.nextAppointment.appointmentDate).toBe(next);
+    expect(res.body.lastAppointment.date).toBe(addDays(today(), -10));
+    expect(res.body.nextAppointment.date).toBe(next);
     expect(res.body.highlight).toEqual({ from: addDays(next, -7), to: addDays(next, -1), reason: 'NEXT_APPOINTMENT' });
   });
 
@@ -212,6 +212,101 @@ describe('resumo e destaque', () => {
 
     expect(res.body.nextAppointment).toBeNull();
     expect(res.body.highlight).toEqual({ from: addDays(today(), -6), to: today(), reason: 'LAST_7_DAYS' });
+    expect(res.body.agendaStatus).toBe('SEM_AGENDA');
+  });
+
+  it('situação da agenda e pausa, para o selo da lista (DEC-045), sem os motivos', async () => {
+    const schedule = await prisma.appointmentSchedule.create({
+      data: {
+        userId: patientId,
+        startDate: dateOnlyToDate(addDays(today(), 1)),
+        time: timeOnlyToDate('14:00'),
+        frequency: 'SEMANAL',
+      },
+    });
+    await prisma.appointmentException.create({
+      data: {
+        scheduleId: schedule.id,
+        originalDate: dateOnlyToDate(addDays(today(), 1)),
+        type: 'DESMARCADA',
+        reason: 'Motivo fictício',
+      },
+    });
+    // A próxima sessão é uma remarcada: o motivo dela também não vai no resumo.
+    await prisma.appointmentException.create({
+      data: {
+        scheduleId: schedule.id,
+        originalDate: dateOnlyToDate(addDays(today(), 22)),
+        type: 'REMARCADA',
+        newDate: dateOnlyToDate(addDays(today(), 23)),
+        newTime: timeOnlyToDate('10:00'),
+        reason: 'Remarcação fictícia',
+      },
+    });
+    await prisma.therapyPause.create({
+      data: { userId: patientId, startDate: dateOnlyToDate(today()), returnDate: dateOnlyToDate(addDays(today(), 20)) },
+    });
+
+    const res = await (await loginAgent(THERAPIST)).get(base());
+
+    expect(res.body.agendaStatus).toBe('PAUSADA');
+    expect(res.body.pause).toEqual({ startDate: today(), returnDate: addDays(today(), 20) });
+    expect(res.body.nextAppointment).toEqual({ date: addDays(today(), 23), time: '10:00', kind: 'RECORRENTE' });
+    expect(JSON.stringify(res.body)).not.toContain('Motivo fictício');
+    expect(JSON.stringify(res.body)).not.toContain('Remarcação fictícia');
+  });
+});
+
+describe('agenda da terapeuta (DEC-045)', () => {
+  it('lê as sessões com os motivos; sem o aceite da 2026-10.4, 403', async () => {
+    const schedule = await prisma.appointmentSchedule.create({
+      data: {
+        userId: patientId,
+        startDate: dateOnlyToDate(addDays(today(), 1)),
+        time: timeOnlyToDate('14:00'),
+        frequency: 'SEMANAL',
+      },
+    });
+    await prisma.appointmentException.create({
+      data: {
+        scheduleId: schedule.id,
+        originalDate: dateOnlyToDate(addDays(today(), 1)),
+        type: 'DESMARCADA',
+        reason: 'Motivo fictício',
+      },
+    });
+    const oldTherapistId = (
+      await createConfirmedUser({
+        email: 'terapeuta-aviso-antigo@faisca.test',
+        patient: false,
+        therapist: true,
+        privacyVersion: '2026-10.3',
+      })
+    ).id;
+    await prisma.therapistLink.create({ data: { patientId: otherPatientId, therapistId: oldTherapistId, method: 'CODE' } });
+
+    const allowed = await (await loginAgent(THERAPIST)).get(`${base()}/appointments`);
+    const oldConsent = await (await loginAgent('terapeuta-aviso-antigo@faisca.test')).get(`${base(otherPatientId)}/appointments`);
+
+    expect(allowed.status).toBe(200);
+    expect(allowed.body.upcoming[0]).toEqual(
+      expect.objectContaining({ status: 'DESMARCADA', reason: 'Motivo fictício' }),
+    );
+    expect(oldConsent.status).toBe(403);
+    expect(oldConsent.body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');
+  });
+
+  it('as rotas de escrita da agenda não existem pela porta da terapeuta: 403', async () => {
+    const agent = await loginAgent(THERAPIST);
+
+    const calls = [
+      agent.put(`${base()}/appointments/schedule`).send({ startDate: today(), time: '14:00', frequency: 'SEMANAL' }),
+      agent.post(`${base()}/appointments/pause`).send({ startDate: today() }),
+      agent.post(`${base()}/appointments/sessions/${today()}/cancel`).send({ reason: 'x' }),
+    ];
+    for (const res of await Promise.all(calls)) expect(res.status).toBe(403);
+    expect(await prisma.appointmentSchedule.count()).toBe(0);
+    expect(await prisma.therapyPause.count()).toBe(0);
   });
 });
 

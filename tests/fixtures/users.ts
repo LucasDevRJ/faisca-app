@@ -26,4 +26,8 @@ export const users = {
   // Usadas só nas telas dos Episódios de tensão (e2e/tension-episodes.spec.ts), também com a versão do RPD.
   tensionScreenPatient: { email: 'tensao-tela-paciente@faisca.test', password: SEED_PASSWORD },
   tensionScreenTherapist: { email: 'tensao-tela-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nos testes da agenda (api/appointments.spec.ts). Já aceitaram a versão dos episódios,
+  // mas não a que cita a agenda (DEC-045).
+  agendaPatient: { email: 'agenda-paciente@faisca.test', password: SEED_PASSWORD },
+  agendaTherapist: { email: 'agenda-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;

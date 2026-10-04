@@ -9,6 +9,9 @@ export async function resetDatabase() {
   await prisma.thoughtRecord.deleteMany();
   await prisma.tensionEpisode.deleteMany();
   await prisma.appointment.deleteMany();
+  // As exceções saem em cascata com a regra.
+  await prisma.appointmentSchedule.deleteMany();
+  await prisma.therapyPause.deleteMany();
   await prisma.authToken.deleteMany();
   await prisma.linkCodeAttempt.deleteMany();
   await prisma.linkCode.deleteMany();

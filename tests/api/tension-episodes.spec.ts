@@ -35,7 +35,7 @@ test('aceite por área, registro da paciente e leitura só pela terapeuta vincul
 
   // Com a versão do RPD: o RPD segue aberto, e só os episódios ficam fechados.
   const me = (await (await patient.get('/auth/me')).json()).user;
-  expect(me.privacyAreas).toEqual({ thoughtRecords: true, tensionEpisodes: false });
+  expect(me.privacyAreas).toEqual({ thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false });
   expect((await patient.get('/thought-records', { params })).status()).toBe(200);
   const blocked = await patient.post('/tension-episodes', { data: episode });
   expect(blocked.status()).toBe(403);
