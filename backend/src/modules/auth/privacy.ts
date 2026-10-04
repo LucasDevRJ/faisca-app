@@ -4,6 +4,8 @@
 // - 2026-10: primeira versão, aceita no cadastro.
 // - 2026-10.2: entra o Registro de Pensamentos (DEC-039).
 // - 2026-10.3: entram os Episódios de tensão (DEC-042).
+// - 2026-10.4: entra a agenda, com hora, motivos e pausas (DEC-045).
+// - 2026-10.5: entra a Ação (DEC-051).
 export const PRIVACY_VERSIONS = ['2026-10', '2026-10.2', '2026-10.3', '2026-10.4', '2026-10.5'] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
