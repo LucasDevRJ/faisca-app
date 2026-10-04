@@ -759,6 +759,20 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Motivo:** o pedido do usuário. No tablet e no computador, as colunas cabem e deixam a comparação
   entre atividades mais direta; o problema que levou às barras era só o celular estreito.
 
+## DEC-048 — Correção da agenda no mesmo dia e consultas antigas absorvidas
+- **Decisão:**
+  - mudar a agenda **no mesmo dia em que ela foi criada** (dia de São Paulo, pelo `createdAt`) é uma
+    **correção**: as regras criadas hoje saem inteiras, com as desmarcações e remarcações delas, sem
+    deixar sessões no histórico. A regra anterior que uma delas tinha fechado (`MUDANCA`) volta a
+    valer e é fechada de novo pela regra nova. Se depois disso não sobra regra nenhuma, valem as
+    regras da primeira agenda, que pode começar no passado;
+  - ao criar ou mudar a agenda, uma **consulta antiga sem hora** (avulsa de antes da agenda) que cai
+    num dia da regra nova é a mesma sessão: sai, e a sessão da agenda fica no lugar, com a hora.
+- **Motivo:** em produção, uma agenda criada por engano começando no dia e corrigida minutos depois
+  deixou uma sessão falsa no histórico, que também encurtaria o ciclo da consulta. Um engano no mesmo
+  dia não é histórico a preservar. E quem já usava o app antes da agenda tinha as consultas como
+  datas soltas, que bateriam com a agenda nova e a impediriam de começar no passado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
