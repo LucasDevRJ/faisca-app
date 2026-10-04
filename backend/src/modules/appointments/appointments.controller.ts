@@ -4,6 +4,7 @@ import {
   appointmentIdSchema,
   appointmentInputSchema,
   cancelSessionSchema,
+  cycleQuerySchema,
   listAppointmentsQuerySchema,
   pauseInputSchema,
   rescheduleSessionSchema,
@@ -29,6 +30,10 @@ export function createAppointmentsController(service: AppointmentsService) {
   const list: RequestHandler = async (req, res) => {
     const query = listAppointmentsQuerySchema.parse(req.query);
     res.status(200).json(await service.list(getAuthUser(req).id, query));
+  };
+
+  const cycle: RequestHandler = async (req, res) => {
+    res.status(200).json(await service.cycle(getAuthUser(req).id, cycleQuerySchema.parse(req.query)));
   };
 
   const create: RequestHandler = async (req, res) => {
@@ -93,6 +98,7 @@ export function createAppointmentsController(service: AppointmentsService) {
 
   return {
     list,
+    cycle,
     create,
     update,
     remove,

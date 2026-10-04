@@ -66,6 +66,18 @@ sessões são calculadas a partir dela (DEC-045). Só o paciente mexe na agenda;
 - O paciente pode baixar um arquivo de agenda (`.ics`) com as sessões dos próximos 12 meses, com o
   texto neutro "Consulta", para importar no calendário do celular.
 
+## Ciclo da consulta
+O período que cada sessão olha: o que a pessoa viveu desde a sessão anterior (DEC-049).
+- O ciclo de uma sessão vai do **dia seguinte à sessão agendada anterior até o dia da sessão,
+  inclusive**. Na agenda semanal, 7 dias; na quinzenal, 14.
+- Sessão **desmarcada** não fecha ciclo: o período se junta ao da sessão seguinte. Sessão
+  **remarcada** fecha no dia novo. Consulta **avulsa** também fecha um ciclo.
+- A **primeira sessão** (sem anterior) olha os 7 dias que terminam nela (14 na quinzenal).
+- **Teto de 42 dias** (depois de uma pausa longa, por exemplo): ficam os dias mais recentes, com aviso.
+- O **ciclo atual** é o que contém hoje; no dia da consulta, o ciclo ainda é o dela, mesmo depois da
+  sessão. Sem próxima sessão, o ciclo fica **aberto**: do dia seguinte à última sessão até hoje. Sem
+  nenhuma sessão, não há ciclo, e as telas usam a semana.
+
 ## Registro de Pensamentos (RPD)
 Registro da TCC, independente das atividades. O paciente alterna entre as abas **Atividades** e
 **Pensamentos**, e o formulário fica numa página própria.

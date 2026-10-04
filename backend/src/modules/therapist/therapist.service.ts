@@ -2,7 +2,7 @@ import { addDays, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import type { ActivitiesService } from '../activities/activities.service.js';
 import type { ListActivitiesQuery } from '../activities/activities.schema.js';
-import type { ListAppointmentsQuery } from '../appointments/appointments.schema.js';
+import type { CycleQuery, ListAppointmentsQuery } from '../appointments/appointments.schema.js';
 import type { AppointmentsService } from '../appointments/appointments.service.js';
 import type { Session } from '../appointments/sessions.js';
 import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
@@ -63,6 +63,10 @@ export function createTherapistService(
 
     listActivities(patientId: string, query: ListActivitiesQuery) {
       return activities.list(patientId, query);
+    },
+
+    cycle(patientId: string, query: CycleQuery) {
+      return appointments.cycle(patientId, query);
     },
 
     listAppointments(patientId: string, query: ListAppointmentsQuery) {

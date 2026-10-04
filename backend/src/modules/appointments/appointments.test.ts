@@ -597,3 +597,59 @@ describe('excluir a conta (LGPD)', () => {
     expect(await prisma.therapyPause.count()).toBe(0);
   });
 });
+
+describe('GET /appointments/cycle (DEC-049)', () => {
+  it('sem sessão: 401; conta só de terapeuta: 403', async () => {
+    expect((await request(app).get('/appointments/cycle')).status).toBe(401);
+    const res = await (await loginAgent(THERAPIST)).get('/appointments/cycle');
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('PATIENT_PROFILE_REQUIRED');
+  });
+
+  it('o ciclo de hoje, da própria paciente: só a agenda dela conta', async () => {
+    // Sessões em day(-6), day(1), day(8)...; a outra paciente tem sessões em dias diferentes.
+    await seedSchedule(patientId, day(-6));
+    await seedSchedule(otherPatientId, day(-2));
+    const agent = await loginAgent();
+
+    const res = await agent.get('/appointments/cycle');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      today: today(),
+      cycle: {
+        from: day(-5),
+        to: day(1),
+        session: { date: day(1), time: '14:00', kind: 'RECORRENTE' },
+        truncated: false,
+        previous: day(-6),
+        next: day(2),
+      },
+    });
+  });
+
+  it('com dia: o ciclo que contém o dia; sem agenda: null; dia inválido: 400', async () => {
+    const agent = await loginAgent();
+    expect((await agent.get('/appointments/cycle')).body.cycle).toBeNull();
+
+    await seedSchedule(patientId, day(1));
+    const later = await agent.get('/appointments/cycle').query({ date: day(10) });
+    const invalid = await agent.get('/appointments/cycle').query({ date: '2026-02-30' });
+
+    expect(later.body.cycle).toEqual(expect.objectContaining({ from: day(9), to: day(15) }));
+    expect(invalid.status).toBe(400);
+    // Data muito distante: 400, sem calcular milhares de sessões.
+    const farAway = await agent.get('/appointments/cycle').query({ date: '9999-12-31' });
+    expect(farAway.status).toBe(400);
+    expect(farAway.body.error.code).toBe('DATE_TOO_FAR');
+  });
+
+  it('não pede o aceite da agenda: só dias, sem motivos', async () => {
+    const oldConsentId = (await prisma.user.findUniqueOrThrow({ where: { email: OLD_CONSENT } })).id;
+    await seedSchedule(oldConsentId, day(1));
+    const res = await (await loginAgent(OLD_CONSENT)).get('/appointments/cycle');
+
+    expect(res.status).toBe(200);
+    expect(res.body.cycle.to).toBe(day(1));
+  });
+});

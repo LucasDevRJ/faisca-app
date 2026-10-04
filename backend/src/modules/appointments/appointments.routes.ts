@@ -17,6 +17,8 @@ export function createAppointmentsRoutes() {
 
   router.get('/appointments', ...patient, controller.list);
   router.get('/appointments/calendar.ics', ...patient, controller.calendar);
+  // Ciclo da consulta (DEC-049): só dias, sem motivos, então não pede o aceite da agenda.
+  router.get('/appointments/cycle', ...patient, controller.cycle);
   router.post('/appointments', ...writesAgenda, controller.create);
   router.put('/appointments/schedule', ...writesAgenda, controller.setSchedule);
   router.post('/appointments/schedule/end', ...patient, controller.endSchedule);
