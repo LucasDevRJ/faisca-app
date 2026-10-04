@@ -1,6 +1,7 @@
 import { api } from '../../lib/api';
 import type { Activity } from '../activities/activities-api';
 import type { AgendaResponse, AgendaStatus, DateRange, Pause } from '../appointments/appointments-api';
+import type { CycleResponse } from '../cycle/cycle-api';
 import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
 
@@ -66,4 +67,10 @@ export async function fetchPatientTensionEpisodes(patientId: string, from: strin
     params: { from, to },
   });
   return data.tensionEpisodes;
+}
+
+// Ciclo da consulta do paciente (DEC-049): só dias e horas, sem pedir o aceite da agenda.
+export async function fetchPatientCycle(patientId: string, date?: string): Promise<CycleResponse> {
+  const { data } = await api.get<CycleResponse>(`${base(patientId)}/cycle`, { params: date ? { date } : undefined });
+  return data;
 }

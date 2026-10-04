@@ -16,17 +16,26 @@ const GATED: Record<string, PrivacyArea> = {
 // Telas principais do paciente: Atividades, Pensamentos e Tensão, em abas (DEC-040, DEC-043).
 // A faixa do aviso de privacidade aparece aqui enquanto falta algum aceite.
 export function PatientTabsLayout() {
-  const gatedArea = GATED[useLocation().pathname];
+  const location = useLocation();
+  const gatedArea = GATED[location.pathname];
+  // Trocar de aba mantém o período aberto (ciclo ou semana, DEC-050).
+  const params = new URLSearchParams(location.search);
+  const kept = new URLSearchParams();
+  for (const key of ['ciclo', 'semana']) {
+    const value = params.get(key);
+    if (value) kept.set(key, value);
+  }
+  const search = kept.size ? `?${kept}` : '';
   return (
     <>
       <nav aria-label="Registros" className="flex gap-2">
-        <NavLink to="/registros" className={tabClass}>
+        <NavLink to={{ pathname: '/registros', search }} className={tabClass}>
           Atividades
         </NavLink>
-        <NavLink to="/pensamentos" end className={tabClass}>
+        <NavLink to={{ pathname: '/pensamentos', search }} end className={tabClass}>
           Pensamentos
         </NavLink>
-        <NavLink to="/tensao" end className={tabClass}>
+        <NavLink to={{ pathname: '/tensao', search }} end className={tabClass}>
           Tensão
         </NavLink>
       </nav>

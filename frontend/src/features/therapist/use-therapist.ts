@@ -1,8 +1,10 @@
-import { skipToken, useQuery } from '@tanstack/react-query';
+import { skipToken, useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import type { CycleResponse } from '../cycle/cycle-api';
 import { getApiError } from '../auth/auth-api';
 import {
   fetchPatientActivities,
   fetchPatientAppointments,
+  fetchPatientCycle,
   fetchPatientSummary,
   fetchPatientTensionEpisodes,
   fetchPatientThoughtRecords,
@@ -59,6 +61,15 @@ export function usePatientAppointments(patientId: string, enabled: boolean, rang
   return useQuery({
     queryKey: [...THERAPIST_KEY, patientId, 'appointments', range?.from ?? null, range?.to ?? null],
     queryFn: enabled ? () => fetchPatientAppointments(patientId, range) : skipToken,
+    retry: retryUnlessForbidden,
+  });
+}
+
+// Ciclo da consulta do paciente (DEC-049), no formato que o usePeriod pede.
+export function patientCycleQuery(patientId: string) {
+  return (date: string | null): UseQueryOptions<CycleResponse> => ({
+    queryKey: [...THERAPIST_KEY, patientId, 'cycle', date],
+    queryFn: () => fetchPatientCycle(patientId, date ?? undefined),
     retry: retryUnlessForbidden,
   });
 }

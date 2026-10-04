@@ -123,7 +123,7 @@ describe('RecordsPage: semana', () => {
     server.use(http.get('*/api/activities', () => new HttpResponse(null, { status: 500 })));
     renderRoute('/registros');
 
-    expect(await screen.findByText(/Não conseguimos carregar esta semana/)).toBeInTheDocument();
+    expect(await screen.findByText(/Não conseguimos carregar este período/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument();
   });
 });
@@ -439,5 +439,66 @@ describe('RecordsPage: editar e excluir', () => {
     await waitFor(() =>
       expect(writes).toEqual([{ method: 'DELETE', path: `/activities/${activity.id}`, body: undefined }]),
     );
+  });
+});
+
+describe('RecordsPage: ciclo da consulta (DEC-050)', () => {
+  // Consulta na segunda, 28/09, às 14:00; a anterior foi na segunda, 21/09.
+  const cycle = {
+    from: '2026-09-22',
+    to: '2026-09-28',
+    session: { date: '2026-09-28', time: '14:00', kind: 'RECORRENTE' },
+    truncated: false,
+    previous: '2026-09-21',
+    next: '2026-09-29',
+  };
+
+  function cycleHandler() {
+    const dates: (string | null)[] = [];
+    server.use(
+      http.get('*/api/appointments/cycle', ({ request }) => {
+        dates.push(new URL(request.url).searchParams.get('date'));
+        return HttpResponse.json({ today: '2026-09-24', cycle });
+      }),
+    );
+    return dates;
+  }
+
+  it('abre no ciclo de hoje: título, período, contagem, resumo e as atividades do ciclo', async () => {
+    cycleHandler();
+    const calls = weekHandler([
+      fakeActivity({ name: 'Caminhada', activityDate: '2026-09-23', status: 'CONCLUIDA', wantBefore: 2, pleasure: 7, achievement: 8 }),
+    ]);
+    renderRoute('/registros');
+
+    expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
+    expect(screen.getByText('22/09 a 28/09')).toBeInTheDocument();
+    expect(screen.getByText('Sua consulta é daqui a 4 dias.')).toBeInTheDocument();
+    expect(await screen.findByText(/^7 dias · 1 atividade feita/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 3, name: /segunda-feira, 28\/09/ })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3, name: /segunda-feira, 21\/09/ })).not.toBeInTheDocument();
+    await waitFor(() => expect(calls).toContainEqual({ from: '2026-09-22', to: '2026-09-28' }));
+  });
+
+  it('setas e alternância ficam na URL, e trocar de aba mantém o período', async () => {
+    const dates = cycleHandler();
+    weekHandler([]);
+    const user = userEvent.setup();
+    const { router } = renderRoute('/registros');
+
+    await user.click(await screen.findByRole('button', { name: 'Ciclo anterior' }));
+    await waitFor(() => expect(router.state.location.search).toBe('?ciclo=2026-09-21'));
+    await waitFor(() => expect(dates.at(-1)).toBe('2026-09-21'));
+
+    await user.click(screen.getByRole('link', { name: 'Pensamentos' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/pensamentos'));
+    expect(router.state.location.search).toBe('?ciclo=2026-09-21');
+
+    await user.click(screen.getByRole('link', { name: 'Atividades' }));
+    await user.click(await screen.findByRole('button', { name: 'Semana' }));
+    expect(await screen.findByRole('heading', { name: '21 a 27 de set.' })).toBeInTheDocument();
+    expect(router.state.location.search).toBe('?semana=2026-09-21');
+    await user.click(screen.getByRole('button', { name: 'Ciclo' }));
+    await waitFor(() => expect(router.state.location.search).toBe(''));
   });
 });

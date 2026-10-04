@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { useSession } from '../features/auth/use-session';
@@ -13,58 +12,27 @@ import {
   NotDoneDialog,
   StartActivityDialog,
 } from '../features/activities/activity-dialogs';
-import { useWeekActivities } from '../features/activities/use-activities';
+import { useRangeActivities } from '../features/activities/use-activities';
 import { AppointmentsCard } from '../features/appointments/appointments-card';
 import { sessionDays } from '../features/appointments/appointments-api';
 import { useAgenda } from '../features/appointments/use-appointments';
 import { NewLinkNotice } from '../features/links/new-link-notice';
-import {
-  addDays,
-  formatDayHeading,
-  formatWeekRange,
-  isValidDateOnly,
-  startOfWeek,
-  todayInAppZone,
-  weekDays,
-} from '../features/activities/week';
+import { formatDayHeading, todayInAppZone } from '../features/activities/week';
 import { WeekChart } from '../features/activities/week-chart';
+import { PatientCycleSummary } from '../features/cycle/cycle-summary';
+import { PeriodNav } from '../features/cycle/period-nav';
+import { cycleQuery } from '../features/cycle/use-cycle';
+import { usePeriod, type Period } from '../features/cycle/use-period';
+import { daysInRange } from '../features/therapist/period';
 
 type OpenDialog = { kind: 'create'; date: string } | { kind: ActivityAction; activity: Activity } | null;
 
-// "Meus registros": a semana de segunda a domingo (SPEC, Tela semanal).
-// A semana fica na URL (?semana=AAAA-MM-DD) para recarregar e voltar sem perder o lugar (DEC-029).
+// "Meus registros": o ciclo da consulta ou a semana de segunda a domingo (SPEC; DEC-050).
+// O período fica na URL (?ciclo= ou ?semana=) para recarregar e voltar sem perder o lugar (DEC-029).
 export function RecordsPage() {
   const { data: user } = useSession();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [dialog, setDialog] = useState<OpenDialog>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-
   const today = todayInAppZone();
-  const currentMonday = startOfWeek(today);
-  const param = searchParams.get('semana');
-  const monday = isValidDateOnly(param) ? startOfWeek(param) : currentMonday;
-  const isCurrentWeek = monday === currentMonday;
-  const days = weekDays(monday);
-
-  const week = useWeekActivities(monday);
-  const activities = week.data ?? [];
-  // Dias com sessão agendada ganham um selo na semana (DEC-030, DEC-045).
-  const appointmentDays = new Set(sessionDays(useAgenda({ from: monday, to: addDays(monday, 6) }).data));
-
-  function goToWeek(target: string) {
-    setNotice(null);
-    setSearchParams(target === currentMonday ? {} : { semana: target });
-  }
-
-  function close() {
-    setDialog(null);
-  }
-
-  function done(message?: string) {
-    setDialog(null);
-    setNotice(message ?? null);
-  }
-
+  const { period, currentMonday, showCycle, showWeek } = usePeriod(cycleQuery, today);
   const firstName = user?.name.split(' ')[0];
 
   return (
@@ -78,60 +46,95 @@ export function RecordsPage() {
 
       <AppointmentsCard today={today} />
 
-      <section aria-labelledby="week-title" className="flex flex-col gap-5 sm:gap-6">
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              className="px-3 text-2xl"
-              aria-label="Semana anterior"
-              onClick={() => goToWeek(addDays(monday, -7))}
-            >
-              ‹
-            </Button>
-            <h2 id="week-title" className="min-w-40 text-center text-2xl font-bold" aria-live="polite">
-              {formatWeekRange(monday)}
-            </h2>
-            <Button
-              variant="ghost"
-              className="px-3 text-2xl"
-              aria-label="Próxima semana"
-              onClick={() => goToWeek(addDays(monday, 7))}
-            >
-              ›
-            </Button>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {!isCurrentWeek && (
-              <Button variant="secondary" onClick={() => goToWeek(currentMonday)}>
-                Voltar para esta semana
-              </Button>
-            )}
-            {/* No celular, o botão flutua no canto de baixo, ao alcance do polegar durante a rolagem. */}
+      {period ? (
+        <PeriodRecords
+          period={period}
+          today={today}
+          currentMonday={currentMonday}
+          onCycle={showCycle}
+          onWeek={showWeek}
+        />
+      ) : (
+        <p className="text-muted" aria-busy="true">
+          Carregando…
+        </p>
+      )}
+    </>
+  );
+}
+
+type PeriodRecordsProps = {
+  period: Period;
+  today: string;
+  currentMonday: string;
+  onCycle: (date: string | null) => void;
+  onWeek: (monday: string) => void;
+};
+
+function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: PeriodRecordsProps) {
+  const [dialog, setDialog] = useState<OpenDialog>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const days = daysInRange(period);
+  const inCycle = period.mode === 'cycle';
+  const here = inCycle ? 'neste ciclo' : 'nesta semana';
+
+  const week = useRangeActivities(period);
+  const activities = week.data ?? [];
+  // Dias com sessão agendada ganham um selo (DEC-030, DEC-045).
+  const appointmentDays = new Set(sessionDays(useAgenda({ from: period.from, to: period.to }).data));
+
+  function close() {
+    setDialog(null);
+  }
+
+  function done(message?: string) {
+    setDialog(null);
+    setNotice(message ?? null);
+  }
+
+  return (
+    <>
+      <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
+        <PeriodNav
+          period={period}
+          today={today}
+          audience="patient"
+          currentMonday={currentMonday}
+          onCycle={(date) => {
+            setNotice(null);
+            onCycle(date);
+          }}
+          onWeek={(monday) => {
+            setNotice(null);
+            onWeek(monday);
+          }}
+          summary={<PatientCycleSummary range={period} />}
+          actions={
+            // No celular, o botão flutua no canto de baixo, ao alcance do polegar durante a rolagem.
             <Button
               className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 shadow-soft sm:static sm:shadow-none"
-              onClick={() => setDialog({ kind: 'create', date: days.includes(today) ? today : monday })}
+              onClick={() => setDialog({ kind: 'create', date: days.includes(today) ? today : period.from })}
             >
               <span aria-hidden="true" className="text-xl leading-none sm:hidden">
                 +
               </span>
               Nova atividade
             </Button>
-          </div>
-        </div>
+          }
+        />
 
         {notice && <Alert tone="attention">{notice}</Alert>}
 
         {week.isPending && (
           <p className="text-muted" aria-busy="true">
-            Carregando a semana…
+            Carregando…
           </p>
         )}
 
         {week.isError && (
           <Alert tone="attention">
             <div className="flex flex-col gap-3">
-              <p>Não conseguimos carregar esta semana. Confira sua conexão e tente de novo.</p>
+              <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
               <div>
                 <Button variant="secondary" onClick={() => week.refetch()}>
                   Tentar de novo
@@ -145,11 +148,11 @@ export function RecordsPage() {
           <>
             {activities.length === 0 && (
               <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-                Nada registrado nesta semana ainda. Que tal planejar algo pequeno?
+                Nada registrado {here} ainda. Que tal planejar algo pequeno?
               </p>
             )}
 
-            <WeekChart activities={activities} />
+            <WeekChart activities={activities} period={inCycle ? 'no ciclo' : 'na semana'} />
 
             <ol className="flex flex-col gap-2 sm:gap-6">
               {days.map((day) => {

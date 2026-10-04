@@ -52,4 +52,10 @@ test('aceitar o aviso, configurar a agenda, desmarcar com motivo e desfazer', as
   await page.getByRole('link', { name: '‹ Meus registros' }).click();
   await expect(card.getByText('Próxima')).toBeVisible();
   await expect(card).toContainText('às 14:00 · amanhã');
+
+  // A tela abre no ciclo da consulta de amanhã (DEC-050), com a contagem.
+  const [, month, dayOfMonth] = tomorrow.split('-');
+  await expect(page.getByRole('heading', { name: `Consulta de ${dayOfMonth}/${month}` })).toBeVisible();
+  await expect(page.getByText('Sua consulta é amanhã.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ciclo', exact: true })).toHaveAttribute('aria-pressed', 'true');
 });

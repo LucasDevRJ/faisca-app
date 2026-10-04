@@ -112,8 +112,13 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   de vocalizar ao longo da semana, com os dias de consulta marcados.
 - Usar os episódios exige ter aceitado uma versão do aviso de privacidade que os cite.
 
-## Tela semanal (paciente e terapeuta)
-- A semana vai de segunda a domingo e dá para navegar entre semanas.
+## Tela de registros: ciclo ou semana (paciente e terapeuta)
+- A tela abre no **ciclo da consulta** atual, com o título "Consulta de dd/mm", o período, quantos
+  dias faltam para a consulta e um resumo neutro (dias, atividades feitas, pensamentos e episódios
+  registrados). Sem nenhuma sessão na agenda, abre na semana (DEC-050).
+- Dá para alternar entre **Ciclo** e **Semana** e navegar entre ciclos ou semanas; o período fica na
+  URL e vale para as três abas.
+- A semana vai de segunda a domingo.
 - Mostra a lista de atividades e um gráfico comparando vontade × prazer × realização.
 - As notas usam uma única cor que varia de intensidade (sem vermelho/verde).
 
@@ -128,8 +133,7 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   - **Tensão**: os Episódios de tensão, só leitura, com todos os campos, as duas datas e um gráfico
     da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
-  - filtro "desde a última consulta" (do dia da última consulta até hoje, com no máximo 92 dias).
-- **Destaque**: as atividades dos 7 dias antes da próxima consulta aparecem em evidência (da consulta −7 até a véspera, sem o dia da consulta). Sem próxima consulta cadastrada, o destaque cobre os últimos 7 dias até hoje.
+- **Período**: a tela abre no **ciclo da consulta** (seção "Ciclo da consulta"), o mesmo que o paciente vê, nas três abas; dá para alternar para a semana e navegar entre ciclos ou semanas. O ciclo substitui o antigo destaque e o filtro "desde a última consulta" (DEC-050).
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta

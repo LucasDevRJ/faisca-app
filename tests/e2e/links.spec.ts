@@ -54,7 +54,8 @@ test('paciente gera o código, terapeuta vincula e lê os registros, paciente de
   await expect(therapist).toHaveURL(/\/pacientes\/[0-9a-f-]{36}$/);
   const patientUrl = therapist.url();
   await expect(therapist.getByRole('heading', { level: 1, name: 'Vera Fictícia' })).toBeVisible();
-  await expect(therapist.getByText(/Em destaque:/)).toBeVisible();
+  // Sem agenda, sem ciclo: a semana atual (DEC-050).
+  await expect(therapist.getByRole('button', { name: 'Semana anterior' })).toBeVisible();
   const card = therapist.getByRole('article', { name: 'Leitura no fim de tarde' });
   await expect(card.getByText(/Registrado em/)).toBeVisible();
   await expect(card.getByRole('button')).toHaveCount(0);

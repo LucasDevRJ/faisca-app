@@ -4,7 +4,7 @@ import { Alert } from '../components/ui/alert';
 import { buttonClasses } from '../components/ui/button-styles';
 import { getApiError, type ApiErrorInfo } from '../features/auth/auth-api';
 import { useSession } from '../features/auth/use-session';
-import { isValidDateOnly, startOfWeek, todayInAppZone } from '../features/activities/week';
+import { isValidDateOnly, todayInAppZone } from '../features/activities/week';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { ThoughtRecordForm } from '../features/thought-records/thought-record-form';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
@@ -18,12 +18,12 @@ import type { ThoughtsPageState } from './thoughts-page';
 
 const backLinkClass = 'self-start font-medium text-primary-text underline underline-offset-4';
 
-// Volta para a semana do dia da situação, com o aviso de que deu certo.
+// Volta para o período do dia da situação, com o aviso de que deu certo.
 function useBackToWeek() {
   const navigate = useNavigate();
   return (record: ThoughtRecord, notice: string) => {
-    const monday = startOfWeek(record.situationDate);
-    const search = monday === startOfWeek(todayInAppZone()) ? '' : `?semana=${monday}`;
+    // O ciclo do dia registrado (DEC-050); sem agenda, a tela mostra a semana dele.
+    const search = record.situationDate === todayInAppZone() ? '' : `?ciclo=${record.situationDate}`;
     const state: ThoughtsPageState = { notice };
     navigate(`/pensamentos${search}`, { state });
   };
