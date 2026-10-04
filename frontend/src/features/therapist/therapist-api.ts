@@ -1,6 +1,6 @@
 import { api } from '../../lib/api';
 import type { Activity } from '../activities/activities-api';
-import type { Appointment, AppointmentsResponse } from '../appointments/appointments-api';
+import type { AgendaResponse, AgendaStatus, DateRange, Pause } from '../appointments/appointments-api';
 import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
 
@@ -14,12 +14,18 @@ export type Highlight = {
   reason: 'NEXT_APPOINTMENT' | 'LAST_7_DAYS';
 };
 
+export type SessionWhen = { date: string; time: string | null; kind: 'RECORRENTE' | 'AVULSA' };
+
 export type PatientSummary = {
   patient: { id: string; name: string; email: string; linkedAt: string };
   // O "hoje" da API, no fuso de São Paulo: a tela usa o mesmo dia do destaque.
   today: string;
-  lastAppointment: Appointment | null;
-  nextAppointment: Appointment | null;
+  // Só quando e de que tipo: os motivos ficam na agenda, que pede o aceite (DEC-045).
+  lastAppointment: SessionWhen | null;
+  nextAppointment: SessionWhen | null;
+  // Situação da agenda, para o selo "em pausa" ou "encerrada".
+  agendaStatus: AgendaStatus;
+  pause: Pause | null;
   highlight: Highlight;
 };
 
@@ -48,8 +54,9 @@ export async function fetchPatientThoughtRecords(patientId: string, from: string
   return data.thoughtRecords;
 }
 
-export async function fetchPatientAppointments(patientId: string): Promise<AppointmentsResponse> {
-  const { data } = await api.get<AppointmentsResponse>(`${base(patientId)}/appointments`);
+// Agenda com os motivos (DEC-045): pede a versão do aviso que a cita, aceita pela terapeuta.
+export async function fetchPatientAppointments(patientId: string, range?: DateRange): Promise<AgendaResponse> {
+  const { data } = await api.get<AgendaResponse>(`${base(patientId)}/appointments`, { params: range });
   return data;
 }
 

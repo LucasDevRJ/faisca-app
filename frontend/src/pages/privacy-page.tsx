@@ -8,7 +8,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // (src/modules/auth/privacy.ts): é a versão que fica gravada no aceite de cada cadastro.
 // Versão 2026-10.2 (DEC-039): entra o Registro de Pensamentos, com novo aceite para usá-lo.
 // Versão 2026-10.3 (DEC-042): entram os Episódios de tensão, com novo aceite para usá-los.
-const VERSION_LABEL = 'versão 3, de outubro de 2026';
+// Versão 2026-10.4 (DEC-045): entra a agenda (hora, motivos e pausas), com novo aceite para usá-la.
+const VERSION_LABEL = 'versão 4, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -54,7 +55,11 @@ export function PrivacyPage() {
             <li>
               Da sua conta: nome, e-mail e senha. A senha é guardada de um jeito que nem nós conseguimos ler.
             </li>
-            <li>O que você registra: atividades, datas, notas de 0 a 10, observações e datas de consultas.</li>
+            <li>O que você registra: atividades, datas, notas de 0 a 10 e observações.</li>
+            <li>
+              Na agenda de consultas: o dia, a hora e a frequência das sessões, as pausas e os motivos que você
+              escreve ao desmarcar ou remarcar uma sessão.
+            </li>
             <li>
               No Registro de Pensamentos (RPD): as situações que você descreve e, para cada uma, o pensamento
               automático, o quanto você acredita nele, as emoções e a intensidade de cada uma, o comportamento e
@@ -66,6 +71,10 @@ export function PrivacyPage() {
             </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No seu aparelho: só o cookie de sessão e a preferência de tema claro ou escuro.</li>
+            <li>
+              Se você baixar o arquivo da agenda para o calendário do celular, ele leva só o dia e a hora de cada
+              sessão, com o texto “Consulta”, sem motivos.
+            </li>
             <li>
               Seu endereço IP é usado por alguns minutos, só para barrar tentativas repetidas de senha, e não é
               gravado.
@@ -86,8 +95,8 @@ export function PrivacyPage() {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li>Você vê tudo o que registrou.</li>
             <li>
-              A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos e os
-              Episódios de tensão, enquanto o vínculo existir. Você
+              A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos, os
+              Episódios de tensão e a agenda com os motivos, enquanto o vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
               hora.
             </li>

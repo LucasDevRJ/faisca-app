@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -16,7 +16,10 @@ import {
   weekDays,
 } from '../features/activities/week';
 import { WeekChart } from '../features/activities/week-chart';
+import { statusBadge } from '../features/appointments/agenda-format';
+import { sessionDays } from '../features/appointments/appointments-api';
 import { AppointmentLine } from '../features/appointments/appointments-card';
+import { PatientAgenda } from '../features/therapist/patient-agenda';
 import { useSession } from '../features/auth/use-session';
 import { formatDate } from '../features/links/link-format';
 import { PATIENTS_KEY } from '../features/links/use-links';
@@ -119,7 +122,8 @@ function NoAccess() {
 function PatientRecords({ patientId, summary }: { patientId: string; summary: PatientSummary }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: user } = useSession();
-  const { patient, today, lastAppointment, nextAppointment, highlight } = summary;
+  const { patient, today, lastAppointment, nextAppointment, highlight, agendaStatus, pause } = summary;
+  const [agendaOpen, setAgendaOpen] = useState(false);
   const tab = parseTab(searchParams.get('aba'));
   // Trocar de período mantém a aba aberta.
   const tabParam: Record<string, string> = tab ? { aba: tab } : {};
@@ -130,7 +134,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   // Sem consulta passada, o filtro "desde a última consulta" não existe (DEC-033).
   const since =
     searchParams.get('periodo') === SINCE_PARAM && lastAppointment
-      ? sinceLastAppointment(lastAppointment.appointmentDate, today)
+      ? sinceLastAppointment(lastAppointment.date, today)
       : null;
   const range: DateRange = since ?? { from: monday, to: addDays(monday, 6) };
 
@@ -141,8 +145,15 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const thoughts = usePatientThoughtRecords(patientId, tab === 'pensamentos' && consented ? range : null);
   const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
   const tension = usePatientTensionEpisodes(patientId, tab === 'tensao' && tensionConsented ? range : null);
-  const appointmentList = usePatientAppointments(patientId).data?.appointments.map((a) => a.appointmentDate) ?? [];
+  // Selo "consulta" nos dias com sessão. A agenda pede o aceite da versão que a cita (DEC-045);
+  // sem ele, só a última e a próxima, que vêm no resumo.
+  const agendaConsented = Boolean(user?.privacyAreas.appointmentSchedule);
+  const agenda = usePatientAppointments(patientId, agendaConsented, range);
+  const appointmentList = agendaConsented
+    ? sessionDays(agenda.data)
+    : [lastAppointment?.date, nextAppointment?.date].filter((d): d is string => Boolean(d));
   const appointmentDays = new Set(appointmentList);
+  const badge = statusBadge(agendaStatus, pause, today);
 
   // Vínculo desfeito enquanto a tela estava aberta.
   if (activities.isError && isForbidden(activities.error)) return <NoAccess />;
@@ -178,17 +189,29 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
         aria-labelledby="appointments-title"
         className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft"
       >
-        <h2 id="appointments-title" className="text-lg font-semibold">
-          Consultas
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="appointments-title" className="text-lg font-semibold">
+            Consultas
+          </h2>
+          {badge && <span className="rounded-full border border-border px-2 py-0.5 text-sm text-muted">{badge}</span>}
+        </div>
         {lastAppointment || nextAppointment ? (
           <dl className="grid gap-3 sm:grid-cols-2">
-            {nextAppointment && <AppointmentLine label="Próxima" appointment={nextAppointment} today={today} />}
-            {lastAppointment && <AppointmentLine label="Última" appointment={lastAppointment} today={today} />}
+            {nextAppointment && <AppointmentLine label="Próxima" session={nextAppointment} today={today} />}
+            {lastAppointment && <AppointmentLine label="Última" session={lastAppointment} today={today} />}
           </dl>
         ) : (
           <p className="text-muted">{firstName} ainda não cadastrou consultas.</p>
         )}
+        <Button
+          variant="ghost"
+          className="self-start px-0 underline"
+          aria-expanded={agendaOpen}
+          onClick={() => setAgendaOpen((open) => !open)}
+        >
+          {agendaOpen ? 'Esconder a agenda' : 'Ver a agenda'}
+        </Button>
+        {agendaOpen && <PatientAgenda patientId={patientId} consented={agendaConsented} today={today} />}
       </section>
 
       <HighlightNote highlight={highlight} />

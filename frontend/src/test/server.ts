@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { Activity } from '../features/activities/activities-api';
+import type { AgendaResponse, Session } from '../features/appointments/appointments-api';
 import type { SessionUser } from '../features/auth/auth-api';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
@@ -12,14 +13,45 @@ export const fakeUser: SessionUser = {
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
-  privacyAreas: { thoughtRecords: true, tensionEpisodes: true },
+  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true },
 };
 
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
 export const outdatedPrivacy = {
   privacyUpToDate: false,
-  privacyAreas: { thoughtRecords: false, tensionEpisodes: false },
+  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false },
 } satisfies Partial<SessionUser>;
+
+// Sessão fictícia da agenda (DEC-045): recorrente e agendada, às 14:00, por padrão.
+export function fakeSession(date: string, overrides: Partial<Session> = {}): Session {
+  return {
+    kind: 'RECORRENTE',
+    date,
+    time: '14:00',
+    status: 'AGENDADA',
+    originalDate: date,
+    rescheduled: false,
+    reason: null,
+    appointmentId: null,
+    ...overrides,
+  };
+}
+
+// Agenda fictícia: sem agenda e sem sessões, por padrão.
+export function fakeAgenda(overrides: Partial<AgendaResponse> = {}): AgendaResponse {
+  return {
+    status: 'SEM_AGENDA',
+    schedule: null,
+    pause: null,
+    from: '2026-06-25',
+    to: '2026-12-24',
+    sessions: [],
+    upcoming: [],
+    last: null,
+    next: null,
+    ...overrides,
+  };
+}
 
 // Atividade fictícia com valores padrão; cada teste troca só o que importa.
 let activitySeq = 0;
@@ -97,7 +129,7 @@ export const handlers = [
   http.get('*/api/activities', () => HttpResponse.json({ activities: [] })),
   http.get('*/api/thought-records', () => HttpResponse.json({ thoughtRecords: [] })),
   http.get('*/api/tension-episodes', () => HttpResponse.json({ tensionEpisodes: [] })),
-  http.get('*/api/appointments', () => HttpResponse.json({ appointments: [], last: null, next: null })),
+  http.get('*/api/appointments', () => HttpResponse.json(fakeAgenda())),
   // Sem vínculo e sem pacientes, por padrão.
   http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
   http.get('*/api/links/patients', () => HttpResponse.json({ patients: [] })),

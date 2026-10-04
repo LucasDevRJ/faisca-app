@@ -15,7 +15,8 @@ import {
 } from '../features/activities/activity-dialogs';
 import { useWeekActivities } from '../features/activities/use-activities';
 import { AppointmentsCard } from '../features/appointments/appointments-card';
-import { useAppointments } from '../features/appointments/use-appointments';
+import { sessionDays } from '../features/appointments/appointments-api';
+import { useAgenda } from '../features/appointments/use-appointments';
 import { NewLinkNotice } from '../features/links/new-link-notice';
 import {
   addDays,
@@ -47,8 +48,8 @@ export function RecordsPage() {
 
   const week = useWeekActivities(monday);
   const activities = week.data ?? [];
-  // Dias com consulta ganham um selo na semana (DEC-030).
-  const appointmentDays = new Set(useAppointments().data?.appointments.map((a) => a.appointmentDate));
+  // Dias com sessão agendada ganham um selo na semana (DEC-030, DEC-045).
+  const appointmentDays = new Set(sessionDays(useAgenda({ from: monday, to: addDays(monday, 6) }).data));
 
   function goToWeek(target: string) {
     setNotice(null);
