@@ -540,14 +540,16 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
     const agent = await loginAgent();
     const areas = async () => (await agent.get('/auth/me')).body.user.privacyAreas;
 
-    const none = { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false };
+    const none = { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
       ['2026-10', none],
       ['2026-10.2', { ...none, thoughtRecords: true }],
       ['2026-10.3', { ...none, thoughtRecords: true, tensionEpisodes: true }],
       // Agenda (DEC-045).
-      ['2026-10.4', { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true }],
+      ['2026-10.4', { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true }],
+      // Ação (DEC-051).
+      ['2026-10.5', { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true }],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {

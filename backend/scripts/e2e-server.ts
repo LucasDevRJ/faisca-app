@@ -56,11 +56,15 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   // Só para a agenda (api/appointments.spec.ts): começam só com a versão dos episódios (DEC-045).
   { name: 'Ana Fictícia', email: 'agenda-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.3' },
   { name: 'Clara Fictícia', email: 'agenda-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.3' },
+  // Só para a Ação (api/actions.spec.ts): começam só com a versão da agenda (DEC-051).
+  { name: 'Iara Fictícia', email: 'acao-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.4' },
+  { name: 'Joana Fictícia', email: 'acao-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.4' },
 ];
 
 await prisma.activity.deleteMany();
 await prisma.thoughtRecord.deleteMany();
 await prisma.tensionEpisode.deleteMany();
+await prisma.behavioralAction.deleteMany();
 await prisma.appointment.deleteMany();
 await prisma.appointmentSchedule.deleteMany();
 await prisma.therapyPause.deleteMany();

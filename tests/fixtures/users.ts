@@ -30,4 +30,8 @@ export const users = {
   // mas não a que cita a agenda (DEC-045).
   agendaPatient: { email: 'agenda-paciente@faisca.test', password: SEED_PASSWORD },
   agendaTherapist: { email: 'agenda-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nos testes da Ação (api/actions.spec.ts). Já aceitaram a versão da agenda, mas não a
+  // que cita a Ação (DEC-051).
+  actionPatient: { email: 'acao-paciente@faisca.test', password: SEED_PASSWORD },
+  actionTherapist: { email: 'acao-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;

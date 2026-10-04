@@ -820,6 +820,34 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   preserva o hábito de quem já usa o app. O resumo e a contagem dão contexto sem cobrança, seguindo o
   tom do app.
 
+## DEC-051 — API da Ação
+- **Decisão:**
+  - a **Ação** entra como registro independente das atividades (issue #62): tabela
+    `BehavioralAction` com `actionDate` (DATE), `name` (1 a 100), `category`
+    (`PRAZER | CONEXAO | REALIZACAO`), `status` (`PLANEJADA | AVALIADA | NAO_REALIZADA`),
+    `expectation` (0 a 10, sempre), `pleasure` e `achievement` (0 a 10, só na avaliada) e
+    `observation` (até 1000, na avaliada e na não realizada). CHECKs no banco para notas, textos e
+    os campos de cada estado;
+  - datas: **planejar** de hoje até 7 dias à frente; **registrar algo já feito** (criar já
+    `AVALIADA`) de 7 dias atrás até hoje; **avaliar** ou marcar **não realizada** só a partir do
+    dia da ação (400 `ACTION_NOT_YET`), sem prazo depois dele. Fora da janela, 400
+    `DATE_OUT_OF_RANGE`;
+  - **avaliada e não realizada são finais**: editar, avaliar de novo ou excluir é 409
+    `ACTION_FINALIZED`, com escrita condicional (`status = PLANEJADA`). Na planejada, mudar só o nome,
+    o tipo ou a expectativa vale mesmo com o dia já passado; mudar o dia segue a janela de planejar;
+  - rotas do paciente em `/actions` (`GET ?from&to` com até 42 dias, `GET /:id`, `POST`,
+    `PATCH /:id`, `POST /:id/evaluate`, `POST /:id/not-done`, `DELETE /:id`). A terapeuta lê em
+    `GET /therapist/patients/:patientId/actions`, com até 92 dias, atrás da cadeia da DEC-033;
+  - aviso de privacidade **`2026-10.5`**, com a área `actions`: sem ela, paciente e terapeuta não
+    usam a Ação, e o resto do app segue igual;
+  - `expectation` entra no `redact` do logger (regra 7); nome, prazer, realização e observação já
+    estavam. Tudo sai em cascata ao excluir a conta;
+  - a meta por ciclo e as telas vêm na DEC-052.
+- **Motivo:** a ativação comportamental compara o que a pessoa esperava com o que sentiu; guardar a
+  expectativa antes e as notas depois, em dois momentos, preserva essa comparação. Manter a não
+  realizada registrada, em vez de excluí-la, mostra os ciclos com mais e com menos ações sem culpa.
+  As janelas de 7 dias cobrem o planejamento até a próxima sessão semanal e o esquecimento comum.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

@@ -169,6 +169,22 @@ await prisma.$transaction(async (tx) => {
       consequence,
     })),
   });
+  // Ação (DEC-051): uma de cada tipo no ciclo atual, em estados diferentes, e uma planejada à frente.
+  await tx.behavioralAction.deleteMany({ where: { userId: patient.id } });
+  await tx.behavioralAction.createMany({
+    data: [
+      { offset: -5, name: 'Ouvir um disco inteiro (fictício)', category: 'PRAZER', status: 'AVALIADA', expectation: 3, pleasure: 8, achievement: 5 },
+      { offset: -3, name: 'Café com uma amiga (fictício)', category: 'CONEXAO', status: 'NAO_REALIZADA', expectation: 5, observation: 'Ela desmarcou; fica para a próxima.' },
+      { offset: -1, name: 'Organizar a escrivaninha (fictício)', category: 'REALIZACAO', status: 'AVALIADA', expectation: 2, pleasure: 5, achievement: 9 },
+      { offset: 2, name: 'Caminhar no parque (fictício)', category: 'PRAZER', status: 'PLANEJADA', expectation: 4 },
+    ].map(({ offset, ...action }) => ({
+      ...action,
+      category: action.category as 'PRAZER' | 'CONEXAO' | 'REALIZACAO',
+      status: action.status as 'PLANEJADA' | 'AVALIADA' | 'NAO_REALIZADA',
+      userId: patient.id,
+      actionDate: dateOnlyToDate(addDays(today, offset)),
+    })),
+  });
   // Agenda (DEC-045): toda semana às 14:00, desde 3 semanas atrás, com uma sessão desmarcada, uma
   // remarcada e uma consulta antiga, de antes da agenda, sem hora. As exceções saem em cascata.
   await tx.appointmentSchedule.deleteMany({ where: { userId: patient.id } });

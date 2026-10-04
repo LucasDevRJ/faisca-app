@@ -37,6 +37,7 @@ model User {
   appointments    Appointment[]
   schedules       AppointmentSchedule[]
   therapyPauses   TherapyPause[]
+  actions         BehavioralAction[]
   thoughtRecords  ThoughtRecord[]
   tensionEpisodes TensionEpisode[]
 
@@ -347,4 +348,41 @@ model LinkCodeAttempt {
   therapist User @relation(fields: [therapistId], references: [id], onDelete: Cascade)
 
   @@index([therapistId, createdAt])
+}
+
+enum ActionCategory {
+  PRAZER
+  CONEXAO
+  REALIZACAO
+}
+
+enum ActionStatus {
+  PLANEJADA
+  AVALIADA
+  NAO_REALIZADA
+}
+
+// Ação (DEC-051): uma ação de prazer, de conexão ou de realização, planejada com a expectativa e
+// avaliada depois com o prazer e a realização. Avaliada e não realizada são finais.
+model BehavioralAction {
+  id          String         @id @default(uuid()) @db.Uuid
+  // O paciente dono do registro.
+  userId      String         @db.Uuid
+  // Dia da ação, no fuso America/Sao_Paulo (DEC-007); separado do createdAt.
+  actionDate  DateTime       @db.Date
+  name        String
+  category    ActionCategory
+  status      ActionStatus   @default(PLANEJADA)
+  // Expectativa antes (0–10), sempre; prazer e realização depois (0–10), só na avaliada.
+  expectation Int
+  pleasure    Int?
+  achievement Int?
+  // Opcional na avaliada e na não realizada.
+  observation String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, actionDate])
 }

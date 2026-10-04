@@ -38,6 +38,8 @@ const SENSITIVE_KEYS = [
   'vocalizeUrge',
   // Agenda (DEC-045): motivo de desmarcar ou remarcar.
   'reason',
+  // Ação (DEC-051): a expectativa (nome, prazer, realização e observação já estão acima).
+  'expectation',
   'cookie',
   'authorization',
 ];

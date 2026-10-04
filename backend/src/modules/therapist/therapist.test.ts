@@ -583,3 +583,52 @@ describe('ciclo da consulta da terapeuta (DEC-049)', () => {
     expect(write.status).toBe(403);
   });
 });
+
+describe('Ação da terapeuta (DEC-051)', () => {
+  beforeEach(() =>
+    prisma.behavioralAction.create({
+      data: {
+        userId: patientId,
+        actionDate: dateOnlyToDate(today()),
+        name: 'Ação fictícia',
+        category: 'CONEXAO',
+        status: 'AVALIADA',
+        expectation: 3,
+        pleasure: 7,
+        achievement: 6,
+        observation: 'Observação fictícia',
+      },
+    }),
+  );
+
+  it('vínculo ativo e aceite: lê as ações com as notas e a observação', async () => {
+    const res = await (await loginAgent(THERAPIST)).get(`${base()}/actions`).query(week());
+
+    expect(res.status).toBe(200);
+    expect(res.body.actions).toEqual([
+      expect.objectContaining({ name: 'Ação fictícia', category: 'CONEXAO', expectation: 3, pleasure: 7 }),
+    ]);
+    expect(res.body.actions[0]).not.toHaveProperty('userId');
+  });
+
+  it('sem vínculo: 403; sem o aceite da 2026-10.5: 403 PRIVACY_CONSENT_REQUIRED; escrita: 403', async () => {
+    const agent = await loginAgent(THERAPIST);
+    const other = await agent.get(`${base(otherPatientId)}/actions`).query(week());
+    const write = await agent.post(`${base()}/actions`).send({});
+
+    await createConfirmedUser({
+      email: 'terapeuta-acao@faisca.test',
+      patient: false,
+      therapist: true,
+      privacyVersion: '2026-10.4',
+    }).then((t) => prisma.therapistLink.create({ data: { patientId: otherPatientId, therapistId: t.id, method: 'CODE' } }));
+    const oldConsent = await (await loginAgent('terapeuta-acao@faisca.test')).get(`${base(otherPatientId)}/actions`).query(week());
+
+    expect(other.status).toBe(403);
+    expect(other.body.error.code).toBe('FORBIDDEN');
+    expect(write.status).toBe(403);
+    expect(oldConsent.status).toBe(403);
+    expect(oldConsent.body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');
+    expect(await prisma.behavioralAction.count()).toBe(1);
+  });
+});
