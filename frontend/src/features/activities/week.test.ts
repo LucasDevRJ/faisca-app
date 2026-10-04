@@ -5,6 +5,7 @@ import {
   formatDayHeading,
   formatDayMonth,
   formatRelativeDay,
+  formatShortDay,
   formatWeekRange,
   isValidDateOnly,
   startOfWeek,
@@ -54,6 +55,8 @@ describe('week', () => {
   it('formata o título do dia', () => {
     expect(formatDayHeading('2026-09-21')).toBe('segunda-feira, 21/09');
     expect(formatDayMonth('2026-10-05')).toBe('05/10');
+    expect(formatShortDay('2026-09-28')).toBe('seg, 28/09');
+    expect(formatShortDay('2026-10-04')).toBe('dom, 04/10');
   });
 });
 

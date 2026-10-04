@@ -656,6 +656,23 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   o gráfico, como já vê o das atividades: perceber o próprio padrão antes da sessão faz parte do
   acompanhamento.
 
+## DEC-044 — Gráfico das atividades com barras horizontais
+- **Decisão:**
+  - o gráfico "Como foram as atividades feitas" (paciente e terapeuta) troca as colunas verticais
+    do Recharts por **barras horizontais** em HTML. Cada atividade ocupa um bloco: o **nome
+    inteiro** numa linha, com o **dia ao lado** ("Academia · seg, 28/09"), e embaixo as três
+    barras (vontade antes, prazer e realização), na mesma ordem e nos mesmos tons de sálvia, sobre
+    uma trilha que marca até onde vai o 10, com o valor escrito no fim;
+  - a legenda fica acima das barras. Sai a rolagem lateral para mais de 8 atividades: o gráfico
+    cresce para baixo;
+  - a tabela para leitor de tela continua, com o dia junto do nome da atividade;
+  - o Recharts segue no projeto, usado pelo gráfico da tensão (DEC-043).
+- **Motivo:** num celular de 360px, cinco atividades deixavam uns 9 caracteres para cada nome
+  no eixo, e os nomes se sobrepunham (visto em produção). Abreviar mais deixaria nomes iguais
+  ("Consulta c…") e pioraria com mais atividades. Na horizontal, nenhum nome precisa ser cortado,
+  e rolar para baixo é o gesto natural no celular. O dia liga a barra ao dia da lista logo abaixo e
+  separa duas atividades com o mesmo nome na semana (ou no período da terapeuta).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

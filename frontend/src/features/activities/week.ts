@@ -79,6 +79,14 @@ export function formatDayHeading(value: string): string {
   return `${weekdayLong.format(date)}, ${dayMonthNumeric.format(date)}`;
 }
 
+const weekdayShort = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'short' });
+
+// "seg, 21/09": cabe ao lado de um nome sem ocupar uma linha inteira.
+export function formatShortDay(value: string): string {
+  const date = toUtcDate(value);
+  return `${weekdayShort.format(date).replace('.', '')}, ${dayMonthNumeric.format(date)}`;
+}
+
 // "21/09"
 export function formatDayMonth(value: string): string {
   return dayMonthNumeric.format(toUtcDate(value));
