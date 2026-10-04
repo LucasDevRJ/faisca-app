@@ -773,6 +773,28 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   dia não é histórico a preservar. E quem já usava o app antes da agenda tinha as consultas como
   datas soltas, que bateriam com a agenda nova e a impediriam de começar no passado.
 
+## DEC-049 — Ciclo da consulta (API)
+- **Decisão:**
+  - o ciclo é calculado na API, a partir das sessões **agendadas** da agenda (`cycleFor`, função pura
+    em `sessions.ts`): do dia seguinte à sessão anterior até o dia da sessão. Desmarcada não fecha
+    ciclo, remarcada fecha no dia novo, avulsa fecha. O primeiro ciclo tem o passo da regra da
+    sessão (7 ou 14 dias; 7 para avulsa). Sem próxima sessão, ciclo aberto até hoje. Teto de 42
+    dias, o mesmo limite das listas do paciente, ficando com os mais recentes (`truncated`);
+  - `GET /appointments/cycle?date=AAAA-MM-DD` (sem `date`, hoje) devolve `today` e `cycle`: `from`,
+    `to`, a sessão que fecha o ciclo (dia, hora e tipo; `null` no ciclo aberto), `truncated` e um dia
+    do ciclo anterior e do seguinte (`previous`, `next`), para as setas. Sem nenhuma sessão, `cycle`
+    é `null`. O `date` vai até 365 dias à frente (400 `DATE_TOO_FAR`), para o cálculo não pesar na
+    API. A terapeuta lê o mesmo em `GET /therapist/patients/:patientId/cycle`, atrás da cadeia
+    da DEC-033;
+  - as duas rotas **não pedem o aceite da agenda**: devolvem só dias e horas, como o resumo, nunca
+    motivos;
+  - a rota é nova e não muda nenhuma existente: a API vai para produção antes das telas, sem a janela
+    em que o front novo fala com a API antiga (como no deploy da agenda). O `highlight` do resumo
+    continua na resposta até as telas deixarem de usá-lo.
+- **Motivo:** a psicóloga discute o que aconteceu desde a sessão anterior. Contar a partir das sessões
+  (e não um tamanho fixo de 7 ou 14 dias) não deixa buraco depois de uma desmarcação nem sobreposição
+  numa remarcação. Calcular na API mantém o "hoje" e as regras da agenda num lugar só.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

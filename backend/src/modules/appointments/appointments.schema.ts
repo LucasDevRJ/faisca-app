@@ -47,6 +47,9 @@ export const pauseInputSchema = z.strictObject({
   returnDate: dateSchema.nullable().optional(),
 });
 
+// Ciclo que contém o dia (DEC-049); sem dia, o de hoje.
+export const cycleQuerySchema = z.object({ date: dateSchema.optional() });
+
 // A sessão da recorrência é identificada pelo dia em que cairia pela regra.
 export const sessionParamsSchema = z.object({ date: dateSchema });
 
@@ -56,6 +59,7 @@ export const rescheduleSessionSchema = z.strictObject({ date: dateSchema, time: 
 
 export type AppointmentInput = z.infer<typeof appointmentInputSchema>;
 export type ListAppointmentsQuery = z.infer<typeof listAppointmentsQuerySchema>;
+export type CycleQuery = z.infer<typeof cycleQuerySchema>;
 export type ScheduleInput = z.infer<typeof scheduleInputSchema>;
 export type PauseInput = z.infer<typeof pauseInputSchema>;
 export type RescheduleInput = z.infer<typeof rescheduleSessionSchema>;

@@ -537,3 +537,49 @@ describe('Episódios de tensão da terapeuta (DEC-042)', () => {
     expect((await agent.get(path()).query({ from: addDays(today(), -92), to: today() })).status).toBe(400);
   });
 });
+
+describe('ciclo da consulta da terapeuta (DEC-049)', () => {
+  beforeEach(() =>
+    prisma.appointmentSchedule.create({
+      data: {
+        userId: patientId,
+        startDate: dateOnlyToDate(addDays(today(), 2)),
+        time: timeOnlyToDate('14:00'),
+        frequency: 'SEMANAL',
+      },
+    }),
+  );
+
+  it('vínculo ativo: lê o ciclo do paciente, mesmo sem o aceite da agenda', async () => {
+    const oldTherapistId = (
+      await createConfirmedUser({
+        email: 'terapeuta-ciclo@faisca.test',
+        patient: false,
+        therapist: true,
+        privacyVersion: '2026-10.3',
+      })
+    ).id;
+    await prisma.therapistLink.update({
+      where: { id: (await prisma.therapistLink.findFirstOrThrow({ where: { patientId } })).id },
+      data: { therapistId: oldTherapistId },
+    });
+
+    const res = await (await loginAgent('terapeuta-ciclo@faisca.test')).get(`${base()}/cycle`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.cycle).toEqual(
+      expect.objectContaining({ from: addDays(today(), -4), to: addDays(today(), 2) }),
+    );
+  });
+
+  it('sem vínculo com o paciente: 403; escrita no caminho: 403', async () => {
+    const agent = await loginAgent(THERAPIST);
+
+    const other = await agent.get(`${base(otherPatientId)}/cycle`);
+    const write = await agent.post(`${base()}/cycle`).send({});
+
+    expect(other.status).toBe(403);
+    expect(other.body.error.code).toBe('FORBIDDEN');
+    expect(write.status).toBe(403);
+  });
+});

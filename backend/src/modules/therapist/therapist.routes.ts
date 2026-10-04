@@ -31,6 +31,8 @@ export function createTherapistRoutes() {
 
   router.get(PREFIX, controller.summary);
   router.get(`${PREFIX}/activities`, controller.activities);
+  // Ciclo da consulta (DEC-049): só dias, como o resumo, sem pedir o aceite da agenda.
+  router.get(`${PREFIX}/cycle`, controller.cycle);
   // RPD (DEC-039), episódios de tensão (DEC-042) e agenda com motivos e pausas (DEC-045): a
   // terapeuta também precisa ter aceitado uma versão do aviso de privacidade que fale deles.
   router.get(`${PREFIX}/appointments`, requirePrivacy('appointmentSchedule'), controller.appointments);

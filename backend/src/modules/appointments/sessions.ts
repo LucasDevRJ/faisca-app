@@ -207,3 +207,70 @@ export function therapyStatus(
 export function currentOrUpcomingPause<T extends PauseData>(pauses: T[], today: string): T | null {
   return pauses.find((p) => p.returnDate === null || p.returnDate > today) ?? null;
 }
+
+// Ciclo da consulta (DEC-049): do dia seguinte à sessão agendada anterior até o dia da sessão,
+// inclusive. Desmarcada não fecha ciclo; avulsa e remarcada fecham no dia em que acontecem.
+// Sem sessão anterior, 7 dias (14 na quinzenal) terminando na sessão. Sem próxima sessão, o ciclo
+// fica aberto: do dia seguinte à última até hoje. Sem nenhuma sessão, não há ciclo (a tela usa a
+// semana). Teto de CYCLE_MAX_DAYS, ficando com os dias mais recentes.
+export const CYCLE_MAX_DAYS = 42;
+
+export type Cycle = {
+  from: string;
+  to: string;
+  // A sessão que fecha o ciclo; null no ciclo aberto (sem próxima sessão).
+  session: { date: string; time: string | null; kind: Session['kind'] } | null;
+  // Passou do teto: mostra só os CYCLE_MAX_DAYS dias mais recentes.
+  truncated: boolean;
+  // Um dia dentro do ciclo anterior e do seguinte, para as setas; null quando não há.
+  previous: string | null;
+  next: string | null;
+};
+
+// Tamanho do primeiro ciclo: o passo da regra que marcou a sessão (7 para avulsa).
+function firstCycleDays(session: Session, data: AgendaData): number {
+  if (session.kind === 'AVULSA' || session.originalDate === null) return 7;
+  const original = session.originalDate;
+  const schedule = data.schedules.find((s) => ruleDates(s, original, original).length > 0);
+  return schedule ? STEP[schedule.frequency] : 7;
+}
+
+export function cycleFor(data: AgendaData, date: string, today: string): Cycle | null {
+  const start = earliestDate(data);
+  if (start === null) return null;
+  const until = addDays(date > today ? date : today, SEARCH_DAYS);
+  // Uma sessão por dia (DEC-045): basta o primeiro horário de cada dia.
+  const sessions: Session[] = [];
+  for (const s of sessionsBetween(data, start, until)) {
+    if (s.status === 'AGENDADA' && sessions.at(-1)?.date !== s.date) sessions.push(s);
+  }
+  if (sessions.length === 0) return null;
+
+  const endIndex = sessions.findIndex((s) => s.date >= date);
+  let from: string;
+  let to: string;
+  let session: Cycle['session'] = null;
+  let previous: string | null;
+  let next: string | null;
+
+  if (endIndex >= 0) {
+    const end = sessions[endIndex]!;
+    const prev = endIndex > 0 ? sessions[endIndex - 1]! : null;
+    to = end.date;
+    from = prev ? addDays(prev.date, 1) : addDays(end.date, -(firstCycleDays(end, data) - 1));
+    session = { date: end.date, time: end.time, kind: end.kind };
+    previous = prev ? prev.date : null;
+    // Depois da última sessão marcada, o seguinte é o ciclo aberto, se já tiver começado.
+    next = endIndex < sessions.length - 1 || to < today ? addDays(to, 1) : null;
+  } else {
+    const last = sessions.at(-1)!;
+    from = addDays(last.date, 1);
+    to = today > from ? today : from;
+    previous = last.date;
+    next = null;
+  }
+
+  const truncated = daysBetween(from, to) >= CYCLE_MAX_DAYS;
+  if (truncated) from = addDays(to, -(CYCLE_MAX_DAYS - 1));
+  return { from, to, session, truncated, previous, next };
+}

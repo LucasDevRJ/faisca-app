@@ -73,6 +73,14 @@ test('aceite, agenda da paciente e leitura só pela terapeuta vinculada', async 
   // E pelas rotas da paciente, a conta de terapeuta não entra.
   expect((await therapist.post('/appointments/schedule/end')).status()).toBe(403);
 
+  // Ciclo da consulta (DEC-049): a paciente e a terapeuta vinculada leem o mesmo período.
+  const myCycle = (await (await patient.get('/appointments/cycle')).json()).cycle;
+  expect(myCycle).toEqual(expect.objectContaining({ from: day(-5), to: day(1) }));
+  const theirCycle = await therapist.get(`${base}/cycle`);
+  expect(theirCycle.status()).toBe(200);
+  expect((await theirCycle.json()).cycle).toEqual(myCycle);
+  expect((await therapist.post(`${base}/cycle`)).status()).toBe(403);
+
   const mine = await (await patient.get('/appointments')).json();
   expect(mine.status).toBe('ATIVA');
   expect(mine.pause).toEqual({ startDate: day(20), returnDate: day(40) });

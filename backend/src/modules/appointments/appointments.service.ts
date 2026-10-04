@@ -12,6 +12,7 @@ import {
 import { prisma } from '../../lib/prisma.js';
 import type {
   AppointmentInput,
+  CycleQuery,
   ListAppointmentsQuery,
   PauseInput,
   RescheduleInput,
@@ -19,6 +20,7 @@ import type {
 } from './appointments.schema.js';
 import {
   currentOrUpcomingPause,
+  cycleFor,
   hasStarted,
   lastAndNext,
   ruleDates,
@@ -174,6 +176,16 @@ export function createAppointmentsService() {
       upcoming: upcomingSessions(agenda, today, nowTime, UPCOMING_COUNT),
       ...lastAndNext(agenda, today, nowTime),
     };
+  }
+
+  // Ciclo da consulta que contém o dia pedido (DEC-049). O "hoje" vem junto, no fuso de São Paulo,
+  // para a tela contar os dias até a consulta.
+  async function cycle(userId: string, query: CycleQuery = {}) {
+    const { today } = now();
+    // O cálculo vai até o dia pedido: sem teto, uma data muito distante pesaria na API.
+    if (query.date && query.date > addDays(today, MAX_AHEAD_DAYS)) throw tooFarAhead();
+    const agenda = await loadAgenda(prisma, userId);
+    return { today, cycle: cycleFor(agenda, query.date ?? today, today) };
   }
 
   // Consultas avulsas (DEC-030), agora com hora.
@@ -474,6 +486,7 @@ export function createAppointmentsService() {
 
   return {
     list,
+    cycle,
     create,
     update,
     remove,

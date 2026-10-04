@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCalendar } from './calendar.js';
 import {
+  cycleFor,
   hasStarted,
   lastAndNext,
   ruleDates,
@@ -167,5 +168,84 @@ describe('buildCalendar (.ics)', () => {
     // Nada além de "Consulta": o motivo não vai para fora do app.
     expect(ics).not.toContain('Motivo fictício');
     expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true);
+  });
+});
+
+describe('cycleFor (DEC-049)', () => {
+  // Sessões às quartas: 07/10, 14/10, 21/10, 28/10...
+  const TODAY = '2026-10-10';
+
+  it('normal: do dia seguinte à sessão anterior até o dia da sessão, inclusive', () => {
+    expect(cycleFor(agenda(), '2026-10-10', TODAY)).toEqual({
+      from: '2026-10-08',
+      to: '2026-10-14',
+      session: { date: '2026-10-14', time: '14:00', kind: 'RECORRENTE' },
+      truncated: false,
+      previous: '2026-10-07',
+      next: '2026-10-15',
+    });
+    // O dia da consulta é do ciclo que termina nele.
+    expect(cycleFor(agenda(), '2026-10-14', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-14' });
+  });
+
+  it('primeira sessão: 7 dias terminando nela; 14 na quinzenal', () => {
+    expect(cycleFor(agenda(), '2026-10-03', TODAY)).toMatchObject({ from: '2026-10-01', to: '2026-10-07', previous: null });
+    const biweekly = agenda({ schedules: [{ ...weekly, frequency: 'QUINZENAL' }] });
+    expect(cycleFor(biweekly, '2026-10-03', TODAY)).toMatchObject({ from: '2026-09-24', to: '2026-10-07' });
+    expect(cycleFor(biweekly, '2026-10-10', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-21' });
+  });
+
+  it('desmarcada não fecha ciclo: junta com a sessão seguinte', () => {
+    const data = agenda({
+      exceptions: [
+        { scheduleId: 's1', originalDate: '2026-10-14', type: 'DESMARCADA', newDate: null, newTime: null, reason: 'x' },
+      ],
+    });
+    expect(cycleFor(data, '2026-10-10', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-21' });
+  });
+
+  it('remarcada fecha no dia novo, e o ciclo seguinte começa no outro dia', () => {
+    const data = agenda({
+      exceptions: [
+        { scheduleId: 's1', originalDate: '2026-10-14', type: 'REMARCADA', newDate: '2026-10-16', newTime: '09:00', reason: 'x' },
+      ],
+    });
+    expect(cycleFor(data, '2026-10-15', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-16' });
+    expect(cycleFor(data, '2026-10-17', TODAY)).toMatchObject({ from: '2026-10-17', to: '2026-10-21' });
+  });
+
+  it('avulsa fecha ciclo', () => {
+    const data = agenda({ extras: [{ id: 'a1', date: '2026-10-10', time: '18:00' }] });
+    expect(cycleFor(data, '2026-10-09', TODAY)).toMatchObject({
+      from: '2026-10-08',
+      to: '2026-10-10',
+      session: { date: '2026-10-10', kind: 'AVULSA' },
+    });
+    expect(cycleFor(data, '2026-10-11', TODAY)).toMatchObject({ from: '2026-10-11', to: '2026-10-14' });
+  });
+
+  it('depois de uma pausa longa: teto de 42 dias, com os mais recentes', () => {
+    const data = agenda({ pauses: [{ startDate: '2026-10-10', returnDate: '2026-12-01' }] });
+    const cycle = cycleFor(data, '2026-11-20', TODAY)!;
+    expect(cycle).toMatchObject({ to: '2026-12-02', truncated: true, previous: '2026-10-07' });
+    expect(cycle.from).toBe('2026-10-22');
+  });
+
+  it('sem próxima sessão: ciclo aberto, do dia seguinte à última até hoje', () => {
+    const data = agenda({ pauses: [{ startDate: '2026-10-10', returnDate: null }] });
+    expect(cycleFor(data, '2026-10-20', '2026-10-20')).toEqual({
+      from: '2026-10-08',
+      to: '2026-10-20',
+      session: null,
+      truncated: false,
+      previous: '2026-10-07',
+      next: null,
+    });
+    // A seta "seguinte" do último ciclo fechado leva ao ciclo aberto.
+    expect(cycleFor(data, '2026-10-07', '2026-10-20')?.next).toBe('2026-10-08');
+  });
+
+  it('sem nenhuma sessão: sem ciclo (a tela usa a semana)', () => {
+    expect(cycleFor(agenda({ schedules: [] }), TODAY, TODAY)).toBeNull();
   });
 });
