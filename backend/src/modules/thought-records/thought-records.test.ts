@@ -187,12 +187,17 @@ describe('POST /thought-records', () => {
       automaticThought: 'Pensamento fictício',
       beliefLevel: 7,
       emotions: [
-        { emotion: 'TRISTEZA', intensity: 9, otherLabel: null },
-        { emotion: 'ALIVIO', intensity: 2, otherLabel: null },
+        { emotion: 'TRISTEZA', intensity: 9, intensityAfter: null, otherLabel: null },
+        { emotion: 'ALIVIO', intensity: 2, intensityAfter: null, otherLabel: null },
       ],
       behavior: 'Comportamento fictício',
       consequence: 'Consequência fictícia',
+      // Explicação alternativa (DEC-054): opcional; sem consulta agendada, sem prazo.
+      alternativeExplanation: null,
+      alternativeAddedAt: null,
       editable: true,
+      alternativeDeadline: null,
+      canAddAlternative: false,
       createdAt: expect.any(String),
       updatedAt: expect.any(String),
     });

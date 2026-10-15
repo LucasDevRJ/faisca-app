@@ -102,8 +102,8 @@ async function withUnique<T>(run: () => Promise<T>, conflict: () => AppError = a
 }
 
 // Tudo o que define as sessões de um paciente. São poucas linhas por pessoa: carrega tudo e
-// calcula na memória (sessions.ts).
-async function loadAgenda(db: Db, userId: string) {
+// calcula na memória (sessions.ts). Também usado pelo prazo da explicação alternativa (DEC-054).
+export async function loadAgenda(db: Db, userId: string) {
   const [schedules, exceptions, pauses, extras] = await Promise.all([
     db.appointmentSchedule.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } }),
     db.appointmentException.findMany({ where: { schedule: { userId } } }),

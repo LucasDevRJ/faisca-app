@@ -1,6 +1,7 @@
 import type { Request, RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import {
+  addAlternativeSchema,
   createThoughtRecordSchema,
   listThoughtRecordsQuerySchema,
   thoughtRecordIdSchema,
@@ -19,7 +20,8 @@ function owner(req: Request) {
 export function createThoughtRecordsController(service: ThoughtRecordsService) {
   const list: RequestHandler = async (req, res) => {
     const query = listThoughtRecordsQuerySchema.parse(req.query);
-    res.status(200).json({ thoughtRecords: await service.list(getAuthUser(req).id, query) });
+    const thoughtRecords = await service.list(getAuthUser(req).id, query, { freezeDeadlines: true });
+    res.status(200).json({ thoughtRecords });
   };
 
   const get: RequestHandler = async (req, res) => {
@@ -38,11 +40,18 @@ export function createThoughtRecordsController(service: ThoughtRecordsService) {
     res.status(200).json({ thoughtRecord });
   };
 
+  // Explicação alternativa depois do dia do registro (DEC-054).
+  const addAlternative: RequestHandler = async (req, res) => {
+    const { userId, id } = owner(req);
+    const thoughtRecord = await service.addAlternative(userId, id, addAlternativeSchema.parse(req.body));
+    res.status(200).json({ thoughtRecord });
+  };
+
   const remove: RequestHandler = async (req, res) => {
     const { userId, id } = owner(req);
     await service.remove(userId, id);
     res.status(204).end();
   };
 
-  return { list, get, create, update, remove };
+  return { list, get, create, update, addAlternative, remove };
 }

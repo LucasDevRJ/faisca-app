@@ -28,6 +28,8 @@ const emotionSchema = z
   .strictObject({
     emotion: z.enum(Emotion, { error: 'Escolha uma emoção da lista.' }),
     intensity: scoreSchema,
+    // "Como me sinto agora" (DEC-054): só com a explicação alternativa.
+    intensityAfter: scoreSchema.optional(),
     otherLabel: z
       .string()
       .trim()
@@ -47,7 +49,18 @@ const emotionsSchema = z
   .max(EMOTIONS.length)
   .refine((items) => new Set(items.map((item) => item.emotion)).size === items.length, {
     error: 'Cada emoção aparece uma vez só.',
+  })
+  // Reavalia todas as emoções de uma vez, ou nenhuma (DEC-054).
+  .refine((items) => allOrNone(items.map((item) => item.intensityAfter)), {
+    error: 'Reavalie todas as emoções, ou nenhuma.',
   });
+
+function allOrNone(values: unknown[]): boolean {
+  const filled = values.filter((value) => value !== undefined).length;
+  return filled === 0 || filled === values.length;
+}
+
+const ALTERNATIVE_EMPTY = 'Escreva a explicação alternativa.';
 
 const fields = {
   situationDate: dateSchema,
@@ -57,12 +70,26 @@ const fields = {
   emotions: emotionsSchema,
   behavior: textSchema('Conte o que você fez.'),
   consequence: textSchema('Conte qual foi a consequência.'),
+  alternativeExplanation: textSchema(ALTERNATIVE_EMPTY),
 };
 
-// Todos os campos são obrigatórios (SPEC). Objetos estritos: campo a mais é 400.
-export const createThoughtRecordSchema = z.strictObject(fields);
+const NEEDS_ALTERNATIVE = {
+  error: 'Para dizer como se sente agora, escreva a explicação alternativa.',
+  path: ['emotions'],
+};
 
-// Na edição, manda só o que mudou. As emoções, se vierem, substituem a lista inteira.
+// Todos os campos são obrigatórios (SPEC), menos a explicação alternativa (DEC-054). Objetos
+// estritos: campo a mais é 400.
+export const createThoughtRecordSchema = z
+  .strictObject({ ...fields, alternativeExplanation: fields.alternativeExplanation.optional() })
+  .refine(
+    (data) => data.alternativeExplanation !== undefined || data.emotions.every((e) => e.intensityAfter === undefined),
+    NEEDS_ALTERNATIVE,
+  );
+
+// Na edição, manda só o que mudou. As emoções, se vierem, substituem a lista inteira. A
+// alternativa em null apaga a alternativa e a reavaliação. Se a reavaliação vem sem a alternativa,
+// o service confere a que já está gravada.
 export const updateThoughtRecordSchema = z
   .strictObject({
     situationDate: fields.situationDate.optional(),
@@ -72,10 +99,34 @@ export const updateThoughtRecordSchema = z
     emotions: fields.emotions.optional(),
     behavior: fields.behavior.optional(),
     consequence: fields.consequence.optional(),
+    alternativeExplanation: fields.alternativeExplanation.nullable().optional(),
   })
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
     error: 'Nada para alterar.',
-  });
+  })
+  .refine(
+    (data) => data.alternativeExplanation !== null || !data.emotions?.some((e) => e.intensityAfter !== undefined),
+    NEEDS_ALTERNATIVE,
+  );
+
+// Adicionar a alternativa depois do dia do registro (DEC-054): uma vez só, até a hora da próxima
+// consulta. A reavaliação é opcional e, se vier, cobre todas as emoções do registro.
+export const addAlternativeSchema = z.strictObject({
+  alternativeExplanation: fields.alternativeExplanation,
+  emotionsAfter: z
+    .array(
+      z.strictObject({
+        emotion: z.enum(Emotion, { error: 'Escolha uma emoção da lista.' }),
+        intensityAfter: scoreSchema,
+      }),
+    )
+    .min(1)
+    .max(EMOTIONS.length)
+    .refine((items) => new Set(items.map((item) => item.emotion)).size === items.length, {
+      error: 'Cada emoção aparece uma vez só.',
+    })
+    .optional(),
+});
 
 // Mesmos tetos das atividades: 42 dias para o paciente, 92 para a terapeuta (DEC-033).
 export const listThoughtRecordsQuerySchema = listQuerySchema(LIST_MAX_DAYS);
@@ -87,3 +138,4 @@ export type EmotionInput = z.infer<typeof emotionSchema>;
 export type CreateThoughtRecordInput = z.infer<typeof createThoughtRecordSchema>;
 export type UpdateThoughtRecordInput = z.infer<typeof updateThoughtRecordSchema>;
 export type ListThoughtRecordsQuery = z.infer<typeof listThoughtRecordsQuerySchema>;
+export type AddAlternativeInput = z.infer<typeof addAlternativeSchema>;

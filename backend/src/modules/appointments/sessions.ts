@@ -184,6 +184,18 @@ export function lastAndNext(data: AgendaData, today: string, nowTime: string) {
   return { last, next };
 }
 
+// Prazo da explicação alternativa (DEC-054): a primeira sessão agendada que ainda não tinha começado
+// quando o registro foi feito. `sessions` vem de scheduledSessionsFrom, em ordem.
+export function firstSessionAfter(sessions: Session[], day: string, time: string): Session | null {
+  return sessions.find((s) => !hasStarted(s, day, time)) ?? null;
+}
+
+// Sessões agendadas de `from` até SEARCH_DAYS depois de hoje, em ordem: calcula uma vez para vários
+// registros. As desmarcadas ficam de fora, porque não aconteceram.
+export function scheduledSessionsFrom(data: AgendaData, from: string, today: string): Session[] {
+  return sessionsBetween(data, from, addDays(today, SEARCH_DAYS)).filter((s) => s.status === 'AGENDADA');
+}
+
 // As próximas sessões, agendadas ou desmarcadas, para a lista "Próximas".
 export function upcomingSessions(data: AgendaData, today: string, nowTime: string, count: number): Session[] {
   return sessionsBetween(data, today, addDays(today, SEARCH_DAYS))
