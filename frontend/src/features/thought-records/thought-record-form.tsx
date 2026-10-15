@@ -6,8 +6,11 @@ import { buttonClasses } from '../../components/ui/button-styles';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { isValidDateOnly, todayInAppZone } from '../activities/week';
+import { AlternativeFields } from './alternative-fields';
+import { emotionsAfter, initialAlternativeState, validateAlternative } from './alternative-state';
 import {
   EMOTION_LABEL,
+  emotionName,
   EMOTIONS,
   FIELD_TEXT,
   INTENSITY_TEXT,
@@ -41,7 +44,8 @@ type ThoughtRecordFormProps = {
 };
 
 // Formulário do Registro de Pensamentos, em página própria (DEC-040). Todos os campos são
-// obrigatórios (SPEC). A validação aqui só avisa antes; quem decide é a API.
+// obrigatórios (SPEC), menos a explicação alternativa e o "como me sinto agora" (DEC-055). A
+// validação aqui só avisa antes; quem decide é a API.
 export function ThoughtRecordForm({
   initial,
   initialDate,
@@ -64,6 +68,7 @@ export function ThoughtRecordForm({
       (initial?.emotions ?? []).map((e) => [e.emotion, { intensity: e.intensity, otherLabel: e.otherLabel ?? '' }]),
     ),
   );
+  const [alternative, setAlternative] = useState(() => initialAlternativeState(initial));
   const [errors, setErrors] = useState<Errors>({});
 
   const selected = EMOTIONS.filter((emotion) => emotions[emotion]);
@@ -101,7 +106,7 @@ export function ThoughtRecordForm({
         else if (label.length > OTHER_LABEL_MAX) next.otherLabel = `O nome pode ter até ${OTHER_LABEL_MAX} caracteres.`;
       }
     }
-    return next;
+    return { ...next, ...validateAlternative(alternative, selected) };
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -110,6 +115,8 @@ export function ThoughtRecordForm({
     setErrors(next);
     if (Object.values(next).some(Boolean)) return;
 
+    const alternativeText = alternative.text.trim();
+    const after = emotionsAfter(alternative, selected);
     onSubmit({
       situationDate: date,
       situation: texts.situation.trim(),
@@ -117,12 +124,18 @@ export function ThoughtRecordForm({
       beliefLevel: belief!,
       emotions: selected.map((emotion) => {
         const state = emotions[emotion]!;
-        return emotion === 'OUTRA'
-          ? { emotion, intensity: state.intensity!, otherLabel: state.otherLabel.trim() }
-          : { emotion, intensity: state.intensity! };
+        const intensityAfter = after?.find((e) => e.emotion === emotion)?.intensityAfter;
+        return {
+          emotion,
+          intensity: state.intensity!,
+          ...(intensityAfter !== undefined && { intensityAfter }),
+          ...(emotion === 'OUTRA' && { otherLabel: state.otherLabel.trim() }),
+        };
       }),
       behavior: texts.behavior.trim(),
       consequence: texts.consequence.trim(),
+      // Vazia: na criação, não vai; na edição, null apaga a que existia.
+      ...(alternativeText ? { alternativeExplanation: alternativeText } : initial && { alternativeExplanation: null }),
     });
   }
 
@@ -210,6 +223,17 @@ export function ThoughtRecordForm({
 
       {textArea('behavior')}
       {textArea('consequence')}
+
+      <AlternativeFields
+        state={alternative}
+        onChange={setAlternative}
+        emotions={selected.map((emotion) => ({
+          emotion,
+          name: emotion === 'OUTRA' ? emotions.OUTRA!.otherLabel.trim() || 'Outra' : emotionName({ emotion, otherLabel: null }),
+          before: emotions[emotion]!.intensity,
+        }))}
+        error={fieldError}
+      />
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={pending}>

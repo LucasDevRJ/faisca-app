@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
 import { Button } from '../components/ui/button';
+import { AnnouncementCard } from '../features/announcements/announcement-card';
 import { useLogout, useSession } from '../features/auth/use-session';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -53,6 +54,8 @@ export function AppLayout() {
       )}
 
       <main className="flex flex-col gap-6 sm:gap-8">
+        {/* Novidade do app, uma vez, até o "Entendi" (DEC-055). */}
+        <AnnouncementCard />
         <Outlet />
       </main>
 

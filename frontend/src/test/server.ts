@@ -14,6 +14,7 @@ export const fakeUser: SessionUser = {
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
   privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true },
+  pendingAnnouncement: null,
 };
 
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
@@ -82,10 +83,14 @@ export function fakeThoughtRecord(overrides: Partial<ThoughtRecord> = {}): Thoug
     situation: 'Situação fictícia',
     automaticThought: 'Pensamento fictício',
     beliefLevel: 7,
-    emotions: [{ emotion: 'ANSIEDADE', intensity: 8, otherLabel: null }],
+    emotions: [{ emotion: 'ANSIEDADE', intensity: 8, intensityAfter: null, otherLabel: null }],
     behavior: 'Comportamento fictício',
     consequence: 'Consequência fictícia',
+    alternativeExplanation: null,
+    alternativeAddedAt: null,
     editable: true,
+    alternativeDeadline: null,
+    canAddAlternative: false,
     createdAt: '2026-09-24T15:00:00.000Z',
     updatedAt: '2026-09-24T15:00:00.000Z',
     ...overrides,

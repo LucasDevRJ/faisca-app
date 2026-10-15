@@ -9,17 +9,27 @@ function plural(count: number, one: string, many: string) {
 
 // Resumo neutro do ciclo (DEC-050): "7 dias · 5 atividades feitas · 2 pensamentos registrados ·
 // 1 episódio de tensão". Só números, sem meta nem comparação. Parte sem dado (sem aceite ou ainda
-// carregando) fica de fora.
+// carregando) fica de fora. Os pensamentos com explicação alternativa aparecem entre parênteses só
+// quando há algum (DEC-055): zero não vira cobrança.
 export function cycleSummaryText(
   range: { from: string; to: string },
-  counts: { activitiesDone?: number; thoughts?: number; tension?: number; actionsDone?: number },
+  counts: {
+    activitiesDone?: number;
+    thoughts?: number;
+    thoughtsWithAlternative?: number;
+    tension?: number;
+    actionsDone?: number;
+  },
 ): string {
   const parts = [plural(daysBetween(range.from, range.to) + 1, 'dia', 'dias')];
   if (counts.activitiesDone !== undefined) {
     parts.push(plural(counts.activitiesDone, 'atividade feita', 'atividades feitas'));
   }
   if (counts.thoughts !== undefined) {
-    parts.push(plural(counts.thoughts, 'pensamento registrado', 'pensamentos registrados'));
+    const withAlternative = counts.thoughtsWithAlternative
+      ? ` (${counts.thoughtsWithAlternative} com explicação alternativa)`
+      : '';
+    parts.push(plural(counts.thoughts, 'pensamento registrado', 'pensamentos registrados') + withAlternative);
   }
   if (counts.tension !== undefined) {
     parts.push(plural(counts.tension, 'episódio de tensão', 'episódios de tensão'));

@@ -14,6 +14,8 @@ export type SessionUser = {
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o Registro de Pensamentos e os
   // Episódios de tensão ficam bloqueados; o resto do app funciona.
   privacyAreas: { thoughtRecords: boolean; tensionEpisodes: boolean; appointmentSchedule: boolean; actions: boolean };
+  // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
+  pendingAnnouncement: string | null;
 };
 
 export type SignupInput = {
@@ -103,6 +105,12 @@ export async function addProfile(profile: 'patient' | 'therapist'): Promise<Sess
 // Novo aceite do aviso de privacidade (DEC-039), com o mesmo consentimento explícito do cadastro.
 export async function acceptPrivacy(): Promise<SessionUser> {
   const { data } = await api.post<{ user: SessionUser }>('/auth/accept-privacy', { acceptPrivacy: true });
+  return data.user;
+}
+
+// Card de Novidades: a pessoa tocou em "Entendi" (DEC-054). A resposta traz a sessão atualizada.
+export async function markAnnouncementSeen(announcement: string): Promise<SessionUser> {
+  const { data } = await api.post<{ user: SessionUser }>('/auth/announcement-seen', { announcement });
   return data.user;
 }
 

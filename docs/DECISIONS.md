@@ -948,6 +948,40 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   agenda antes de vê-lo; na prática, o botão de adicionar só aparece depois de ver a lista, que já
   congela.
 
+## DEC-055 — Telas da explicação alternativa e do card de Novidades
+- **Decisão:**
+  - **formulário do RPD:** depois de "Consequência", o campo **Explicação alternativa** (opcional,
+    com a dica "Existe outro jeito de olhar para essa situação? O que você diria a uma pessoa
+    querida que tivesse esse pensamento?"). Com ela escrita, aparece **Como me sinto agora**: a
+    caixa "Quero dizer como me sinto agora" abre um slider por emoção, com a nota de antes na dica,
+    e aí todas ficam obrigatórias (a API exige todas ou nenhuma). Na edição, apagar o texto manda
+    `null` e apaga a alternativa;
+  - **cartão:** a alternativa num bloco com fundo pêssego (`bg-accent/10`, borda `accent`), o
+    destaque pontual que o visual permite, e "Adicionada em dd/mm" quando ela entrou num dia
+    depois do registro. As emoções reavaliadas aparecem como "8 → 4" (a barra segue a de antes);
+  - **depois do dia, sem alternativa:** dentro do prazo, o botão **"Adicionar explicação
+    alternativa"** com "até sex, 17/10, às 10:00"; sem consulta agendada, o convite "Agende sua
+    próxima consulta…" com link para a agenda; prazo encerrado, **nada**, para o cartão não falar
+    de prazo perdido. Sem contagem de dias, que soaria como cobrança;
+  - **página `/pensamentos/:id/alternativa`:** mostra no topo a situação e o pensamento automático
+    daquele registro, explica que é uma vez só e até quando, e tem o mesmo bloco do formulário. Um
+    409 da API mostra a mensagem dela no lugar do formulário. Registro de hoje leva ao "Editar";
+  - **card de Novidades** no topo das telas de quem entrou (`AppLayout`), com borda e fundo
+    pêssego: título, texto do perfil de paciente e/ou de terapeuta (quem tem os dois vê os dois),
+    **"Entendi"** e, no perfil de paciente, **"Ver meus pensamentos"** (os dois marcam como vista).
+    Os textos ficam no front, por id; um id desconhecido não mostra nada;
+  - **resumo do ciclo:** "2 pensamentos registrados (1 com explicação alternativa)", com os
+    parênteses só quando há alguma;
+  - **aviso de privacidade:** o item do RPD passa a citar a explicação alternativa e o "como me
+    sinto agora", **sem versão nova** (exceção registrada no comentário de `privacy-page.tsx`);
+  - o "Ver mais" / "Ver menos" dos textos longos (DEC-053) fica sempre sublinhado, para não passar
+    despercebido.
+- **Motivo:** o bloco da alternativa é o mesmo nos dois lugares (formulário e adicionar depois),
+  para a pessoa reconhecer. Mostrar o pensamento ao adicionar depois ajuda quem volta dias depois
+  a lembrar do que está respondendo. O destaque pêssego e o "antes → agora" deixam à vista, para a
+  terapeuta, o que foi reestruturado e se a alternativa ajudou. A finalidade do RPD não mudou, por
+  isso não há novo aceite; o card de Novidades conta a mudança a todos.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
