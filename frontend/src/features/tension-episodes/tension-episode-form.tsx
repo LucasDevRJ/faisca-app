@@ -100,7 +100,7 @@ export function TensionEpisodeForm({
       label={FIELD_TEXT[key].label}
       hint={key === 'situation' ? FIELD_TEXT.situation.hint : undefined}
       value={texts[key]}
-      maxLength={TEXT_MAX}
+      limit={TEXT_MAX}
       onChange={(e) => setTexts((current) => ({ ...current, [key]: e.target.value }))}
       error={fieldError(key)}
     />

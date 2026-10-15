@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { LIST_MAX_DAYS, THERAPIST_LIST_MAX_DAYS, listQuerySchema } from '../activities/activities.schema.js';
 
-// Limite da DEC-042. O mesmo valor está no CHECK da migration.
-export const TEXT_MAX = 1000;
+// Limite da DEC-042, em 5000 pela DEC-053. O mesmo valor está no CHECK do banco.
+export const TEXT_MAX = 5000;
 
 function textSchema(emptyMessage: string) {
   return z

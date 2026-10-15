@@ -83,7 +83,7 @@ Registro da TCC, independente das atividades. O paciente alterna entre as abas *
 **Pensamentos**, e o formulário fica numa página própria.
 - Campos, **todos obrigatórios**:
   - **dia da situação** (sem horário, até hoje), separado de quando foi registrado;
-  - **situação**, **pensamento automático**, **comportamento** e **consequência**: texto de 1 a 1000 caracteres;
+  - **situação**, **pensamento automático**, **comportamento** e **consequência**: texto de 1 a 5000 caracteres (DEC-053);
   - **o quanto acredito nesse pensamento**: inteiro de 0 a 10;
   - **emoções**: uma ou mais, cada uma com **intensidade** inteira de 0 a 10, sem repetir.
     Lista: tristeza, ansiedade, medo, raiva, culpa, vergonha, frustração, solidão, alegria, alívio e
@@ -101,7 +101,7 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   - **hora** (opcional, no relógio de São Paulo): a pessoa pode não lembrar. Se o dia for hoje, a
     hora não pode ser depois de agora;
   - **situação** (o que estava acontecendo), **o que fez** e **o que aconteceu depois**: texto de 1 a
-    1000 caracteres;
+    5000 caracteres (DEC-053);
   - **tensão**: inteiro de 0 a 10 ("nenhuma" a "muito forte");
   - **vontade de vocalizar**: inteiro de 0 a 10 ("nenhuma" a "muito forte"). Cobre o tique vocal ou
     de ansiedade, a forma de expressar a ansiedade: falando, gritando ou se movimentando.

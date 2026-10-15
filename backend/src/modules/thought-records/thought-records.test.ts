@@ -219,7 +219,7 @@ describe('POST /thought-records', () => {
       { beliefLevel: 11 },
       { beliefLevel: -1 },
       { beliefLevel: 5.5 },
-      { situation: 'x'.repeat(1001) },
+      { situation: 'x'.repeat(5001) },
       { emotions: [] },
       { emotions: [{ emotion: 'TEDIO', intensity: 3 }] },
       { emotions: [{ emotion: 'MEDO', intensity: 11 }] },
@@ -235,7 +235,10 @@ describe('POST /thought-records', () => {
       const res = await agent.post('/thought-records').send(body(overrides));
       expect(res.status, JSON.stringify(overrides).slice(0, 80)).toBe(400);
     }
-    expect((await agent.post('/thought-records').send(body({ situation: 'x'.repeat(1000) }))).status).toBe(201);
+    // No limite passa, também no CHECK do banco (DEC-053).
+    const long = 'x'.repeat(5000);
+    const atLimit = body({ situation: long, automaticThought: long, behavior: long, consequence: long });
+    expect((await agent.post('/thought-records').send(atLimit)).status).toBe(201);
   });
 
   it('a situação é de hoje ou de antes: amanhã é 400', async () => {

@@ -874,6 +874,26 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   o que já foi feito sem placar nem culpa (frontend/CLAUDE.md), e a expectativa ao lado do
   resultado é o que dá sentido à Ação: perceber que muitas vezes foi melhor do que se esperava.
 
+## DEC-053 — Textos do RPD e da Tensão com até 5000 caracteres
+- **Decisão:**
+  - os textos do Registro de Pensamentos (situação, pensamento automático, comportamento e
+    consequência) e dos Episódios de tensão (situação, o que fez e o que aconteceu depois) passam de
+    1000 para **5000 caracteres** (issue #67), no Zod, no CHECK do banco (migration nova, que troca
+    só o CHECK) e no front. As **observações** das atividades e da Ação continuam em 1000;
+  - nesses campos, o formulário **não usa mais `maxLength`**, que corta em silêncio o texto colado.
+    O `TextAreaField` ganha `limit`: um **contador** aparece a partir de 80% do limite ("4.850 de
+    5.000 caracteres") e, se passar, mostra quanto passou. Quem barra é a validação, no front e na
+    API;
+  - nos cartões (paciente e terapeuta), texto com mais de 700 caracteres abre **recolhido**, com
+    um trecho de até 500, cortado no último espaço, e o botão **"Ver mais" / "Ver menos"**;
+  - deploy: a API sobe antes do front (#66). Com a ordem invertida, um texto acima de 1000 daria
+    400 até a API nova subir.
+- **Motivo:** o limite de 1000 foi estourado num uso real. Relatos de situação e de pensamento podem
+  ser longos, e cortar o relato atrapalha o que a terapia precisa ler. 5000 (cerca de uma página)
+  dá folga e ainda barra um texto colado por engano. Aumentar não perde dado: as colunas são `TEXT`
+  e todo registro que já existe continua válido. As observações são notas curtas e ficam como
+  estão. O contador e o "Ver mais" evitam o corte silencioso e mantêm os cartões legíveis.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
