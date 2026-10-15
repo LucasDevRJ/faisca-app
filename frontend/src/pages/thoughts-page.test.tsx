@@ -92,8 +92,8 @@ describe('/pensamentos', () => {
     weekHandler([
       fakeThoughtRecord({
         emotions: [
-          { emotion: 'TRISTEZA', intensity: 6, otherLabel: null },
-          { emotion: 'OUTRA', intensity: 3, otherLabel: 'Inquietação' },
+          { emotion: 'TRISTEZA', intensity: 6, intensityAfter: null, otherLabel: null },
+          { emotion: 'OUTRA', intensity: 3, intensityAfter: null, otherLabel: 'Inquietação' },
         ],
       }),
     ]);
@@ -124,7 +124,8 @@ describe('/pensamentos', () => {
     );
     expect(within(today).getByRole('button', { name: 'Excluir' })).toBeInTheDocument();
     expect(within(old).queryByRole('button')).not.toBeInTheDocument();
-    expect(within(old).queryByRole('link')).not.toBeInTheDocument();
+    // Sem consulta agendada, o único link é o convite para a agenda (DEC-055).
+    expect(within(old).getAllByRole('link').map((link) => link.textContent)).toEqual(['Ir para a agenda']);
     expect(within(old).getByText(/Registrado em/)).toHaveTextContent('Registrado em 22/09, 12:00');
   });
 

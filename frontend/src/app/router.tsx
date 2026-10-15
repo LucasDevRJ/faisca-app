@@ -15,7 +15,7 @@ import { PatientPage } from '../pages/patient-page';
 import { PrivacyPage } from '../pages/privacy-page';
 import { PatientsPage } from '../pages/patients-page';
 import { RecordsPage } from '../pages/records-page';
-import { EditThoughtRecordPage, NewThoughtRecordPage } from '../pages/thought-record-form-page';
+import { AddAlternativePage, EditThoughtRecordPage, NewThoughtRecordPage } from '../pages/thought-record-form-page';
 import { ThoughtsPage } from '../pages/thoughts-page';
 import { EditTensionEpisodePage, NewTensionEpisodePage } from '../pages/tension-episode-form-page';
 import { TensionPage } from '../pages/tension-page';
@@ -53,6 +53,7 @@ export const routes = [
                   },
                   { path: 'pensamentos/novo', element: <NewThoughtRecordPage /> },
                   { path: 'pensamentos/:id/editar', element: <EditThoughtRecordPage /> },
+                  { path: 'pensamentos/:id/alternativa', element: <AddAlternativePage /> },
                   { path: 'tensao/novo', element: <NewTensionEpisodePage /> },
                   { path: 'tensao/:id/editar', element: <EditTensionEpisodePage /> },
                   { path: 'acao/nova', element: <NewActionPage /> },

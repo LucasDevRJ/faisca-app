@@ -10,6 +10,9 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-10.3 (DEC-042): entram os Episódios de tensão, com novo aceite para usá-los.
 // Versão 2026-10.4 (DEC-045): entra a agenda (hora, motivos e pausas), com novo aceite para usá-la.
 // Versão 2026-10.5 (DEC-051): entra a Ação, com novo aceite para usá-la.
+// Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
+// me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
+// contada a todos pelo card de Novidades.
 const VERSION_LABEL = 'versão 5, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
@@ -69,7 +72,7 @@ export function PrivacyPage() {
             <li>
               No Registro de Pensamentos (RPD): as situações que você descreve e, para cada uma, o pensamento
               automático, o quanto você acredita nele, as emoções e a intensidade de cada uma, o comportamento e
-              a consequência.
+              a consequência e, se você escrever, a explicação alternativa e como você se sente depois dela.
             </li>
             <li>
               Nos Episódios de tensão: o dia e, se você informar, a hora de cada episódio, a situação, a nota de 0

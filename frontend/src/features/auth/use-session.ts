@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { acceptPrivacy, addProfile, deleteAccount, fetchSession, login, logout } from './auth-api';
+import { acceptPrivacy, addProfile, deleteAccount, fetchSession, login, logout, markAnnouncementSeen } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
 
@@ -65,6 +65,15 @@ export function useAcceptPrivacy() {
       queryClient.setQueryData(SESSION_QUERY_KEY, user);
       void queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] !== SESSION_QUERY_KEY[0] });
     },
+  });
+}
+
+// "Entendi" no card de Novidades: a resposta já traz a sessão sem a novidade (DEC-054).
+export function useMarkAnnouncementSeen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: markAnnouncementSeen,
+    onSuccess: (user) => queryClient.setQueryData(SESSION_QUERY_KEY, user),
   });
 }
 

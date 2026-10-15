@@ -2,11 +2,13 @@ import { skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/reac
 import { getApiError } from '../auth/auth-api';
 import { addDays } from '../activities/week';
 import {
+  addAlternative,
   createThoughtRecord,
   deleteThoughtRecord,
   fetchThoughtRecord,
   fetchThoughtRecords,
   updateThoughtRecord,
+  type AddAlternativeInput,
   type ThoughtRecordInput,
 } from './thought-records-api';
 
@@ -60,6 +62,12 @@ export function useCreateThoughtRecord() {
 export function useUpdateThoughtRecord() {
   return useThoughtRecordMutation(({ id, input }: { id: string; input: ThoughtRecordInput }) =>
     updateThoughtRecord(id, input),
+  );
+}
+
+export function useAddAlternative() {
+  return useThoughtRecordMutation(({ id, input }: { id: string; input: AddAlternativeInput }) =>
+    addAlternative(id, input),
   );
 }
 

@@ -226,6 +226,9 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
 - Textos acolhedores ("Conta como foi?"), sem gamificação nem mensagens que gerem culpa.
 - PWA instalável; usar o app exige conexão.
+- **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
+  tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra
+  depois não recebe como novidade o que já existia (DEC-054, DEC-055).
 
 ## Fora do escopo (por ora)
 - Exportação CSV/PDF

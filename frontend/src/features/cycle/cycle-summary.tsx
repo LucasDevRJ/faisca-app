@@ -33,6 +33,7 @@ export function PatientCycleSummary({ range }: { range: Range }) {
       text={cycleSummaryText(range, {
         activitiesDone: activities.data?.filter((a) => a.status === 'CONCLUIDA').length,
         thoughts: thoughts.data?.length,
+        thoughtsWithAlternative: thoughts.data?.filter((t) => t.alternativeExplanation !== null).length,
         tension: tension.data?.length,
         actionsDone: actions.data?.filter((a) => a.status === 'AVALIADA').length,
       })}
@@ -52,6 +53,7 @@ export function TherapistCycleSummary({ patientId, range }: { patientId: string;
       text={cycleSummaryText(range, {
         activitiesDone: activities.data?.filter((a) => a.status === 'CONCLUIDA').length,
         thoughts: thoughts.data?.length,
+        thoughtsWithAlternative: thoughts.data?.filter((t) => t.alternativeExplanation !== null).length,
         tension: tension.data?.length,
         actionsDone: actions.data?.filter((a) => a.status === 'AVALIADA').length,
       })}

@@ -31,7 +31,7 @@ export function LongText({ text }: { text: string }) {
         aria-expanded={expanded}
         aria-controls={id}
         onClick={() => setExpanded((value) => !value)}
-        className="rounded-sm text-sm font-medium text-primary-text underline-offset-2 hover:underline"
+        className="rounded-sm text-sm font-medium text-primary-text underline underline-offset-4"
       >
         {expanded ? 'Ver menos' : 'Ver mais'}
       </button>
