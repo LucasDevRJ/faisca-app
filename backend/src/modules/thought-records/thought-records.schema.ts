@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { Emotion } from '../../generated/prisma/enums.js';
 import { LIST_MAX_DAYS, THERAPIST_LIST_MAX_DAYS, listQuerySchema } from '../activities/activities.schema.js';
 
-// Limites da DEC-039. Os mesmos valores estão nos CHECKs da migration.
-export const TEXT_MAX = 1000;
+// Limites da DEC-039, com o texto em 5000 pela DEC-053. Os mesmos valores estão nos CHECKs do banco.
+export const TEXT_MAX = 5000;
 export const OTHER_LABEL_MAX = 50;
 
 // Ordem em que as emoções aparecem (a da lista na SPEC).

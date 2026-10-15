@@ -16,8 +16,8 @@ export const FIELD_TEXT = {
   consequence: { label: 'O que aconteceu depois?' },
 } as const;
 
-// Limite da DEC-042 (o mesmo da API).
-export const TEXT_MAX = 1000;
+// Limite da DEC-042, em 5000 pela DEC-053 (o mesmo da API).
+export const TEXT_MAX = 5000;
 
 // "às 14:30" ou "sem horário".
 export function formatEpisodeTime(time: string | null): string {

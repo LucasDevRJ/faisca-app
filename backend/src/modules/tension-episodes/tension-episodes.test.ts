@@ -215,12 +215,12 @@ describe('POST /tension-episodes', () => {
     expect(asNull.body.tensionEpisode.episodeTime).toBeNull();
   });
 
-  it('o resto é obrigatório, com notas inteiras de 0 a 10 e textos de até 1000 caracteres', async () => {
+  it('o resto é obrigatório, com notas inteiras de 0 a 10 e textos de até 5000 caracteres', async () => {
     const agent = await loginAgent();
     const invalid = [
       body({ situation: '   ' }),
       body({ behavior: undefined }),
-      body({ consequence: 'x'.repeat(1001) }),
+      body({ consequence: 'x'.repeat(5001) }),
       body({ tensionLevel: 11 }),
       body({ vocalizeUrge: -1 }),
       body({ tensionLevel: 2.5 }),
@@ -234,6 +234,11 @@ describe('POST /tension-episodes', () => {
       expect(res.status, JSON.stringify(payload)).toBe(400);
     }
     expect(await prisma.tensionEpisode.count()).toBe(0);
+
+    // No limite passa, também no CHECK do banco (DEC-053).
+    const long = 'x'.repeat(5000);
+    const res = await agent.post('/tension-episodes').send(body({ situation: long, behavior: long, consequence: long }));
+    expect(res.status).toBe(201);
   });
 
   it('dia no futuro: 400 DATE_IN_FUTURE', async () => {

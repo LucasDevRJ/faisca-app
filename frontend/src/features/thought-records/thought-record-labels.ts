@@ -36,6 +36,6 @@ export const FIELD_TEXT = {
 
 export const INTENSITY_TEXT = { min: 'Fraca', max: 'Muito forte' } as const;
 
-// Limites da DEC-039 (os mesmos da API).
-export const TEXT_MAX = 1000;
+// Limites da DEC-039, com o texto em 5000 pela DEC-053 (os mesmos da API).
+export const TEXT_MAX = 5000;
 export const OTHER_LABEL_MAX = 50;

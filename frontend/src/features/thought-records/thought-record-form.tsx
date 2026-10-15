@@ -133,7 +133,7 @@ export function ThoughtRecordForm({
       label={FIELD_TEXT[key].label}
       hint={FIELD_TEXT[key].hint}
       value={texts[key]}
-      maxLength={TEXT_MAX}
+      limit={TEXT_MAX}
       onChange={(e) => setTexts((current) => ({ ...current, [key]: e.target.value }))}
       error={fieldError(key)}
     />

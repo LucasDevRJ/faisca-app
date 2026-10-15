@@ -64,14 +64,26 @@ type TextAreaFieldProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'
   label: string;
   hint?: string;
   error?: string;
+  // Limite com contador, no lugar do maxLength: o maxLength corta em silêncio o texto colado,
+  // e assim a pessoa vê que passou e decide o que tirar (DEC-053). Quem barra é a validação.
+  limit?: number;
 };
 
+// O contador só aparece perto do limite, para não pesar no formulário.
+const COUNTER_FROM = 0.8;
+const countFormat = new Intl.NumberFormat('pt-BR');
+
 // Mesmo padrão do TextField, para textos mais longos (ex.: observação).
-export function TextAreaField({ label, hint, error, className = '', ...props }: TextAreaFieldProps) {
+export function TextAreaField({ label, hint, error, limit, className = '', ...props }: TextAreaFieldProps) {
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+  const counterId = `${id}-counter`;
+  const length = typeof props.value === 'string' ? props.value.length : 0;
+  const showCounter = limit !== undefined && length >= limit * COUNTER_FROM;
+  const over = limit !== undefined && length > limit;
+  const describedBy =
+    [hint && hintId, showCounter && counterId, error && errorId].filter(Boolean).join(' ') || undefined;
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
@@ -89,6 +101,12 @@ export function TextAreaField({ label, hint, error, className = '', ...props }: 
       {hint && (
         <p id={hintId} className="text-sm text-muted">
           {hint}
+        </p>
+      )}
+      {showCounter && (
+        <p id={counterId} className={`text-sm tabular-nums ${over ? 'text-accent-text' : 'text-muted'}`}>
+          {countFormat.format(length)} de {countFormat.format(limit)} caracteres
+          {over && ` (passou ${countFormat.format(length - limit)})`}
         </p>
       )}
       {error && (

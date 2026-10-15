@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { buttonClasses } from '../../components/ui/button-styles';
+import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { FIELD_TEXT, formatEpisodeTime } from './tension-episode-labels';
 import type { TensionEpisode } from './tension-episodes-api';
@@ -61,7 +62,7 @@ function Field({ label, text }: { label: string; text: string }) {
     <div className="flex flex-col gap-0.5">
       <dt className="text-sm font-medium text-muted">{label}</dt>
       <dd>
-        <p className="break-words whitespace-pre-line">{text}</p>
+        <LongText text={text} />
       </dd>
     </div>
   );
