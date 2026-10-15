@@ -894,6 +894,60 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   e todo registro que já existe continua válido. As observações são notas curtas e ficam como
   estão. O contador e o "Ver mais" evitam o corte silencioso e mantêm os cartões legíveis.
 
+## DEC-054 — API da explicação alternativa no RPD e do card de Novidades
+- **Decisão:**
+  - o RPD ganha as colunas de reestruturação que a DEC-039 tinha deixado de fora (issue #69),
+    como na ficha "Avaliando Pensamentos: Perspectiva alternativa" usada na terapia (Beck, 2022):
+    a **explicação alternativa** (`alternativeExplanation`, opcional, 1 a 5000 caracteres) e o
+    **"como me sinto agora"** (`intensityAfter` em cada emoção, 0 a 10). A reavaliação só existe
+    com a alternativa e cobre **todas** as emoções do registro, ou nenhuma. Continua um registro
+    só, e não uma área nova: a alternativa responde ao pensamento daquele registro;
+  - `alternativeAddedAt` guarda quando a alternativa entrou (CHECK: as duas colunas juntas). No
+    PATCH do dia, ela é marcada quando a alternativa aparece, mantida quando o texto muda e apagada
+    junto com ela (o `null` apaga a alternativa e a reavaliação);
+  - **adicionar depois do dia:** `POST /thought-records/:id/alternative` (`{ alternativeExplanation,
+    emotionsAfter? }`), uma vez só, se a alternativa estiver vazia (senão 409
+    `ALTERNATIVE_ALREADY_SET`, com escrita condicional para dois envios ao mesmo tempo). O prazo é a
+    **hora marcada da primeira consulta agendada que ainda não tinha começado quando o registro foi
+    feito**: passou, 409 `ALTERNATIVE_DEADLINE_PASSED`; sem consulta, 409 `NO_NEXT_APPOINTMENT`;
+  - **prazo congelado:** ao criar o registro, a API guarda essa hora em `alternativeDeadlineAt`
+    (segunda migration). Depois, vale **o que vier primeiro**: o prazo congelado ou a consulta pela
+    agenda de agora. Assim, desmarcar ou apagar uma consulta que já passou não reabre o prazo, e
+    antecipar a consulta o encurta; remarcar para depois não o estende. Os registros sem prazo
+    congelado (os de antes deste PR e os feitos sem consulta agendada) são congelados na primeira
+    vez que a paciente os vê com uma consulta pela frente (lista ou página de edição), com escrita
+    condicional. A leitura da terapeuta não grava nada;
+  - a reavaliação, se vier, precisa listar exatamente as emoções do registro (400
+    `EMOTIONS_MISMATCH`). O resto do registro continua travado, e o PATCH depois do dia segue em
+    409;
+  - a resposta do RPD traz `alternativeDeadline` (dia e hora da consulta, ou null) e
+    `canAddAlternative`, para o "agora" ficar só na API, como o `editable`. A agenda é lida uma vez
+    por pedido, e não uma por registro. A terapeuta lê os campos novos na rota de sempre, só GET;
+  - **card de Novidades:** `User.seenAnnouncement` guarda a última novidade vista. O `/auth/me`
+    devolve `pendingAnnouncement` (a atual, ou null), e `POST /auth/announcement-seen`
+    (`{ announcement }`) marca só a atual; outra é 400. Conta nova já nasce com a atual vista. Os
+    textos ficam no front; a lista das novidades fica em `auth/announcements.ts`;
+  - logs: `alternativeExplanation`, `intensityAfter` e `emotionsAfter` entram no `redact` (regra 7).
+    Lembretes não mudam (regra 3);
+  - **sem nova versão do aviso de privacidade**: a finalidade é a mesma do RPD já aceito
+    (pensamentos e emoções). O texto do aviso passa a citar os campos novos nas telas (DEC-055), e
+    o card de Novidades conta a mudança para todos;
+  - `db:seed-dev`: os RPDs dos dias anteriores passam a ter `createdAt` no próprio dia (travados,
+    como no uso real), dois com alternativa e um aberto para adicionar até a próxima consulta.
+- **Motivo:** a explicação alternativa é a parte da TCC que trabalha o pensamento, e muitas vezes
+  só aparece depois do momento. O prazo até a consulta seguinte deixa adicionar com o registro
+  ainda recente, e por isso mais fiel ao que se viveu, e a data guardada mostra à terapeuta se ela
+  veio no dia ou depois. Sem consulta agendada não há prazo a contar, e o app é para quem faz
+  terapia (a agenda obrigatória segue na issue #65). As Novidades ficam no banco porque, no
+  iPhone, o Safari e o app instalado não dividem o armazenamento.
+  O prazo congelado veio da revisão (revisor-regras): sem ele, a própria pessoa podia reabrir o
+  prazo mexendo no passado da agenda.
+- **Limites conhecidos:** num registro feito sem consulta agendada, a primeira consulta marcada
+  depois, mesmo que bem mais tarde, abre o prazo até ela. E um registro de antes deste PR que a
+  paciente ainda não abriu depois do deploy pode ter o prazo reaberto se ela mexer no passado da
+  agenda antes de vê-lo; na prática, o botão de adicionar só aparece depois de ver a lista, que já
+  congela.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

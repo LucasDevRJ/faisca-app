@@ -17,6 +17,8 @@ export function createThoughtRecordsRoutes() {
   router.get('/thought-records/:id', ...patient, controller.get);
   router.post('/thought-records', ...patient, controller.create);
   router.patch('/thought-records/:id', ...patient, controller.update);
+  // Uma vez só, até a hora da próxima consulta (DEC-054).
+  router.post('/thought-records/:id/alternative', ...patient, controller.addAlternative);
   router.delete('/thought-records/:id', ...patient, controller.remove);
 
   return router;

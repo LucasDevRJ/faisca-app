@@ -81,14 +81,25 @@ O período que cada sessão olha: o que a pessoa viveu desde a sessão anterior 
 ## Registro de Pensamentos (RPD)
 Registro da TCC, independente das atividades. O paciente alterna entre as abas **Atividades** e
 **Pensamentos**, e o formulário fica numa página própria.
-- Campos, **todos obrigatórios**:
+- Campos, **todos obrigatórios**, menos a explicação alternativa e o "como me sinto agora":
   - **dia da situação** (sem horário, até hoje), separado de quando foi registrado;
   - **situação**, **pensamento automático**, **comportamento** e **consequência**: texto de 1 a 5000 caracteres (DEC-053);
   - **o quanto acredito nesse pensamento**: inteiro de 0 a 10;
   - **emoções**: uma ou mais, cada uma com **intensidade** inteira de 0 a 10, sem repetir.
     Lista: tristeza, ansiedade, medo, raiva, culpa, vergonha, frustração, solidão, alegria, alívio e
     **outra** (com o nome escrito pelo paciente, de 1 a 50 caracteres).
+  - **explicação alternativa** (opcional): outro jeito de olhar a situação, texto de 1 a 5000
+    caracteres (DEC-054);
+  - **como me sinto agora** (opcional, só com a explicação alternativa): nova intensidade de 0 a 10
+    para **todas** as emoções do registro de uma vez.
 - Editar e excluir só até o fim do dia em que o registro foi feito; depois, **409**.
+- **Exceção da explicação alternativa:** depois do dia do registro, se ainda estiver vazia, ela
+  pode ser adicionada **uma única vez** (com o "como me sinto agora", opcional), **até a hora
+  marcada da próxima consulta** depois do registro. Consulta às 10:00 de 17/10: dá até 09:59 de
+  17/10. O prazo é o da consulta marcada quando o registro foi feito: antecipar a consulta encurta
+  o prazo, mas desmarcar, apagar ou remarcar para depois não o estende. Sem consulta agendada, não
+  dá para adicionar depois. Depois de adicionada, fica fixa, como o resto do registro (**409**). A data em
+  que ela entrou fica guardada e aparece para a terapeuta.
 - Pode haver vários registros no mesmo dia, na ordem em que foram feitos.
 - Termos clínicos suaves: "Registro de Pensamentos (RPD)", "pensamento automático".
 - Usar o RPD exige ter aceitado uma versão do aviso de privacidade que o cite (veja "Privacidade").
@@ -222,4 +233,3 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Uso offline com sincronização
 - Mais de uma terapeuta por paciente
 - Verificação de CRP
-- Colunas de reestruturação do RPD ("pensamento alternativo" e "como me sinto agora")

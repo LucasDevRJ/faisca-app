@@ -4,6 +4,7 @@ import { clearSessionCookie, setSessionCookie } from '../../lib/session.js';
 import {
   acceptPrivacySchema,
   addProfileSchema,
+  announcementSeenSchema,
   deleteAccountSchema,
   emailOnlySchema,
   loginSchema,
@@ -58,6 +59,12 @@ export function createAuthController(service: AuthService) {
     res.status(200).json({ user: toPublicUser(user) });
   };
 
+  const announcementSeen: RequestHandler = async (req, res) => {
+    announcementSeenSchema.parse(req.body);
+    const user = await service.markAnnouncementSeen(getAuthUser(req).id);
+    res.status(200).json({ user: toPublicUser(user) });
+  };
+
   const deleteAccount: RequestHandler = async (req, res) => {
     const { password } = deleteAccountSchema.parse(req.body);
     await service.deleteAccount(getAuthUser(req).id, password);
@@ -84,6 +91,7 @@ export function createAuthController(service: AuthService) {
     me,
     addProfile,
     acceptPrivacy,
+    announcementSeen,
     deleteAccount,
     forgotPassword,
     resetPassword,

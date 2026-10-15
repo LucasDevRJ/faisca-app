@@ -33,6 +33,10 @@ const SENSITIVE_KEYS = [
   'emotions',
   'intensity',
   'otherLabel',
+  // Explicação alternativa e "como me sinto agora" (DEC-054).
+  'alternativeExplanation',
+  'intensityAfter',
+  'emotionsAfter',
   // Episódios de tensão (DEC-042): as duas notas (situation, behavior e consequence já estão acima).
   'tensionLevel',
   'vocalizeUrge',

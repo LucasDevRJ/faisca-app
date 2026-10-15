@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CURRENT_ANNOUNCEMENT } from './announcements.js';
 
 // Normaliza antes de validar: "  Ana@Exemplo.com " e "ana@exemplo.com" são a mesma conta.
 const emailSchema = z
@@ -55,6 +56,12 @@ export const deleteAccountSchema = z.strictObject({ password: z.string().min(1).
 // Novo aceite do aviso de privacidade (DEC-039): o mesmo consentimento explícito do cadastro.
 export const acceptPrivacySchema = z.strictObject({
   acceptPrivacy: z.literal(true, { error: 'Para continuar, é preciso concordar com o aviso de privacidade.' }),
+});
+
+// Card de Novidades (DEC-054): só a novidade atual pode ser marcada como vista. Uma aba antiga,
+// com outra novidade, recebe 400 e não esconde a atual.
+export const announcementSeenSchema = z.strictObject({
+  announcement: z.literal(CURRENT_ANNOUNCEMENT, { error: 'Esta novidade não está mais valendo.' }),
 });
 
 export const resetPasswordSchema = z.object({

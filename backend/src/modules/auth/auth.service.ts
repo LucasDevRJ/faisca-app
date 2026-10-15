@@ -8,6 +8,7 @@ import { generateToken, hashToken } from '../../lib/secure-token.js';
 import type { LinksService } from '../links/links.service.js';
 import { accountDeletedEmail, accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
 import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
+import { CURRENT_ANNOUNCEMENT, pendingAnnouncement, type Announcement } from './announcements.js';
 import { PRIVACY_VERSION, privacyAreas, type PrivacyArea } from './privacy.js';
 
 // A versão atual do aviso e as áreas que dependem dele ficam em ./privacy.ts (DEC-042).
@@ -29,10 +30,15 @@ export type PublicUser = {
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o RPD e os episódios de tensão
   // ficam bloqueados; o resto do app funciona.
   privacyAreas: Record<PrivacyArea, boolean>;
+  // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
+  pendingAnnouncement: Announcement | null;
 };
 
 export function toPublicUser(
-  user: Pick<User, 'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile' | 'privacyVersion'>,
+  user: Pick<
+    User,
+    'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile' | 'privacyVersion' | 'seenAnnouncement'
+  >,
 ): PublicUser {
   return {
     id: user.id,
@@ -41,6 +47,7 @@ export function toPublicUser(
     profiles: { patient: user.hasPatientProfile, therapist: user.hasTherapistProfile },
     privacyUpToDate: user.privacyVersion === PRIVACY_VERSION,
     privacyAreas: privacyAreas(user.privacyVersion),
+    pendingAnnouncement: pendingAnnouncement(user.seenAnnouncement),
   };
 }
 
@@ -140,6 +147,8 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
             hasTherapistProfile: input.profiles.therapist,
             privacyAcceptedAt: new Date(),
             privacyVersion: PRIVACY_VERSION,
+            // Conta nova já conhece o app como ele está: a novidade atual não é novidade para ela.
+            seenAnnouncement: CURRENT_ANNOUNCEMENT,
           },
         });
       } catch (err) {
@@ -202,6 +211,11 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
         where: { id: userId },
         data: { privacyAcceptedAt: new Date(), privacyVersion: PRIVACY_VERSION },
       });
+    },
+
+    // Card de Novidades (DEC-054): a pessoa tocou em "Entendi" na novidade atual.
+    async markAnnouncementSeen(userId: string): Promise<User> {
+      return prisma.user.update({ where: { id: userId }, data: { seenAnnouncement: CURRENT_ANNOUNCEMENT } });
     },
 
     // SPEC ("Privacidade"), DEC-035: apaga a conta e, em cascata no banco, atividades, consultas,

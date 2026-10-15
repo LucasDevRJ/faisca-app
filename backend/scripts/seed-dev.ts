@@ -4,7 +4,8 @@
 //
 // - terapeuta.dev@faisca.test: terapeuta, sem dados;
 // - paciente.dev@faisca.test: paciente vinculada à terapeuta dev, com ~3 semanas de atividades,
-//   Registros de Pensamentos, Episódios de tensão (um deles no dia da última consulta, para aparecer
+//   Registros de Pensamentos (com e sem explicação alternativa, um deles ainda aberto para
+//   adicionar até a próxima consulta; DEC-054), Episódios de tensão (um deles no dia da última consulta, para aparecer
 //   no gráfico) e consultas fictícias em volta de hoje (última há 7 dias, próxima daqui a 3);
 // - aviso-antigo.dev@faisca.test: paciente que só aceitou o aviso de privacidade de antes do RPD,
 //   para testar o pedido do novo aceite no Registro de Pensamentos (DEC-039);
@@ -35,6 +36,15 @@ const THOUGHT_RECORDS: [number, string, string, number, [string, number, string?
   [-2, 'Elogio inesperado no trabalho', 'Foi só sorte', 5, [['ALEGRIA', 6], ['OUTRA', 4, 'Desconfiança']], 'Agradeci e mudei de assunto', 'Fiquei mais leve no fim do dia'],
   [0, 'Trânsito parado a caminho da consulta', 'Vou chegar atrasada e vão me julgar', 6, [['ANSIEDADE', 7], ['RAIVA', 4]], 'Avisei por mensagem', 'Cheguei e ninguém se importou'],
 ];
+
+// Explicação alternativa de alguns registros (DEC-054), pelo dia do registro: [texto, dias depois do
+// registro em que foi adicionada, intensidades depois, na ordem das emoções]. O de -9 entrou no dia;
+// o de -5, um dia depois. O de -2 fica sem, para mostrar o botão (a próxima consulta é daqui a 3
+// dias); o de -12 também, mas o prazo já passou (a consulta de -7).
+const ALTERNATIVES: Record<number, [string, number, number[]]> = {
+  [-9]: ['Ela pode estar ocupada; já ficou dias sem responder e depois falou normalmente', 0, [4, 3]],
+  [-5]: ['Esquecer uma conta não apaga tudo o que eu dou conta todo dia', 1, [3, 4]],
+};
 
 // Episódios de tensão fictícios: [dias a partir de hoje, hora ou null, situação, tensão,
 // vontade de vocalizar, o que fez, o que aconteceu depois]. O de -7 cai no dia da última consulta.
@@ -69,7 +79,9 @@ if (process.env.NODE_ENV !== 'development') {
 const { prisma } = await import('../src/lib/prisma.js');
 const { hashPassword } = await import('../src/lib/password.js');
 const { logger } = await import('../src/lib/logger.js');
-const { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } = await import('../src/lib/dates.js');
+const { addDays, dateOnlyToDate, startOfDayInAppZone, timeOnlyToDate, todayInAppZone } = await import(
+  '../src/lib/dates.js'
+);
 const { PRIVACY_VERSION } = await import('../src/modules/auth/auth.service.js');
 
 const passwordHash = await hashPassword(PASSWORD);
@@ -137,6 +149,11 @@ await prisma.$transaction(async (tx) => {
   // As emoções saem em cascata.
   await tx.thoughtRecord.deleteMany({ where: { userId: patient.id } });
   for (const [offset, situation, automaticThought, beliefLevel, emotions, behavior, consequence] of THOUGHT_RECORDS) {
+    // Registrado no dia da situação, às 20h: os dos dias anteriores já estão travados, como no uso
+    // real. O de hoje leva a hora de agora, para continuar editável.
+    const at = (days: number) => new Date(startOfDayInAppZone(addDays(today, days)).getTime() + 20 * 60 * 60 * 1000);
+    const createdAt = offset === 0 ? new Date() : at(offset);
+    const alternative = ALTERNATIVES[offset];
     await tx.thoughtRecord.create({
       data: {
         userId: patient.id,
@@ -146,10 +163,14 @@ await prisma.$transaction(async (tx) => {
         beliefLevel,
         behavior,
         consequence,
+        createdAt,
+        alternativeExplanation: alternative?.[0] ?? null,
+        alternativeAddedAt: alternative ? at(offset + alternative[1]) : null,
         emotions: {
-          create: emotions.map(([emotion, intensity, otherLabel]) => ({
+          create: emotions.map(([emotion, intensity, otherLabel], i) => ({
             emotion: emotion as Emotion,
             intensity,
+            intensityAfter: alternative?.[2][i] ?? null,
             otherLabel: otherLabel ?? null,
           })),
         },

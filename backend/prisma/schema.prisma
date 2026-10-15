@@ -29,6 +29,9 @@ model User {
   // null só em contas criadas antes do aviso existir.
   privacyAcceptedAt   DateTime?
   privacyVersion      String?
+  // A última novidade do app que a pessoa já viu (card de Novidades, DEC-054). Fica no banco, e
+  // não no aparelho: no iPhone, o Safari e o app instalado não dividem o armazenamento.
+  seenAnnouncement    String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -218,19 +221,28 @@ enum Emotion {
 // faixa da crença (0–10) são garantidos por CHECK na migration, além do Zod (DEC-039).
 // Editar e excluir só no dia (São Paulo) em que foi registrado, conferido pelo createdAt.
 model ThoughtRecord {
-  id               String   @id @default(uuid()) @db.Uuid
+  id                     String    @id @default(uuid()) @db.Uuid
   // O paciente dono do registro.
-  userId           String   @db.Uuid
+  userId                 String    @db.Uuid
   // Dia da situação, no fuso America/Sao_Paulo (DEC-007). Só até hoje; separado do createdAt.
-  situationDate    DateTime @db.Date
-  situation        String
-  automaticThought String
+  situationDate          DateTime  @db.Date
+  situation              String
+  automaticThought       String
   // O quanto acredita no pensamento (0–10).
-  beliefLevel      Int
-  behavior         String
-  consequence      String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  beliefLevel            Int
+  behavior               String
+  consequence            String
+  // Explicação alternativa (DEC-054): opcional. Depois do dia do registro, pode ser adicionada uma
+  // vez, até a hora da próxima consulta. alternativeAddedAt diz quando entrou (CHECK: os dois
+  // juntos), para a terapeuta saber se veio no dia ou depois.
+  alternativeExplanation String?
+  alternativeAddedAt     DateTime?
+  // Prazo congelado no momento do registro: a hora da próxima consulta naquele momento. Vale o que
+  // vier primeiro, ele ou a agenda atual, para mexer no passado da agenda não reabrir o prazo.
+  // null = sem consulta agendada quando o registro foi feito (ou registro de antes do prazo).
+  alternativeDeadlineAt  DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   emotions ThoughtRecordEmotion[]
@@ -240,12 +252,15 @@ model ThoughtRecord {
 
 // Emoções de um registro: uma ou mais, sem repetir, cada uma com intensidade de 0 a 10.
 model ThoughtRecordEmotion {
-  id         String  @id @default(uuid()) @db.Uuid
-  recordId   String  @db.Uuid
-  emotion    Emotion
-  intensity  Int
+  id             String  @id @default(uuid()) @db.Uuid
+  recordId       String  @db.Uuid
+  emotion        Emotion
+  intensity      Int
+  // "Como me sinto agora" (DEC-054): a intensidade depois da explicação alternativa, de 0 a 10.
+  // Só com a alternativa, e em todas as emoções do registro ou em nenhuma (conferido no service).
+  intensityAfter Int?
   // Só na OUTRA, e obrigatório nela (CHECK na migration).
-  otherLabel String?
+  otherLabel     String?
 
   record ThoughtRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
 

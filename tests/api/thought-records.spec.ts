@@ -59,6 +59,10 @@ test('aceite do aviso, registro da paciente e leitura só pela terapeuta vincula
   expect((await therapist.post(path, { data: record })).status()).toBe(403);
   expect((await therapist.delete(`${path}/${id}`)).status()).toBe(403);
   expect((await therapist.delete(`/thought-records/${id}`)).status()).toBe(403);
+  // Nem a explicação alternativa (DEC-054), pelos dois caminhos.
+  const alternative = { alternativeExplanation: 'Explicação alternativa fictícia' };
+  expect((await therapist.post(`${path}/${id}/alternative`, { data: alternative })).status()).toBe(403);
+  expect((await therapist.post(`/thought-records/${id}/alternative`, { data: alternative })).status()).toBe(403);
 
   expect((await patient.post('/link/revoke')).status()).toBe(204);
   expect((await therapist.get(path, { params: { from: DAY, to: DAY } })).status()).toBe(403);
