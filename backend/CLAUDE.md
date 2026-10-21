@@ -27,6 +27,8 @@
   Nunca `db push` fora do ambiente local.
 - Tabela nova precisa de permissão DML para `faisca_app`, garantida pelos default privileges
   definidos na primeira migration.
+- Nunca edite uma migration já aplicada: crie outra (o hook e o CI `migrations-ci.yml` barram).
+  Passo a passo na skill `nova-migration`.
 
 ## Lembretes
 - Jobs do `node-cron` são idempotentes via `NotificationLog`; verifique antes de enviar.
