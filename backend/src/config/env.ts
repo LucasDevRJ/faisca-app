@@ -31,6 +31,9 @@ const envSchema = z.object({
     .string()
     .min(1)
     .refine((value) => !value.includes('seu-dominio.com')),
+  // Commit em produção, preenchido sozinho pelo Railway em cada deploy. O /health o devolve para
+  // conferir qual versão da API está no ar (DEC-056). Fora do Railway, fica vazio.
+  RAILWAY_GIT_COMMIT_SHA: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

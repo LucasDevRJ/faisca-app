@@ -982,6 +982,32 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   terapeuta, o que foi reestruturado e se a alternativa ajudou. A finalidade do RPD não mudou, por
   isso não há novo aceite; o card de Novidades conta a mudança a todos.
 
+## DEC-056 — Ordem do deploy: a API antes do front
+- **Decisão:**
+  - num merge, a Vercel publica o front em ~1 min e o Railway, a API em ~8–9 min (espera o CI,
+    build, migration no pre-deploy e healthcheck). Por isso, **mudança de contrato da API** (rota,
+    formato de resposta ou de entrada que o front usa) **nunca vai no mesmo PR que o front que
+    depende dela** (issue #66):
+    1. primeiro o PR da API, **aditivo**: a API nova continua aceitando o front que está no ar;
+    2. merge e conferência da API em produção;
+    3. só então o PR do front;
+  - remover ou renomear algo do contrato segue o "expandir e depois contrair": a API aceita os dois
+    formatos, o front muda, e só depois um PR tira o antigo;
+  - o `GET /health` passa a devolver `version`: os 7 primeiros caracteres do commit no ar
+    (`RAILWAY_GIT_COMMIT_SHA`, preenchido pelo Railway; `null` fora dele). Depois do merge da API,
+    o `version` igual ao commit do merge confirma que ela já está no ar;
+  - o passo a passo de cada deploy fica na skill `deploy-checklist`; o `docs/DEPLOY.md` segue com o
+    primeiro deploy e aponta para ela.
+- **Motivo:** nos deploys da agenda (#56/#57) e da Ação (#63/#64), o front novo falou com a API
+  antiga por ~8 e ~9 minutos (rotas em 404, telas que podiam quebrar). Nos do ciclo (#60/#61) e da
+  explicação alternativa (#71/#72), feitos em dois PRs, não houve janela nenhuma. Fazer a Vercel
+  esperar o Railway (deploy hook disparado por um workflow) exigiria segredo novo e mudanças nos
+  dois painéis, e deixaria sem deploy os PRs só de front; para um projeto solo, a regra de
+  processo, verificável pelo `/health`, resolve com menos peças.
+- **Limite conhecido:** depende de disciplina; a skill `deploy-checklist` classifica o PR antes do
+  merge para lembrar da regra. A proteção da `main` com checks obrigatórios (que destravaria o
+  auto-merge) fica para depois, porque os workflows filtram por pasta (issue nova).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
