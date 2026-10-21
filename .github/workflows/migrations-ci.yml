@@ -1,0 +1,42 @@
+name: Migrations CI
+
+# Migration que já está na main rodou em produção: um PR só pode ACRESCENTAR migrations, nunca
+# editar, renomear ou apagar uma existente (issue #41). Também roda os testes do hook do Claude
+# Code que protege as migrations. Vale para qualquer pessoa, com ou sem o Claude.
+on:
+  pull_request:
+    paths:
+      - 'backend/prisma/migrations/**'
+      - '.claude/hooks/**'
+      - '.github/workflows/migrations-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Histórico completo: a comparação e os testes do hook olham a main.
+          fetch-depth: 0
+
+      - name: Nenhuma migration existente foi alterada
+        env:
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          changed=$(git diff --name-status --diff-filter=MDRT "$BASE"...HEAD -- 'backend/prisma/migrations/*/migration.sql')
+          if [ -n "$changed" ]; then
+            echo "::error::Migration já aplicada foi alterada. Crie uma migration nova com a correção (skill nova-migration)."
+            echo "$changed"
+            exit 1
+          fi
+          echo "Só migrations novas (ou nenhuma) neste PR."
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Testes do hook do Claude Code
+        run: node --test .claude/hooks/proteger.test.mjs

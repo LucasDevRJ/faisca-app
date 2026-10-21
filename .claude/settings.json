@@ -13,7 +13,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|PowerShell|Read|Grep|Glob",
+        "matcher": "Bash|PowerShell|Read|Grep|Glob|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
