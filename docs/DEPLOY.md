@@ -177,6 +177,11 @@ O `frontend/vercel.json` já cuida do resto:
 
 ## Depois do primeiro deploy
 
+Cada merge segue a skill `deploy-checklist` (`.claude/skills/`): classificar o PR, merge,
+acompanhar, conferir e avisar quem usa. **Mudança de contrato da API vai em dois PRs, a API antes
+do front** (DEC-056), porque a Vercel publica minutos antes do Railway. O `/health` devolve o
+commit no ar (`version`), para conferir que a API nova já entrou.
+
 - **Merge na `main`:**
   - o Railway espera o CI, roda as migrations no pre-deploy e só troca a versão se o healthcheck
     passar. Se a migration falhar, a versão anterior continua no ar;
