@@ -27,18 +27,31 @@ async function loginAgent(email = PATIENT) {
   return agent;
 }
 
-describe('card de Novidades (DEC-054)', () => {
-  it('quem já usava vê a novidade atual até tocar em "Entendi"', async () => {
+const ALTERNATIVE = '2026-10-explicacao-alternativa';
+const READ_MARKS = '2026-10-lido';
+
+describe('card de Novidades (DEC-054, DEC-058)', () => {
+  it('a paciente vê a novidade que é para ela até tocar em "Entendi"; fica no banco', async () => {
     const agent = await loginAgent();
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(CURRENT_ANNOUNCEMENT);
+    // A do "Lido" é só da terapeuta: a paciente segue com a da explicação alternativa.
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(ALTERNATIVE);
 
-    const seen = await agent.post('/auth/announcement-seen').send({ announcement: CURRENT_ANNOUNCEMENT });
+    const seen = await agent.post('/auth/announcement-seen').send({ announcement: ALTERNATIVE });
     expect(seen.status).toBe(200);
     expect(seen.body.user.pendingAnnouncement).toBeNull();
-    // Fica no banco: vale em qualquer aparelho.
     expect((await request.agent(app).post('/auth/login').send({ email: PATIENT, password: PASSWORD })).body.user
       .pendingAnnouncement).toBeNull();
+  });
+
+  it('a terapeuta recebe a do "Lido", a mais recente para ela', async () => {
+    await createConfirmedUser({ email: 'terapeuta@faisca.test', patient: false, therapist: true });
+    const agent = await loginAgent('terapeuta@faisca.test');
+
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(READ_MARKS);
+    // A anterior não pode ser marcada no lugar da que está aparecendo.
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: ALTERNATIVE })).status).toBe(400);
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: READ_MARKS })).status).toBe(200);
   });
 
   it('conta nova não recebe como novidade o que já existia no cadastro', async () => {
@@ -54,21 +67,28 @@ describe('card de Novidades (DEC-054)', () => {
 
     const user = await prisma.user.findUniqueOrThrow({ where: { email: 'nova@faisca.test' } });
     expect(user.seenAnnouncement).toBe(CURRENT_ANNOUNCEMENT);
+    expect(pendingAnnouncement(user.seenAnnouncement, { patient: true, therapist: false })).toBeNull();
   });
 
-  it('só a novidade atual pode ser marcada; sem sessão, 401', async () => {
+  it('id desconhecido ou corpo vazio: 400; sem sessão, 401', async () => {
     const agent = await loginAgent();
 
     expect((await agent.post('/auth/announcement-seen').send({ announcement: 'novidade-antiga' })).status).toBe(400);
     expect((await agent.post('/auth/announcement-seen').send({})).status).toBe(400);
-    expect(
-      (await request(app).post('/auth/announcement-seen').send({ announcement: CURRENT_ANNOUNCEMENT })).status,
-    ).toBe(401);
+    expect((await request(app).post('/auth/announcement-seen').send({ announcement: ALTERNATIVE })).status).toBe(401);
   });
 
-  it('pendente é sempre a atual, a menos que já tenha sido vista', () => {
-    expect(pendingAnnouncement(null)).toBe(CURRENT_ANNOUNCEMENT);
-    expect(pendingAnnouncement('novidade-antiga')).toBe(CURRENT_ANNOUNCEMENT);
-    expect(pendingAnnouncement(CURRENT_ANNOUNCEMENT)).toBeNull();
+  it('a pendente é a mais recente para o perfil, depois da última vista', () => {
+    const patient = { patient: true, therapist: false };
+    const therapist = { patient: false, therapist: true };
+    const both = { patient: true, therapist: true };
+
+    expect(pendingAnnouncement(null, patient)).toBe(ALTERNATIVE);
+    expect(pendingAnnouncement(null, therapist)).toBe(READ_MARKS);
+    expect(pendingAnnouncement(null, both)).toBe(READ_MARKS);
+    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBeNull();
+    expect(pendingAnnouncement(ALTERNATIVE, therapist)).toBe(READ_MARKS);
+    expect(pendingAnnouncement(READ_MARKS, both)).toBeNull();
+    expect(pendingAnnouncement('desconhecida', patient)).toBe(ALTERNATIVE);
   });
 });

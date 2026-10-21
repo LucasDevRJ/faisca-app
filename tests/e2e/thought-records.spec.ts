@@ -66,7 +66,10 @@ test('paciente aceita o aviso e registra; terapeuta vinculada aceita e lê na ab
   const read = therapist.getByRole('article', { name: 'Registro: Apresentação no curso' });
   await expect(read.getByText('Ninguém comentou, e me senti aliviada')).toBeVisible();
   await expect(read.getByText(/Registrado em/)).toBeVisible();
-  await expect(read.getByRole('button')).toHaveCount(0);
+  // Só leitura: o único botão é a marca de leitura dela (DEC-057, DEC-058), que não altera o registro.
+  await expect(read.getByRole('button')).toHaveCount(1);
+  await read.getByRole('button', { name: 'Marcar como lido: Apresentação no curso' }).click();
+  await expect(read.getByRole('button', { name: 'Marcar como não lido: Apresentação no curso' })).toBeVisible();
   await expect(read.getByRole('link')).toHaveCount(0);
 
   await patient.context().close();

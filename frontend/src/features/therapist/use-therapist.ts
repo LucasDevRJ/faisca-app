@@ -1,4 +1,6 @@
-import { skipToken, useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { skipToken, useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import { PATIENTS_KEY } from '../links/use-links';
+import { fetchPatientUnread, markRead, unmarkRead, type ReadItem } from './read-marks-api';
 import type { CycleResponse } from '../cycle/cycle-api';
 import { getApiError } from '../auth/auth-api';
 import {
@@ -20,6 +22,30 @@ function retryUnlessForbidden(failureCount: number, error: unknown) {
 
 export function isForbidden(error: unknown): boolean {
   return getApiError(error).status === 403;
+}
+
+// Os registros para ler (DEC-058). enabled = false quando a terapeuta não aceitou nenhuma das
+// três áreas: nem pergunta.
+export function usePatientUnread(patientId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'unread'],
+    queryFn: enabled ? () => fetchPatientUnread(patientId) : skipToken,
+    retry: retryUnlessForbidden,
+  });
+}
+
+// Marcar ou desmarcar como lido. Depois, recarrega as listas, os registros para ler e o contador
+// da lista de pacientes.
+export function useReadMarks(patientId: string) {
+  const queryClient = useQueryClient();
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: [...THERAPIST_KEY, patientId] }),
+      queryClient.invalidateQueries({ queryKey: PATIENTS_KEY }),
+    ]);
+  const mark = useMutation({ mutationFn: (items: ReadItem[]) => markRead(patientId, items), onSettled: refresh });
+  const unmark = useMutation({ mutationFn: (items: ReadItem[]) => unmarkRead(patientId, items), onSettled: refresh });
+  return { mark, unmark };
 }
 
 export function usePatientSummary(patientId: string) {

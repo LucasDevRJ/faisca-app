@@ -6,7 +6,7 @@ import { RedeemCodeForm } from '../features/links/redeem-code-form';
 import { useLinkedPatients } from '../features/links/use-links';
 import { PrivacyUpdateBanner } from '../features/auth/privacy-consent';
 import { statusBadge } from '../features/appointments/agenda-format';
-import type { LinkedPatient } from '../features/links/links-api';
+import type { ListedPatient } from '../features/links/links-api';
 import { usePatientSummary } from '../features/therapist/use-therapist';
 
 // Selo da agenda (DEC-045): "em pausa", "encerrada" ou "sem agenda". Vem do resumo de cada
@@ -18,7 +18,7 @@ function AgendaBadge({ patientId }: { patientId: string }) {
   return <span className="self-start rounded-full border border-border px-2 py-0.5 text-sm text-muted">{badge}</span>;
 }
 
-function PatientItem({ patient }: { patient: LinkedPatient }) {
+function PatientItem({ patient }: { patient: ListedPatient }) {
   return (
     <li>
       <Link
@@ -29,7 +29,15 @@ function PatientItem({ patient }: { patient: LinkedPatient }) {
           <span className="text-lg font-semibold text-primary-text">{patient.name}</span>
           <span className="break-all text-muted">{patient.email}</span>
           <span className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</span>
-          <AgendaBadge patientId={patient.id} />
+          <span className="flex flex-wrap gap-2">
+            {/* Quantos registros a terapeuta ainda tem para ler (DEC-058), num selo neutro. */}
+            {patient.unreadCount > 0 && (
+              <span className="rounded-full border border-primary px-2 py-0.5 text-sm font-medium text-primary-text">
+                {patient.unreadCount} para ler
+              </span>
+            )}
+            <AgendaBadge patientId={patient.id} />
+          </span>
         </span>
         <span aria-hidden="true" className="text-2xl text-muted">
           ›
