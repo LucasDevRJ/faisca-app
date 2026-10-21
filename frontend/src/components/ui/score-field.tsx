@@ -23,7 +23,7 @@ export function ScoreField({ label, value, onChange, minLabel, maxLabel, hint, e
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-4">
-        <label htmlFor={id} className="font-medium">
+        <label htmlFor={id} className="min-w-0 font-medium break-words">
           {label}
         </label>
         <output htmlFor={id} className="font-heading text-2xl font-bold tabular-nums" aria-live="polite">

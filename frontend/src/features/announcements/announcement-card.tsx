@@ -9,6 +9,8 @@ import { useMarkAnnouncementSeen, useSession } from '../auth/use-session';
 // um id que o front não conhece não mostra nada.
 type AnnouncementText = {
   title: string;
+  // Emoji ao lado do título, escondido do leitor de tela (senão ele lê "brilhos" no nome da região).
+  icon?: string;
   // Texto para quem usa como paciente e para quem atende como terapeuta. Quem tem os dois perfis
   // vê os dois.
   patient: ReactNode;
@@ -19,7 +21,8 @@ type AnnouncementText = {
 
 const ANNOUNCEMENTS: Record<string, AnnouncementText> = {
   '2026-10-explicacao-alternativa': {
-    title: 'Novidade no Registro de Pensamentos ✨',
+    title: 'Novidade no Registro de Pensamentos',
+    icon: '✨',
     patient: (
       <>
         <p>
@@ -62,13 +65,25 @@ function Card({ user, id, text }: { user: SessionUser; id: string; text: Announc
       aria-labelledby={titleId}
       className="flex flex-col gap-3 rounded-lg border border-accent bg-accent/10 p-4 shadow-soft"
     >
-      <h2 id={titleId} className="font-heading text-xl font-bold">
-        {text.title}
-      </h2>
+      <div className="flex items-baseline gap-2">
+        <h2 id={titleId} className="font-heading text-xl font-bold">
+          {text.title}
+        </h2>
+        {text.icon && (
+          <span aria-hidden="true" className="text-xl">
+            {text.icon}
+          </span>
+        )}
+      </div>
       <div className="flex flex-col gap-2">
         {patient && text.patient}
         {therapist && text.therapist}
       </div>
+      {markSeen.isError && (
+        <p role="alert" className="text-sm text-accent-text">
+          Não deu para registrar agora. Tente de novo em instantes.
+        </p>
+      )}
       <div className="flex flex-wrap gap-3">
         <Button disabled={markSeen.isPending} onClick={() => markSeen.mutate(id)}>
           Entendi

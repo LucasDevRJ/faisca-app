@@ -212,12 +212,35 @@ export function AddAlternativePage() {
     );
   }
 
-  // A API também recusa com 409 (já tem, prazo encerrado ou sem consulta): a mensagem dela explica.
-  const conflict = add.isError && getApiError(add.error).status === 409 ? getApiError(add.error).message : null;
+  // A API também recusa com 409 (já tem, a consulta começou ou não há consulta). O texto que a
+  // pessoa escreveu continua à vista, para não se perder, e a mensagem não fala de prazo perdido.
+  const conflict = add.isError && getApiError(add.error).status === 409 ? getApiError(add.error).code : null;
+  const written = conflict ? add.variables?.input : undefined;
   if (!data.canAddAlternative || !data.alternativeDeadline || conflict) {
     return (
       <Frame title={title}>
-        <Alert tone="attention">{conflict ?? unavailableMessage(data)}</Alert>
+        <Alert tone="attention">{conflict ? conflictMessage(conflict) : unavailableMessage(data)}</Alert>
+        {written && (
+          <section aria-labelledby="alternativa-escrita" className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4">
+            <h2 id="alternativa-escrita" className="text-sm font-medium text-muted">
+              O que você escreveu
+            </h2>
+            <LongText text={written.alternativeExplanation} />
+            {written.emotionsAfter && (
+              <ul className="flex flex-col gap-0.5 text-sm">
+                {written.emotionsAfter.map(({ emotion, intensityAfter }) => {
+                  const entry = data.emotions.find((e) => e.emotion === emotion);
+                  return (
+                    <li key={emotion}>
+                      {entry ? emotionName(entry) : emotion}: agora {intensityAfter} de 10
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <p className="text-sm text-muted">Dá para copiar ou levar para conversar na sua consulta.</p>
+          </section>
+        )}
         <Link to="/pensamentos" className={buttonClasses('secondary', 'self-start')}>
           Voltar para o Registro de Pensamentos
         </Link>
@@ -255,6 +278,15 @@ export function AddAlternativePage() {
       />
     </Frame>
   );
+}
+
+// Os 409 do "adicionar depois" (DEC-054), com o tom das telas, e não o texto da API.
+function conflictMessage(code: string): string {
+  if (code === 'ALTERNATIVE_ALREADY_SET') return 'Este registro já tem uma explicação alternativa.';
+  if (code === 'NO_NEXT_APPOINTMENT') {
+    return 'Agende sua próxima consulta para poder adicionar a explicação alternativa.';
+  }
+  return 'Sua consulta já começou, então este registro ficou guardado como estava.';
 }
 
 function unavailableMessage(record: ThoughtRecord): string {

@@ -83,7 +83,11 @@ describe('cartão do registro', () => {
     expect(within(card).getByText('Explicação alternativa')).toBeInTheDocument();
     expect(within(card).getByText('Outro jeito fictício de ver')).toBeInTheDocument();
     expect(within(card).getByText('Adicionada em 24/09')).toBeInTheDocument();
-    expect(within(card).getByLabelText('intensidade 8 de 10; agora, 4 de 10')).toHaveTextContent('8 → 4');
+    // O leitor de tela ouve o texto completo; o "8 → 4" aparece na tela, mas fica fora da árvore
+    // de acessibilidade (senão seria lido duas vezes).
+    expect(within(card).getByText('intensidade 8 de 10; agora, 4 de 10')).toBeInTheDocument();
+    expect(within(card).getByText('8 → 4')).toBeInTheDocument();
+    expect(within(card).queryByText('8 → 4', { ignore: '[aria-hidden="true"]' })).not.toBeInTheDocument();
     // Já tem alternativa: nem botão, nem convite.
     expect(within(card).queryByRole('link', { name: 'Adicionar explicação alternativa' })).not.toBeInTheDocument();
   });
@@ -215,7 +219,7 @@ describe('/pensamentos/:id/alternativa', () => {
     expect(writes).toEqual([]);
   });
 
-  it('a API recusa (409): mostra a mensagem dela, sem formulário', async () => {
+  it('a API recusa (409): mensagem acolhedora, sem formulário e sem perder o que foi escrito', async () => {
     const record = lockedRecord({ canAddAlternative: true, alternativeDeadline: { date: '2026-09-25', time: '10:00' } });
     serveRecord(record);
     recordWrites(() =>
@@ -224,10 +228,19 @@ describe('/pensamentos/:id/alternativa', () => {
     const user = userEvent.setup();
     renderRoute(`/pensamentos/${record.id}/alternativa`);
 
-    await user.type(await screen.findByLabelText('Explicação alternativa'), 'Tarde demais');
+    await user.type(await screen.findByLabelText('Explicação alternativa'), 'Texto fictício escrito com cuidado');
+    await user.click(screen.getByRole('checkbox', { name: 'Quero dizer como me sinto agora' }));
+    fireEvent.change(screen.getByLabelText('Ansiedade: agora'), { target: { value: '4' } });
+    fireEvent.change(screen.getByLabelText('Medo: agora'), { target: { value: '2' } });
     await user.click(screen.getByRole('button', { name: 'Salvar explicação alternativa' }));
 
-    expect(await screen.findByText(/podia ser adicionada até a hora da consulta/)).toBeInTheDocument();
+    expect(
+      await screen.findByText('Sua consulta já começou, então este registro ficou guardado como estava.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/podia/)).not.toBeInTheDocument();
+    const written = screen.getByRole('region', { name: 'O que você escreveu' });
+    expect(within(written).getByText('Texto fictício escrito com cuidado')).toBeInTheDocument();
+    expect(within(written).getByText('Ansiedade: agora 4 de 10')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Salvar explicação alternativa' })).not.toBeInTheDocument();
   });
 
@@ -254,6 +267,34 @@ describe('/pensamentos/:id/alternativa', () => {
   });
 });
 
+describe('edição no dia: apagar a alternativa', () => {
+  it('esvaziar o campo manda null, que apaga a alternativa e a reavaliação', async () => {
+    const record = fakeThoughtRecord({
+      alternativeExplanation: 'Alternativa fictícia',
+      alternativeAddedAt: '2026-09-24T15:00:00.000Z',
+      emotions: [{ emotion: 'ANSIEDADE', intensity: 8, intensityAfter: 3, otherLabel: null }],
+    });
+    serveRecord(record);
+    const writes: unknown[] = [];
+    server.use(
+      http.patch(`*/api/thought-records/${record.id}`, async ({ request }) => {
+        const body = await request.json();
+        writes.push(body);
+        return HttpResponse.json({ thoughtRecord: { ...record, alternativeExplanation: null } });
+      }),
+    );
+    const user = userEvent.setup();
+    renderRoute(`/pensamentos/${record.id}/editar`);
+
+    await user.clear(await screen.findByLabelText('Explicação alternativa'));
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    await waitFor(() => expect(writes).toHaveLength(1));
+    expect(writes[0]).toMatchObject({ alternativeExplanation: null, emotions: [{ emotion: 'ANSIEDADE', intensity: 8 }] });
+    expect((writes[0] as { emotions: object[] }).emotions[0]).not.toHaveProperty('intensityAfter');
+  });
+});
+
 describe('card de Novidades', () => {
   const withAnnouncement = (profiles = fakeUser.profiles) =>
     http.get('*/api/auth/me', () =>
@@ -275,6 +316,34 @@ describe('card de Novidades', () => {
     expect(writes).toEqual([
       { method: 'POST', path: '/auth/announcement-seen', body: { announcement: '2026-10-explicacao-alternativa' } },
     ]);
+  });
+
+  it('"Ver meus pensamentos" marca como vista e leva à aba; o emoji não entra no nome da região', async () => {
+    server.use(withAnnouncement());
+    const writes = recordWrites();
+    const user = userEvent.setup();
+    const { router } = renderRoute('/registros');
+
+    const card = await screen.findByRole('region', { name: 'Novidade no Registro de Pensamentos' });
+    await user.click(within(card).getByRole('button', { name: 'Ver meus pensamentos' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/pensamentos'));
+    expect(writes).toEqual([
+      { method: 'POST', path: '/auth/announcement-seen', body: { announcement: '2026-10-explicacao-alternativa' } },
+    ]);
+  });
+
+  it('se o "Entendi" falhar, avisa e o card continua', async () => {
+    server.use(withAnnouncement());
+    recordWrites((path) => (path === '/auth/announcement-seen' ? apiError(500, 'INTERNAL', 'Erro.') : undefined));
+    const user = userEvent.setup();
+    renderRoute('/registros');
+
+    const card = await screen.findByRole('region', { name: /Novidade/ });
+    await user.click(within(card).getByRole('button', { name: 'Entendi' }));
+
+    expect(await within(card).findByRole('alert')).toHaveTextContent('Não deu para registrar agora.');
+    expect(screen.getByRole('region', { name: /Novidade/ })).toBeInTheDocument();
   });
 
   it('para quem é só terapeuta: o texto da terapeuta, sem o atalho de paciente', async () => {

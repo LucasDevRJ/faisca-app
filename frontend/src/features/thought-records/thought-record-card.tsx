@@ -124,18 +124,16 @@ function EmotionChip({ entry }: { entry: EmotionEntry }) {
     <li className="flex min-w-28 flex-col gap-1 rounded-md border border-border bg-bg px-3 py-1.5">
       <span className="flex items-baseline justify-between gap-3">
         <span className="font-medium break-words">{emotionName(entry)}</span>
-        {after === null ? (
-          <span className="font-semibold tabular-nums" aria-label={`intensidade ${entry.intensity} de 10`}>
-            {entry.intensity}
+        {/* aria-label em <span> sem papel é ignorado por leitores de tela (VoiceOver): o número
+            visual fica escondido e o texto completo vai num sr-only. */}
+        <span className="font-semibold tabular-nums">
+          <span aria-hidden="true">{after === null ? entry.intensity : `${entry.intensity} → ${after}`}</span>
+          <span className="sr-only">
+            {after === null
+              ? `intensidade ${entry.intensity} de 10`
+              : `intensidade ${entry.intensity} de 10; agora, ${after} de 10`}
           </span>
-        ) : (
-          <span
-            className="font-semibold tabular-nums"
-            aria-label={`intensidade ${entry.intensity} de 10; agora, ${after} de 10`}
-          >
-            {entry.intensity} → {after}
-          </span>
-        )}
+        </span>
       </span>
       <span aria-hidden="true" className="h-1.5 overflow-hidden rounded-full bg-border">
         <span className="block h-full rounded-full bg-primary" style={{ width: `${entry.intensity * 10}%` }} />
