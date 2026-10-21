@@ -18,6 +18,8 @@ import {
   TEXT_MAX,
 } from './thought-record-labels';
 import type { Emotion, ThoughtRecord, ThoughtRecordInput } from './thought-records-api';
+import { choiceCardClasses } from '../../components/ui/field-styles';
+import { FieldError } from '../../components/ui/field-error';
 
 type TextKey = 'situation' | 'automaticThought' | 'behavior' | 'consequence';
 const TEXT_FIELDS: TextKey[] = ['situation', 'automaticThought', 'behavior', 'consequence'];
@@ -175,28 +177,27 @@ export function ThoughtRecordForm({
         error={fieldError('beliefLevel')}
       />
 
-      <fieldset className="flex flex-col gap-3" aria-describedby="emotions-hint">
+      <fieldset
+        className="flex flex-col gap-3"
+        aria-describedby={fieldError('emotions') ? 'emotions-hint emotions-error' : 'emotions-hint'}
+      >
         <legend className="mb-1 font-medium">{FIELD_TEXT.emotions.label}</legend>
         <p id="emotions-hint" className="text-sm text-muted">
           {FIELD_TEXT.emotions.hint}
         </p>
         <div className="flex flex-wrap gap-2">
           {EMOTIONS.map((emotion) => (
-            <label
-              key={emotion}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-border px-3 has-checked:border-primary has-checked:bg-bg"
-            >
+            <label key={emotion} className={`flex min-h-11 items-center gap-2 px-3 ${choiceCardClasses}`}>
               <input
                 type="checkbox"
                 checked={Boolean(emotions[emotion])}
                 onChange={(e) => toggleEmotion(emotion, e.target.checked)}
-                className="accent-primary"
               />
               {EMOTION_LABEL[emotion]}
             </label>
           ))}
         </div>
-        {fieldError('emotions') && <p className="text-sm text-accent-text">{fieldError('emotions')}</p>}
+        {fieldError('emotions') && <FieldError id="emotions-error">{fieldError('emotions')!}</FieldError>}
 
         {selected.map((emotion) => (
           <div key={emotion} className="flex flex-col gap-3 rounded-md border border-border p-3">

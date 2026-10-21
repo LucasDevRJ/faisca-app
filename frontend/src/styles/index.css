@@ -14,6 +14,7 @@
   --color-bg: var(--faisca-bg);
   --color-surface: var(--faisca-surface);
   --color-border: var(--faisca-border);
+  --color-field-border: var(--faisca-field-border);
   --color-text: var(--faisca-text);
   --color-muted: var(--faisca-muted);
   --color-primary: var(--faisca-primary);
@@ -57,6 +58,8 @@
   --faisca-bg: light-dark(#fbf7f1, #0f2429);
   --faisca-surface: light-dark(#fffdf9, #16323a);
   --faisca-border: light-dark(#e6ddd0, #2b4b53);
+  /* Borda de campo: >= 3:1 contra o fundo e a superfície nos dois temas (WCAG 1.4.11, DEC-059). */
+  --faisca-field-border: light-dark(#8a7f70, #6a8b92);
   --faisca-text: light-dark(#23302e, #ecf1ee);
   --faisca-muted: light-dark(#5a6662, #a7b8b4);
   --faisca-primary: light-dark(#4f6f58, #9cc2a5);
@@ -99,6 +102,93 @@
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /*
+   * Caixa de seleção e rádio com o visual do Faísca (DEC-059). O elemento continua nativo: teclado,
+   * leitor de tela e formulário funcionam igual. O .sr-only (ex.: tema) fica de fora.
+   */
+  input:is([type='checkbox'], [type='radio']):not(.sr-only) {
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    border: 2px solid var(--color-field-border);
+    background: var(--color-surface);
+    cursor: pointer;
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+
+  input[type='checkbox']:not(.sr-only) {
+    border-radius: 0.375rem;
+  }
+
+  input[type='radio']:not(.sr-only) {
+    border-radius: 9999px;
+  }
+
+  input:is([type='checkbox'], [type='radio']):not(.sr-only):is(:hover, :checked) {
+    border-color: var(--color-primary);
+  }
+
+  input[type='checkbox']:not(.sr-only):checked {
+    background: var(--color-primary);
+  }
+
+  input:is([type='checkbox'], [type='radio']):not(.sr-only)[aria-invalid='true'] {
+    border-color: var(--color-accent-text);
+  }
+
+  input:is([type='checkbox'], [type='radio']):not(.sr-only)::before {
+    content: '';
+    transform: scale(0);
+    transition: transform 120ms;
+  }
+
+  input[type='checkbox']:not(.sr-only)::before {
+    width: 0.75rem;
+    height: 0.75rem;
+    background: var(--color-on-primary);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+
+  input[type='radio']:not(.sr-only)::before {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+  }
+
+  input:is([type='checkbox'], [type='radio']):not(.sr-only):checked::before {
+    transform: scale(1);
+  }
+
+  input:is([type='checkbox'], [type='radio']):not(.sr-only):disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    input:is([type='checkbox'], [type='radio']):not(.sr-only),
+    input:is([type='checkbox'], [type='radio']):not(.sr-only)::before {
+      transition: none;
+    }
+  }
+
+  /* Alto contraste do sistema: volta ao controle nativo, que o sistema sabe desenhar. */
+  @media (forced-colors: active) {
+    input:is([type='checkbox'], [type='radio']):not(.sr-only) {
+      appearance: auto;
+    }
+
+    input:is([type='checkbox'], [type='radio']):not(.sr-only)::before {
+      display: none;
+    }
   }
 }
 

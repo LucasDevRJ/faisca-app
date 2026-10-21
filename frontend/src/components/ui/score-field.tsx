@@ -1,4 +1,5 @@
 import { useId, type CSSProperties } from 'react';
+import { FieldError } from './field-error';
 
 type ScoreFieldProps = {
   label: string;
@@ -59,11 +60,7 @@ export function ScoreField({ label, value, onChange, minLabel, maxLabel, hint, e
         <span>0 · {minLabel}</span>
         <span>10 · {maxLabel}</span>
       </div>
-      {error && (
-        <p id={errorId} className="text-sm text-accent-text">
-          {error}
-        </p>
-      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
     </div>
   );
 }

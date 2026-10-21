@@ -118,7 +118,6 @@ export function ScheduleDialog({
                 value={value}
                 checked={frequency === value}
                 onChange={() => setFrequency(value)}
-                className="size-4 accent-primary"
               />
               {label}
             </label>
