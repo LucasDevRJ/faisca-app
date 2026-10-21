@@ -13,7 +13,8 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
 - `docs/`: SPEC, DECISIONS e DEPLOY (passo a passo do deploy).
 - `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-migration` e `finalizar-mudanca`).
-- `.claude/agents/`: subagentes do projeto (ex.: `revisor-regras`).
+- `.claude/agents/`: subagentes do projeto (`revisor-regras` para as regras invioláveis e
+  `revisor-telas` para tom, cores, contraste, acessibilidade e celular).
 - `.claude/settings.json` e `.claude/hooks/`: permissões e hooks do Claude Code (bloqueiam `.env`,
   `--no-verify`, force push, `prisma db push` e edição de migration já aplicada; pedem confirmação
   em push, PR e merge). Testes do hook: `node --test .claude/hooks/proteger.test.mjs`.
