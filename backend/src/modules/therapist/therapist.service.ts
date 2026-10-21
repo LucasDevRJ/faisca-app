@@ -9,6 +9,7 @@ import type { AppointmentsService } from '../appointments/appointments.service.j
 import type { Session } from '../appointments/sessions.js';
 import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
+import type { ReadMarksService } from '../read-marks/read-marks.service.js';
 import type { ListThoughtRecordsQuery } from '../thought-records/thought-records.schema.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
 
@@ -42,6 +43,7 @@ export function createTherapistService(
   thoughtRecords: ThoughtRecordsService,
   tensionEpisodes: TensionEpisodesService,
   actions: ActionsService,
+  readMarks: ReadMarksService,
 ) {
   return {
     async summary(therapistId: string, patientId: string) {
@@ -76,16 +78,22 @@ export function createTherapistService(
       return appointments.list(patientId, query);
     },
 
-    listThoughtRecords(patientId: string, query: ListThoughtRecordsQuery) {
-      return thoughtRecords.list(patientId, query);
+    // Pensamentos, Tensão e Ação saem com o status de leitura desta terapeuta (DEC-057).
+    async listThoughtRecords(therapistId: string, patientId: string, query: ListThoughtRecordsQuery) {
+      return readMarks.withReadStatus(therapistId, 'THOUGHT_RECORD', await thoughtRecords.list(patientId, query));
     },
 
-    listTensionEpisodes(patientId: string, query: ListTensionEpisodesQuery) {
-      return tensionEpisodes.list(patientId, query);
+    async listTensionEpisodes(therapistId: string, patientId: string, query: ListTensionEpisodesQuery) {
+      return readMarks.withReadStatus(therapistId, 'TENSION_EPISODE', await tensionEpisodes.list(patientId, query));
     },
 
-    listActions(patientId: string, query: ListActionsQuery) {
-      return actions.list(patientId, query);
+    async listActions(therapistId: string, patientId: string, query: ListActionsQuery) {
+      return readMarks.withReadStatus(therapistId, 'ACTION', await actions.list(patientId, query));
+    },
+
+    // A visão "Não lidos" (DEC-057), fora do ciclo.
+    unread(therapistId: string, patientId: string, privacyVersion: string | null) {
+      return readMarks.unread(therapistId, patientId, privacyVersion);
     },
   };
 }

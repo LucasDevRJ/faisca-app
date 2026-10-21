@@ -6,6 +6,7 @@ import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesService } from '../activities/activities.service.js';
 import { createAppointmentsService } from '../appointments/appointments.service.js';
+import { createReadMarksService } from '../read-marks/read-marks.service.js';
 import { createTensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import { createThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { createTherapistController } from './therapist.controller.js';
@@ -16,13 +17,17 @@ import { createTherapistService } from './therapist.service.js';
 const PREFIX = '/therapist/patients/:patientId';
 
 export function createTherapistRoutes() {
+  const thoughtRecords = createThoughtRecordsService();
+  const tensionEpisodes = createTensionEpisodesService();
+  const actions = createActionsService();
   const controller = createTherapistController(
     createTherapistService(
       createActivitiesService(),
       createAppointmentsService(),
-      createThoughtRecordsService(),
-      createTensionEpisodesService(),
-      createActionsService(),
+      thoughtRecords,
+      tensionEpisodes,
+      actions,
+      createReadMarksService(thoughtRecords, tensionEpisodes, actions),
     ),
   );
   const router = Router();
@@ -42,6 +47,9 @@ export function createTherapistRoutes() {
   router.get(`${PREFIX}/tension-episodes`, requirePrivacy('tensionEpisodes'), controller.tensionEpisodes);
   // Ação (DEC-051): também pede o aceite da versão do aviso que a cita.
   router.get(`${PREFIX}/actions`, requirePrivacy('actions'), controller.actions);
+  // Não lidos (DEC-057): o aceite é conferido por área dentro do service. Escrever as marcas fica
+  // em /therapist/read-marks (read-marks.routes.ts), fora deste prefixo só leitura.
+  router.get(`${PREFIX}/unread`, controller.unread);
 
   return router;
 }

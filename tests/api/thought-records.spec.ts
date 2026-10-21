@@ -64,8 +64,23 @@ test('aceite do aviso, registro da paciente e leitura só pela terapeuta vincula
   expect((await therapist.post(`${path}/${id}/alternative`, { data: alternative })).status()).toBe(403);
   expect((await therapist.post(`/thought-records/${id}/alternative`, { data: alternative })).status()).toBe(403);
 
+  // A única escrita da terapeuta: as próprias marcas de leitura (DEC-057), num prefixo próprio.
+  const marks = `/therapist/read-marks/${patientId}`;
+  const items = { items: [{ type: 'THOUGHT_RECORD', id }] };
+  expect((await (await therapist.get(`/therapist/patients/${patientId}/unread`)).json()).counts.thoughtRecords).toBe(1);
+  expect((await therapist.put(marks, { data: items })).status()).toBe(200);
+  const afterMark = await therapist.get(path, { params: { from: DAY, to: DAY } });
+  expect((await afterMark.json()).thoughtRecords[0].readStatus).toBe('LIDO');
+  expect((await (await therapist.get(`/therapist/patients/${patientId}/unread`)).json()).counts.thoughtRecords).toBe(0);
+  // A paciente não marca nada e não vê as marcas.
+  expect((await patient.put(marks, { data: items })).status()).toBe(403);
+  const own = await patient.get('/thought-records', { params: { from: DAY, to: DAY } });
+  expect((await own.json()).thoughtRecords[0]).not.toHaveProperty('readStatus');
+
   expect((await patient.post('/link/revoke')).status()).toBe(204);
   expect((await therapist.get(path, { params: { from: DAY, to: DAY } })).status()).toBe(403);
+  // Sem vínculo, nem as marcas.
+  expect((await therapist.delete(marks, { data: items })).status()).toBe(403);
 
   await patient.dispose();
   await therapist.dispose();
