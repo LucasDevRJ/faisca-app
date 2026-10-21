@@ -1,4 +1,6 @@
 import { useId, useState, type InputHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { FieldError } from './field-error';
+import { fieldClasses } from './field-styles';
 
 type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> & {
   label: string;
@@ -22,7 +24,7 @@ export function TextField({ label, hint, error, className = '', ...props }: Text
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className="min-h-11 rounded-md border border-border bg-bg px-3 text-text aria-invalid:border-accent-text"
+        className={`min-h-11 ${fieldClasses}`}
         {...props}
       />
       {hint && (
@@ -30,11 +32,7 @@ export function TextField({ label, hint, error, className = '', ...props }: Text
           {hint}
         </p>
       )}
-      {error && (
-        <p id={errorId} className="text-sm text-accent-text">
-          {error}
-        </p>
-      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
     </div>
   );
 }
@@ -95,7 +93,7 @@ export function TextAreaField({ label, hint, error, limit, className = '', ...pr
         rows={3}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className="rounded-md border border-border bg-bg px-3 py-2 text-text aria-invalid:border-accent-text"
+        className={`py-2 ${fieldClasses}`}
         {...props}
       />
       {hint && (
@@ -109,11 +107,7 @@ export function TextAreaField({ label, hint, error, limit, className = '', ...pr
           {over && ` (passou ${countFormat.format(length - limit)})`}
         </p>
       )}
-      {error && (
-        <p id={errorId} className="text-sm text-accent-text">
-          {error}
-        </p>
-      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
     </div>
   );
 }

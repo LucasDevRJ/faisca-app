@@ -1078,6 +1078,25 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   O card só aparece quando é útil, e o "Marcar todos" com confirmação resolve a estreia, em que
   tudo começa para ler (DEC-057).
 
+## DEC-059 — Visual dos campos: borda com contraste, foco sálvia e opções desenhadas
+- **Decisão:**
+  - nova cor **`--faisca-field-border`** (`#8a7f70` no claro, `#6a8b92` no escuro), só para a borda
+    dos campos, com contraste de 3,7 a 4,4:1 contra o fundo e a superfície. A borda de antes
+    (`--faisca-border`, 1,3 a 1,7:1) não atendia a WCAG 1.4.11 (3:1) e continua só nos cartões;
+  - estilo central em `components/ui/field-styles.ts` (como o `button-styles.ts`):
+    `fieldClasses` para texto, data, hora e textos longos (borda de 1,5px, cantos arredondados,
+    hover em sálvia mais leve; foco com borda e anel sálvia sólidos e `outline-hidden`, que continua visível no alto contraste do sistema) e `choiceCardClasses` para os cartões de opção
+    (marcado: borda sálvia e fundo tingido);
+  - erro do campo com **ícone** (`FieldError`), para não depender só da cor (WCAG 1.4.1), também nos
+    grupos de opções, ligado ao `fieldset` por `aria-describedby`;
+  - caixa de seleção e rádio desenhados no `index.css` sobre o elemento nativo (teclado, leitor
+    de tela e formulário iguais), voltando ao controle do sistema em alto contraste
+    (`forced-colors`) e sem transição com `prefers-reduced-motion`.
+- **Motivo:** o usuário pediu campos com a identidade do Faísca, e a revisão mostrou que a borda
+  dos campos quase não aparecia. Um estilo central muda todos os formulários de uma vez e prepara
+  o perfil (#83).
+- **Limite conhecido:** o anel colorido da foto de perfil fica para o PR do perfil (#83).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

@@ -41,7 +41,6 @@ export function AlternativeFields({ state, onChange, emotions, error, optional =
               type="checkbox"
               checked={state.feelNow}
               onChange={(e) => onChange({ ...state, feelNow: e.target.checked })}
-              className="accent-primary"
             />
             {FIELD_TEXT.feelNow.toggle}
           </label>
