@@ -1,6 +1,6 @@
 ---
 name: finalizar-mudanca
-description: Checklist para encerrar uma mudança no Faísca antes do commit e do PR — ambiente (Docker/Postgres), lint, typecheck e testes só dos pacotes alterados e na ordem certa, conferência na tela, revisor-regras, SPEC/DECISIONS e um relatório fiel do resultado. Use sempre que terminar de codar ou quando pedirem "roda os testes", "pode commitar", "abre o PR", "finaliza", "está pronto?", mesmo que não digam "checklist". Tem um modo rápido para mudança só de documentação.
+description: Checklist para encerrar uma mudança no Faísca antes do commit e do PR — ambiente (Docker/Postgres), lint, typecheck e testes só dos pacotes alterados e na ordem certa, conferência na tela, revisores (regras e telas), SPEC/DECISIONS e um relatório fiel do resultado. Use sempre que terminar de codar ou quando pedirem "roda os testes", "pode commitar", "abre o PR", "finaliza", "está pronto?", mesmo que não digam "checklist". Tem um modo rápido para mudança só de documentação.
 ---
 
 # Finalizar uma mudança
@@ -70,9 +70,14 @@ Só se mudou o que a pessoa vê:
    encerre o `node` que sobra na porta (`Get-NetTCPConnection -LocalPort 3333,5173`). Avise antes
    de desligar.
 
-## 6. Revisão das regras
-Se o PR toca em `backend/`, rode o subagente `revisor-regras` (o CLAUDE.md exige). Corrija o que
-ele apontar ou leve a decisão ao usuário, e rode-o de novo sobre a correção.
+## 6. Revisores
+Rode os subagentes de revisão que se aplicam (o CLAUDE.md exige):
+- tocou em `backend/` → `revisor-regras` (as 8 regras invioláveis);
+- tocou em `frontend/src` ou nos textos de e-mail (`backend/src/modules/*/*.emails.ts`) →
+  `revisor-telas` (tom, cores, contraste, acessibilidade, celular e testes de tela).
+
+Os dois podem rodar ao mesmo tempo, porque só leem. Corrija o que apontarem ou leve a decisão ao
+usuário, e rode de novo o revisor sobre a correção.
 
 ## 7. Documentação
 A mudança altera requisito ou decisão?
@@ -90,7 +95,7 @@ Mostre uma tabela com cada verificação e o resultado real:
 | Lint e typecheck | ✅ / ❌ com a mensagem |
 | Front / Backend / Playwright | quantos passaram, quantos falharam e por quê |
 | Tela | o que foi conferido |
-| `revisor-regras` | veredito, ou "não exigido" |
+| `revisor-regras` / `revisor-telas` | veredito de cada um, ou "não exigido" |
 
 Depois, proponha a mensagem de commit (Conventional Commits, em pt-BR, `Closes #N` ou `Refs #N`)
 e **peça confirmação antes de commit, push, PR ou merge**. Mande a mensagem por heredoc, porque o
