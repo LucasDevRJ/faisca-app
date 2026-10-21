@@ -17,6 +17,7 @@ import {
   type CreateRequest,
 } from './use-activities';
 import { isValidDateOnly, todayInAppZone } from './week';
+import { choiceCardClasses } from '../../components/ui/field-styles';
 
 // Ao terminar, o dialog fecha. `notice` vem quando um passo duplo gravou só a primeira parte
 // (DEC-029): o aviso aparece na tela da semana, e o formulário não pode ser reenviado.
@@ -170,7 +171,7 @@ export function CreateActivityDialog({
           {CREATE_MODES.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer items-start gap-3 rounded-md border border-border px-3 py-2 has-checked:border-primary has-checked:bg-bg sm:px-4 sm:py-3"
+              className={`flex items-start gap-3 px-3 py-2 sm:px-4 sm:py-3 ${choiceCardClasses}`}
             >
               <input
                 type="radio"
@@ -178,7 +179,7 @@ export function CreateActivityDialog({
                 value={option.value}
                 checked={mode === option.value}
                 onChange={() => setMode(option.value)}
-                className="mt-1 accent-primary"
+                className="mt-0.5"
               />
               <span className="flex flex-col">
                 <span className="font-medium">{option.label}</span>

@@ -14,6 +14,8 @@
 - Títulos em Nunito, texto em Inter. Muito espaço, cantos arredondados, sombras leves.
 - Sliders grandes com legendas nos extremos. Animações sutis e respeito a `prefers-reduced-motion`.
 - Contraste mínimo WCAG AA nos dois temas.
+- Campos e opções usam `fieldClasses` e `choiceCardClasses` (`components/ui/field-styles.ts`) e o
+  erro usa `FieldError`; a borda de campo é `border-field-border` (3:1), nunca a dos cartões (DEC-059).
 
 ## Tom
 - Textos acolhedores: "Conta como foi?" em vez de "Tarefa pendente";

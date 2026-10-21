@@ -103,7 +103,7 @@ export function PrivacyConsentGate({ area, audience = 'patient' }: PrivacyConsen
             type="checkbox"
             checked={checked}
             onChange={(e) => setChecked(e.target.checked)}
-            className="mt-1 size-4 accent-primary"
+            className="mt-0.5"
           />
           <span>
             Li e concordo com o{' '}
