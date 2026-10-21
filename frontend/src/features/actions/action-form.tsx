@@ -8,6 +8,8 @@ import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { addDays, isValidDateOnly } from '../activities/week';
 import { CATEGORIES, CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action, ActionCategory, CreateActionInput } from './actions-api';
+import { choiceCardClasses } from '../../components/ui/field-styles';
+import { FieldError } from '../../components/ui/field-error';
 
 // Formulário da Ação (DEC-052), em página própria: planejar ou, para algo que já foi feito,
 // registrar já com a avaliação. Na edição de uma planejada, só os campos dela.
@@ -100,17 +102,20 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
         </fieldset>
       )}
 
-      <fieldset className="flex flex-col gap-2">
+      <fieldset
+        className="flex flex-col gap-2"
+        aria-describedby={fieldError('category') ? 'action-category-error' : undefined}
+      >
         <legend className="mb-1.5 font-medium">Tipo</legend>
         {CATEGORIES.map((value) => (
-          <label key={value} className="flex min-h-11 cursor-pointer items-start gap-3 rounded-md border border-border bg-surface p-3">
+          <label key={value} className={`flex min-h-11 items-start gap-3 p-3 ${choiceCardClasses}`}>
             <input
               type="radio"
               name="category"
               value={value}
               checked={category === value}
               onChange={() => setCategory(value)}
-              className="mt-1 size-4 accent-primary"
+              className="mt-0.5"
             />
             <span className="flex flex-col">
               <span className="font-medium">{CATEGORY_TEXT[value].label}</span>
@@ -118,7 +123,7 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
             </span>
           </label>
         ))}
-        {fieldError('category') && <p className="text-sm text-accent-text">{fieldError('category')}</p>}
+        {fieldError('category') && <FieldError id="action-category-error">{fieldError('category')!}</FieldError>}
       </fieldset>
 
       <TextField

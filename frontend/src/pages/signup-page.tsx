@@ -8,6 +8,8 @@ import { getApiError, signup } from '../features/auth/auth-api';
 import { AuthLayout } from '../features/auth/auth-layout';
 import { PASSWORD_MIN, validateEmail, validateNewPassword } from '../features/auth/validation';
 import { readInviteToken } from '../features/links/invite-state';
+import { choiceCardClasses } from '../components/ui/field-styles';
+import { FieldError } from '../components/ui/field-error';
 
 type Errors = { name?: string; email?: string; password?: string; profiles?: string; acceptPrivacy?: string };
 
@@ -115,15 +117,12 @@ export function SignupPage() {
           <legend className="mb-1 font-medium">Como você vai usar o Faísca?</legend>
           <p className="-mt-1 text-sm text-muted">Pode escolher as duas. Dá para mudar depois.</p>
           {profileOptions.map((option) => (
-            <label
-              key={option.key}
-              className="flex cursor-pointer gap-3 rounded-md border border-border p-3 has-checked:border-primary"
-            >
+            <label key={option.key} className={`flex gap-3 p-3 ${choiceCardClasses}`}>
               <input
                 type="checkbox"
                 checked={profiles[option.key]}
                 onChange={(e) => setProfiles((p) => ({ ...p, [option.key]: e.target.checked }))}
-                className="mt-1 size-4 accent-primary"
+                className="mt-0.5"
               />
               <span className="flex flex-col">
                 <span className="font-medium">{option.label}</span>
@@ -131,24 +130,20 @@ export function SignupPage() {
               </span>
             </label>
           ))}
-          {shownErrors.profiles && (
-            <p id="profiles-error" className="text-sm text-accent-text">
-              {shownErrors.profiles}
-            </p>
-          )}
+          {shownErrors.profiles && <FieldError id="profiles-error">{shownErrors.profiles}</FieldError>}
         </fieldset>
 
         {/* Consentimento específico e destacado para dado de saúde (LGPD, art. 11; DEC-036).
             O link abre em outra aba para não perder o que já foi digitado. */}
         <div className="flex flex-col gap-1.5">
-          <label className="flex cursor-pointer gap-3 rounded-md border border-border p-3 has-checked:border-primary">
+          <label className={`flex gap-3 p-3 ${choiceCardClasses}`}>
             <input
               type="checkbox"
               checked={acceptPrivacy}
               onChange={(e) => setAcceptPrivacy(e.target.checked)}
               aria-invalid={shownErrors.acceptPrivacy ? true : undefined}
               aria-describedby={shownErrors.acceptPrivacy ? 'privacy-error' : undefined}
-              className="mt-1 size-4 shrink-0 accent-primary"
+              className="mt-0.5"
             />
             <span>
               Li o{' '}
@@ -163,11 +158,7 @@ export function SignupPage() {
               e concordo com o uso dos meus dados, inclusive os de saúde, para os fins descritos nele.
             </span>
           </label>
-          {shownErrors.acceptPrivacy && (
-            <p id="privacy-error" className="text-sm text-accent-text">
-              {shownErrors.acceptPrivacy}
-            </p>
-          )}
+          {shownErrors.acceptPrivacy && <FieldError id="privacy-error">{shownErrors.acceptPrivacy}</FieldError>}
         </div>
 
         <Button type="submit" disabled={mutation.isPending}>
