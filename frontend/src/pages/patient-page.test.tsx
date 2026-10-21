@@ -252,6 +252,47 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     return calls;
   }
 
+  it('alternativa e antes → agora aparecem, sem nenhum botão ou link de escrita (DEC-055)', async () => {
+    patientApi();
+    thoughtsApi([
+      fakeThoughtRecord({
+        situation: 'Situação travada',
+        situationDate: '2026-09-22',
+        editable: false,
+        createdAt: '2026-09-22T15:00:00.000Z',
+        alternativeExplanation: 'Alternativa fictícia da paciente',
+        alternativeAddedAt: '2026-09-23T12:00:00.000Z',
+        emotions: [{ emotion: 'ANSIEDADE', intensity: 8, intensityAfter: 4, otherLabel: null }],
+      }),
+      // Mesmo com a paciente ainda podendo adicionar, a terapeuta não vê o botão nem o convite.
+      fakeThoughtRecord({
+        situation: 'Situação sem alternativa',
+        situationDate: '2026-09-22',
+        editable: false,
+        createdAt: '2026-09-22T16:00:00.000Z',
+        canAddAlternative: true,
+        alternativeDeadline: { date: '2026-09-25', time: '10:00' },
+      }),
+      fakeThoughtRecord({
+        situation: 'Situação sem consulta',
+        situationDate: '2026-09-22',
+        editable: false,
+        createdAt: '2026-09-22T17:00:00.000Z',
+      }),
+    ]);
+    renderRoute(`${path}?aba=pensamentos`);
+
+    const withAlternative = await screen.findByRole('article', { name: 'Registro: Situação travada' });
+    expect(within(withAlternative).getByText('Alternativa fictícia da paciente')).toBeInTheDocument();
+    expect(within(withAlternative).getByText('Adicionada em 23/09')).toBeInTheDocument();
+    expect(within(withAlternative).getByText('8 → 4')).toBeInTheDocument();
+    for (const name of ['Situação travada', 'Situação sem alternativa', 'Situação sem consulta']) {
+      const card = screen.getByRole('article', { name: `Registro: ${name}` });
+      expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+      expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+    }
+  });
+
   it('mostra os registros só para leitura, com a hora do registro', async () => {
     const { writes } = patientApi();
     const calls = thoughtsApi([fakeThoughtRecord({ situation: 'Situação da paciente', situationDate: '2026-09-22' })]);

@@ -106,7 +106,7 @@ describe('/pensamentos', () => {
     expect(within(card).getByText(/Acredito:/)).toHaveTextContent('Acredito: 7 de 10');
     expect(within(card).getByText('Tristeza')).toBeInTheDocument();
     expect(within(card).getByText('Inquietação')).toBeInTheDocument();
-    expect(within(card).getByLabelText('intensidade 3 de 10')).toBeInTheDocument();
+    expect(within(card).getByText('intensidade 3 de 10')).toBeInTheDocument();
   });
 
   it('registro de hoje tem Editar e Excluir; de outro dia, só "Registrado em"', async () => {
