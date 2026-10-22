@@ -30,7 +30,8 @@ export function RequireAuth() {
   if (isPending) return <SessionLoading />;
   if (isError) return <SessionError />;
   if (!user) {
-    const next = location.pathname + location.search;
+    // Com o #, para um link como /novidades#<id> voltar para a novidade certa depois do login.
+    const next = location.pathname + location.search + location.hash;
     const target = next === '/' ? '/entrar' : `/entrar?next=${encodeURIComponent(next)}`;
     return <Navigate to={target} replace />;
   }

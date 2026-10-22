@@ -11,9 +11,9 @@ import { routes } from '../app/router';
 // Devolve o router para os testes conferirem para onde a tela navegou.
 export function renderRoute(path: string, options: { state?: unknown } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const { pathname, search } = new URL(path, 'http://faisca.test');
+  const { pathname, search, hash } = new URL(path, 'http://faisca.test');
   const router = createMemoryRouter(routes, {
-    initialEntries: [{ pathname, search, state: options.state }],
+    initialEntries: [{ pathname, search, hash, state: options.state }],
   });
 
   const result = render(

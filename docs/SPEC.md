@@ -229,6 +229,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
   tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra
   depois não recebe como novidade o que já existia (DEC-054, DEC-055).
+- **O que há de novo:** uma página reúne todas as novidades da pessoa, da mais nova para a mais
+  antiga, com a data, inclusive as já vistas; abrir a página não fecha o card (DEC-060).
 
 ## Fora do escopo (por ora)
 - Exportação CSV/PDF

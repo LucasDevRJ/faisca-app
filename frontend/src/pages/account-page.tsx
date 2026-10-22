@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
+import { buttonClasses } from '../components/ui/button-styles';
 import { getApiError } from '../features/auth/auth-api';
 import { DeleteAccountSection } from '../features/auth/delete-account-section';
 import { useAddProfile, useSession } from '../features/auth/use-session';
@@ -17,8 +18,8 @@ const profileInfo = {
   },
 } as const;
 
-// "Conta": a terapeuta vinculada (só para quem é paciente), os perfis (SPEC, "Contas e perfis")
-// e, no fim, excluir a conta (SPEC, "Privacidade").
+// "Conta": a terapeuta vinculada (só para quem é paciente), os perfis (SPEC, "Contas e perfis"),
+// as novidades do app e, no fim, excluir a conta (SPEC, "Privacidade").
 export function AccountPage() {
   const { data: user } = useSession();
   if (!user) return null;
@@ -42,6 +43,17 @@ export function AccountPage() {
       {user.profiles.patient && <TherapistLinkSection />}
 
       <ProfilesSection profiles={user.profiles} />
+
+      {/* Todas as novidades do app, inclusive as que já foram vistas (DEC-060). */}
+      <section aria-labelledby="news-title" className="flex flex-col gap-3">
+        <h2 id="news-title" className="text-2xl font-semibold">
+          Novidades do Faísca
+        </h2>
+        <p className="text-muted">Tudo o que melhorou no app, mesmo o que você já viu.</p>
+        <Link to="/novidades" className={buttonClasses('secondary', 'self-start')}>
+          Ver o que há de novo
+        </Link>
+      </section>
 
       <DeleteAccountSection isPatient={user.profiles.patient} />
     </>
