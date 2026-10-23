@@ -1008,6 +1008,41 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   merge para lembrar da regra. A proteção da `main` com checks obrigatórios (que destravaria o
   auto-merge) fica para depois, porque os workflows filtram por pasta (issue nova).
 
+## DEC-057 — API das marcas de leitura da terapeuta ("Lido")
+- **Decisão:**
+  - a terapeuta marca como **lido** um Pensamento, um Episódio de tensão ou uma Ação de um paciente
+    vinculado (issue #79). Atividades ficam de fora. É a **segunda exceção da regra 1** do
+    AGENTS.md ("terapeuta: só GET"), depois dos POSTs do vínculo (DEC-031): ela grava só **as
+    próprias marcas**, na tabela `ReadMark`, e **nunca altera o registro do paciente**;
+  - as escritas ficam num **prefixo próprio**: `PUT /therapist/read-marks/:patientId` marca e
+    `DELETE` desmarca, com `{ items: [{ type, id }] }` (até 500, para o "Marcar todos"). A cadeia
+    é sessão → perfil de terapeuta → vínculo ativo; `/therapist/patients/...` continua com o
+    `onlyReads` antes de tudo. Cada item é conferido: registro de outro paciente, ou de área sem o
+    aceite do aviso, recusa o pedido inteiro (403) e nada é gravado;
+  - `ReadMark` tem uma coluna por área (`thoughtRecordId`, `tensionEpisodeId`, `actionId`, CHECK
+    de exatamente uma), `therapistId`, `patientId` e `readAt`; some em cascata com o registro ou
+    com qualquer uma das contas. Uma marca por terapeuta e registro: a terapeuta nova de uma
+    paciente começa sem marcas;
+  - **status:** `NAO_LIDO` (sem marca), `LIDO` (marca igual ou depois do `updatedAt`) ou
+    `ATUALIZADO` (o registro mudou depois da marca). As listas da terapeuta de Pensamentos,
+    Tensão e Ação passam a trazer `readStatus` e `readAt`. O congelamento do prazo da explicação
+    alternativa (DEC-054) passa a preservar o `updatedAt` (e só grava se o registro não mudou
+    desde a leitura), para não "atualizar" nada à toa; e a edição do RPD sempre renova o
+    `updatedAt`, porque mudar só as emoções (outra tabela) não o mudava;
+  - `GET /therapist/patients/:patientId/unread` traz os não lidos e atualizados das três áreas, de
+    qualquer data, na ordem das listas, com `counts`; área sem o aceite vem como `null`, em vez de
+    403. `GET /links/patients` ganha `unreadCount`, só das áreas com aceite;
+  - o **paciente não vê** as marcas: nenhuma rota dele muda. Logs só com ids (regra 7);
+  - tudo o que já existia começa **não lido**: um "Marcar todos" resolve.
+- **Motivo:** o ciclo responde "o que aconteceu nesta semana?", mas não "o que eu ainda não vi?":
+  um registro do ciclo passado, ou uma explicação alternativa adicionada na véspera, passava
+  despercebido. A marca é um dado de trabalho da terapeuta sobre a própria leitura, não uma
+  escrita no prontuário; por isso cabe numa exceção estreita, num prefixo à parte, e o resto da
+  visão da terapeuta segue com a garantia do `onlyReads`. Esconder do paciente evita a expectativa
+  de resposta ("ela não leu o que eu escrevi").
+- **Limite conhecido:** o contador da lista de pacientes lê ids e datas e conta na memória; com
+  muitos registros por paciente, valeria uma consulta agregada no banco.
+
 ## DEC-059 — Visual dos campos: borda com contraste, foco sálvia e opções desenhadas
 - **Decisão:**
   - nova cor **`--faisca-field-border`** (`#8a7f70` no claro, `#6a8b92` no escuro), só para a borda

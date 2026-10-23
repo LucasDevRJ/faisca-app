@@ -51,7 +51,8 @@ export function createLinksController(service: LinksService) {
   };
 
   const listPatients: RequestHandler = async (req, res) => {
-    res.status(200).json({ patients: await service.listPatients(getAuthUser(req).id) });
+    const user = getAuthUser(req);
+    res.status(200).json({ patients: await service.listPatients(user.id, user.privacyVersion) });
   };
 
   return { status, createInvite, cancelInvite, generateCode, revoke, markSeen, redeemCode, acceptInvite, listPatients };
