@@ -2,7 +2,7 @@
 // um segundo e-mail de verdade (DEC-032, DEC-033). Só roda em desenvolvimento.
 // Uso: npm run db:seed-dev (com a API de dev configurada no .env).
 //
-// - terapeuta.dev@faisca.test: terapeuta, sem dados;
+// - terapeuta.dev@faisca.test: terapeuta, com marcas de leitura fictícias na paciente dev (DEC-058);
 // - paciente.dev@faisca.test: paciente vinculada à terapeuta dev, com ~3 semanas de atividades,
 //   Registros de Pensamentos (com e sem explicação alternativa, um deles ainda aberto para
 //   adicionar até a próxima consulta; DEC-054), Episódios de tensão (um deles no dia da última consulta, para aparecer
@@ -242,6 +242,37 @@ await prisma.$transaction(async (tx) => {
   if (!active) {
     await tx.therapistLink.create({
       data: { patientId: patient.id, therapistId: therapist.id, method: 'CODE', seenByPatientAt: new Date() },
+    });
+  }
+
+  // Marcas de leitura da terapeuta dev (DEC-057, DEC-058), para ver os três estados na tela: os
+  // pensamentos mais antigos lidos, um lido antes de mudar (atualizado) e o resto para ler.
+  // As marcas antigas saíram em cascata com os registros recriados acima.
+  const thoughts = await tx.thoughtRecord.findMany({
+    where: { userId: patient.id },
+    orderBy: [{ situationDate: 'asc' }, { createdAt: 'asc' }],
+  });
+  const [oldest, second, third] = thoughts;
+  for (const record of [oldest, second].filter((r) => r !== undefined)) {
+    await tx.readMark.create({
+      data: { therapistId: therapist.id, patientId: patient.id, thoughtRecordId: record.id, readAt: new Date() },
+    });
+  }
+  if (third) {
+    // Lida antes da última mudança do registro: aparece como "atualizado depois que você leu".
+    await tx.readMark.create({
+      data: {
+        therapistId: therapist.id,
+        patientId: patient.id,
+        thoughtRecordId: third.id,
+        readAt: new Date(third.updatedAt.getTime() - 60_000),
+      },
+    });
+  }
+  const firstEpisode = await tx.tensionEpisode.findFirst({ where: { userId: patient.id }, orderBy: { episodeDate: 'asc' } });
+  if (firstEpisode) {
+    await tx.readMark.create({
+      data: { therapistId: therapist.id, patientId: patient.id, tensionEpisodeId: firstEpisode.id, readAt: new Date() },
     });
   }
 });

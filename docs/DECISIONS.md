@@ -1043,6 +1043,41 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o contador da lista de pacientes lê ids e datas e conta na memória; com
   muitos registros por paciente, valeria uma consulta agregada no banco.
 
+## DEC-058 — Telas do "Lido" da terapeuta
+- **Decisão:**
+  - o texto fala em **"para ler"** ("4 para ler", "5 registros para ler"), e não em "não lidos":
+    soa como uma tarefa tranquila, e não como pendência atrasada;
+  - na tela do paciente, um **card acima das abas**, só quando há algo para ler: "5 registros para
+    ler", com a divisão por área e o botão **"Ver os registros para ler"**. Uma quinta aba
+    quebraria a grade 2×2 do celular (DEC-052);
+  - a visão **"Para ler"** (`?aba=para-ler`) junta Pensamentos, Tensão e Ação fora do ciclo, do mais
+    antigo ao mais novo, com a área e o dia acima de cada cartão, o link "‹ Voltar ao ciclo" e, sem
+    nada pendente, "Você já leu todos os registros de {nome}";
+  - nas abas, um **número discreto** ao lado do nome (lido como ", 2 para ler" pelo leitor de
+    tela), sem cor de alerta; o botão de cada cartão leva no nome, para o leitor de tela, a
+    situação ou o nome do registro; ao marcar na visão "Para ler", o foco vai para o título;
+  - no rodapé de cada cartão, só na visão da terapeuta: **"Marcar como lido"**; lido, **"Lido em
+    dd/mm"** e **"Marcar como não lido"**; atualizado, o selo pêssego **"Atualizado depois que você
+    leu"** e "Marcar como lido". Nunca marca sozinho ao abrir;
+  - **"Marcar todos como lidos (N)"** no topo de cada lista e da visão "Para ler", só com algo
+    pendente, marca exatamente a lista aberta, depois da confirmação **"Marcar N registros como
+    lidos?"** (dá para desfazer em cada registro);
+  - na lista de pacientes, o selo neutro **"4 para ler"**;
+  - card de Novidades **só para a terapeuta** (`2026-10-lido`). Cada novidade passa a ter um
+    **público** na API (todos ou só terapeuta), e a pendente é a mais recente que vale para o perfil
+    da pessoa, depois da última vista: assim a novidade da terapeuta não esconde, de quem é só
+    paciente, a da explicação alternativa que ela ainda não viu. `POST /auth/announcement-seen` só
+    aceita a novidade pendente da pessoa (outra → 400);
+    casos aceitos: conta nova nasce com a mais recente vista, então quem ativa o perfil de
+    terapeuta depois não recebe a do "Lido"; e quem tem os dois perfis vê só a mais recente
+    (continua valendo "uma novidade por vez", DEC-054);
+  - aviso de privacidade: "A terapeuta pode marcar os seus registros como lidos, para se organizar.
+    Essa marca é só dela: você não a vê.", **sem nova versão** (como na DEC-055);
+  - `db:seed-dev` grava marcas da terapeuta dev nos três estados.
+- **Motivo:** mostrar o que falta ler sem transformar a leitura em cobrança, nem para a psicóloga.
+  O card só aparece quando é útil, e o "Marcar todos" com confirmação resolve a estreia, em que
+  tudo começa para ler (DEC-057).
+
 ## DEC-059 — Visual dos campos: borda com contraste, foco sálvia e opções desenhadas
 - **Decisão:**
   - nova cor **`--faisca-field-border`** (`#8a7f70` no claro, `#6a8b92` no escuro), só para a borda

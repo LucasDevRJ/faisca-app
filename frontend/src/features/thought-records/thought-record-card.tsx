@@ -17,7 +17,7 @@ import type { EmotionEntry, ThoughtRecord } from './thought-records-api';
 // terapeuta as duas datas; a da situação vem no título do dia).
 type ThoughtRecordCardProps =
   | { record: ThoughtRecord; onDelete: (record: ThoughtRecord) => void; readOnly?: false }
-  | { record: ThoughtRecord; readOnly: true };
+  | { record: ThoughtRecord; readOnly: true; footer?: ReactNode };
 
 // Editar e excluir só no dia em que foi registrado (DEC-039). Depois disso, o registro fica
 // fixo e o backend responderia 409: esconder os botões é conforto, não segurança.
@@ -89,6 +89,8 @@ export function ThoughtRecordCard(props: ThoughtRecordCardProps) {
       {(props.readOnly || !record.editable) && (
         <p className="text-sm text-muted">Registrado em {formatDateTime(record.createdAt)}</p>
       )}
+
+      {props.readOnly && props.footer}
 
       {canChange && (
         <div className="flex gap-1">

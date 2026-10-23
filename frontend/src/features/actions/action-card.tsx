@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { formatDateTime } from '../links/link-format';
@@ -16,7 +16,7 @@ export type ActionCardAction = 'evaluate' | 'notDone' | 'delete';
 // readOnly: visão da terapeuta. Sem botões e com a hora em que o registro foi feito.
 type ActionCardProps =
   | { action: Action; today: string; onAction: (kind: ActionCardAction, action: Action) => void; readOnly?: false }
-  | { action: Action; readOnly: true };
+  | { action: Action; readOnly: true; footer?: ReactNode };
 
 // A expectativa ao lado do resultado (DEC-052): "Esperava 3 · Prazer 7 · Realização 6". Só os
 // números, sem julgamento: comparar o que se esperava com o que aconteceu é o centro da Ação.
@@ -59,6 +59,7 @@ export function ActionCard(props: ActionCardProps) {
       {action.observation && <p className="whitespace-pre-line text-muted">{action.observation}</p>}
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(action.createdAt)}</p>}
+      {props.readOnly && props.footer}
 
       {!props.readOnly && planned && (
         <div className="flex flex-col gap-2">

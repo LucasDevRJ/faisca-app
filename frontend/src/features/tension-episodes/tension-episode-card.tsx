@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { buttonClasses } from '../../components/ui/button-styles';
@@ -11,7 +11,7 @@ import type { TensionEpisode } from './tension-episodes-api';
 // terapeuta as duas datas; a do episódio vem no título do dia).
 type TensionEpisodeCardProps =
   | { episode: TensionEpisode; onDelete: (episode: TensionEpisode) => void; readOnly?: false }
-  | { episode: TensionEpisode; readOnly: true };
+  | { episode: TensionEpisode; readOnly: true; footer?: ReactNode };
 
 // Editar e excluir só no dia em que foi registrado (DEC-042). Depois disso, o registro fica
 // fixo e o backend responderia 409: esconder os botões é conforto, não segurança.
@@ -42,6 +42,8 @@ export function TensionEpisodeCard(props: TensionEpisodeCardProps) {
       {(props.readOnly || !episode.editable) && (
         <p className="text-sm text-muted">Registrado em {formatDateTime(episode.createdAt)}</p>
       )}
+
+      {props.readOnly && props.footer}
 
       {canChange && (
         <div className="flex gap-1">

@@ -5,6 +5,7 @@ import type { AgendaResponse, AgendaStatus, DateRange, Pause } from '../appointm
 import type { CycleResponse } from '../cycle/cycle-api';
 import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
+import type { WithRead } from './read-marks-api';
 
 // Visão da terapeuta (DEC-033): só leitura, sob /therapist/patients/:patientId. O backend confere
 // o vínculo a cada chamada; sem vínculo ativo, tudo aqui volta 403.
@@ -49,8 +50,13 @@ export async function fetchPatientActivities(patientId: string, from: string, to
 }
 
 // Registro de Pensamentos (DEC-039): também pede a versão atual do aviso aceita pela terapeuta.
-export async function fetchPatientThoughtRecords(patientId: string, from: string, to: string): Promise<ThoughtRecord[]> {
-  const { data } = await api.get<{ thoughtRecords: ThoughtRecord[] }>(`${base(patientId)}/thought-records`, {
+// Pensamentos, Tensão e Ação vêm com o status de leitura desta terapeuta (DEC-057).
+export async function fetchPatientThoughtRecords(
+  patientId: string,
+  from: string,
+  to: string,
+): Promise<WithRead<ThoughtRecord>[]> {
+  const { data } = await api.get<{ thoughtRecords: WithRead<ThoughtRecord>[] }>(`${base(patientId)}/thought-records`, {
     params: { from, to },
   });
   return data.thoughtRecords;
@@ -63,8 +69,12 @@ export async function fetchPatientAppointments(patientId: string, range?: DateRa
 }
 
 // Episódios de tensão (DEC-042): pedem a versão do aviso que os cita, aceita pela terapeuta.
-export async function fetchPatientTensionEpisodes(patientId: string, from: string, to: string): Promise<TensionEpisode[]> {
-  const { data } = await api.get<{ tensionEpisodes: TensionEpisode[] }>(`${base(patientId)}/tension-episodes`, {
+export async function fetchPatientTensionEpisodes(
+  patientId: string,
+  from: string,
+  to: string,
+): Promise<WithRead<TensionEpisode>[]> {
+  const { data } = await api.get<{ tensionEpisodes: WithRead<TensionEpisode>[] }>(`${base(patientId)}/tension-episodes`, {
     params: { from, to },
   });
   return data.tensionEpisodes;
@@ -77,7 +87,7 @@ export async function fetchPatientCycle(patientId: string, date?: string): Promi
 }
 
 // Ação (DEC-051): pede a versão do aviso que a cita, aceita pela terapeuta.
-export async function fetchPatientActions(patientId: string, from: string, to: string): Promise<Action[]> {
-  const { data } = await api.get<{ actions: Action[] }>(`${base(patientId)}/actions`, { params: { from, to } });
+export async function fetchPatientActions(patientId: string, from: string, to: string): Promise<WithRead<Action>[]> {
+  const { data } = await api.get<{ actions: WithRead<Action>[] }>(`${base(patientId)}/actions`, { params: { from, to } });
   return data.actions;
 }

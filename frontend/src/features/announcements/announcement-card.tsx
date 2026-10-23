@@ -12,9 +12,9 @@ type AnnouncementText = {
   // Emoji ao lado do título, escondido do leitor de tela (senão ele lê "brilhos" no nome da região).
   icon?: string;
   // Texto para quem usa como paciente e para quem atende como terapeuta. Quem tem os dois perfis
-  // vê os dois.
-  patient: ReactNode;
-  therapist: ReactNode;
+  // vê os dois; quem não tem texto no próprio perfil não vê o card (ex.: novidade só da terapeuta).
+  patient?: ReactNode;
+  therapist?: ReactNode;
   // Atalho para a parte nova, no perfil de paciente.
   link?: { to: string; label: string };
 };
@@ -44,6 +44,23 @@ const ANNOUNCEMENTS: Record<string, AnnouncementText> = {
     ),
     link: { to: '/pensamentos', label: 'Ver meus pensamentos' },
   },
+  // Só para a terapeuta (DEC-058): para a paciente, nada muda.
+  '2026-10-lido': {
+    title: 'Novidade: o que você ainda tem para ler',
+    icon: '📋',
+    therapist: (
+      <>
+        <p>
+          Agora você pode marcar os Pensamentos, os Episódios de tensão e as Ações dos seus pacientes como{' '}
+          <strong>lidos</strong>, e ver, fora do ciclo, tudo o que está para ler.
+        </p>
+        <p>
+          Se um registro mudar depois que você leu, ele volta para a lista, com o aviso "atualizado". A marca é só sua: o
+          paciente não a vê.
+        </p>
+      </>
+    ),
+  },
 };
 
 export function AnnouncementCard() {
@@ -51,6 +68,8 @@ export function AnnouncementCard() {
   const id = user?.pendingAnnouncement;
   const text = id ? ANNOUNCEMENTS[id] : undefined;
   if (!user || !id || !text) return null;
+  const { patient, therapist } = user.profiles;
+  if (!(patient && text.patient) && !(therapist && text.therapist)) return null;
   return <Card user={user} id={id} text={text} />;
 }
 

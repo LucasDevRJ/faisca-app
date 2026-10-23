@@ -47,7 +47,10 @@ export function toPublicUser(
     profiles: { patient: user.hasPatientProfile, therapist: user.hasTherapistProfile },
     privacyUpToDate: user.privacyVersion === PRIVACY_VERSION,
     privacyAreas: privacyAreas(user.privacyVersion),
-    pendingAnnouncement: pendingAnnouncement(user.seenAnnouncement),
+    pendingAnnouncement: pendingAnnouncement(user.seenAnnouncement, {
+      patient: user.hasPatientProfile,
+      therapist: user.hasTherapistProfile,
+    }),
   };
 }
 
@@ -214,8 +217,17 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
     },
 
     // Card de Novidades (DEC-054): a pessoa tocou em "Entendi" na novidade atual.
-    async markAnnouncementSeen(userId: string): Promise<User> {
-      return prisma.user.update({ where: { id: userId }, data: { seenAnnouncement: CURRENT_ANNOUNCEMENT } });
+    async markAnnouncementSeen(userId: string, announcement: Announcement): Promise<User> {
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+      const pending = pendingAnnouncement(user.seenAnnouncement, {
+        patient: user.hasPatientProfile,
+        therapist: user.hasTherapistProfile,
+      });
+      // Só a novidade que está aparecendo para a pessoa: uma aba antiga, com outra, não esconde a atual.
+      if (announcement !== pending) {
+        throw new AppError(400, 'ANNOUNCEMENT_NOT_PENDING', 'Esta novidade não está mais valendo.');
+      }
+      return prisma.user.update({ where: { id: userId }, data: { seenAnnouncement: announcement } });
     },
 
     // SPEC ("Privacidade"), DEC-035: apaga a conta e, em cascata no banco, atividades, consultas,

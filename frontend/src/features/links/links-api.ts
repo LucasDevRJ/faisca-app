@@ -20,6 +20,8 @@ export type LinkStatus = {
 export type GeneratedCode = { code: string; expiresAt: string };
 
 export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string };
+// Na lista de pacientes: quantos registros a terapeuta ainda tem para ler (DEC-057).
+export type ListedPatient = LinkedPatient & { unreadCount: number };
 
 export async function fetchLinkStatus(): Promise<LinkStatus> {
   const { data } = await api.get<LinkStatus>('/link');
@@ -57,7 +59,7 @@ export async function acceptInvite(token: string): Promise<LinkedPatient> {
   return data.patient;
 }
 
-export async function fetchLinkedPatients(): Promise<LinkedPatient[]> {
-  const { data } = await api.get<{ patients: LinkedPatient[] }>('/links/patients');
+export async function fetchLinkedPatients(): Promise<ListedPatient[]> {
+  const { data } = await api.get<{ patients: ListedPatient[] }>('/links/patients');
   return data.patients;
 }
