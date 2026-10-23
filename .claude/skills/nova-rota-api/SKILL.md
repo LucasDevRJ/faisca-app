@@ -14,8 +14,10 @@ em caso de dúvida, eles prevalecem sobre esta skill.
   - **A. Paciente**: só os próprios dados.
   - **B. Terapeuta sobre um paciente**: só GET e só com vínculo ativo.
   - **C. Sem dado de paciente**: conta, vínculo, health. Justifique por que não há dado de paciente.
-- Terapeuta escrevendo dado de paciente **não existe**. As únicas exceções são os POSTs que criam
-  o vínculo (DEC-031). Se o pedido exigir isso, pare e explique antes de continuar.
+- Terapeuta escrevendo dado de paciente **não existe**. As únicas escritas da terapeuta são os
+  POSTs que criam o vínculo (DEC-031) e as marcas de leitura dela em `/therapist/read-marks`
+  (DEC-057, `src/modules/read-marks/`), que não tocam no registro. Se o pedido exigir outra,
+  pare e explique antes de continuar: é mudança de regra inviolável.
 
 ## 2. Estrutura
 `src/modules/<modulo>/` com `schema`, `service`, `controller` e `routes` (backend/CLAUDE.md).

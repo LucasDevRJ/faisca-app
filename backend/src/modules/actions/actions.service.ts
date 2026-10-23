@@ -171,7 +171,17 @@ export function createActionsService() {
     if (count === 0) throw await conflictAfterRace(id);
   }
 
-  return { list, get, create, update, evaluate, notDone, remove };
+  // Ações escolhidas por id, de qualquer data, na ordem da lista (visão "Não lidos", DEC-057).
+  async function listByIds(userId: string, ids: string[]) {
+    if (ids.length === 0) return [];
+    const actions = await prisma.behavioralAction.findMany({
+      where: { userId, id: { in: ids } },
+      orderBy: [{ actionDate: 'asc' }, { createdAt: 'asc' }],
+    });
+    return actions.map(toPublicAction);
+  }
+
+  return { list, listByIds, get, create, update, evaluate, notDone, remove };
 }
 
 export type ActionsService = ReturnType<typeof createActionsService>;

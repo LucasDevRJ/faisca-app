@@ -11,9 +11,12 @@
 - Rotas de terapeuta ficam sob `/therapist/patients/:patientId/...` e passam por um middleware
   que responde 403 a qualquer método diferente de GET **antes** de tudo, e também quando não há
   vínculo ativo com `:patientId`.
-- Os únicos POSTs do lado da terapeuta são os que criam o vínculo (`/links/redeem-code` e
-  `/links/accept-invite`, DEC-031). Nada fora de `/therapist/patients/...` devolve dado de paciente
-  além de nome e e-mail dos vinculados (`GET /links/patients`).
+- As únicas escritas do lado da terapeuta são os POSTs que criam o vínculo (`/links/redeem-code`
+  e `/links/accept-invite`, DEC-031) e as marcas de leitura dela (`PUT`/`DELETE
+  /therapist/read-marks/:patientId`, DEC-057), num prefixo próprio, com sessão, perfil e vínculo
+  ativo, e que só gravam na tabela `ReadMark`, nunca no registro do paciente. Nada fora de
+  `/therapist/patients/...` devolve dado de paciente além de nome, e-mail e o número de não lidos
+  dos vinculados (`GET /links/patients`).
 - Rotas de paciente usam sempre o id do usuário autenticado. Nunca aceite `patientId` vindo do
   body ou da query nessas rotas.
 

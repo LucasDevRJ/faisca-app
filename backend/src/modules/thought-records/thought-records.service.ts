@@ -210,10 +210,15 @@ async function freezeMissingDeadlines(records: ThoughtRecord[], sessions: Sessio
     const deadline = deadlineFor(sessions, record.createdAt);
     if (!deadline) continue;
     const at = deadlineInstant(deadline);
-    await prisma.thoughtRecord.updateMany({
-      where: { id: record.id, alternativeDeadlineAt: null },
-      data: { alternativeDeadlineAt: at },
+    // O updatedAt fica como estava: congelar o prazo não muda o registro, e a marca de leitura da
+    // terapeuta compara com o updatedAt para saber se ele mudou depois de lido (DEC-057).
+    // Só congela se o registro não mudou desde a leitura: senão, voltaria o updatedAt de uma
+    // edição feita no meio e a terapeuta a veria como lida. Fica para a próxima leitura.
+    const { count } = await prisma.thoughtRecord.updateMany({
+      where: { id: record.id, alternativeDeadlineAt: null, updatedAt: record.updatedAt },
+      data: { alternativeDeadlineAt: at, updatedAt: record.updatedAt },
     });
+    if (count === 0) continue;
     record.alternativeDeadlineAt = at;
   }
 }
@@ -315,6 +320,9 @@ export function createThoughtRecordsService() {
           ...rest,
           situationDate: situationDate ? dateOnlyToDate(situationDate) : undefined,
           ...alternativeChange(record, alternativeExplanation),
+          // Explícito: as emoções ficam noutra tabela, e uma edição só delas não mudaria o
+          // updatedAt. A marca de leitura da terapeuta depende dele (DEC-057).
+          updatedAt: new Date(),
         },
       });
       if (count === 0) throw await conflictAfterRace(id, tx);
@@ -384,7 +392,21 @@ export function createThoughtRecordsService() {
     if (count === 0) throw await conflictAfterRace(id);
   }
 
-  return { list, get, create, update, addAlternative, remove };
+  // Registros escolhidos por id, de qualquer data, na ordem da lista: a visão "Não lidos" da
+  // terapeuta (DEC-057). Só leitura: não congela prazos.
+  async function listByIds(userId: string, ids: string[]) {
+    if (ids.length === 0) return [];
+    const records = await prisma.thoughtRecord.findMany({
+      where: { userId, id: { in: ids } },
+      include: withEmotions,
+      orderBy: [{ situationDate: 'asc' }, { createdAt: 'asc' }],
+    });
+    const now = new Date();
+    const sessions = await sessionsSince(userId, records);
+    return records.map((record) => toPublicThoughtRecord(record, sessions, now));
+  }
+
+  return { list, listByIds, get, create, update, addAlternative, remove };
 }
 
 export type ThoughtRecordsService = ReturnType<typeof createThoughtRecordsService>;
