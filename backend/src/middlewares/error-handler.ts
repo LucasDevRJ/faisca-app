@@ -26,6 +26,12 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // Corpo maior que o limite (a foto de perfil tem até 5 MB, DEC-061; o JSON, 100 kB).
+  if (err && typeof err === 'object' && 'type' in err && err.type === 'entity.too.large') {
+    res.status(413).json({ error: { code: 'PAYLOAD_TOO_LARGE', message: 'O arquivo é grande demais.' } });
+    return;
+  }
+
   logger.error({ err }, 'Erro não tratado');
   res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Erro interno do servidor.' } });
 };

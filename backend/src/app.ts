@@ -11,6 +11,7 @@ import { createActivitiesRoutes } from './modules/activities/activities.routes.j
 import { createAppointmentsRoutes } from './modules/appointments/appointments.routes.js';
 import { createAuthRoutes } from './modules/auth/auth.routes.js';
 import { createLinksRoutes } from './modules/links/links.routes.js';
+import { createProfileRoutes } from './modules/profile/profile.routes.js';
 import { createTensionEpisodesRoutes } from './modules/tension-episodes/tension-episodes.routes.js';
 import { createActionsRoutes } from './modules/actions/actions.routes.js';
 import { createTherapistRoutes } from './modules/therapist/therapist.routes.js';
@@ -55,6 +56,7 @@ export function createApp({ mailer = createResendMailer() }: AppDependencies = {
   app.use(createTensionEpisodesRoutes());
   app.use(createActionsRoutes());
   app.use(createLinksRoutes(mailer));
+  app.use(createProfileRoutes());
   app.use(createTherapistRoutes());
   // Marcas de leitura da terapeuta (DEC-057), num prefixo próprio, fora do só leitura.
   app.use(createReadMarksRoutes());

@@ -8,6 +8,7 @@ import { generateToken, hashToken } from '../../lib/secure-token.js';
 import { countUnread } from '../read-marks/read-marks.service.js';
 import { inviteEmail, linkCreatedEmail } from './links.emails.js';
 import type { CreateInviteInput } from './links.schema.js';
+import { avatarVersion } from '../profile/profile.service.js';
 
 const MINUTE_MS = 60 * 1000;
 const CODE_TTL_MS = 24 * 60 * MINUTE_MS;
@@ -24,14 +25,16 @@ export type PatientLinkStatus = {
     createdAt: string;
     // false = o paciente ainda não viu o aviso de novo vínculo.
     seen: boolean;
-    therapist: { name: string; email: string };
+    // avatarVersion: se a terapeuta tem foto e quando mudou (DEC-061); a imagem vem de /link/therapist/avatar.
+    therapist: { name: string; email: string; avatarVersion: string | null };
   } | null;
   invite: { id: string; therapistEmail: string; createdAt: string } | null;
   // O código em si não volta: o banco só tem o hash. Serve para a tela dizer "você tem um código válido até...".
   code: { expiresAt: string } | null;
 };
 
-export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string };
+// avatarVersion (DEC-061): só se há foto e quando mudou; a imagem fica em /therapist/patients/:id/avatar.
+export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string; avatarVersion: string | null };
 // Na lista de pacientes: quantos Pensamentos, Episódios e Ações a terapeuta ainda não leu
 // (DEC-057), só nas áreas cujo aviso ela aceitou.
 export type ListedPatient = LinkedPatient & { unreadCount: number };
@@ -113,9 +116,10 @@ async function createLink(tx: Tx, patientId: string, therapistId: string, method
 async function linkedPatient(linkId: string): Promise<LinkedPatient> {
   const link = await prisma.therapistLink.findUniqueOrThrow({
     where: { id: linkId },
-    include: { patient: { select: { id: true, name: true, email: true } } },
+    include: { patient: { select: { id: true, name: true, email: true, avatar: { select: { updatedAt: true } } } } },
   });
-  return { ...link.patient, linkedAt: link.createdAt.toISOString() };
+  const { avatar, ...patient } = link.patient;
+  return { ...patient, linkedAt: link.createdAt.toISOString(), avatarVersion: avatarVersion(avatar) };
 }
 
 export function createLinksService(mailer: Mailer) {
@@ -168,7 +172,7 @@ export function createLinksService(mailer: Mailer) {
       const [link, invite, code] = await Promise.all([
         prisma.therapistLink.findFirst({
           where: { patientId, revokedAt: null },
-          include: { therapist: { select: { name: true, email: true } } },
+          include: { therapist: { select: { name: true, email: true, avatar: { select: { updatedAt: true } } } } },
         }),
         prisma.linkInvite.findFirst({ where: { patientId, acceptedAt: null, canceledAt: null } }),
         prisma.linkCode.findFirst({
@@ -182,7 +186,11 @@ export function createLinksService(mailer: Mailer) {
           method: link.method,
           createdAt: link.createdAt.toISOString(),
           seen: link.seenByPatientAt !== null,
-          therapist: link.therapist,
+          therapist: {
+            name: link.therapist.name,
+            email: link.therapist.email,
+            avatarVersion: avatarVersion(link.therapist.avatar),
+          },
         },
         invite: invite && {
           id: invite.id,
@@ -321,7 +329,9 @@ export function createLinksService(mailer: Mailer) {
     async listPatients(therapistId: string, privacyVersion: string | null): Promise<ListedPatient[]> {
       const links = await prisma.therapistLink.findMany({
         where: { therapistId, revokedAt: null },
-        include: { patient: { select: { id: true, name: true, email: true } } },
+        include: {
+          patient: { select: { id: true, name: true, email: true, avatar: { select: { updatedAt: true } } } },
+        },
         orderBy: { patient: { name: 'asc' } },
       });
       const unread = await countUnread(
@@ -329,10 +339,11 @@ export function createLinksService(mailer: Mailer) {
         links.map((link) => link.patient.id),
         privacyVersion,
       );
-      return links.map((link) => ({
-        ...link.patient,
-        linkedAt: link.createdAt.toISOString(),
-        unreadCount: unread.get(link.patient.id) ?? 0,
+      return links.map(({ patient: { avatar, ...patient }, createdAt }) => ({
+        ...patient,
+        linkedAt: createdAt.toISOString(),
+        avatarVersion: avatarVersion(avatar),
+        unreadCount: unread.get(patient.id) ?? 0,
       }));
     },
   };

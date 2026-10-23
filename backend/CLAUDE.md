@@ -15,8 +15,9 @@
   e `/links/accept-invite`, DEC-031) e as marcas de leitura dela (`PUT`/`DELETE
   /therapist/read-marks/:patientId`, DEC-057), num prefixo próprio, com sessão, perfil e vínculo
   ativo, e que só gravam na tabela `ReadMark`, nunca no registro do paciente. Nada fora de
-  `/therapist/patients/...` devolve dado de paciente além de nome, e-mail e o número de não lidos
-  dos vinculados (`GET /links/patients`).
+  `/therapist/patients/...` devolve dado de paciente além de nome, e-mail, o número de não lidos e
+  a versão da foto (só se ela existe e quando mudou, DEC-061) dos vinculados (`GET /links/patients`).
+  A foto em si fica em `/therapist/patients/:patientId/avatar`.
 - Rotas de paciente usam sempre o id do usuário autenticado. Nunca aceite `patientId` vindo do
   body ou da query nessas rotas.
 

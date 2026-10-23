@@ -14,6 +14,11 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   Quem tem um perfil só nunca vê telas do outro.
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.
 - Recuperação de senha por e-mail.
+- **Perfil básico** (paciente e terapeuta, tudo opcional; DEC-061): **nome completo**, além do
+  "Como podemos te chamar?", e **foto**. A foto é guardada reduzida (256×256) e sem os metadados
+  da câmera, como a localização. A terapeuta vê a foto dos pacientes com vínculo ativo; o paciente
+  vê a da terapeuta vinculada. Dá para trocar ou remover a foto a qualquer momento, e ela sai com a
+  conta. O celular entra com as notificações (#82), confirmado por código.
 
 ## Atividades
 ### Estados

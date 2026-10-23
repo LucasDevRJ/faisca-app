@@ -36,4 +36,7 @@ export const users = {
   actionTherapist: { email: 'acao-terapeuta@faisca.test', password: SEED_PASSWORD },
   // Usada só nas telas da Ação (e2e/actions.spec.ts), também sem o aceite da Ação.
   actionScreenPatient: { email: 'acao-tela@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nos testes do perfil (api/profile.spec.ts, DEC-061).
+  profilePatient: { email: 'perfil-paciente@faisca.test', password: SEED_PASSWORD },
+  profileTherapist: { email: 'perfil-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;
