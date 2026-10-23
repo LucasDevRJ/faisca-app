@@ -174,6 +174,12 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
     da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
 - **Período**: a tela abre no **ciclo da consulta** (seção "Ciclo da consulta"), o mesmo que o paciente vê, nas três abas; dá para alternar para a semana e navegar entre ciclos ou semanas. O ciclo substitui o antigo destaque e o filtro "desde a última consulta" (DEC-050).
+- **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão ou Ação como **lido**
+  (e desfaz), ou **todos da lista aberta** de uma vez. Nunca marca sozinho ao abrir. Um registro
+  que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada) volta
+  a contar, como **atualizado**. A visão **Não lidos** junta as três áreas fora do ciclo, do mais
+  antigo ao mais novo, e a lista de pacientes mostra quantos faltam ler. As marcas são da
+  terapeuta: o paciente não as vê, e uma terapeuta nova começa sem nenhuma.
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta

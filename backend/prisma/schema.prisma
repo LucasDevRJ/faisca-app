@@ -48,12 +48,16 @@ model User {
   tensionEpisodes TensionEpisode[]
 
   // Vínculo (DEC-015, DEC-031): o mesmo usuário pode estar dos dois lados, em vínculos diferentes.
-  linksAsPatient   TherapistLink[]   @relation("LinkPatient")
-  linksAsTherapist TherapistLink[]   @relation("LinkTherapist")
-  invitesSent      LinkInvite[]      @relation("InvitePatient")
-  invitesSignedUp  LinkInvite[]      @relation("InviteSignupUser")
-  linkCodes        LinkCode[]
-  linkCodeAttempts LinkCodeAttempt[]
+  linksAsPatient       TherapistLink[]   @relation("LinkPatient")
+  linksAsTherapist     TherapistLink[]   @relation("LinkTherapist")
+  // Marcas de leitura (DEC-057): as que esta conta fez como terapeuta e as que foram feitas nos
+  // registros dela como paciente (só a terapeuta as vê).
+  readMarksAsTherapist ReadMark[]        @relation("ReadMarkTherapist")
+  readMarksAsPatient   ReadMark[]        @relation("ReadMarkPatient")
+  invitesSent          LinkInvite[]      @relation("InvitePatient")
+  invitesSignedUp      LinkInvite[]      @relation("InviteSignupUser")
+  linkCodes            LinkCode[]
+  linkCodeAttempts     LinkCodeAttempt[]
 
   // Foto de perfil (DEC-061), opcional.
   avatar UserAvatar?
@@ -262,8 +266,9 @@ model ThoughtRecord {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  emotions ThoughtRecordEmotion[]
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emotions  ThoughtRecordEmotion[]
+  readMarks ReadMark[]
 
   @@index([userId, situationDate])
 }
@@ -306,7 +311,8 @@ model TensionEpisode {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readMarks ReadMark[]
 
   @@index([userId, episodeDate])
 }
@@ -415,7 +421,37 @@ model BehavioralAction {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readMarks ReadMark[]
 
   @@index([userId, actionDate])
+}
+
+// Marca de leitura da terapeuta (SPEC, "Visão da terapeuta"; DEC-057): "lido" num Pensamento, num
+// Episódio de tensão ou numa Ação de um paciente vinculado. É a única escrita da terapeuta sobre os
+// registros de um paciente, e não altera o registro: só esta tabela. O paciente não vê as marcas.
+// Uma coluna por área, com CHECK de exatamente uma preenchida: a marca some em cascata com o
+// registro ou com qualquer uma das contas.
+model ReadMark {
+  id               String   @id @default(uuid()) @db.Uuid
+  therapistId      String   @db.Uuid
+  // O dono dos registros, para contar os não lidos por paciente sem passar pelas três tabelas.
+  patientId        String   @db.Uuid
+  thoughtRecordId  String?  @db.Uuid
+  tensionEpisodeId String?  @db.Uuid
+  actionId         String?  @db.Uuid
+  // Quando foi lido. Se o registro mudar depois (updatedAt maior), volta a contar como não lido.
+  readAt           DateTime @default(now())
+
+  therapist      User              @relation("ReadMarkTherapist", fields: [therapistId], references: [id], onDelete: Cascade)
+  patient        User              @relation("ReadMarkPatient", fields: [patientId], references: [id], onDelete: Cascade)
+  thoughtRecord  ThoughtRecord?    @relation(fields: [thoughtRecordId], references: [id], onDelete: Cascade)
+  tensionEpisode TensionEpisode?   @relation(fields: [tensionEpisodeId], references: [id], onDelete: Cascade)
+  action         BehavioralAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  // Uma marca por terapeuta e registro. NULL não colide no Postgres: vale para a coluna preenchida.
+  @@unique([therapistId, thoughtRecordId])
+  @@unique([therapistId, tensionEpisodeId])
+  @@unique([therapistId, actionId])
+  @@index([therapistId, patientId])
 }

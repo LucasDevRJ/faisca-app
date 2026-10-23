@@ -5,6 +5,7 @@ import { logger } from '../../lib/logger.js';
 import type { EmailMessage, Mailer } from '../../lib/mailer.js';
 import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
+import { countUnread } from '../read-marks/read-marks.service.js';
 import { inviteEmail, linkCreatedEmail } from './links.emails.js';
 import type { CreateInviteInput } from './links.schema.js';
 import { avatarVersion } from '../profile/profile.service.js';
@@ -34,6 +35,9 @@ export type PatientLinkStatus = {
 
 // avatarVersion (DEC-061): só se há foto e quando mudou; a imagem fica em /therapist/patients/:id/avatar.
 export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string; avatarVersion: string | null };
+// Na lista de pacientes: quantos Pensamentos, Episódios e Ações a terapeuta ainda não leu
+// (DEC-057), só nas áreas cujo aviso ela aceitou.
+export type ListedPatient = LinkedPatient & { unreadCount: number };
 
 function alreadyLinked() {
   return new AppError(409, 'LINK_ALREADY_ACTIVE', 'Você já tem uma terapeuta vinculada. Para trocar, desfaça o vínculo atual.');
@@ -322,7 +326,7 @@ export function createLinksService(mailer: Mailer) {
     },
 
     // Pacientes com vínculo ativo; os dados vêm da conta de cada um (SPEC, "Visão da terapeuta").
-    async listPatients(therapistId: string): Promise<LinkedPatient[]> {
+    async listPatients(therapistId: string, privacyVersion: string | null): Promise<ListedPatient[]> {
       const links = await prisma.therapistLink.findMany({
         where: { therapistId, revokedAt: null },
         include: {
@@ -330,10 +334,16 @@ export function createLinksService(mailer: Mailer) {
         },
         orderBy: { patient: { name: 'asc' } },
       });
+      const unread = await countUnread(
+        therapistId,
+        links.map((link) => link.patient.id),
+        privacyVersion,
+      );
       return links.map(({ patient: { avatar, ...patient }, createdAt }) => ({
         ...patient,
         linkedAt: createdAt.toISOString(),
         avatarVersion: avatarVersion(avatar),
+        unreadCount: unread.get(patient.id) ?? 0,
       }));
     },
   };

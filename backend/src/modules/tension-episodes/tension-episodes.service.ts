@@ -183,7 +183,18 @@ export function createTensionEpisodesService() {
     if (count === 0) throw await conflictAfterRace(id);
   }
 
-  return { list, get, create, update, remove };
+  // Episódios escolhidos por id, de qualquer data, na ordem da lista (visão "Não lidos", DEC-057).
+  async function listByIds(userId: string, ids: string[]) {
+    if (ids.length === 0) return [];
+    const episodes = await prisma.tensionEpisode.findMany({
+      where: { userId, id: { in: ids } },
+      orderBy: [{ episodeDate: 'asc' }, { episodeTime: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
+    });
+    const now = new Date();
+    return episodes.map((episode) => toPublicTensionEpisode(episode, now));
+  }
+
+  return { list, listByIds, get, create, update, remove };
 }
 
 export type TensionEpisodesService = ReturnType<typeof createTensionEpisodesService>;

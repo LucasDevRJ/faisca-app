@@ -29,7 +29,10 @@ no diff, não o que se pretendia fazer. Responda em pt-BR.
      `userId`/`patientId` do corpo, da query ou da URL; dono conferido no service.
    - Rota de terapeuta: só dentro de `therapist.routes.ts`, sob o prefixo que já aplica
      `onlyReads → requireAuth → requireTherapist → requireActiveLink`. Só GET.
-   - Única escrita permitida à terapeuta: `/links/redeem-code` e `/links/accept-invite` (DEC-031).
+   - Únicas escritas permitidas à terapeuta: `/links/redeem-code` e `/links/accept-invite`
+     (DEC-031) e as marcas de leitura em `/therapist/read-marks/:patientId` (DEC-057), que precisam
+     de vínculo ativo, conferem que cada registro é daquele paciente e só gravam em `ReadMark`.
+     Qualquer outra escrita da terapeuta, ou uma marca que altere o registro, é problema.
    - Toda rota nova com dado de paciente tem teste de caso permitido **e** negado.
    - Resposta sem `userId`, `passwordHash`, hashes ou tokens.
 2. **Registros finais imutáveis:** editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA → 409.

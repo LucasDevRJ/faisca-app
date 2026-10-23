@@ -38,20 +38,28 @@ export function createTherapistController(service: TherapistService) {
   const thoughtRecords: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
     const query = therapistThoughtRecordsQuerySchema.parse(req.query);
-    res.status(200).json({ thoughtRecords: await service.listThoughtRecords(patientId, query) });
+    res.status(200).json({ thoughtRecords: await service.listThoughtRecords(getAuthUser(req).id, patientId, query) });
   };
 
   const tensionEpisodes: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
     const query = therapistTensionEpisodesQuerySchema.parse(req.query);
-    res.status(200).json({ tensionEpisodes: await service.listTensionEpisodes(patientId, query) });
+    res.status(200).json({ tensionEpisodes: await service.listTensionEpisodes(getAuthUser(req).id, patientId, query) });
   };
 
   const actions: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
     const query = therapistActionsQuerySchema.parse(req.query);
-    res.status(200).json({ actions: await service.listActions(patientId, query) });
+    res.status(200).json({ actions: await service.listActions(getAuthUser(req).id, patientId, query) });
   };
 
-  return { summary, activities, appointments, cycle, thoughtRecords, tensionEpisodes, actions };
+  // Não lidos e atualizados das três áreas (DEC-057). Área sem o aceite do aviso vem como null,
+  // em vez de 403, para a tela mostrar o resto.
+  const unread: RequestHandler = async (req, res) => {
+    const { patientId } = patientParamsSchema.parse(req.params);
+    const user = getAuthUser(req);
+    res.status(200).json(await service.unread(user.id, patientId, user.privacyVersion));
+  };
+
+  return { summary, activities, appointments, cycle, thoughtRecords, tensionEpisodes, actions, unread };
 }
