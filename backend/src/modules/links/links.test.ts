@@ -155,7 +155,7 @@ describe('código de vínculo', () => {
 
     const status = await (await loginAgent(PATIENT)).get('/link');
     expect(status.body.link).toEqual(
-      expect.objectContaining({ method: 'CODE', seen: false, therapist: { name: 'Tereza Fictícia', email: THERAPIST } }),
+      expect.objectContaining({ method: 'CODE', seen: false, therapist: { name: 'Tereza Fictícia', email: THERAPIST, avatarVersion: null } }),
     );
     expect(status.body.code).toBeNull();
   });

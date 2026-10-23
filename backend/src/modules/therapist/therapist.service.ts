@@ -11,6 +11,7 @@ import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episo
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ListThoughtRecordsQuery } from '../thought-records/thought-records.schema.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
+import { avatarVersion } from '../profile/profile.service.js';
 
 // No resumo, só quando e de que tipo: o motivo de uma remarcada fica na rota da agenda, que pede o
 // aceite da 2026-10.4 (DEC-045).
@@ -47,12 +48,21 @@ export function createTherapistService(
     async summary(therapistId: string, patientId: string) {
       const link = await prisma.therapistLink.findFirstOrThrow({
         where: { therapistId, patientId, revokedAt: null },
-        include: { patient: { select: { id: true, name: true, email: true } } },
+        include: {
+          patient: { select: { id: true, name: true, email: true, avatar: { select: { updatedAt: true } } } },
+        },
       });
       const today = todayInAppZone();
       const { last, next, status, pause } = await appointments.list(patientId);
       return {
-        patient: { ...link.patient, linkedAt: link.createdAt.toISOString() },
+        patient: {
+          id: link.patient.id,
+          name: link.patient.name,
+          email: link.patient.email,
+          linkedAt: link.createdAt.toISOString(),
+          // Foto (DEC-061): a imagem vem de /therapist/patients/:id/avatar.
+          avatarVersion: avatarVersion(link.patient.avatar),
+        },
         today,
         lastAppointment: withoutReason(last),
         nextAppointment: withoutReason(next),

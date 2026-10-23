@@ -6,6 +6,8 @@ import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesService } from '../activities/activities.service.js';
 import { createAppointmentsService } from '../appointments/appointments.service.js';
+import { createProfileController } from '../profile/profile.controller.js';
+import { createProfileService } from '../profile/profile.service.js';
 import { createTensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import { createThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { createTherapistController } from './therapist.controller.js';
@@ -25,6 +27,7 @@ export function createTherapistRoutes() {
       createActionsService(),
     ),
   );
+  const profile = createProfileController(createProfileService());
   const router = Router();
 
   // router.use com o prefixo pega também caminhos que não existem: um POST em qualquer
@@ -42,6 +45,8 @@ export function createTherapistRoutes() {
   router.get(`${PREFIX}/tension-episodes`, requirePrivacy('tensionEpisodes'), controller.tensionEpisodes);
   // Ação (DEC-051): também pede o aceite da versão do aviso que a cita.
   router.get(`${PREFIX}/actions`, requirePrivacy('actions'), controller.actions);
+  // Foto de perfil do paciente (DEC-061): dado pessoal, não de saúde, sem aceite próprio.
+  router.get(`${PREFIX}/avatar`, profile.patientAvatar);
 
   return router;
 }

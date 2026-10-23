@@ -13,7 +13,8 @@
   vínculo ativo com `:patientId`.
 - Os únicos POSTs do lado da terapeuta são os que criam o vínculo (`/links/redeem-code` e
   `/links/accept-invite`, DEC-031). Nada fora de `/therapist/patients/...` devolve dado de paciente
-  além de nome e e-mail dos vinculados (`GET /links/patients`).
+  além de nome, e-mail e a versão da foto (só se ela existe e quando mudou, DEC-061) dos vinculados
+  (`GET /links/patients`). A foto em si fica em `/therapist/patients/:patientId/avatar`.
 - Rotas de paciente usam sempre o id do usuário autenticado. Nunca aceite `patientId` vindo do
   body ou da query nessas rotas.
 

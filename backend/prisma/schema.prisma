@@ -32,6 +32,9 @@ model User {
   // A última novidade do app que a pessoa já viu (card de Novidades, DEC-054). Fica no banco, e
   // não no aparelho: no iPhone, o Safari e o app instalado não dividem o armazenamento.
   seenAnnouncement    String?
+  // Perfil básico (DEC-061): o nome completo, opcional. O `name` é o "Como podemos te chamar?",
+  // que continua sendo o nome mostrado no app.
+  fullName            String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -51,6 +54,21 @@ model User {
   invitesSignedUp  LinkInvite[]      @relation("InviteSignupUser")
   linkCodes        LinkCode[]
   linkCodeAttempts LinkCodeAttempt[]
+
+  // Foto de perfil (DEC-061), opcional.
+  avatar UserAvatar?
+}
+
+// Foto de perfil (DEC-061): guardada já reduzida (256×256, WebP) e sem metadados, como a
+// localização que a câmera grava. Fica numa tabela à parte para a linha do User continuar leve e
+// sai em cascata com a conta. O updatedAt vira a "versão" da foto, que o front usa no endereço
+// da imagem para não mostrar uma antiga do cache.
+model UserAvatar {
+  userId    String   @id @db.Uuid
+  image     Bytes
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum AuthTokenType {

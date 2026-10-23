@@ -11,10 +11,13 @@
 //   para testar o pedido do novo aceite no Registro de Pensamentos (DEC-039);
 // - aviso-rpd.dev@faisca.test: paciente que aceitou a versão do RPD, mas não a dos episódios, para
 //   testar o aceite por área (DEC-042): o RPD aberto e a Tensão pedindo o aceite.
+// Perfil (DEC-061): a terapeuta dev tem foto fictícia; a paciente dev tem nome completo e fica sem foto.
 // As duas primeiras já aceitaram a versão atual do aviso.
 // Rodar de novo recria os registros da paciente dev (as datas acompanham o dia de hoje).
 
+import sharp from 'sharp';
 import type { ActivityStatus, Emotion } from '../src/generated/prisma/client.js';
+import { toAvatarImage } from '../src/modules/profile/profile.service.js';
 
 // Dados fictícios (regra 5). A senha é pública de propósito: as contas só existem no banco local.
 const PASSWORD = 'senha-ficticia-123';
@@ -244,6 +247,19 @@ await prisma.$transaction(async (tx) => {
       data: { patientId: patient.id, therapistId: therapist.id, method: 'CODE', seenByPatientAt: new Date() },
     });
   }
+});
+
+// Perfil básico (DEC-061): nome completo da paciente dev e uma foto fictícia (um quadrado de cor)
+// para a terapeuta dev. A paciente fica sem foto, para ver as iniciais.
+await prisma.user.update({ where: { id: patient.id }, data: { fullName: 'Paciente Dev Fictícia da Silva' } });
+const devPhoto = await sharp({ create: { width: 512, height: 512, channels: 3, background: '#9cc2a5' } })
+  .png()
+  .toBuffer();
+const avatarImage = new Uint8Array(await toAvatarImage(devPhoto));
+await prisma.userAvatar.upsert({
+  where: { userId: therapist.id },
+  create: { userId: therapist.id, image: avatarImage },
+  update: { image: avatarImage },
 });
 await prisma.$disconnect();
 
