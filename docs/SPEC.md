@@ -150,7 +150,9 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 - Usar a Ação exige ter aceitado uma versão do aviso de privacidade que a cite.
 - **Fotos** (DEC-064): na ação avaliada, até 10 fotos opcionais, que aparecem para a psicóloga.
   Dá para adicionar e remover até a hora da próxima consulta depois da avaliação (sem consulta
-  marcada, sem prazo). As fotos pedem o aceite da versão do aviso que as cita.
+  marcada, sem prazo). As fotos pedem o aceite da versão do aviso que as cita. No cartão, as fotos
+  aparecem como miniaturas e abrem maiores ao tocar, com anterior e próxima (DEC-065); a terapeuta
+  só vê.
 - A aba **Ação** fica ao lado de Atividades, Pensamentos e Tensão (no celular, as quatro em grade
   2×2), com a explicação dos três tipos, a meta do ciclo, os dias com ação, o cartão com a
   expectativa ao lado do resultado ("Esperava 3 · Prazer 7 · Realização 6") e um gráfico de

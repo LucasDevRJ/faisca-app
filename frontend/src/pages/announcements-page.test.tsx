@@ -15,7 +15,7 @@ const THERAPIST_ONLY = 'teste-so-terapeuta';
 beforeEach(() => {
   ANNOUNCEMENT_TEXTS[NEWER] = {
     title: 'Novidade fictícia mais nova',
-    date: '2026-10-20',
+    date: '2026-10-30',
     patient: <p>Texto fictício para pacientes.</p>,
     therapist: <p>Texto fictício para terapeutas.</p>,
   };
@@ -55,12 +55,13 @@ describe('página "O que há de novo"', () => {
     const entries = screen.getAllByRole('article');
     expect(entries.map((entry) => within(entry).getByRole('heading').textContent)).toEqual([
       'Novidade fictícia mais nova',
+      'Novidade: fotos na Ação',
       'Novidade no Registro de Pensamentos',
     ]);
-    expect(within(entries[0]!).getByText('20 de outubro de 2026')).toBeInTheDocument();
+    expect(within(entries[0]!).getByText('30 de outubro de 2026')).toBeInTheDocument();
     expect(within(entries[0]!).getByText('Texto fictício para pacientes.')).toBeInTheDocument();
     expect(within(entries[0]!).queryByText('Texto fictício para terapeutas.')).not.toBeInTheDocument();
-    expect(within(entries[1]!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
+    expect(within(entries[2]!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
       'href',
       '/pensamentos',
     );

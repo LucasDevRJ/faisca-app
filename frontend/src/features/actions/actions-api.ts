@@ -18,7 +18,14 @@ export type Action = {
   observation: string | null;
   createdAt: string;
   updatedAt: string;
+  // Fotos da ação avaliada (DEC-064). photosOpen diz se ainda dá para adicionar ou remover;
+  // photosDeadline é a consulta que fecha o prazo (null quando não há consulta marcada).
+  photos: { id: string; createdAt: string }[];
+  photosDeadline: { date: string; time: string | null } | null;
+  photosOpen: boolean;
 };
+
+export const MAX_ACTION_PHOTOS = 10;
 
 type Planned = { actionDate: string; name: string; category: ActionCategory; expectation: number };
 
@@ -62,4 +69,19 @@ export async function markActionNotDone(id: string, observation?: string): Promi
 
 export async function deleteAction(id: string): Promise<void> {
   await api.delete(`/actions/${id}`);
+}
+
+// A foto vai crua no corpo, com o tipo dela no Content-Type; a API confere pelo conteúdo.
+export async function uploadActionPhoto(actionId: string, file: File): Promise<void> {
+  await api.post(`/actions/${actionId}/photos`, file, { headers: { 'Content-Type': file.type } });
+}
+
+export async function deleteActionPhoto(actionId: string, photoId: string): Promise<void> {
+  await api.delete(`/actions/${actionId}/photos/${photoId}`);
+}
+
+// Endereço para o <img>, que manda o cookie da sessão sozinho. base = '' (paciente) ou
+// '/therapist/patients/:patientId' (terapeuta).
+export function actionPhotoUrl(base: string, actionId: string, photoId: string, size: 'thumb' | 'full'): string {
+  return `/api${base}/actions/${actionId}/photos/${photoId}?size=${size}`;
 }

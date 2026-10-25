@@ -63,6 +63,30 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
       </>
     ),
   },
+  // Fotos nas ações avaliadas (DEC-065).
+  '2026-10-fotos-acao': {
+    title: 'Novidade: fotos na Ação',
+    icon: '📷',
+    date: '2026-10-25',
+    patient: (
+      <>
+        <p>
+          Depois de contar como foi uma ação, você pode <strong>adicionar até 10 fotos</strong> a ela, como lembrança
+          do que fez. É opcional.
+        </p>
+        <p>
+          As fotos aparecem para a sua psicóloga. Dá para adicionar ou remover até a hora da sua próxima consulta.
+        </p>
+      </>
+    ),
+    therapist: (
+      <p>
+        Nas ações dos seus pacientes, agora podem aparecer <strong>fotos</strong> do que eles fizeram. Toque numa foto
+        para vê-la maior.
+      </p>
+    ),
+    link: { to: '/acao', label: 'Ver minhas ações' },
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?
@@ -70,9 +94,11 @@ export function isFor(text: AnnouncementText, profiles: Profiles): boolean {
   return Boolean((profiles.patient && text.patient) || (profiles.therapist && text.therapist));
 }
 
-// As novidades da pessoa, da mais nova para a mais antiga.
+// As novidades da pessoa, da mais nova para a mais antiga. No mesmo dia, a que entrou depois na
+// lista vem primeiro.
 export function announcementsFor(profiles: Profiles): [string, AnnouncementText][] {
   return Object.entries(ANNOUNCEMENT_TEXTS)
     .filter(([, text]) => isFor(text, profiles))
+    .reverse()
     .sort(([, a], [, b]) => b.date.localeCompare(a.date));
 }

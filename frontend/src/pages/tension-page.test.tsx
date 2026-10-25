@@ -191,7 +191,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
     expect(banner).toHaveTextContent(
-      'para incluir os Episódios de tensão, a agenda de consultas e a Ação. Você só precisa aceitar a nova versão para usar essas partes.',
+      'para incluir os Episódios de tensão, a agenda de consultas, a Ação e as fotos da Ação. Você só precisa aceitar a nova versão para usar essas partes.',
     );
   });
 
@@ -200,7 +200,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     renderRoute('/registros');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas e a Ação');
+    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação e as fotos da Ação');
     expect(banner).toHaveTextContent('essas partes');
   });
 
