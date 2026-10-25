@@ -1,3 +1,4 @@
+import type { Palette } from '../../generated/prisma/client.js';
 import { processImage } from '../../lib/images.js';
 import { prisma } from '../../lib/prisma.js';
 import type { UpdateProfileInput } from './profile.schema.js';
@@ -6,6 +7,8 @@ import type { UpdateProfileInput } from './profile.schema.js';
 
 export type PublicProfile = {
   fullName: string | null;
+  // Paleta de cores (DEC-063); sem escolha, a Sálvia.
+  palette: Palette;
   // Quando a foto mudou pela última vez (ISO), ou null sem foto. O front usa no endereço da
   // imagem para não mostrar uma antiga do cache.
   avatarVersion: string | null;
@@ -34,13 +37,18 @@ export function createProfileService() {
     async get(userId: string): Promise<PublicProfile> {
       const user = await prisma.user.findUniqueOrThrow({
         where: { id: userId },
-        select: { fullName: true, avatar: { select: { updatedAt: true } } },
+        select: { fullName: true, palette: true, avatar: { select: { updatedAt: true } } },
       });
-      return { fullName: user.fullName, avatarVersion: avatarVersion(user.avatar) };
+      return {
+        fullName: user.fullName,
+        palette: user.palette ?? 'SALVIA',
+        avatarVersion: avatarVersion(user.avatar),
+      };
     },
 
     async update(userId: string, input: UpdateProfileInput): Promise<PublicProfile> {
-      await prisma.user.update({ where: { id: userId }, data: { fullName: input.fullName } });
+      // undefined = campo não enviado: o Prisma deixa como está.
+      await prisma.user.update({ where: { id: userId }, data: { fullName: input.fullName, palette: input.palette } });
       return this.get(userId);
     },
 
