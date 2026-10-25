@@ -1089,6 +1089,26 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   depois do ataque ao Railway, e nada da foto que não seja necessário guardar.
 - **Limite conhecido:** como o Faísca não tem backup no plano Hobby (DEC-038), a foto também não tem.
 
+## DEC-062 — Incidente do Railway (out/2026): troca de todos os segredos
+- **Decisão:**
+  - em 21/10/2026, o Railway confirmou acesso indevido às variáveis de ambiente dos clientes (parte
+    delas descriptografada) e pediu que todos trocassem os segredos. Os deploys ficaram pausados por
+    mais de um dia (plano Hobby voltou em 22/10, 18h08 de Brasília);
+  - não houve sinal de uso indevido no Faísca, e o banco **não estava aberto na internet** (o TCP
+    Proxy da configuração inicial tinha sido removido, como manda o DEPLOY). Mesmo assim, **todos os
+    segredos foram trocados** em 22/10: senhas do `postgres`, do `faisca_app` e do
+    `faisca_migrator`, `JWT_SECRET`, `LINK_CODE_SECRET` e a chave do Resend (a antiga foi apagada).
+    As chaves VAPID ainda não existem em produção;
+  - as senhas do banco foram trocadas pelo **Console** do Postgres (`\password`), sem reabrir o
+    banco na internet; o passo a passo virou a seção "Trocar os segredos" do `docs/DEPLOY.md`;
+  - efeito para quem usa: todos saíram da conta (JWT novo) e entraram de novo;
+  - no mesmo dia, o IP `216.198.79.1` da Vercel parou de responder e o site ficou fora por ~10 h;
+    o registro A do domínio raiz passou para `76.76.21.21`.
+- **Motivo:** dado de saúde em risco. Trocar tudo é barato perto do custo de um segredo vazado.
+- **Limite conhecido:** não há como saber se a conta do Faísca estava no grupo afetado; o Railway
+  só avisa por e-mail os casos confirmados, e nenhum chegou. Sem monitor de queda, o site fora do ar
+  foi percebido por acaso: um monitor externo (ex.: UptimeRobot) fica recomendado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

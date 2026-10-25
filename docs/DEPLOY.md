@@ -124,7 +124,7 @@ valores que cada painel mostrou:
 |---|---|---|---|
 | `api` | CNAME | o destino do Railway (passo 3.4) | API |
 | `_railway-verify.api` | TXT | o valor do Railway (passo 3.4) | verificação do domínio da API |
-| (vazio / `@`) | A | o IP que a Vercel mostrar (passo 6) | app |
+| (vazio / `@`) | A | o IP que a Vercel mostrar (passo 6); hoje `76.76.21.21` (veja "Site fora do ar") | app |
 | `www` | CNAME | o destino que a Vercel mostrar (passo 6) | app, com redirecionamento para a raiz |
 | `resend._domainkey` | TXT | o valor do Resend | DKIM (e-mails) |
 | `send` e `rsend` | CNAME | os destinos do Resend | SPF (e-mails) |
@@ -189,3 +189,64 @@ commit no ar (`version`), para conferir que a API nova já entrou.
 - **Logs:** no Railway, os logs da API são JSON do pino, sem dados sensíveis (regra 7). Dá para
   filtrar por `level`.
 - **Nunca** rode `db:seed-dev` nem aponte testes para o banco de produção (regra 5).
+
+## Trocar os segredos (incidente de segurança)
+
+Use quando um segredo pode ter vazado: um incidente no Railway (como o de 21/10/2026, DEC-062), um
+print com valores, um `.env` exposto. A ordem evita deixar a API fora do ar mais do que alguns
+minutos. **Nunca cole um valor em conversa, print ou issue**: a janela *Details* das mudanças do
+Railway mostra os valores por inteiro.
+
+O Railway **acumula** as mudanças ("Apply N changes") e só aplica tudo junto ao clicar em
+**Deploy**: variáveis e configurações (até um TCP Proxy) não valem antes disso.
+
+1. **Banco aberto na internet?** No Postgres, *Settings → Networking*: se houver um **TCP Proxy**
+   (endereço `*.proxy.rlwy.net`), remova. A API usa a rede privada.
+2. **Gerar os novos** no seu terminal (passo 1 deste documento): senhas do `postgres`, do
+   `faisca_migrator` e do `faisca_app`, o `JWT_SECRET` e o `LINK_CODE_SECRET`. No Resend, crie uma
+   chave nova (*Sending access*, domínio `minhafaisca.com.br`) **sem apagar a antiga**.
+3. **Preencher as variáveis da API, sem aplicar:** no `faisca-app`, troque só a senha dentro do
+   `DATABASE_URL` e do `MIGRATION_DATABASE_URL` (entre `usuario:` e `@`), o `JWT_SECRET`, o
+   `LINK_CODE_SECRET` e o `RESEND_API_KEY`. **Não clique em Deploy ainda.**
+4. **Trocar as senhas no banco**, pelo **Console** do Postgres (sem abrir o banco na internet):
+
+   ```sh
+   unset PGPASSWORD          # o Console usa a senha antiga do ambiente
+   psql -W -U postgres -d railway
+   ```
+
+   e, dentro do `psql`, um por vez (pede a senha duas vezes, sem mostrar e sem histórico):
+
+   ```
+   \password postgres
+   \password faisca_app
+   \password faisca_migrator
+   \q
+   ```
+
+   Copie as senhas de dentro das URLs do passo 3, para não haver diferença. A partir da troca do
+   `faisca_app`, a API começa a falhar: siga direto para o passo 5.
+5. **Aplicar:** clique em **Deploy** nas mudanças do `faisca-app`. Se o pre-deploy falhar com
+   `P1000 ... faisca_migrator`, a senha do banco não bate com a da URL: refaça o `\password
+   faisca_migrator` copiando da própria URL e use *Redeploy*. A versão anterior fica no ar até lá.
+6. **Conferir:** `/health` com `ok`, e um login com e-mail fictício respondendo 401 (prova que a
+   API consulta o banco).
+7. **Atualizar o `POSTGRES_PASSWORD`** do Postgres com a senha nova do `postgres` e aplicar (o
+   banco reinicia em segundos). Sem isso, o Console e a aba *Database* do Railway falham.
+8. **E-mail:** peça um "Esqueci minha senha" na conta de testes; se chegar, **apague a chave
+   antiga** no Resend.
+9. **Avisar quem usa:** com o `JWT_SECRET` novo, todo mundo sai da conta e entra de novo.
+
+## Site fora do ar com a API funcionando
+
+Se `minhafaisca.com.br` não abre, mas a API responde, o problema costuma ser o registro **A** do
+domínio raiz. Em 22/10/2026, o IP `216.198.79.1` da Vercel parou de responder, e a correção foi
+trocar o A no Registro.br para **`76.76.21.21`** (o IP de domínio raiz que a Vercel indica há mais
+tempo). O registro tem TTL de 1 hora: em até 1 hora todos passam a usar o novo. Para testar o site
+pelo outro IP antes de trocar:
+
+```sh
+curl -s -o /dev/null -w "%{http_code}" --resolve minhafaisca.com.br:443:76.76.21.21 https://minhafaisca.com.br/
+```
+
+Atenção: `faisca-app.vercel.app` **não** é o nosso app (é de outro projeto).
