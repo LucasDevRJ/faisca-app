@@ -1,0 +1,60 @@
+import type { ReactNode } from 'react';
+
+// Textos das novidades do app (DEC-054, DEC-055, DEC-060), por id. A API só diz qual novidade a
+// pessoa ainda não viu; o card e a página "O que há de novo" leem daqui. Um id que o front não
+// conhece não mostra nada.
+export type AnnouncementText = {
+  title: string;
+  // Emoji ao lado do título, escondido do leitor de tela (senão ele lê "brilhos" no nome da região).
+  icon?: string;
+  // Dia em que a novidade entrou no ar (AAAA-MM-DD), mostrado na página "O que há de novo".
+  date: string;
+  // Texto para quem usa como paciente e para quem atende como terapeuta. Quem tem os dois perfis
+  // vê os dois; sem texto para nenhum perfil da pessoa, a novidade não é para ela.
+  patient?: ReactNode;
+  therapist?: ReactNode;
+  // Atalho para a parte nova, no perfil de paciente.
+  link?: { to: string; label: string };
+};
+
+export type Profiles = { patient: boolean; therapist: boolean };
+
+export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
+  '2026-10-explicacao-alternativa': {
+    title: 'Novidade no Registro de Pensamentos',
+    icon: '✨',
+    date: '2026-10-15',
+    patient: (
+      <>
+        <p>
+          Agora você pode escrever uma <strong>explicação alternativa</strong>: outro jeito de olhar para a situação.
+          Se quiser, depois diz <strong>como se sente agora</strong> em cada emoção.
+        </p>
+        <p>
+          É opcional. Se a alternativa só vier depois, tudo bem: você pode adicioná-la ao registro até a hora da sua
+          próxima consulta.
+        </p>
+      </>
+    ),
+    therapist: (
+      <p>
+        Nos registros dos seus pacientes, o Registro de Pensamentos agora pode trazer a{' '}
+        <strong>explicação alternativa</strong> e a intensidade das emoções depois dela (antes → agora). Quando a
+        alternativa é adicionada depois do dia do registro, aparece a data em que entrou.
+      </p>
+    ),
+    link: { to: '/pensamentos', label: 'Ver meus pensamentos' },
+  },
+};
+
+// A novidade tem texto para algum perfil da pessoa?
+export function isFor(text: AnnouncementText, profiles: Profiles): boolean {
+  return Boolean((profiles.patient && text.patient) || (profiles.therapist && text.therapist));
+}
+
+// As novidades da pessoa, da mais nova para a mais antiga.
+export function announcementsFor(profiles: Profiles): [string, AnnouncementText][] {
+  return Object.entries(ANNOUNCEMENT_TEXTS)
+    .filter(([, text]) => isFor(text, profiles))
+    .sort(([, a], [, b]) => b.date.localeCompare(a.date));
+}

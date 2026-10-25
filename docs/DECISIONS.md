@@ -1062,6 +1062,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   o perfil (#83).
 - **Limite conhecido:** o anel colorido da foto de perfil fica para o PR do perfil (#83).
 
+## DEC-060 — Página "O que há de novo"
+- **Decisão:**
+  - página **`/novidades`** com todas as novidades do app que valem para a pessoa, da mais nova
+    para a mais antiga, com a **data** em que cada uma entrou no ar e o texto do perfil dela
+    (paciente, terapeuta ou os dois). Uma novidade só para terapeutas não aparece para quem é só
+    paciente;
+  - os textos saem do card para `features/announcements/announcement-texts.tsx`, com `date` e
+    `patient`/`therapist` opcionais; card e página leem do mesmo lugar;
+  - selo **"Nova"** na novidade ainda não fechada. **Abrir a página não conta como "Entendi"**: o
+    card continua no topo até a pessoa tocar nele;
+  - entradas: seção "Novidades do Faísca" na Conta e o link "Ver todas as novidades" no card
+    (escondido na própria página);
+  - **`/novidades#<id>`** abre e foca direto uma novidade, para o link das mensagens de novidade
+    por canal (#82).
+- **Motivo:** o card mostra uma novidade por vez; quem perde um card, ou tem os dois perfis e só vê
+  a mais recente, não tinha como rever o que mudou. Só front, sem API.
+- **Limite conhecido:** a data é escrita à mão no texto de cada novidade, no dia em que ela vai ao ar.
+
 ## DEC-061 — Perfil básico: nome completo e foto (API)
 - **Decisão:**
   - **nome completo** opcional (`User.fullName`, até 120 caracteres, CHECK no banco), separado do
