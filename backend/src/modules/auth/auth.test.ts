@@ -540,7 +540,13 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
     const agent = await loginAgent();
     const areas = async () => (await agent.get('/auth/me')).body.user.privacyAreas;
 
-    const none = { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false };
+    const none = {
+      thoughtRecords: false,
+      tensionEpisodes: false,
+      appointmentSchedule: false,
+      actions: false,
+      actionPhotos: false,
+    };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
       ['2026-10', none],
@@ -549,7 +555,12 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       // Agenda (DEC-045).
       ['2026-10.4', { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true }],
       // Ação (DEC-051).
-      ['2026-10.5', { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true }],
+      ['2026-10.5', { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true }],
+      // Fotos da Ação (DEC-064).
+      [
+        '2026-10.6',
+        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true },
+      ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {

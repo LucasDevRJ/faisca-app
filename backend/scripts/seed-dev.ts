@@ -12,11 +12,13 @@
 // - aviso-rpd.dev@faisca.test: paciente que aceitou a versão do RPD, mas não a dos episódios, para
 //   testar o aceite por área (DEC-042): o RPD aberto e a Tensão pedindo o aceite.
 // Perfil (DEC-061): a terapeuta dev tem foto fictícia; a paciente dev tem nome completo e fica sem foto.
+// Fotos da Ação (DEC-064): a ação avaliada mais recente da paciente dev tem três fotos fictícias.
 // As duas primeiras já aceitaram a versão atual do aviso.
 // Rodar de novo recria os registros da paciente dev (as datas acompanham o dia de hoje).
 
 import sharp from 'sharp';
 import type { ActivityStatus, Emotion } from '../src/generated/prisma/client.js';
+import { processImage } from '../src/lib/images.js';
 import { toAvatarImage } from '../src/modules/profile/profile.service.js';
 
 // Dados fictícios (regra 5). A senha é pública de propósito: as contas só existem no banco local.
@@ -205,6 +207,7 @@ await prisma.$transaction(async (tx) => {
       ...action,
       category: action.category as 'PRAZER' | 'CONEXAO' | 'REALIZACAO',
       status: action.status as 'PLANEJADA' | 'AVALIADA' | 'NAO_REALIZADA',
+      evaluatedAt: action.status === 'AVALIADA' ? new Date() : null,
       userId: patient.id,
       actionDate: dateOnlyToDate(addDays(today, offset)),
     })),
@@ -287,6 +290,22 @@ const devPhoto = await sharp({ create: { width: 512, height: 512, channels: 3, b
   .png()
   .toBuffer();
 const avatarImage = new Uint8Array(await toAvatarImage(devPhoto));
+// Fotos da Ação (DEC-064): três quadros de cor fictícios na ação avaliada mais recente.
+const deskAction = await prisma.behavioralAction.findFirstOrThrow({
+  where: { userId: patient.id, name: 'Organizar a escrivaninha (fictício)' },
+});
+for (const color of ['#c9b79c', '#8fa9b8', '#b8927a']) {
+  const original = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: color } })
+    .jpeg()
+    .toBuffer();
+  const [image, thumbnail] = await processImage(original, 50_000_000, [
+    { width: 2560, height: 2560, fit: 'inside', quality: 85 },
+    { width: 400, height: 400, fit: 'cover', quality: 75 },
+  ]);
+  await prisma.actionPhoto.create({
+    data: { actionId: deskAction.id, image: new Uint8Array(image!), thumbnail: new Uint8Array(thumbnail!) },
+  });
+}
 await prisma.userAvatar.upsert({
   where: { userId: therapist.id },
   create: { userId: therapist.id, image: avatarImage },

@@ -72,6 +72,23 @@ export const notDoneActionSchema = z.strictObject({ observation: observationSche
 
 export const actionIdSchema = z.object({ id: z.uuid({ error: 'Ação inválida.' }) });
 
+// Fotos da Ação (DEC-064).
+export const photoParamsSchema = z.object({
+  id: z.uuid({ error: 'Ação inválida.' }),
+  photoId: z.uuid({ error: 'Foto inválida.' }),
+});
+// A terapeuta chega pela cadeia do prefixo (vínculo ativo já conferido).
+export const therapistPhotoParamsSchema = z.object({
+  patientId: z.uuid(),
+  actionId: z.uuid({ error: 'Ação inválida.' }),
+  photoId: z.uuid({ error: 'Foto inválida.' }),
+});
+// thumb: a miniatura dos cartões; full: a foto grande, ao tocar.
+export const photoSizeSchema = z.object({ size: z.enum(['thumb', 'full']).default('thumb') });
+// A foto chega como o próprio arquivo; o tipo real é conferido pelo conteúdo (lib/images.ts).
+export const PHOTO_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const PHOTO_MAX_BYTES = '20mb';
+
 // Mesmos tetos das outras listas: 42 dias para o paciente, 92 para a terapeuta (DEC-033).
 export const listActionsQuerySchema = listQuerySchema(LIST_MAX_DAYS);
 export const therapistActionsQuerySchema = listQuerySchema(THERAPIST_LIST_MAX_DAYS);

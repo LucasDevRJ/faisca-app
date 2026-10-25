@@ -1,7 +1,17 @@
 import { AppError } from '../../errors/app-error.js';
 import type { BehavioralAction, Prisma } from '../../generated/prisma/client.js';
 import { addDays, dateOnlyToDate, dateToDateOnly, todayInAppZone } from '../../lib/dates.js';
+import { processImage } from '../../lib/images.js';
 import { prisma } from '../../lib/prisma.js';
+import { loadAgenda } from '../appointments/appointments.service.js';
+import { scheduledSessionsFrom, type Session } from '../appointments/sessions.js';
+import {
+  deadlineFor,
+  deadlineInstant,
+  effectiveDeadline,
+  isBeforeDeadline,
+  type AlternativeDeadline,
+} from '../thought-records/thought-records.service.js';
 import type {
   CreateActionInput,
   EvaluateActionInput,
@@ -26,12 +36,53 @@ export type PublicAction = {
   pleasure: number | null;
   achievement: number | null;
   observation: string | null;
+  // Fotos da ação avaliada (DEC-064), da mais antiga para a mais nova; as imagens vêm por rota própria.
+  photos: { id: string; createdAt: string }[];
+  // A próxima consulta depois da avaliação, que fecha o prazo das fotos; null sem consulta marcada.
+  photosDeadline: AlternativeDeadline | null;
+  // Dá para adicionar ou remover fotos agora: avaliada e antes do prazo (sem prazo, sempre).
+  photosOpen: boolean;
   createdAt: string;
   updatedAt: string;
 };
 
+// Fotos (DEC-064): até 10 por ação; a grande cabe em 2560 px e a miniatura é um quadrado de 400 px.
+export const MAX_PHOTOS = 10;
+// Câmeras de celular de até 50 MP; a fila de lib/images.ts trata uma foto por vez na API toda.
+const PHOTO_MAX_PIXELS = 50_000_000;
+const PHOTO_OUTPUTS = [
+  { width: 2560, height: 2560, fit: 'inside' as const, quality: 85 },
+  { width: 400, height: 400, fit: 'cover' as const, quality: 75 },
+];
+
+type PhotoRef = { id: string; createdAt: Date };
+export type ActionWithPhotos = BehavioralAction & { photos: PhotoRef[] };
+
+// Para as consultas trazerem as fotos (só id e data, sem as imagens) na ordem certa.
+const withPhotos = { photos: { select: { id: true, createdAt: true }, orderBy: { createdAt: 'asc' as const } } };
+
+// A partir de quando conta o prazo das fotos: a avaliação. As avaliadas antes do evaluatedAt
+// existir usam o updatedAt, preenchido igual na migration.
+function photosBasis(action: BehavioralAction): Date | null {
+  if (action.status !== 'AVALIADA') return null;
+  return action.evaluatedAt ?? action.updatedAt;
+}
+
+// Funções puras, para testar as bordas sem banco. Vale o que vier primeiro: o prazo congelado ou a
+// consulta pela agenda de agora (como no RPD, DEC-054).
+export function photosDeadlineFor(action: BehavioralAction, sessions: Session[]): AlternativeDeadline | null {
+  const basis = photosBasis(action);
+  return basis ? effectiveDeadline(action.photosDeadlineAt, deadlineFor(sessions, basis)) : null;
+}
+
+export function arePhotosOpen(action: BehavioralAction, sessions: Session[], now: Date = new Date()): boolean {
+  if (action.status !== 'AVALIADA') return false;
+  const deadline = photosDeadlineFor(action, sessions);
+  return deadline === null || isBeforeDeadline(deadline, now);
+}
+
 // Sem o userId: quem pede já é o dono, ou a terapeuta, que sabe de quem pediu.
-export function toPublicAction(action: BehavioralAction): PublicAction {
+export function toPublicAction(action: ActionWithPhotos, sessions: Session[] = [], now: Date = new Date()): PublicAction {
   return {
     id: action.id,
     actionDate: dateToDateOnly(action.actionDate),
@@ -42,9 +93,55 @@ export function toPublicAction(action: BehavioralAction): PublicAction {
     pleasure: action.pleasure,
     achievement: action.achievement,
     observation: action.observation,
+    photos: action.photos.map((photo) => ({ id: photo.id, createdAt: photo.createdAt.toISOString() })),
+    photosDeadline: photosDeadlineFor(action, sessions),
+    photosOpen: arePhotosOpen(action, sessions, now),
     createdAt: action.createdAt.toISOString(),
     updatedAt: action.updatedAt.toISOString(),
   };
+}
+
+// As sessões agendadas desde a avaliação mais antiga, para o prazo das fotos de cada ação. Uma
+// leitura da agenda por pedido, e só se houver alguma avaliada.
+async function sessionsFor(userId: string, actions: BehavioralAction[]): Promise<Session[]> {
+  const bases = actions.map(photosBasis).filter((basis): basis is Date => basis !== null);
+  if (bases.length === 0) return [];
+  const oldest = bases.reduce((a, b) => (a < b ? a : b));
+  return scheduledSessionsFrom(await loadAgenda(prisma, userId), todayInAppZone(oldest), todayInAppZone());
+}
+
+// freeze: congela o prazo das fotos que ainda não têm. Só na leitura e nas escritas do paciente: a
+// leitura da terapeuta não grava nada (regra 1).
+async function toPublicActions(userId: string, actions: ActionWithPhotos[], freeze = false): Promise<PublicAction[]> {
+  const sessions = await sessionsFor(userId, actions);
+  if (freeze) await freezeMissingDeadlines(actions, sessions);
+  return actions.map((action) => toPublicAction(action, sessions));
+}
+
+// Congela o prazo das fotos das avaliadas que ainda não têm, na primeira vez que há uma consulta
+// pela frente. Escrita condicional, sem mexer no updatedAt: congelar não muda a ação, e o Lido da
+// terapeuta compara com o updatedAt (DEC-057). Se a ação mudou no meio, fica para a próxima leitura.
+async function freezeMissingDeadlines(actions: ActionWithPhotos[], sessions: Session[]) {
+  for (const action of actions) {
+    const basis = photosBasis(action);
+    if (!basis || action.photosDeadlineAt !== null) continue;
+    const deadline = deadlineFor(sessions, basis);
+    if (!deadline) continue;
+    const at = deadlineInstant(deadline);
+    const { count } = await prisma.behavioralAction.updateMany({
+      where: { id: action.id, photosDeadlineAt: null, updatedAt: action.updatedAt },
+      data: { photosDeadlineAt: at, updatedAt: action.updatedAt },
+    });
+    if (count > 0) action.photosDeadlineAt = at;
+  }
+}
+
+function photoLimit() {
+  return new AppError(409, 'PHOTO_LIMIT', `Cada ação tem espaço para até ${MAX_PHOTOS} fotos.`);
+}
+
+function photoNotFound() {
+  return new AppError(404, 'PHOTO_NOT_FOUND', 'Foto não encontrada.');
 }
 
 function notFound() {
@@ -112,20 +209,52 @@ async function conflictAfterRace(id: string): Promise<AppError> {
 async function writePlanned(userId: string, id: string, data: Prisma.BehavioralActionUpdateManyMutationInput) {
   const { count } = await prisma.behavioralAction.updateMany({ where: { id, userId, status: 'PLANEJADA' }, data });
   if (count === 0) throw await conflictAfterRace(id);
-  return toPublicAction(await prisma.behavioralAction.findUniqueOrThrow({ where: { id } }));
+  const [action] = await toPublicActions(
+    userId,
+    [await prisma.behavioralAction.findUniqueOrThrow({ where: { id }, include: withPhotos })],
+    true,
+  );
+  return action!;
+}
+
+// As fotos só mudam na ação avaliada e antes do prazo (a próxima consulta depois da avaliação).
+async function assertPhotosOpen(userId: string, action: BehavioralAction) {
+  if (action.status !== 'AVALIADA') {
+    throw new AppError(409, 'PHOTOS_NOT_ALLOWED', 'As fotos entram depois de contar como foi a ação.');
+  }
+  const withPhotoRefs = { ...action, photos: [] };
+  const sessions = await sessionsFor(userId, [action]);
+  await freezeMissingDeadlines([withPhotoRefs], sessions);
+  if (!arePhotosOpen(withPhotoRefs, sessions)) {
+    throw new AppError(409, 'PHOTOS_CLOSED', 'O prazo para mexer nas fotos desta ação terminou na consulta.');
+  }
+}
+
+// A foto nova (ou removida) conta como mudança da ação: a terapeuta que já a leu vê "atualizado"
+// (DEC-057). Dentro da transação que mexe na foto.
+function touchAction(tx: Prisma.TransactionClient, id: string) {
+  return tx.behavioralAction.update({ where: { id }, data: { updatedAt: new Date() } });
 }
 
 export function createActionsService() {
-  async function list(userId: string, { from, to }: ListActionsQuery) {
+  // freeze: true só quando quem lê é o próprio paciente (a terapeuta usa o padrão).
+  async function list(userId: string, { from, to }: ListActionsQuery, freeze = false) {
     const actions = await prisma.behavioralAction.findMany({
       where: { userId, actionDate: { gte: dateOnlyToDate(from), lte: dateOnlyToDate(to) } },
       orderBy: [{ actionDate: 'asc' }, { createdAt: 'asc' }],
+      include: withPhotos,
     });
-    return actions.map(toPublicAction);
+    return toPublicActions(userId, actions, freeze);
   }
 
   async function get(userId: string, id: string) {
-    return toPublicAction(await findOwned(userId, id));
+    await findOwned(userId, id);
+    const [action] = await toPublicActions(
+      userId,
+      [await prisma.behavioralAction.findUniqueOrThrow({ where: { id }, include: withPhotos })],
+      true,
+    );
+    return action!;
   }
 
   async function create(userId: string, input: CreateActionInput) {
@@ -135,9 +264,17 @@ export function createActionsService() {
     );
     const { actionDate, ...rest } = input;
     const action = await prisma.behavioralAction.create({
-      data: { ...rest, userId, actionDate: dateOnlyToDate(actionDate) },
+      // Registrar algo já feito já nasce avaliado: o prazo das fotos conta daqui (DEC-064).
+      data: {
+        ...rest,
+        userId,
+        actionDate: dateOnlyToDate(actionDate),
+        evaluatedAt: rest.status === 'AVALIADA' ? new Date() : null,
+      },
+      include: withPhotos,
     });
-    return toPublicAction(action);
+    const [created] = await toPublicActions(userId, [action], true);
+    return created!;
   }
 
   async function update(userId: string, id: string, input: UpdateActionInput) {
@@ -154,6 +291,7 @@ export function createActionsService() {
     assertDayArrived(await findPlanned(userId, id));
     return writePlanned(userId, id, {
       status: 'AVALIADA',
+      evaluatedAt: new Date(),
       pleasure: input.pleasure,
       achievement: input.achievement,
       observation: input.observation ?? null,
@@ -177,11 +315,78 @@ export function createActionsService() {
     const actions = await prisma.behavioralAction.findMany({
       where: { userId, id: { in: ids } },
       orderBy: [{ actionDate: 'asc' }, { createdAt: 'asc' }],
+      include: withPhotos,
     });
-    return actions.map(toPublicAction);
+    return toPublicActions(userId, actions);
   }
 
-  return { list, listByIds, get, create, update, evaluate, notDone, remove };
+  // ——— Fotos (DEC-064) ———
+
+  async function addPhoto(userId: string, id: string, upload: Uint8Array) {
+    const action = await findOwned(userId, id);
+    await assertPhotosOpen(userId, action);
+    // Confere o limite antes de tratar a imagem, que é a parte cara; a transação confere de novo.
+    if ((await prisma.actionPhoto.count({ where: { actionId: id } })) >= MAX_PHOTOS) throw photoLimit();
+    // Trata a imagem fora da transação: é a parte demorada.
+    const [image, thumbnail] = await processImage(upload, PHOTO_MAX_PIXELS, PHOTO_OUTPUTS);
+    const photo = await prisma.$transaction(async (tx) => {
+      // Trava a ação: dois envios ao mesmo tempo não passam juntos do limite.
+      await tx.$queryRaw`SELECT id FROM "BehavioralAction" WHERE id = ${id}::uuid FOR UPDATE`;
+      if ((await tx.actionPhoto.count({ where: { actionId: id } })) >= MAX_PHOTOS) {
+        throw photoLimit();
+      }
+      const created = await tx.actionPhoto.create({
+        data: { actionId: id, image: new Uint8Array(image!), thumbnail: new Uint8Array(thumbnail!) },
+        select: { id: true, createdAt: true },
+      });
+      await touchAction(tx, id);
+      return created;
+    });
+    return { photo: { id: photo.id, createdAt: photo.createdAt.toISOString() }, action: await get(userId, id) };
+  }
+
+  async function removePhoto(userId: string, id: string, photoId: string) {
+    const action = await findOwned(userId, id);
+    await assertPhotosOpen(userId, action);
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.actionPhoto.deleteMany({ where: { id: photoId, actionId: id } });
+      if (count === 0) throw photoNotFound();
+      await touchAction(tx, id);
+    });
+  }
+
+  // A imagem de uma foto, de uma ação de `ownerId`: o paciente pede as próprias; a terapeuta, as
+  // do paciente com vínculo ativo (conferido antes, na cadeia do prefixo).
+  async function photoImage(ownerId: string, actionId: string, photoId: string, size: 'thumb' | 'full') {
+    const where = { id: photoId, actionId, action: { userId: ownerId } };
+    const photo =
+      size === 'thumb'
+        ? await prisma.actionPhoto.findFirst({ where, select: { thumbnail: true } }).then((p) => p?.thumbnail)
+        : await prisma.actionPhoto.findFirst({ where, select: { image: true } }).then((p) => p?.image);
+    if (!photo) throw photoNotFound();
+    return photo;
+  }
+
+  // A foto de uma ação do próprio paciente: ação de outra pessoa é 403, como no resto da Ação.
+  async function ownPhotoImage(userId: string, actionId: string, photoId: string, size: 'thumb' | 'full') {
+    await findOwned(userId, actionId);
+    return photoImage(userId, actionId, photoId, size);
+  }
+
+  return {
+    list,
+    listByIds,
+    get,
+    create,
+    update,
+    evaluate,
+    notDone,
+    remove,
+    addPhoto,
+    removePhoto,
+    photoImage,
+    ownPhotoImage,
+  };
 }
 
 export type ActionsService = ReturnType<typeof createActionsService>;

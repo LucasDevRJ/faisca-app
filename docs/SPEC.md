@@ -146,6 +146,9 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 - A meta é **uma de cada tipo por ciclo da consulta** (duas de cada no ciclo de 14 dias ou mais),
   mostrada de forma neutra, sem placar.
 - Usar a Ação exige ter aceitado uma versão do aviso de privacidade que a cite.
+- **Fotos** (DEC-064): na ação avaliada, até 10 fotos opcionais, que aparecem para a psicóloga.
+  Dá para adicionar e remover até a hora da próxima consulta depois da avaliação (sem consulta
+  marcada, sem prazo). As fotos pedem o aceite da versão do aviso que as cita.
 - A aba **Ação** fica ao lado de Atividades, Pensamentos e Tensão (no celular, as quatro em grade
   2×2), com a explicação dos três tipos, a meta do ciclo, os dias com ação, o cartão com a
   expectativa ao lado do resultado ("Esperava 3 · Prazer 7 · Realização 6") e um gráfico de
@@ -229,7 +232,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
-- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas.
+- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`; as fotos da Ação, a partir da `2026-10.6`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas.
 - Nenhum documento pessoal é solicitado.
 - A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos. A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída.
 - Nenhum dado real em seeds, fixtures ou testes.

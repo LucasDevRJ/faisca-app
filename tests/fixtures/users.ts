@@ -39,4 +39,7 @@ export const users = {
   // Usadas só nos testes do perfil (api/profile.spec.ts, DEC-061).
   profilePatient: { email: 'perfil-paciente@faisca.test', password: SEED_PASSWORD },
   profileTherapist: { email: 'perfil-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nos testes das fotos da Ação (api/action-photos.spec.ts, DEC-064).
+  photosPatient: { email: 'fotos-paciente@faisca.test', password: SEED_PASSWORD },
+  photosTherapist: { email: 'fotos-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;

@@ -404,27 +404,48 @@ enum ActionStatus {
 // Ação (DEC-051): uma ação de prazer, de conexão ou de realização, planejada com a expectativa e
 // avaliada depois com o prazer e a realização. Avaliada e não realizada são finais.
 model BehavioralAction {
-  id          String         @id @default(uuid()) @db.Uuid
+  id               String         @id @default(uuid()) @db.Uuid
   // O paciente dono do registro.
-  userId      String         @db.Uuid
+  userId           String         @db.Uuid
   // Dia da ação, no fuso America/Sao_Paulo (DEC-007); separado do createdAt.
-  actionDate  DateTime       @db.Date
-  name        String
-  category    ActionCategory
-  status      ActionStatus   @default(PLANEJADA)
+  actionDate       DateTime       @db.Date
+  name             String
+  category         ActionCategory
+  status           ActionStatus   @default(PLANEJADA)
   // Expectativa antes (0–10), sempre; prazer e realização depois (0–10), só na avaliada.
-  expectation Int
-  pleasure    Int?
-  achievement Int?
+  expectation      Int
+  pleasure         Int?
+  achievement      Int?
   // Opcional na avaliada e na não realizada.
-  observation String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  observation      String?
+  // Quando foi avaliada (DEC-064): o prazo das fotos é a próxima consulta depois disso.
+  evaluatedAt      DateTime?
+  // O prazo das fotos, congelado como o da alternativa no RPD (DEC-054): desmarcar ou apagar uma
+  // consulta que já passou não reabre o prazo; antecipar a consulta encurta.
+  photosDeadlineAt DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   readMarks ReadMark[]
+  photos    ActionPhoto[]
 
   @@index([userId, actionDate])
+}
+
+// Fotos de uma Ação avaliada (DEC-064): até 10, guardadas já tratadas (sem metadados, como a
+// localização), numa tabela à parte para as listas não carregarem imagens. A grande cabe em
+// 2560 px; a miniatura é um quadrado de 400 px para os cartões. Saem em cascata com a ação.
+model ActionPhoto {
+  id        String   @id @default(uuid()) @db.Uuid
+  actionId  String   @db.Uuid
+  image     Bytes
+  thumbnail Bytes
+  createdAt DateTime @default(now())
+
+  action BehavioralAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([actionId, createdAt])
 }
 
 // Marca de leitura da terapeuta (SPEC, "Visão da terapeuta"; DEC-057): "lido" num Pensamento, num
