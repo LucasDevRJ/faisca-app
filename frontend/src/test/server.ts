@@ -15,6 +15,7 @@ export const fakeUser: SessionUser = {
   privacyUpToDate: true,
   privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true },
   pendingAnnouncement: null,
+  palette: 'SALVIA',
 };
 
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
@@ -126,6 +127,9 @@ export const loggedIn = http.get('*/api/auth/me', () => HttpResponse.json({ user
 
 // Respostas padrão da API simulada. Cada teste pode sobrescrever com server.use(...).
 export const handlers = [
+  http.get('*/api/profile', () =>
+    HttpResponse.json({ profile: { fullName: null, palette: 'SALVIA', avatarVersion: null } }),
+  ),
   http.get('*/api/health', () =>
     HttpResponse.json({ status: 'ok', timestamp: '2026-01-01T12:00:00.000Z' }),
   ),

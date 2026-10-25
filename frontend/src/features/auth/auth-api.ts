@@ -1,5 +1,6 @@
 import { isAxiosError } from 'axios';
 import { api } from '../../lib/api';
+import type { Palette } from '../profile/palettes';
 
 // Chamadas às rotas /auth da API (DEC-025). A sessão fica no cookie httpOnly:
 // o front nunca vê nem guarda o token.
@@ -22,6 +23,8 @@ export type SessionUser = {
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;
+  // Paleta de cores da conta (DEC-063); sem escolha, a Sálvia.
+  palette: Palette;
 };
 
 export type SignupInput = {

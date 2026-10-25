@@ -14,7 +14,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
-// (DEC-058): um dado de trabalho dela, que o paciente não vê.
+// (DEC-058): um dado de trabalho dela, que o paciente não vê. E também para o nome completo e a
+// paleta do perfil (DEC-061, DEC-068): dados pessoais da própria conta, que não são de saúde.
 const VERSION_LABEL = 'versão 6, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
@@ -59,7 +60,8 @@ export function PrivacyPage() {
         <Section title="O que guardamos">
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li>
-              Da sua conta: nome, e-mail e senha. A senha é guardada de um jeito que nem nós conseguimos ler.
+              Da sua conta: nome, e-mail e senha. A senha é guardada de um jeito que nem nós conseguimos ler. Se
+              você quiser, também o nome completo e a paleta de cores que escolher no seu perfil.
             </li>
             <li>O que você registra: atividades, datas, notas de 0 a 10 e observações.</li>
             <li>
@@ -86,7 +88,7 @@ export function PrivacyPage() {
               a 10 da tensão e da vontade de vocalizar, o que você fez e o que aconteceu depois.
             </li>
             <li>Seus vínculos com terapeutas.</li>
-            <li>No seu aparelho: só o cookie de sessão e a preferência de tema claro ou escuro.</li>
+            <li>No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro e a paleta de cores.</li>
             <li>
               Se você baixar o arquivo da agenda para o calendário do celular, ele leva só o dia e a hora de cada
               sessão, com o texto “Consulta”, sem motivos.
