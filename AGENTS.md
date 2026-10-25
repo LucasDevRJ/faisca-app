@@ -11,7 +11,8 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 
 ## Estrutura
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
-- `docs/`: SPEC, DECISIONS e DEPLOY (passo a passo do deploy).
+- `docs/`: SPEC, DECISIONS, DEPLOY (passo a passo do deploy e da troca de segredos) e
+  APRESENTACAO (o que o Faísca é, para divulgação; atualizar quando uma funcionalidade entra no ar).
 - `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-migration`, `nova-decisao`,
   `finalizar-mudanca` e `deploy-checklist`).
 - `.claude/agents/`: subagentes do projeto (`revisor-regras` para as regras invioláveis e
