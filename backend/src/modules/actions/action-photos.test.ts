@@ -109,9 +109,12 @@ describe('adicionar e remover fotos', () => {
     const fullMeta = await sharp(full.body as Buffer).metadata();
     expect([full.headers['content-type'], fullMeta.width, fullMeta.height]).toEqual(['image/webp', 2560, 1707]);
     expect(fullMeta.exif).toBeUndefined();
+    // Dado de saúde: nada fica no cache do aparelho (DEC-066).
+    expect(full.headers['cache-control']).toBe('no-store');
     const thumb = await agent.get(`/actions/${action.id}/photos/${res.body.photo.id}`).buffer(true);
     const thumbMeta = await sharp(thumb.body as Buffer).metadata();
     expect([thumbMeta.width, thumbMeta.height]).toEqual([400, 400]);
+    expect(thumb.headers['cache-control']).toBe('no-store');
   });
 
   it('foto menor que o limite não é aumentada', async () => {
@@ -268,6 +271,7 @@ describe('autorização (regra 1)', () => {
     const photo = await therapist.get(`${path}?size=full`);
     expect(photo.status).toBe(200);
     expect(photo.headers['content-type']).toBe('image/webp');
+    expect(photo.headers['cache-control']).toBe('no-store');
     expect((await therapist.delete(path)).status).toBe(403);
     expect((await therapist.post(`/therapist/patients/${patientId}/actions/${actionId}/photos`)).status).toBe(403);
 

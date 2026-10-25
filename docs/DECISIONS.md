@@ -1237,6 +1237,16 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o envio da foto HEIC depende da conversão do próprio iPhone (testar no
   aparelho da psicóloga); a foto sobe sem barra de progresso por arquivo.
 
+## DEC-066 — Fotos da Ação sem cache no aparelho
+- **Decisão:** as imagens das fotos da Ação (paciente e terapeuta, miniatura e grande) vão com
+  `Cache-Control: no-store`, no lugar do cache privado de um dia da DEC-064.
+- **Motivo:** a foto é dado de saúde e pode mostrar outras pessoas. Com cache, ela ficava no disco
+  do aparelho depois de sair da conta ou de desfazer o vínculo, inclusive num celular dividido.
+- **Limite conhecido:** a foto é baixada de novo a cada visita. As miniaturas têm 400 px, então o
+  custo é pequeno. A foto de perfil continua com `private, no-cache` (DEC-061), porque mostra só o
+  rosto de quem a enviou, que já aparece para quem tem vínculo. As fotos baixadas antes desta
+  mudança podem continuar no aparelho por até 24 horas, pelo cache antigo.
+
 ## DEC-067 — Observações da Ação e das atividades com até 5000 caracteres
 - **Decisão:** a observação da Ação (ao contar como foi, ao registrar já feita e em "não deu desta
   vez") e a das atividades (ao concluir e em "não realizada") passam de 1000 para **5000
