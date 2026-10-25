@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { Button } from '../../components/ui/button';
+import { buttonClasses } from '../../components/ui/button-styles';
 import { Dialog, DialogFooter } from '../../components/ui/dialog';
 import { getApiError } from '../auth/auth-api';
 import { PrivacyConsentGate } from '../auth/privacy-consent';
@@ -86,7 +87,7 @@ export function ActionPhotos({ action, viewer }: { action: Action; viewer: Photo
                 type="button"
                 onClick={() => setViewing(index)}
                 aria-label={`Abrir a foto ${index + 1} de ${photos.length}`}
-                className="block overflow-hidden rounded-md border border-border"
+                className="block cursor-zoom-in overflow-hidden rounded-md border border-border"
               >
                 <img src={url(index, 'thumb')} alt="" loading="lazy" className="size-16 object-cover sm:size-20" />
               </button>
@@ -248,12 +249,14 @@ function PhotoViewer({ action, index, url, canRemove, onIndex, onClose }: Viewer
       title={`Foto ${index + 1} de ${total}`}
       description={<span className="break-words">{action.name}</span>}
       onClose={onClose}
+      size="wide"
     >
-      <div onKeyDown={handleKey} className="flex flex-col gap-4">
+      <div onKeyDown={handleKey} className="flex flex-col gap-4 sm:gap-3">
         <img
           src={url(index, 'full')}
           alt={`Foto ${index + 1} de ${total} de ${action.name}`}
-          className="max-h-[45dvh] w-full rounded-md object-contain sm:max-h-[60dvh]"
+          // No computador, a foto ocupa a altura que sobra do título e dos botões.
+          className="max-h-[45dvh] w-full rounded-md object-contain sm:max-h-[calc(94dvh-12rem)]"
         />
         {/* Trocar de foto não move o foco: o leitor de tela ouve em qual está. */}
         <p role="status" className="sr-only">
@@ -275,18 +278,28 @@ function PhotoViewer({ action, index, url, canRemove, onIndex, onClose }: Viewer
             </>
           ) : (
             <>
+              {/* Para ver os detalhes: a foto inteira, em 2560 px, noutra aba, com o zoom do navegador.
+                  É o primeiro elemento focável, então as setas do teclado já funcionam ao abrir. */}
+              <a
+                href={url(index, 'full')}
+                target="_blank"
+                rel="noopener"
+                className={buttonClasses('ghost', 'col-span-2 whitespace-nowrap sm:mr-auto sm:px-3')}
+              >
+                Abrir em tamanho real<span className="sr-only"> (abre em outra aba)</span>
+              </a>
               {total > 1 && (
                 <>
-                  <Button variant="secondary" onClick={() => go(-1)}>
+                  <Button variant="secondary" className="whitespace-nowrap" onClick={() => go(-1)}>
                     ‹ Anterior
                   </Button>
-                  <Button variant="secondary" onClick={() => go(1)}>
+                  <Button variant="secondary" className="whitespace-nowrap" onClick={() => go(1)}>
                     Próxima ›
                   </Button>
                 </>
               )}
               {canRemove && (
-                <Button variant="ghost" onClick={() => setConfirming(true)}>
+                <Button variant="ghost" className="whitespace-nowrap" onClick={() => setConfirming(true)}>
                   Remover foto
                 </Button>
               )}
