@@ -35,6 +35,9 @@ model User {
   // Perfil básico (DEC-061): o nome completo, opcional. O `name` é o "Como podemos te chamar?",
   // que continua sendo o nome mostrado no app.
   fullName            String?
+  // Paleta de cores escolhida (DEC-063); null = Sálvia, a padrão. Combina com o tema claro/escuro,
+  // que continua no aparelho.
+  palette             Palette?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -73,6 +76,15 @@ model UserAvatar {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Paletas de cores do app (DEC-063), todas conferidas no contraste (AA; Alto contraste em AAA).
+enum Palette {
+  SALVIA
+  LAVANDA
+  OCEANO
+  AREIA
+  ALTO_CONTRASTE
 }
 
 enum AuthTokenType {

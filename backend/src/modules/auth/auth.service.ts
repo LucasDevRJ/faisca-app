@@ -1,5 +1,5 @@
 import { AppError } from '../../errors/app-error.js';
-import { Prisma, type AuthTokenType, type User } from '../../generated/prisma/client.js';
+import { Prisma, type AuthTokenType, type Palette, type User } from '../../generated/prisma/client.js';
 import { logger } from '../../lib/logger.js';
 import type { EmailMessage, Mailer } from '../../lib/mailer.js';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
@@ -32,12 +32,14 @@ export type PublicUser = {
   privacyAreas: Record<PrivacyArea, boolean>;
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: Announcement | null;
+  // Paleta de cores da conta (DEC-063): vem no /auth/me para o app aplicar as cores ao abrir.
+  palette: Palette;
 };
 
 export function toPublicUser(
   user: Pick<
     User,
-    'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile' | 'privacyVersion' | 'seenAnnouncement'
+    'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile' | 'privacyVersion' | 'seenAnnouncement' | 'palette'
   >,
 ): PublicUser {
   return {
@@ -51,6 +53,7 @@ export function toPublicUser(
       patient: user.hasPatientProfile,
       therapist: user.hasTherapistProfile,
     }),
+    palette: user.palette ?? 'SALVIA',
   };
 }
 

@@ -19,6 +19,8 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   da câmera, como a localização. A terapeuta vê a foto dos pacientes com vínculo ativo; o paciente
   vê a da terapeuta vinculada. Dá para trocar ou remover a foto a qualquer momento, e ela sai com a
   conta. O celular entra com as notificações (#82), confirmado por código.
+- **Paleta de cores** (DEC-063): Sálvia (padrão), Lavanda, Oceano, Areia ou Alto contraste, salva na
+  conta e combinada com o tema claro, escuro ou automático.
 
 ## Atividades
 ### Estados
