@@ -64,6 +64,9 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   // Só para o perfil (api/profile.spec.ts, DEC-061): foto vista pela terapeuta vinculada.
   { name: 'Mara Fictícia', email: 'perfil-paciente@faisca.test', patient: true, therapist: false },
   { name: 'Nara Fictícia', email: 'perfil-terapeuta@faisca.test', patient: false, therapist: true },
+  // Só para as fotos da Ação (api/action-photos.spec.ts, DEC-064): já com a versão que cita as fotos.
+  { name: 'Olívia Fictícia', email: 'fotos-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.6' },
+  { name: 'Paula Fictícia', email: 'fotos-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.6' },
 ];
 
 await prisma.activity.deleteMany();

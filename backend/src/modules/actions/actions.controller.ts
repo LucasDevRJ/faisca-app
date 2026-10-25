@@ -1,4 +1,5 @@
-import type { Request, RequestHandler } from 'express';
+import type { Request, RequestHandler, Response } from 'express';
+import { AppError } from '../../errors/app-error.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import {
   actionIdSchema,
@@ -6,6 +7,9 @@ import {
   evaluateActionSchema,
   listActionsQuerySchema,
   notDoneActionSchema,
+  photoParamsSchema,
+  photoSizeSchema,
+  therapistPhotoParamsSchema,
   updateActionSchema,
 } from './actions.schema.js';
 import type { ActionsService } from './actions.service.js';
@@ -15,10 +19,18 @@ function owner(req: Request) {
   return { userId: getAuthUser(req).id, id: actionIdSchema.parse(req.params).id };
 }
 
+// A imagem vai sem cache compartilhado: só o navegador de quem pediu guarda. A foto de um id não
+// muda (trocar é remover e adicionar outra), então pode ficar no cache dele por um dia.
+function sendPhoto(res: Response, image: Uint8Array) {
+  res.set({ 'Content-Type': 'image/webp', 'Cache-Control': 'private, max-age=86400' });
+  res.status(200).send(Buffer.from(image));
+}
+
 export function createActionsController(service: ActionsService) {
   const list: RequestHandler = async (req, res) => {
     const query = listActionsQuerySchema.parse(req.query);
-    res.status(200).json({ actions: await service.list(getAuthUser(req).id, query) });
+    // A leitura do próprio paciente congela o prazo das fotos (DEC-064).
+    res.status(200).json({ actions: await service.list(getAuthUser(req).id, query, true) });
   };
 
   const get: RequestHandler = async (req, res) => {
@@ -52,5 +64,35 @@ export function createActionsController(service: ActionsService) {
     res.status(204).end();
   };
 
-  return { list, get, create, update, evaluate, notDone, remove };
+  // ——— Fotos (DEC-064) ———
+
+  const addPhoto: RequestHandler = async (req, res) => {
+    const { userId, id } = owner(req);
+    // Sem Content-Type de imagem, o express.raw não lê o corpo.
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      throw new AppError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Envie uma foto em JPEG, PNG ou WebP.');
+    }
+    res.status(201).json(await service.addPhoto(userId, id, req.body));
+  };
+
+  const removePhoto: RequestHandler = async (req, res) => {
+    const { id, photoId } = photoParamsSchema.parse(req.params);
+    await service.removePhoto(getAuthUser(req).id, id, photoId);
+    res.status(204).end();
+  };
+
+  const photo: RequestHandler = async (req, res) => {
+    const { id, photoId } = photoParamsSchema.parse(req.params);
+    const { size } = photoSizeSchema.parse(req.query);
+    sendPhoto(res, await service.ownPhotoImage(getAuthUser(req).id, id, photoId, size));
+  };
+
+  // Contexto de terapeuta: só depois da cadeia do prefixo (só leitura, vínculo ativo).
+  const therapistPhoto: RequestHandler = async (req, res) => {
+    const { patientId, actionId, photoId } = therapistPhotoParamsSchema.parse(req.params);
+    const { size } = photoSizeSchema.parse(req.query);
+    sendPhoto(res, await service.photoImage(patientId, actionId, photoId, size));
+  };
+
+  return { list, get, create, update, evaluate, notDone, remove, addPhoto, removePhoto, photo, therapistPhoto };
 }

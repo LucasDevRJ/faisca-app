@@ -40,6 +40,7 @@ test('aceite por área, registro da paciente e leitura só pela terapeuta vincul
     tensionEpisodes: false,
     appointmentSchedule: false,
     actions: false,
+    actionPhotos: false,
   });
   expect((await patient.get('/thought-records', { params })).status()).toBe(200);
   const blocked = await patient.post('/tension-episodes', { data: episode });

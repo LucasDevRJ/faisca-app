@@ -1,6 +1,5 @@
-import sharp from 'sharp';
-import { AppError } from '../../errors/app-error.js';
 import type { Palette } from '../../generated/prisma/client.js';
+import { processImage } from '../../lib/images.js';
 import { prisma } from '../../lib/prisma.js';
 import type { UpdateProfileInput } from './profile.schema.js';
 
@@ -18,47 +17,15 @@ export type PublicProfile = {
 export type Avatar = { image: Uint8Array; updatedAt: Date };
 
 const AVATAR_SIDE = 256;
-const ACCEPTED_FORMATS = new Set(['jpeg', 'png', 'webp']);
-// Trava contra "bombas" de imagem: um arquivo pequeno que descomprime em bilhões de pixels.
 // 25 MP cobre a foto de qualquer celular e limita a memória de cada envio.
 const MAX_INPUT_PIXELS = 25_000_000;
 
-// Uma imagem por vez e sem cache: a API roda numa instância pequena, e o processamento da foto
-// não pode tomar a memória e a CPU de quem está usando o resto do app.
-sharp.concurrency(1);
-sharp.cache(false);
-
-// Os bytes do começo do arquivo de cada formato aceito. Conferir antes de chamar o sharp evita
-// que o arquivo passe pelo leitor de outro formato (SVG, TIFF, HEIF...) só para ser recusado.
-function hasAcceptedSignature(data: Uint8Array): boolean {
-  const ascii = (start: number, end: number) => String.fromCharCode(...data.subarray(start, end));
-  const jpeg = data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff;
-  const png = data[0] === 0x89 && ascii(1, 4) === 'PNG';
-  const webp = ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP';
-  return jpeg || png || webp;
-}
-
-function invalidImage() {
-  return new AppError(400, 'INVALID_IMAGE', 'Não foi possível ler esta imagem. Envie uma foto em JPEG, PNG ou WebP.');
-}
-
-// Confere o tipo pelo conteúdo (não pela extensão), endireita pela orientação da câmera,
-// recorta no centro em 256×256 e regrava em WebP. Regravar sem withMetadata() descarta todos
-// os metadados, inclusive a localização (GPS) que o celular grava na foto.
+// Recorta no centro em 256×256 e regrava em WebP, sem metadados (lib/images.ts).
 export async function toAvatarImage(input: Uint8Array): Promise<Buffer> {
-  if (!hasAcceptedSignature(input)) throw invalidImage();
-  try {
-    const { format } = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
-    if (!format || !ACCEPTED_FORMATS.has(format)) throw invalidImage();
-    return await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS })
-      .rotate()
-      .resize(AVATAR_SIDE, AVATAR_SIDE, { fit: 'cover', position: 'centre' })
-      .webp({ quality: 82 })
-      .toBuffer();
-  } catch (err) {
-    if (err instanceof AppError) throw err;
-    throw invalidImage();
-  }
+  const [avatar] = await processImage(input, MAX_INPUT_PIXELS, [
+    { width: AVATAR_SIDE, height: AVATAR_SIDE, fit: 'cover', quality: 82 },
+  ]);
+  return avatar!;
 }
 
 export function avatarVersion(avatar: { updatedAt: Date } | null): string | null {

@@ -1180,6 +1180,39 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   quem enxerga pior. O enum evita guardar um nome de paleta que o app não conhece.
 - **Limite conhecido:** paleta nova pede migration (o enum) e um bloco de cores nas telas.
 
+## DEC-064 — Fotos na Ação (API)
+- **Decisão:**
+  - na Ação **avaliada**, até **10 fotos**, todas opcionais. O prazo para adicionar e remover é a
+    **próxima consulta** depois da avaliação (mesma regra do prazo da explicação alternativa,
+    DEC-054); sem consulta marcada, não há prazo. Fora da avaliada, 409 `PHOTOS_NOT_ALLOWED`; depois
+    do prazo, 409 `PHOTOS_CLOSED`;
+  - a Ação passa a guardar **quando foi avaliada** (`evaluatedAt`). As já avaliadas recebem o
+    `updatedAt` na migration, porque avaliada é final e só mudava na avaliação;
+  - **no Postgres**, numa tabela à parte (`ActionPhoto`, em cascata com a ação): a foto grande cabe em
+    **2560 px** (WebP, qualidade 85, sem aumentar fotos menores) e a **miniatura** é um quadrado de
+    400 px. Envio de até **20 MB** e **50 MP**, uma imagem por vez na API toda (fila em
+    `lib/images.ts`), 60 envios por hora por conta, e o limite de 10 conferido antes de tratar a imagem;
+    tipo conferido pelos primeiros bytes; **sem metadados** (sem GPS). O tratamento de imagem foi
+    para `lib/images.ts`, usado também pela foto de perfil;
+  - **gatilho para sair do Postgres:** quando as fotos passarem de **1 GB**, ou com os laudos (#84),
+    migrar para um serviço de arquivos; o vídeo fica para essa etapa;
+  - **a psicóloga vê as fotos** (só GET, vínculo ativo), pelo prefixo da terapeuta;
+  - foto nova ou removida conta como mudança da ação: quem já leu vê **"atualizado"** (DEC-057);
+  - **área nova no aviso de privacidade** (versão `2026-10.6`, `actionPhotos`): as fotos fazem parte
+    do registro de saúde e podem mostrar outras pessoas. Sem o aceite, a Ação funciona e só as fotos
+    pedem o aceite (paciente e terapeuta). A API **conhece** a versão, mas a **versão atual** (a que o
+    cadastro e o aceite gravam) continua a `2026-10.5` até o PR das telas, que traz o texto do aviso
+    e troca a atual para a `2026-10.6`. Assim ninguém aceita um texto que ainda não viu;
+  - o prazo das fotos é **congelado** (`photosDeadlineAt`) na avaliação ou na primeira leitura do
+    paciente com uma consulta pela frente, como o da alternativa: desmarcar ou apagar uma consulta
+    que já passou não reabre; antecipar a consulta encurta. A leitura da terapeuta não grava nada;
+  - a lista da Ação traz `photos` (id e data), `photosDeadline` e `photosOpen`; as imagens vêm por
+    rota própria (`?size=thumb|full`), com cache privado de um dia (uma foto não muda: trocar é
+    remover e adicionar).
+- **Motivo:** o pedido do usuário (#95): guardar os bons momentos das ações, que ajudam na ativação
+  comportamental e dão assunto para a sessão.
+- **Limite conhecido:** sem backup no plano Hobby (DEC-038).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

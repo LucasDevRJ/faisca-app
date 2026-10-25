@@ -8,6 +8,7 @@ const AREA_NAMES: Record<PrivacyArea, string> = {
   tensionEpisodes: 'os Episódios de tensão',
   appointmentSchedule: 'a agenda de consultas',
   actions: 'a Ação',
+  actionPhotos: 'as fotos da Ação',
 };
 
 // Cada área de dado novo entrou no aviso de privacidade numa versão (DEC-039, DEC-042). Quem
