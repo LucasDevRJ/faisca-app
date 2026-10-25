@@ -214,6 +214,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Com um vínculo ativo ou convite pendente, o paciente não gera outro convite nem outro código.
 - Quando um vínculo é criado, o paciente é avisado no app e por e-mail e vê o **nome e o e-mail** de quem se vinculou.
 - O paciente revoga a qualquer momento e o acesso cai na hora. O registro do vínculo é mantido (`revokedAt`).
+  Os registros do paciente não são apagados: continuam na conta dele. Num vínculo novo, a terapeuta volta
+  a ver tudo, inclusive o que foi registrado sem vínculo. A confirmação de desfazer conta isso.
 
 ## Autorização (regra inviolável)
 - No papel de terapeuta: somente requisições GET, e apenas de pacientes com vínculo ativo.

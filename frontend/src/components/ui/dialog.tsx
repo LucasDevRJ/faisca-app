@@ -37,7 +37,7 @@ export function Dialog({ title, description, onClose, children }: DialogProps) {
     >
       <div className="flex max-h-[90dvh] flex-col gap-5 overflow-y-auto px-5 pt-6 sm:max-h-[85dvh] sm:px-6">
         <header className="flex flex-col gap-1">
-          <h2 id={titleId} className="text-2xl font-bold">
+          <h2 id={titleId} className="text-2xl font-bold break-words">
             {title}
           </h2>
           {description && (

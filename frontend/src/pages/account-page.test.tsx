@@ -162,9 +162,13 @@ describe('/conta: minha terapeuta', () => {
     expect(screen.queryByRole('button', { name: 'Gerar código' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Desfazer vínculo' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Desfazer o vínculo?' });
+    const dialog = await screen.findByRole('dialog', { name: `Desfazer o vínculo com ${therapist.name}?` });
+    // A confirmação conta que nada é apagado e o que acontece num vínculo novo.
+    expect(dialog).toHaveTextContent('Seus registros continuam com você: nada é apagado.');
+    expect(dialog).toHaveTextContent(`${therapist.name} deixa de ver seus registros na hora.`);
+    expect(dialog).toHaveTextContent(`${therapist.name} volta a ver tudo, inclusive o que você registrar até lá.`);
     expect(revoke).not.toHaveBeenCalled();
-    await user.click(within(dialog).getByRole('button', { name: 'Desfazer' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Desfazer vínculo' }));
 
     await waitFor(() => expect(revoke).toHaveBeenCalledOnce());
     expect(await screen.findByRole('button', { name: 'Gerar código' })).toBeInTheDocument();
