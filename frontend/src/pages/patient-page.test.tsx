@@ -602,6 +602,10 @@ describe('/pacientes/:id: aba Ação (DEC-052)', () => {
       'src',
       `/api/therapist/patients/${PATIENT_ID}/actions/00000000-0000-4000-a000-000000000001/photos/${photoId}?size=full`,
     );
+    expect(within(viewer).getByRole('link', { name: /^Abrir em tamanho real.*abre em outra aba/ })).toHaveAttribute(
+      'href',
+      `/api/therapist/patients/${PATIENT_ID}/actions/00000000-0000-4000-a000-000000000001/photos/${photoId}?size=full`,
+    );
     expect(within(viewer).queryByRole('button', { name: 'Remover foto' })).not.toBeInTheDocument();
     expect(writes).toEqual([]);
   });

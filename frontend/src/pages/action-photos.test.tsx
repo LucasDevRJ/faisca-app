@@ -112,7 +112,15 @@ describe('/acao: fotos da ação avaliada', () => {
       'src',
       `/api/actions/${ACTION_ID}/photos/${photo(1).id}?size=full`,
     );
-    await user.click(within(viewer).getByRole('button', { name: /Próxima/ }));
+    const full = within(viewer).getByRole('link', { name: /^Abrir em tamanho real.*abre em outra aba/ });
+    expect(full).toHaveAttribute('href', `/api/actions/${ACTION_ID}/photos/${photo(1).id}?size=full`);
+    expect(full).toHaveAttribute('target', '_blank');
+    // As setas funcionam com o foco no primeiro elemento da janela (onde o navegador o põe ao abrir).
+    full.focus();
+    await user.keyboard('{ArrowRight}');
+    expect(screen.getByRole('dialog', { name: 'Foto 2 de 2' })).toBeInTheDocument();
+    await user.keyboard('{ArrowLeft}');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Próxima/ }));
     expect(screen.getByRole('dialog', { name: 'Foto 2 de 2' })).toBeInTheDocument();
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('dialog', { name: 'Foto 1 de 2' })).toBeInTheDocument();

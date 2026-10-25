@@ -7,12 +7,19 @@ type DialogProps = {
   description?: ReactNode;
   onClose: () => void;
   children: ReactNode;
+  // wide: no computador, janela larga e mais alta (ex.: a foto grande da Ação). No celular, igual.
+  size?: 'default' | 'wide';
 };
+
+const DESKTOP_SIZE = {
+  default: { width: 'sm:w-[min(32rem,calc(100%-2rem))]', height: 'sm:max-h-[85dvh]', title: '' },
+  wide: { width: 'sm:w-[min(64rem,calc(100%-2rem))]', height: 'sm:max-h-[94dvh] sm:gap-3', title: 'sm:text-xl' },
+} as const;
 
 // <dialog> nativo em modo modal (DEC-029): o navegador cuida do foco preso dentro dele,
 // do Esc para fechar e de deixar o resto da página inerte. Monte só enquanto estiver aberto.
 // Sem padding embaixo: o rodapé com os botões (DialogFooter) fica grudado na base do painel.
-export function Dialog({ title, description, onClose, children }: DialogProps) {
+export function Dialog({ title, description, onClose, children, size = 'default' }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descriptionId = useId();
@@ -33,11 +40,11 @@ export function Dialog({ title, description, onClose, children }: DialogProps) {
       // Esc dispara "cancel" e depois "close": quem abriu decide fechar.
       onClose={onClose}
       // Celular: painel que sobe de baixo, na largura toda. A partir do sm: janela no centro.
-      className="mx-0 mt-auto mb-0 w-full max-w-full rounded-t-xl border border-border bg-surface p-0 text-text shadow-soft backdrop:bg-text/40 sm:m-auto sm:w-[min(32rem,calc(100%-2rem))] sm:rounded-xl"
+      className={`mx-0 mt-auto mb-0 w-full max-w-full rounded-t-xl border border-border bg-surface p-0 text-text shadow-soft backdrop:bg-text/40 sm:m-auto sm:rounded-xl ${DESKTOP_SIZE[size].width}`}
     >
-      <div className="flex max-h-[90dvh] flex-col gap-5 overflow-y-auto px-5 pt-6 sm:max-h-[85dvh] sm:px-6">
+      <div className={`flex max-h-[90dvh] flex-col gap-5 overflow-y-auto px-5 pt-6 sm:px-6 ${DESKTOP_SIZE[size].height}`}>
         <header className="flex flex-col gap-1">
-          <h2 id={titleId} className="text-2xl font-bold break-words">
+          <h2 id={titleId} className={`text-2xl font-bold break-words ${DESKTOP_SIZE[size].title}`}>
             {title}
           </h2>
           {description && (
@@ -55,7 +62,7 @@ export function Dialog({ title, description, onClose, children }: DialogProps) {
 // Botões do dialog, sempre visíveis: ficam grudados na base enquanto o formulário rola.
 export function DialogFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-0 -mx-5 mt-auto grid grid-cols-2 gap-3 border-t border-border bg-surface px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:flex sm:justify-end sm:px-6 sm:pb-6">
+    <div className="sticky bottom-0 -mx-5 mt-auto grid grid-cols-2 gap-3 border-t border-border bg-surface px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:-mx-6 sm:flex sm:flex-wrap sm:justify-end sm:px-6 sm:pb-6">
       {children}
     </div>
   );

@@ -105,6 +105,19 @@
   }
 
   /*
+   * Cursor de "mãozinha" em tudo que é clicável. O Tailwind v4 deixa os botões com o cursor
+   * padrão; aqui ele volta, para ficar claro onde dá para tocar. Desabilitado ou indisponível
+   * (aria-disabled, ex.: enviando fotos) mostra que não dá agora. As fotos usam a lupa (zoom-in).
+   */
+  :is(button, [role='button'], summary, select, label:has(input:not([type='hidden'])), input:is([type='checkbox'], [type='radio'], [type='file'], [type='range'], [type='submit'], [type='button'])):not(:disabled, [aria-disabled='true']) {
+    cursor: pointer;
+  }
+
+  :is(button, [role='button'], select, input):is(:disabled, [aria-disabled='true']) {
+    cursor: not-allowed;
+  }
+
+  /*
    * Caixa de seleção e rádio com o visual do Faísca (DEC-059). O elemento continua nativo: teclado,
    * leitor de tela e formulário funcionam igual. O .sr-only (ex.: tema) fica de fora.
    */
