@@ -50,7 +50,9 @@ export function InviteDialog({ onClose, onSent }: { onClose: () => void; onSent:
   );
 }
 
-// Desfazer é imediato (SPEC): a confirmação diz isso antes, sem tom de alarme.
+// Desfazer é imediato (SPEC): a confirmação diz isso antes, sem tom de alarme, e conta que os
+// registros ficam com o paciente e o que acontece se ele se vincular de novo. Usa o nome da
+// terapeuta em vez de pronome: o perfil é aberto a qualquer profissional.
 export function RevokeLinkDialog({ therapistName, onClose }: { therapistName: string; onClose: () => void }) {
   const revoke = useRevokeLink();
 
@@ -61,12 +63,23 @@ export function RevokeLinkDialog({ therapistName, onClose }: { therapistName: st
 
   return (
     <Dialog
-      title="Desfazer o vínculo?"
-      description={`${therapistName} deixa de ver seus registros na hora. Se mudar de ideia, dá para criar um vínculo novo depois.`}
+      title={`Desfazer o vínculo com ${therapistName}?`}
+      description={
+        <div className="flex flex-col gap-2">
+          <p>{therapistName} deixa de ver seus registros na hora.</p>
+          <p>
+            <strong className="font-semibold text-text">Seus registros continuam com você</strong>: nada é apagado.
+          </p>
+          <p>
+            Se mudar de ideia, é só criar um vínculo novo, com código ou convite. {therapistName} volta a ver tudo,
+            inclusive o que você registrar até lá.
+          </p>
+        </div>
+      }
       onClose={onClose}
     >
       <DialogForm onSubmit={handleSubmit} error={revoke.error ? getApiError(revoke.error).message : null}>
-        <DialogActions submitLabel="Desfazer" pending={revoke.isPending} onCancel={onClose} />
+        <DialogActions submitLabel="Desfazer vínculo" pending={revoke.isPending} onCancel={onClose} />
       </DialogForm>
     </Dialog>
   );

@@ -71,7 +71,10 @@ test('paciente gera o código, terapeuta vincula e lê os registros, paciente de
   // Paciente: desfaz em Conta, com confirmação.
   await patient.getByRole('link', { name: 'Conta' }).click();
   await patient.getByRole('button', { name: 'Desfazer vínculo' }).click();
-  await patient.getByRole('dialog', { name: 'Desfazer o vínculo?' }).getByRole('button', { name: 'Desfazer' }).click();
+  await patient
+    .getByRole('dialog', { name: /^Desfazer o vínculo com / })
+    .getByRole('button', { name: 'Desfazer vínculo' })
+    .click();
   await expect(section.getByRole('button', { name: 'Gerar código' })).toBeVisible();
 
   // Terapeuta: os registros ficam indisponíveis e o paciente sai da lista.

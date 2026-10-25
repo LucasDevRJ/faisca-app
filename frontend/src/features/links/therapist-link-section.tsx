@@ -73,8 +73,8 @@ function LinkState({ status, generated, generating, generateError, onGenerate, o
           <dd className="text-sm text-muted">Acompanha seus registros desde {formatDate(createdAt)}</dd>
         </dl>
         <p className="text-sm text-muted">
-          O acesso é só de leitura: atividades, Registro de Pensamentos, Episódios de tensão e consultas, sem
-          alterar nada.
+          O acesso é só de leitura: atividades, Registro de Pensamentos, Episódios de tensão, Ação (com as
+          fotos) e consultas, sem alterar nada.
         </p>
         <div>
           <Button variant="secondary" onClick={onRevoke}>
