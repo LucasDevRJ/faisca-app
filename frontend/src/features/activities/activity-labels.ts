@@ -16,4 +16,5 @@ export const SCORE_TEXT = {
 } as const;
 
 export const NAME_MAX = 100;
-export const OBSERVATION_MAX = 1000;
+// Igual ao da API (DEC-067; era 1000).
+export const OBSERVATION_MAX = 5000;

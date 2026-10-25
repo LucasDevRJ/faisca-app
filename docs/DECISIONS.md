@@ -1237,15 +1237,17 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o envio da foto HEIC depende da conversão do próprio iPhone (testar no
   aparelho da psicóloga); a foto sobe sem barra de progresso por arquivo.
 
-## DEC-067 — Observação da Ação com até 5000 caracteres
+## DEC-067 — Observações da Ação e das atividades com até 5000 caracteres
 - **Decisão:** a observação da Ação (ao contar como foi, ao registrar já feita e em "não deu desta
-  vez") passa de 1000 para **5000 caracteres**, no Zod, no CHECK do banco (migration nova, que troca
-  só o CHECK) e no front, com o mesmo contador da DEC-053 e sem `maxLength`. No cartão, observação
-  longa abre recolhida, com "Ver mais". A observação das atividades continua em 1000.
+  vez") e a das atividades (ao concluir e em "não realizada") passam de 1000 para **5000
+  caracteres**, no Zod, no CHECK do banco (migrations novas, que trocam só o CHECK) e no front, com
+  o mesmo contador da DEC-053 e sem `maxLength`. No cartão, observação longa abre recolhida, com
+  "Ver mais". Muda o que a DEC-053 tinha decidido para as observações.
 - **Motivo:** o limite estourou num uso real (o relato de uma ação de conexão). Na Ação, a
   observação é o lugar de contar como foi, que a terapia lê; cortar o relato atrapalha. A DEC-053
-  tinha deixado as observações em 1000 por serem notas curtas, e na Ação elas não são. Aumentar não
-  perde dado: a coluna é `TEXT` e toda ação que já existe continua válida.
+  tinha deixado as observações em 1000 por serem notas curtas, e elas não são. As atividades vão
+  junto, a pedido do usuário, para o limite ser o mesmo em todo o app. Aumentar não perde dado: as
+  colunas são `TEXT` e todo registro que já existe continua válido.
 - **Limite conhecido:** deploy da API antes do front (DEC-056). Com a ordem invertida, uma
   observação acima de 1000 daria 400 até a API nova subir.
 

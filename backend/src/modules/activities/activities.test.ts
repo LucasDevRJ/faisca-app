@@ -223,7 +223,7 @@ describe('POST /activities', () => {
         wantBefore: 1,
         pleasure: 1,
         achievement: 1,
-        observation: 'a'.repeat(1001),
+        observation: 'a'.repeat(5001),
       },
     ],
   ])('400: %s', async (_label, body) => {
@@ -234,6 +234,23 @@ describe('POST /activities', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
     expect(await prisma.activity.count()).toBe(0);
+  });
+
+  it('observação de até 5000 caracteres (DEC-067)', async () => {
+    const agent = await loginAgent();
+
+    const res = await agent.post('/activities').send({
+      status: 'CONCLUIDA',
+      name: 'Caminhada fictícia',
+      activityDate: '2026-09-01',
+      wantBefore: 1,
+      pleasure: 1,
+      achievement: 1,
+      observation: 'a'.repeat(5000),
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.body.activity.observation).toHaveLength(5000);
   });
 
   it('várias atividades no mesmo dia', async () => {

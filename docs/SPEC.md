@@ -42,7 +42,7 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - `activityDate` (dia da atividade) é separado de `createdAt` (quando foi registrada); a terapeuta vê os dois.
 - Notas de 0 a 10 são inteiras.
 - CONCLUIDA e NAO_REALIZADA só com data até hoje; PLANEJADA e PENDENTE aceitam qualquer data.
-- Nome da atividade com 1 a 100 caracteres; observação com até 1000.
+- Nome da atividade com 1 a 100 caracteres; observação com até 5000 (DEC-067).
 - No mesmo dia, as atividades aparecem na ordem em que foram registradas.
 
 ## Consultas
