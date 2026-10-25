@@ -177,9 +177,10 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 - **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão ou Ação como **lido**
   (e desfaz), ou **todos da lista aberta** de uma vez. Nunca marca sozinho ao abrir. Um registro
   que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada) volta
-  a contar, como **atualizado**. A visão **Não lidos** junta as três áreas fora do ciclo, do mais
+  a contar, como **atualizado**. A visão **Para ler** junta as três áreas fora do ciclo, do mais
   antigo ao mais novo, e a lista de pacientes mostra quantos faltam ler. As marcas são da
-  terapeuta: o paciente não as vê, e uma terapeuta nova começa sem nenhuma.
+  terapeuta: o paciente não as vê, e uma terapeuta nova começa sem nenhuma. Nas telas, o texto
+  fala em **"para ler"** (DEC-058).
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta

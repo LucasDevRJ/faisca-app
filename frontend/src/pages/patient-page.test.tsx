@@ -288,7 +288,10 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     expect(within(withAlternative).getByText('8 → 4')).toBeInTheDocument();
     for (const name of ['Situação travada', 'Situação sem alternativa', 'Situação sem consulta']) {
       const card = screen.getByRole('article', { name: `Registro: ${name}` });
-      expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+      // O único botão é o de leitura da própria terapeuta (DEC-058).
+      expect(within(card).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
+      expect.stringMatching(/^Marcar como lido: /),
+    ]);
       expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     }
   });
@@ -299,7 +302,10 @@ describe('/pacientes/:id: aba Registro de Pensamentos (DEC-040)', () => {
     renderRoute(`${path}?aba=pensamentos`);
 
     const card = await screen.findByRole('article', { name: 'Registro: Situação da paciente' });
-    expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+    // O único botão é o de leitura da própria terapeuta (DEC-058).
+    expect(within(card).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
+      expect.stringMatching(/^Marcar como lido: /),
+    ]);
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pensamentos' })).toHaveAttribute('aria-pressed', 'true');
@@ -380,7 +386,10 @@ describe('/pacientes/:id: aba Tensão (DEC-043)', () => {
 
     const card = await screen.findByRole('article', { name: 'Episódio: Fila do mercado' });
     expect(within(card).getByText('às 19:20')).toBeInTheDocument();
-    expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+    // O único botão é o de leitura da própria terapeuta (DEC-058).
+    expect(within(card).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
+      expect.stringMatching(/^Marcar como lido: /),
+    ]);
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
     expect(within(screen.getByRole('article', { name: 'Episódio: Reunião' })).getByText('sem horário')).toBeInTheDocument();
@@ -538,7 +547,10 @@ describe('/pacientes/:id: aba Ação (DEC-052)', () => {
 
     const card = await screen.findByRole('article', { name: 'Café com amiga' });
     expect(card).toHaveTextContent('Esperava2');
-    expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+    // O único botão é o de leitura da própria terapeuta (DEC-058).
+    expect(within(card).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
+      expect.stringMatching(/^Marcar como lido: /),
+    ]);
     expect(within(card).queryByRole('link')).not.toBeInTheDocument();
     expect(within(card).getByText(/Registrado em/)).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Conexão: 1 de 1 feita' })).toBeInTheDocument();

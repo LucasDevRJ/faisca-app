@@ -45,6 +45,24 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     ),
     link: { to: '/pensamentos', label: 'Ver meus pensamentos' },
   },
+  // Só para a terapeuta (DEC-058): para a paciente, nada muda.
+  '2026-10-lido': {
+    title: 'Novidade: o que você ainda tem para ler',
+    icon: '📋',
+    date: '2026-10-25',
+    therapist: (
+      <>
+        <p>
+          Agora você pode marcar os Pensamentos, os Episódios de tensão e as Ações dos seus pacientes como{' '}
+          <strong>lidos</strong>, e ver, fora do ciclo, tudo o que está para ler.
+        </p>
+        <p>
+          Se um registro mudar depois que você leu, ele volta para a lista, com o aviso "atualizado". A marca é só sua: o
+          paciente não a vê.
+        </p>
+      </>
+    ),
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?

@@ -60,8 +60,8 @@ export function createAuthController(service: AuthService) {
   };
 
   const announcementSeen: RequestHandler = async (req, res) => {
-    announcementSeenSchema.parse(req.body);
-    const user = await service.markAnnouncementSeen(getAuthUser(req).id);
+    const { announcement } = announcementSeenSchema.parse(req.body);
+    const user = await service.markAnnouncementSeen(getAuthUser(req).id, announcement);
     res.status(200).json({ user: toPublicUser(user) });
   };
 

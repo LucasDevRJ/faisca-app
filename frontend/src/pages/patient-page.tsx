@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -9,7 +9,7 @@ import { ActionCard } from '../features/actions/action-card';
 import { ActionChart } from '../features/actions/action-chart';
 import { CycleGoal } from '../features/actions/cycle-goal';
 import { ActivityCard } from '../features/activities/activity-card';
-import { formatDayHeading } from '../features/activities/week';
+import { formatDayHeading, formatShortDay } from '../features/activities/week';
 import { TherapistCycleSummary } from '../features/cycle/cycle-summary';
 import { PeriodNav } from '../features/cycle/period-nav';
 import { usePeriod } from '../features/cycle/use-period';
@@ -22,6 +22,15 @@ import { useSession } from '../features/auth/use-session';
 import { formatDate } from '../features/links/link-format';
 import { PATIENTS_KEY } from '../features/links/use-links';
 import { daysInRange, type DateRange } from '../features/therapist/period';
+import { MarkAllRead, ReadControl } from '../features/therapist/read-control';
+import { toReadLabel, unreadBreakdown, unreadTotal } from '../features/therapist/read-format';
+import {
+  isPending,
+  type ReadItem,
+  type ReadType,
+  type UnreadResponse,
+  type WithRead,
+} from '../features/therapist/read-marks-api';
 import type { PatientSummary } from '../features/therapist/therapist-api';
 import {
   isForbidden,
@@ -32,6 +41,7 @@ import {
   usePatientSummary,
   usePatientTensionEpisodes,
   usePatientThoughtRecords,
+  usePatientUnread,
 } from '../features/therapist/use-therapist';
 import { TensionChart } from '../features/tension-episodes/tension-chart';
 import { TensionEpisodeCard } from '../features/tension-episodes/tension-episode-card';
@@ -42,8 +52,8 @@ import type { ThoughtRecord } from '../features/thought-records/thought-records-
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 // Aba na URL (?aba=pensamentos ou ?aba=tensao), junto com o período (DEC-040, DEC-043).
-// Sem ?aba, Atividades.
-const TABS = ['pensamentos', 'tensao', 'acao'] as const;
+// Sem ?aba, Atividades. ?aba=para-ler é a visão dos registros para ler, fora do ciclo (DEC-058).
+const TABS = ['pensamentos', 'tensao', 'acao', 'para-ler'] as const;
 type RecordTab = (typeof TABS)[number] | null;
 
 function parseTab(value: string | null): RecordTab {
@@ -51,8 +61,8 @@ function parseTab(value: string | null): RecordTab {
 }
 const backLinkClass = 'self-start font-medium text-primary-text underline underline-offset-4';
 
-// Registros de um paciente vinculado (SPEC, "Visão da terapeuta"; DEC-033). Só leitura: nenhum
-// botão grava nada, e o backend recusaria com 403 de qualquer jeito.
+// Registros de um paciente vinculado (SPEC, "Visão da terapeuta"; DEC-033). Só leitura: a única
+// escrita é a marca de leitura da própria terapeuta (DEC-057, DEC-058), que não toca no registro.
 export function PatientPage() {
   const { patientId = '' } = useParams();
   const summary = usePatientSummary(patientId);
@@ -117,7 +127,13 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const { data: user } = useSession();
   const { patient, today, lastAppointment, nextAppointment, agendaStatus, pause } = summary;
   const [agendaOpen, setAgendaOpen] = useState(false);
-  const tab = parseTab(searchParams.get('aba'));
+  const consented = Boolean(user?.privacyAreas.thoughtRecords);
+  const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
+  const actionsConsented = Boolean(user?.privacyAreas.actions);
+  const anyReadConsented = consented || tensionConsented || actionsConsented;
+  const requestedTab = parseTab(searchParams.get('aba'));
+  // Sem aceite em nenhuma das três áreas, não há o que ler: um link salvo para "Para ler" abre o ciclo.
+  const tab = requestedTab === 'para-ler' && !anyReadConsented ? null : requestedTab;
 
   // Ciclo da consulta por padrão, ou a semana (DEC-050). O mesmo período vale para as três abas.
   const { period, currentMonday, showCycle, showWeek } = usePeriod(patientCycleQuery(patientId), today);
@@ -128,16 +144,15 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   // Só a aba aberta pergunta à API. O RPD e os episódios também esperam o aceite da versão do
   // aviso que os cita (DEC-039, DEC-042).
   const activities = usePatientActivities(patientId, tab || !ready ? null : range);
-  const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const thoughts = usePatientThoughtRecords(patientId, ready && tab === 'pensamentos' && consented ? range : null);
-  const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
   const tension = usePatientTensionEpisodes(patientId, ready && tab === 'tensao' && tensionConsented ? range : null);
-  const actionsConsented = Boolean(user?.privacyAreas.actions);
   const actions = usePatientActions(patientId, ready && tab === 'acao' && actionsConsented ? range : null);
   // Selo "consulta" nos dias com sessão. A agenda pede o aceite da versão que a cita (DEC-045);
   // sem ele, só a última e a próxima, que vêm no resumo.
   const agendaConsented = Boolean(user?.privacyAreas.appointmentSchedule);
   const agenda = usePatientAppointments(patientId, agendaConsented, range);
+  // Os registros para ler (DEC-058), fora do ciclo: sempre que alguma das três áreas tem aceite.
+  const unread = usePatientUnread(patientId, anyReadConsented);
   const appointmentList = agendaConsented
     ? sessionDays(agenda.data)
     : [lastAppointment?.date, nextAppointment?.date].filter((d): d is string => Boolean(d));
@@ -149,6 +164,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   if (thoughts.isError && isForbidden(thoughts.error) && !needsPrivacyConsent(thoughts.error)) return <NoAccess />;
   if (tension.isError && isForbidden(tension.error) && !needsPrivacyConsent(tension.error)) return <NoAccess />;
   if (actions.isError && isForbidden(actions.error) && !needsPrivacyConsent(actions.error)) return <NoAccess />;
+  if (unread.isError && isForbidden(unread.error) && !needsPrivacyConsent(unread.error)) return <NoAccess />;
 
   const firstName = patient.name.split(' ')[0];
 
@@ -200,92 +216,110 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
         {agendaOpen && <PatientAgenda patientId={patientId} consented={agendaConsented} today={today} />}
       </section>
 
-      <RecordTabs tab={tab} onSelect={selectTab} />
+      {tab === 'para-ler' ? (
+        <ToReadView
+          patientId={patientId}
+          firstName={firstName ?? patient.name}
+          query={unread}
+          onBack={() => selectTab(null)}
+        />
+      ) : (
+        <>
+          {unread.data && unreadTotal(unread.data.counts) > 0 && (
+            <ToReadCard counts={unread.data.counts} onOpen={() => selectTab('para-ler')} />
+          )}
 
-      <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
-        {period ? (
-          <PeriodNav
-            period={period}
-            today={today}
-            audience="therapist"
-            currentMonday={currentMonday}
-            onCycle={showCycle}
-            onWeek={showWeek}
-            summary={<TherapistCycleSummary patientId={patientId} range={period} />}
-          />
-        ) : (
-          <p className="text-muted" aria-busy="true">
-            Carregando…
-          </p>
-        )}
+          <RecordTabs tab={tab} onSelect={selectTab} counts={unread.data?.counts} />
 
-        {tab === 'acao' ? (
-          <ActionsTab
-            consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
-            query={actions}
-            range={range}
-            inCycle={inCycle}
-            today={today}
-          />
-        ) : tab === 'tensao' ? (
-          <TensionTab
-            consented={tensionConsented && !(tension.isError && needsPrivacyConsent(tension.error))}
-            query={tension}
-            range={range}
-            inCycle={inCycle}
-            today={today}
-            appointmentDays={appointmentList}
-          />
-        ) : tab === 'pensamentos' ? (
-          <ThoughtsTab
-            consented={consented && !(thoughts.isError && needsPrivacyConsent(thoughts.error))}
-            query={thoughts}
-            range={range}
-            inCycle={inCycle}
-            today={today}
-          />
-        ) : (
-          <>
-            {activities.isPending && (
+          <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
+            {period ? (
+              <PeriodNav
+                period={period}
+                today={today}
+                audience="therapist"
+                currentMonday={currentMonday}
+                onCycle={showCycle}
+                onWeek={showWeek}
+                summary={<TherapistCycleSummary patientId={patientId} range={period} />}
+              />
+            ) : (
               <p className="text-muted" aria-busy="true">
-                Carregando os registros…
+                Carregando…
               </p>
             )}
 
-            {activities.isError && (
-              <Alert tone="attention">
-                <div className="flex flex-col gap-3">
-                  <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
-                  <div>
-                    <Button variant="secondary" onClick={() => activities.refetch()}>
-                      Tentar de novo
-                    </Button>
-                  </div>
-                </div>
-              </Alert>
-            )}
-
-            {activities.isSuccess && (
+            {tab === 'acao' ? (
+              <ActionsTab
+                patientId={patientId}
+                consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
+                query={actions}
+                range={range}
+                inCycle={inCycle}
+                today={today}
+              />
+            ) : tab === 'tensao' ? (
+              <TensionTab
+                patientId={patientId}
+                consented={tensionConsented && !(tension.isError && needsPrivacyConsent(tension.error))}
+                query={tension}
+                range={range}
+                inCycle={inCycle}
+                today={today}
+                appointmentDays={appointmentList}
+              />
+            ) : tab === 'pensamentos' ? (
+              <ThoughtsTab
+                patientId={patientId}
+                consented={consented && !(thoughts.isError && needsPrivacyConsent(thoughts.error))}
+                query={thoughts}
+                range={range}
+                inCycle={inCycle}
+                today={today}
+              />
+            ) : (
               <>
-                {activities.data.length === 0 && (
-                  <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-                    Nada registrado {inCycle ? 'neste ciclo' : 'nesta semana'}.
+                {activities.isPending && (
+                  <p className="text-muted" aria-busy="true">
+                    Carregando os registros…
                   </p>
                 )}
 
-                <WeekChart activities={activities.data} period={inCycle ? 'no ciclo' : 'na semana'} />
+                {activities.isError && (
+                  <Alert tone="attention">
+                    <div className="flex flex-col gap-3">
+                      <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
+                      <div>
+                        <Button variant="secondary" onClick={() => activities.refetch()}>
+                          Tentar de novo
+                        </Button>
+                      </div>
+                    </div>
+                  </Alert>
+                )}
 
-                <DayList
-                  days={daysInRange(range)}
-                  activities={activities.data}
-                  today={today}
-                        appointmentDays={appointmentDays}
-                />
+                {activities.isSuccess && (
+                  <>
+                    {activities.data.length === 0 && (
+                      <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+                        Nada registrado {inCycle ? 'neste ciclo' : 'nesta semana'}.
+                      </p>
+                    )}
+
+                    <WeekChart activities={activities.data} period={inCycle ? 'no ciclo' : 'na semana'} />
+
+                    <DayList
+                      days={daysInRange(range)}
+                      activities={activities.data}
+                      today={today}
+                      appointmentDays={appointmentDays}
+                    />
+                  </>
+                )}
               </>
             )}
-          </>
-        )}
-      </section>
+          </section>
+        </>
+      )}
     </>
   );
 }
@@ -340,25 +374,229 @@ const TAB_LABELS: { tab: RecordTab; label: string }[] = [
   { tab: 'acao', label: 'Ação' },
 ];
 
-function RecordTabs({ tab, onSelect }: { tab: RecordTab; onSelect: (tab: RecordTab) => void }) {
+// Quantos registros para ler em cada aba (DEC-058): um número discreto, sem cor de alerta.
+const TAB_COUNT: Partial<Record<NonNullable<RecordTab>, keyof UnreadResponse['counts']>> = {
+  pensamentos: 'thoughtRecords',
+  tensao: 'tensionEpisodes',
+  acao: 'actions',
+};
+
+type RecordTabsProps = {
+  tab: RecordTab;
+  onSelect: (tab: RecordTab) => void;
+  counts: UnreadResponse['counts'] | undefined;
+};
+
+function RecordTabs({ tab, onSelect, counts }: RecordTabsProps) {
   return (
     <div role="group" aria-label="Tipo de registro" className="grid grid-cols-2 gap-2 sm:flex">
-      {TAB_LABELS.map((item) => (
-        <Button
-          key={item.label}
-          variant={tab === item.tab ? 'primary' : 'secondary'}
-          aria-pressed={tab === item.tab}
-          className="px-2 text-sm sm:px-5 sm:text-base"
-          onClick={() => onSelect(item.tab)}
-        >
-          {item.label}
-        </Button>
-      ))}
+      {TAB_LABELS.map((item) => {
+        const key = item.tab ? TAB_COUNT[item.tab] : undefined;
+        const count = key && counts ? counts[key] : null;
+        return (
+          <Button
+            key={item.label}
+            variant={tab === item.tab ? 'primary' : 'secondary'}
+            aria-pressed={tab === item.tab}
+            className="px-2 text-sm sm:px-5 sm:text-base"
+            onClick={() => onSelect(item.tab)}
+          >
+            {item.label}
+            {count ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="rounded-full bg-bg px-1.5 text-xs font-semibold text-text tabular-nums"
+                >
+                  {count}
+                </span>
+                <span className="sr-only">, {count} para ler</span>
+              </>
+            ) : null}
+          </Button>
+        );
+      })}
     </div>
   );
 }
 
+// Card acima das abas (DEC-058): só aparece quando há algo para ler.
+function ToReadCard({ counts, onOpen }: { counts: UnreadResponse['counts']; onOpen: () => void }) {
+  const total = unreadTotal(counts);
+  return (
+    <section
+      aria-labelledby="to-read-title"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div className="flex flex-col gap-0.5">
+        <h2 id="to-read-title" className="font-semibold">
+          {toReadLabel(total)}
+        </h2>
+        <p className="text-sm text-muted">{unreadBreakdown(counts)}</p>
+      </div>
+      <Button variant="secondary" className="self-start sm:self-auto" onClick={onOpen}>
+        Ver os registros para ler
+      </Button>
+    </section>
+  );
+}
+
+type ToReadEntry = {
+  key: string;
+  area: string;
+  date: string;
+  createdAt: string;
+  item: ReadItem;
+  card: ReactNode;
+};
+
+// A visão "para ler" (DEC-058): as três áreas juntas, fora do ciclo, do mais antigo ao mais novo.
+function ToReadView({
+  patientId,
+  firstName,
+  query,
+  onBack,
+}: {
+  patientId: string;
+  firstName: string;
+  query: ReturnType<typeof usePatientUnread>;
+  onBack: () => void;
+}) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const data = query.data;
+  const pendingCount = data
+    ? (data.thoughtRecords ?? []).length + (data.tensionEpisodes ?? []).length + (data.actions ?? []).length
+    : 0;
+  const previousCount = useRef(pendingCount);
+  // Marcar tira o registro da lista e, com ele, o botão que tinha o foco. Sem isso o foco cairia no
+  // começo da página; vai para o título da visão, de onde dá para seguir lendo.
+  useEffect(() => {
+    if (pendingCount < previousCount.current && (!document.activeElement || document.activeElement === document.body)) {
+      titleRef.current?.focus();
+    }
+    previousCount.current = pendingCount;
+  }, [pendingCount]);
+
+  const back = (
+    <Button variant="ghost" className="self-start px-0 underline" onClick={onBack}>
+      ‹ Voltar ao ciclo
+    </Button>
+  );
+
+  if (query.isPending) {
+    return (
+      <>
+        {back}
+        <p className="text-muted" aria-busy="true">
+          Carregando os registros…
+        </p>
+      </>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <>
+        {back}
+        <Alert tone="attention">
+          <div className="flex flex-col gap-3">
+            <p>Não conseguimos carregar os registros para ler. Confira sua conexão e tente de novo.</p>
+            <div>
+              <Button variant="secondary" onClick={() => query.refetch()}>
+                Tentar de novo
+              </Button>
+            </div>
+          </div>
+        </Alert>
+      </>
+    );
+  }
+
+  const { thoughtRecords, tensionEpisodes, actions } = query.data;
+  const entries: ToReadEntry[] = [
+    ...(thoughtRecords ?? []).map((record) => ({
+      key: `t-${record.id}`,
+      area: 'Pensamento',
+      date: record.situationDate,
+      createdAt: record.createdAt,
+      item: { type: 'THOUGHT_RECORD' as const, id: record.id },
+      card: (
+        <ThoughtRecordCard
+          record={record}
+          readOnly
+          footer={<ReadControl patientId={patientId} type="THOUGHT_RECORD" record={record} label={record.situation} />}
+        />
+      ),
+    })),
+    ...(tensionEpisodes ?? []).map((episode) => ({
+      key: `e-${episode.id}`,
+      area: 'Tensão',
+      date: episode.episodeDate,
+      createdAt: episode.createdAt,
+      item: { type: 'TENSION_EPISODE' as const, id: episode.id },
+      card: (
+        <TensionEpisodeCard
+          episode={episode}
+          readOnly
+          footer={
+            <ReadControl patientId={patientId} type="TENSION_EPISODE" record={episode} label={episode.situation} />
+          }
+        />
+      ),
+    })),
+    ...(actions ?? []).map((action) => ({
+      key: `a-${action.id}`,
+      area: 'Ação',
+      date: action.actionDate,
+      createdAt: action.createdAt,
+      item: { type: 'ACTION' as const, id: action.id },
+      card: (
+        <ActionCard
+          action={action}
+          readOnly
+          footer={<ReadControl patientId={patientId} type="ACTION" record={action} label={action.name} />}
+        />
+      ),
+    })),
+  ].sort((a, b) => (a.date === b.date ? a.createdAt.localeCompare(b.createdAt) : a.date.localeCompare(b.date)));
+
+  return (
+    <section aria-labelledby="to-read-view-title" className="flex flex-col gap-4 sm:gap-6">
+      {back}
+      <div className="flex flex-col gap-1">
+        <h2 id="to-read-view-title" ref={titleRef} tabIndex={-1} className="text-2xl font-bold focus:outline-none">
+          Para ler
+        </h2>
+        <p className="text-muted">Os registros para ler, ou que mudaram depois que você leu, de qualquer data.</p>
+      </div>
+      <MarkAllRead patientId={patientId} items={entries.map((entry) => entry.item)} />
+      {entries.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+          Você já leu todos os registros de {firstName}.
+        </p>
+      ) : (
+        <ol className="flex flex-col gap-4 sm:gap-6">
+          {entries.map((entry) => (
+            <li key={entry.key} className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-muted first-letter:uppercase">
+                {entry.area} · {formatShortDay(entry.date)}
+              </p>
+              {entry.card}
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
+// Os itens ainda para ler de uma lista aberta, para o "Marcar todos" (DEC-058).
+function pendingItems(type: ReadType, records: WithRead<{ id: string }>[]): ReadItem[] {
+  return records.filter(isPending).map((record) => ({ type, id: record.id }));
+}
+
 type ThoughtsTabProps = {
+  patientId: string;
   consented: boolean;
   query: ReturnType<typeof usePatientThoughtRecords>;
   range: DateRange;
@@ -367,7 +605,7 @@ type ThoughtsTabProps = {
 };
 
 // Registro de Pensamentos do paciente, só leitura (DEC-040). Só os dias com registro aparecem.
-function ThoughtsTab({ consented, query, range, inCycle, today }: ThoughtsTabProps) {
+function ThoughtsTab({ patientId, consented, query, range, inCycle, today }: ThoughtsTabProps) {
   if (!consented) return <PrivacyConsentGate area="thoughtRecords" audience="therapist" />;
 
   if (query.isPending) {
@@ -405,22 +643,31 @@ function ThoughtsTab({ consented, query, range, inCycle, today }: ThoughtsTabPro
   const recorded = new Set(records.map((r) => r.situationDate));
   const days = daysInRange(range).filter((day) => recorded.has(day));
   return (
-    <ol className="flex flex-col gap-4 sm:gap-6">
-      {days.map((day) => (
-        <ThoughtsDay
-          key={day}
-          day={day}
-          records={records.filter((r) => r.situationDate === day)}
-          today={today}
-        />
-      ))}
-    </ol>
+    <>
+      <MarkAllRead patientId={patientId} items={pendingItems('THOUGHT_RECORD', records)} />
+      <ol className="flex flex-col gap-4 sm:gap-6">
+        {days.map((day) => (
+          <ThoughtsDay
+            key={day}
+            patientId={patientId}
+            day={day}
+            records={records.filter((r) => r.situationDate === day)}
+            today={today}
+          />
+        ))}
+      </ol>
+    </>
   );
 }
 
-type ThoughtsDayProps = { day: string; records: ThoughtRecord[]; today: string };
+type ThoughtsDayProps = {
+  patientId: string;
+  day: string;
+  records: WithRead<ThoughtRecord>[];
+  today: string;
+};
 
-function ThoughtsDay({ day, records, today }: ThoughtsDayProps) {
+function ThoughtsDay({ patientId, day, records, today }: ThoughtsDayProps) {
   return (
     <li className="flex flex-col gap-2 sm:gap-3">
       <h3 className="font-semibold first-letter:uppercase sm:text-lg">
@@ -431,7 +678,14 @@ function ThoughtsDay({ day, records, today }: ThoughtsDayProps) {
       </h3>
       <div className="flex flex-col gap-3">
         {records.map((record) => (
-          <ThoughtRecordCard key={record.id} record={record} readOnly />
+          <ThoughtRecordCard
+            key={record.id}
+            record={record}
+            readOnly
+            footer={
+              <ReadControl patientId={patientId} type="THOUGHT_RECORD" record={record} label={record.situation} />
+            }
+          />
         ))}
       </div>
     </li>
@@ -439,6 +693,7 @@ function ThoughtsDay({ day, records, today }: ThoughtsDayProps) {
 }
 
 type TensionTabProps = {
+  patientId: string;
   consented: boolean;
   query: ReturnType<typeof usePatientTensionEpisodes>;
   range: DateRange;
@@ -449,7 +704,7 @@ type TensionTabProps = {
 
 // Episódios de tensão do paciente, só leitura (DEC-043): o gráfico do período e, embaixo, os dias
 // com episódio.
-function TensionTab({ consented, query, range, inCycle, today, appointmentDays }: TensionTabProps) {
+function TensionTab({ patientId, consented, query, range, inCycle, today, appointmentDays }: TensionTabProps) {
   if (!consented) return <PrivacyConsentGate area="tensionEpisodes" audience="therapist" />;
 
   if (query.isPending) {
@@ -494,10 +749,12 @@ function TensionTab({ consented, query, range, inCycle, today, appointmentDays }
         appointmentDays={appointmentDays}
         period={inCycle ? 'no ciclo' : 'na semana'}
       />
+      <MarkAllRead patientId={patientId} items={pendingItems('TENSION_EPISODE', episodes)} />
       <ol className="flex flex-col gap-4 sm:gap-6">
         {days.map((day) => (
           <TensionDay
             key={day}
+            patientId={patientId}
             day={day}
             episodes={episodes.filter((e) => e.episodeDate === day)}
             today={today}
@@ -508,9 +765,14 @@ function TensionTab({ consented, query, range, inCycle, today, appointmentDays }
   );
 }
 
-type TensionDayProps = { day: string; episodes: TensionEpisode[]; today: string };
+type TensionDayProps = {
+  patientId: string;
+  day: string;
+  episodes: WithRead<TensionEpisode>[];
+  today: string;
+};
 
-function TensionDay({ day, episodes, today }: TensionDayProps) {
+function TensionDay({ patientId, day, episodes, today }: TensionDayProps) {
   return (
     <li className="flex flex-col gap-2 sm:gap-3">
       <h3 className="font-semibold first-letter:uppercase sm:text-lg">
@@ -521,7 +783,14 @@ function TensionDay({ day, episodes, today }: TensionDayProps) {
       </h3>
       <div className="flex flex-col gap-3">
         {episodes.map((episode) => (
-          <TensionEpisodeCard key={episode.id} episode={episode} readOnly />
+          <TensionEpisodeCard
+            key={episode.id}
+            episode={episode}
+            readOnly
+            footer={
+              <ReadControl patientId={patientId} type="TENSION_EPISODE" record={episode} label={episode.situation} />
+            }
+          />
         ))}
       </div>
     </li>
@@ -529,6 +798,7 @@ function TensionDay({ day, episodes, today }: TensionDayProps) {
 }
 
 type ActionsTabProps = {
+  patientId: string;
   consented: boolean;
   query: ReturnType<typeof usePatientActions>;
   range: DateRange;
@@ -537,7 +807,7 @@ type ActionsTabProps = {
 };
 
 // Ação do paciente, só leitura (DEC-052): a meta do ciclo, os dias com ação e o gráfico.
-function ActionsTab({ consented, query, range, inCycle, today }: ActionsTabProps) {
+function ActionsTab({ patientId, consented, query, range, inCycle, today }: ActionsTabProps) {
   if (!consented) return <PrivacyConsentGate area="actions" audience="therapist" />;
 
   if (query.isPending) {
@@ -569,6 +839,7 @@ function ActionsTab({ consented, query, range, inCycle, today }: ActionsTabProps
   return (
     <>
       {inCycle && <CycleGoal actions={actions} range={range} />}
+      <MarkAllRead patientId={patientId} items={pendingItems('ACTION', actions)} />
       {actions.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
           Nenhuma ação {inCycle ? 'neste ciclo' : 'nesta semana'}.
@@ -587,7 +858,12 @@ function ActionsTab({ consented, query, range, inCycle, today }: ActionsTabProps
                 {actions
                   .filter((a) => a.actionDate === day)
                   .map((action) => (
-                    <ActionCard key={action.id} action={action} readOnly />
+                    <ActionCard
+                      key={action.id}
+                      action={action}
+                      readOnly
+                      footer={<ReadControl patientId={patientId} type="ACTION" record={action} label={action.name} />}
+                    />
                   ))}
               </div>
             </li>

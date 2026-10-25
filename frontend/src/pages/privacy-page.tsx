@@ -12,7 +12,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-10.5 (DEC-051): entra a Ação, com novo aceite para usá-la.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
-// contada a todos pelo card de Novidades.
+// contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
+// (DEC-058): um dado de trabalho dela, que o paciente não vê.
 const VERSION_LABEL = 'versão 5, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
@@ -108,7 +109,8 @@ export function PrivacyPage() {
               A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos, os
               Episódios de tensão, a agenda com os motivos e a Ação, enquanto o vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
-              hora.
+              hora. A terapeuta pode marcar os seus registros como lidos, para se organizar. Essa marca é
+              só dela: você não a vê.
             </li>
             <li>Se você é terapeuta, o seu nome e o seu e-mail aparecem para os pacientes vinculados.</li>
           </ul>

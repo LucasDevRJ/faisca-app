@@ -141,6 +141,15 @@ export const handlers = [
   // Sem vínculo e sem pacientes, por padrão.
   http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
   http.get('*/api/links/patients', () => HttpResponse.json({ patients: [] })),
+  // Nada para ler, por padrão (DEC-058).
+  http.get('*/api/therapist/patients/:patientId/unread', () =>
+    HttpResponse.json({
+      thoughtRecords: [],
+      tensionEpisodes: [],
+      actions: [],
+      counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0 },
+    }),
+  ),
 ];
 
 export const server = setupServer(...handlers);
