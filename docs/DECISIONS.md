@@ -1261,6 +1261,27 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** deploy da API antes do front (DEC-056). Com a ordem invertida, uma
   observação acima de 1000 daria 400 até a API nova subir.
 
+## DEC-068 — Seu perfil: nome completo e paletas (telas)
+- **Decisão:**
+  - em **Conta**, no topo, a seção **"Seu perfil"**: nome completo (opcional; só a própria pessoa
+    vê) e a **paleta de cores**, em cartões com uma amostra de cor, e o botão "Salvar perfil";
+  - ao tocar numa paleta, as cores do app **mudam na hora, como prévia** (escolha do usuário). Só
+    ficam ao salvar; quem sai de Conta sem salvar volta à paleta da conta;
+  - cada paleta é um bloco de tokens no CSS (`:root[data-palette=...]`, com claro e escuro), sem
+    mexer nas telas. A **escala das notas** (0 a 10) de cada uma foi gerada a partir da cor
+    principal, com o mesmo contraste de cada degrau da Sálvia; no **Alto contraste**, os degraus
+    são mais fortes (do 3 em diante, ao menos 3:1). Todas as cores de texto, campo e botão passam
+    no AA nos dois temas (conferido por script);
+  - a paleta da conta vem no `/auth/me` e é aplicada no `<html>` ao abrir. A última aplicada também
+    fica no aparelho (`faisca:palette`, como o tema), lida pelo `theme-init.js` antes do React, para
+    o app não abrir piscando a Sálvia;
+  - o aviso de privacidade cita o nome completo e a paleta **sem versão nova** (DEC-061): são dados
+    pessoais da própria conta, não de saúde.
+- **Motivo:** o pedido do perfil (#83), com as paletas escolhidas pelo usuário (DEC-063). A prévia
+  na hora ajuda a escolher sem ir e voltar.
+- **Limite conhecido:** a foto de perfil fica para o próximo PR (recorte com react-easy-crop). Ao
+  sair da conta, a paleta da última pessoa continua no aparelho até a próxima entrar.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

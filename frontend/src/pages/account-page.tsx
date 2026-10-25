@@ -6,6 +6,7 @@ import { getApiError } from '../features/auth/auth-api';
 import { DeleteAccountSection } from '../features/auth/delete-account-section';
 import { useAddProfile, useSession } from '../features/auth/use-session';
 import { TherapistLinkSection } from '../features/links/therapist-link-section';
+import { ProfileSection } from '../features/profile/profile-section';
 
 const profileInfo = {
   patient: {
@@ -18,7 +19,8 @@ const profileInfo = {
   },
 } as const;
 
-// "Conta": a terapeuta vinculada (só para quem é paciente), os perfis (SPEC, "Contas e perfis"),
+// "Conta": o perfil (nome completo e paleta), a terapeuta vinculada (só para quem é paciente), os
+// perfis (SPEC, "Contas e perfis"),
 // as novidades do app e, no fim, excluir a conta (SPEC, "Privacidade").
 export function AccountPage() {
   const { data: user } = useSession();
@@ -39,6 +41,8 @@ export function AccountPage() {
           {user.name} · <span className="break-all">{user.email}</span>
         </p>
       </div>
+
+      <ProfileSection />
 
       {user.profiles.patient && <TherapistLinkSection />}
 

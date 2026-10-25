@@ -4,7 +4,7 @@ import { useMediaQuery } from '../lib/use-media-query';
 
 // Três notas de 0 a 10 por item (atividade ou ação). No celular, barras horizontais (DEC-044): o
 // nome inteiro numa linha própria, com o dia ao lado, e o gráfico cresce para baixo. A partir do
-// tablet (768px), as colunas lado a lado (DEC-047). Uma só cor (sálvia) em três intensidades, com o
+// tablet (768px), as colunas lado a lado (DEC-047). Uma só cor (a principal da paleta) em três intensidades, com o
 // valor escrito em cada barra: a leitura não depende de distinguir cores. A tabela logo abaixo é a
 // versão para leitor de tela.
 

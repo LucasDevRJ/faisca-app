@@ -5,6 +5,12 @@ try {
   if (theme === 'light' || theme === 'dark') {
     document.documentElement.dataset.theme = theme;
   }
+  // Paleta de cores (DEC-068): a última aplicada neste aparelho. Mantenha a chave igual a
+  // PALETTE_STORAGE_KEY em src/features/profile/palettes.ts.
+  var palette = localStorage.getItem('faisca:palette');
+  if (palette === 'lavanda' || palette === 'oceano' || palette === 'areia' || palette === 'alto-contraste') {
+    document.documentElement.dataset.palette = palette;
+  }
 } catch {
-  // localStorage indisponível (modo privado etc.): fica o tema do sistema.
+  // localStorage indisponível (modo privado etc.): fica o tema do sistema e a Sálvia.
 }

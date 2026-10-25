@@ -23,7 +23,7 @@
   --color-accent: var(--faisca-accent);
   --color-accent-text: var(--faisca-accent-text);
 
-  /* Notas 0–10: uma só cor (sálvia), variando a intensidade. Nunca vermelho/verde. */
+  /* Notas 0–10: uma só cor (a principal da paleta), variando a intensidade. Nunca vermelho/verde. */
   --color-score-0: var(--faisca-score-0);
   --color-score-1: var(--faisca-score-1);
   --color-score-2: var(--faisca-score-2);
@@ -35,6 +35,12 @@
   --color-score-8: var(--faisca-score-8);
   --color-score-9: var(--faisca-score-9);
   --color-score-10: var(--faisca-score-10);
+
+  --color-swatch-salvia: var(--faisca-swatch-salvia);
+  --color-swatch-lavanda: var(--faisca-swatch-lavanda);
+  --color-swatch-oceano: var(--faisca-swatch-oceano);
+  --color-swatch-areia: var(--faisca-swatch-areia);
+  --color-swatch-alto-contraste: var(--faisca-swatch-alto-contraste);
 
   --font-sans: 'Inter Variable', system-ui, sans-serif;
   --font-heading: 'Nunito Variable', system-ui, sans-serif;
@@ -79,6 +85,124 @@
   --faisca-score-8: light-dark(#526a59, #aec5b9);
   --faisca-score-9: light-dark(#405a47, #c0d7c8);
   --faisca-score-10: light-dark(#2e4a36, #d2e8d7);
+
+  /* A cor principal de cada paleta, para a amostra na escolha do perfil. */
+  --faisca-swatch-salvia: light-dark(#4f6f58, #9cc2a5);
+  --faisca-swatch-lavanda: light-dark(#6b5b95, #b9a9e3);
+  --faisca-swatch-oceano: light-dark(#2f6f8f, #8cc3dd);
+  --faisca-swatch-areia: light-dark(#9a5b3c, #e0a283);
+  --faisca-swatch-alto-contraste: light-dark(#000000, #ffffff);
+}
+
+/*
+ * Paletas de cores (DEC-063, DEC-068). A Sálvia é a do :root acima; as outras trocam os mesmos
+ * tokens quando o <html> tem data-palette (ver src/features/profile/palettes.ts). Cada uma passa
+ * no contraste AA nos dois temas (o Alto contraste, em AAA). A escala das notas segue a cor
+ * principal, num tom só, com o mesmo contraste de cada degrau da Sálvia.
+ */
+:root[data-palette='lavanda'] {
+  --faisca-bg: light-dark(#f8f6fb, #1c1a26);
+  --faisca-surface: light-dark(#fdfcff, #26233a);
+  --faisca-border: light-dark(#e3dded, #3b3654);
+  --faisca-field-border: light-dark(#8b82a0, #7d7699);
+  --faisca-text: light-dark(#2a2735, #efedf5);
+  --faisca-muted: light-dark(#5f5a6e, #b3adc7);
+  --faisca-primary: light-dark(#6b5b95, #b9a9e3);
+  --faisca-on-primary: light-dark(#fdfcff, #1c1a26);
+  --faisca-primary-text: light-dark(#5e4f88, #c3b5ea);
+  --faisca-accent: light-dark(#e8a56b, #f0b98a);
+  --faisca-accent-text: light-dark(#8f5520, #f0b98a);
+
+  --faisca-score-0: light-dark(#eae7f2, #2f2c45);
+  --faisca-score-1: light-dark(#dbd6e6, #423c5a);
+  --faisca-score-2: light-dark(#cbc5da, #544d6f);
+  --faisca-score-3: light-dark(#bab3cf, #665d83);
+  --faisca-score-4: light-dark(#aba1c3, #776d97);
+  --faisca-score-5: light-dark(#9b90b8, #897eac);
+  --faisca-score-6: light-dark(#8b7eac, #9b8dc0);
+  --faisca-score-7: light-dark(#7b6da1, #ab9dd3);
+  --faisca-score-8: light-dark(#6a5b94, #bdade4);
+  --faisca-score-9: light-dark(#594c7c, #cdc1eb);
+  --faisca-score-10: light-dark(#483d65, #dbd3f0);
+}
+
+:root[data-palette='oceano'] {
+  --faisca-bg: light-dark(#f4f8fa, #0f1d26);
+  --faisca-surface: light-dark(#fbfdfe, #172a36);
+  --faisca-border: light-dark(#d9e4ea, #2b4352);
+  --faisca-field-border: light-dark(#7f909a, #688896);
+  --faisca-text: light-dark(#1f2d36, #eaf2f6);
+  --faisca-muted: light-dark(#55656f, #a6b8c3);
+  --faisca-primary: light-dark(#2f6f8f, #8cc3dd);
+  --faisca-on-primary: light-dark(#fbfdfe, #0f1d26);
+  --faisca-primary-text: light-dark(#2a6683, #98cbe3);
+  --faisca-accent: light-dark(#e8a56b, #f0b98a);
+  --faisca-accent-text: light-dark(#8f5520, #f0b98a);
+
+  --faisca-score-0: light-dark(#e0ebf0, #1e3440);
+  --faisca-score-1: light-dark(#cbdbe4, #2b4553);
+  --faisca-score-2: light-dark(#b4ccd8, #3a5768);
+  --faisca-score-3: light-dark(#9dbbcb, #47697a);
+  --faisca-score-4: light-dark(#86acbf, #547a8d);
+  --faisca-score-5: light-dark(#709cb3, #628ca0);
+  --faisca-score-6: light-dark(#598ca6, #6f9db3);
+  --faisca-score-7: light-dark(#417b99, #7caec6);
+  --faisca-score-8: light-dark(#2d6a89, #89c0d9);
+  --faisca-score-9: light-dark(#265973, #a4d0e4);
+  --faisca-score-10: light-dark(#1e485c, #c0deed);
+}
+
+:root[data-palette='areia'] {
+  --faisca-bg: light-dark(#fbf6ef, #231c17);
+  --faisca-surface: light-dark(#fffcf7, #2f2620);
+  --faisca-border: light-dark(#eadfce, #4a3d33);
+  --faisca-field-border: light-dark(#92826f, #8a7564);
+  --faisca-text: light-dark(#33291f, #f3ece4);
+  --faisca-muted: light-dark(#6b5d4f, #c2b2a2);
+  --faisca-primary: light-dark(#9a5b3c, #e0a283);
+  --faisca-on-primary: light-dark(#fffcf7, #231c17);
+  --faisca-primary-text: light-dark(#8a4f33, #e6ad91);
+  --faisca-accent: light-dark(#7f9b84, #a9c4ad);
+  --faisca-accent-text: light-dark(#4b6a52, #a9c4ad);
+
+  --faisca-score-0: light-dark(#f2e6de, #3b2e26);
+  --faisca-score-1: light-dark(#e7d5ca, #513e33);
+  --faisca-score-2: light-dark(#dcc3b5, #674e40);
+  --faisca-score-3: light-dark(#d0b09f, #7d5d4c);
+  --faisca-score-4: light-dark(#c49e8a, #936c58);
+  --faisca-score-5: light-dark(#b98c75, #a97c64);
+  --faisca-score-6: light-dark(#ad795f, #bf8b70);
+  --faisca-score-7: light-dark(#a16649, #d49a7c);
+  --faisca-score-8: light-dark(#8f5538, #e3ac90);
+  --faisca-score-9: light-dark(#78472f, #eac0aa);
+  --faisca-score-10: light-dark(#623926, #f1d4c5);
+}
+
+:root[data-palette='alto-contraste'] {
+  --faisca-bg: light-dark(#ffffff, #000000);
+  --faisca-surface: light-dark(#ffffff, #0d0d0d);
+  --faisca-border: light-dark(#595959, #9a9a9a);
+  --faisca-field-border: light-dark(#000000, #ffffff);
+  --faisca-text: light-dark(#000000, #ffffff);
+  --faisca-muted: light-dark(#2b2b2b, #e6e6e6);
+  --faisca-primary: light-dark(#1f4d2b, #a8e6b4);
+  --faisca-on-primary: light-dark(#ffffff, #000000);
+  --faisca-primary-text: light-dark(#1f4d2b, #b5f0c0);
+  --faisca-accent: light-dark(#8a3b00, #ffc38a);
+  --faisca-accent-text: light-dark(#7a3300, #ffc38a);
+
+  /* Notas com degraus mais fortes que nas outras paletas: do 3 em diante, ao menos 3:1. */
+  --faisca-score-0: light-dark(#ecf0ed, #1a1f1a);
+  --faisca-score-1: light-dark(#c3cfc6, #2c392e);
+  --faisca-score-2: light-dark(#a0b3a5, #3c4f3f);
+  --faisca-score-3: light-dark(#829b88, #4c6550);
+  --faisca-score-4: light-dark(#708e78, #55715a);
+  --faisca-score-5: light-dark(#61816a, #5e7f64);
+  --faisca-score-6: light-dark(#51745a, #688d6f);
+  --faisca-score-7: light-dark(#43694d, #739b7b);
+  --faisca-score-8: light-dark(#345d3f, #7eac87);
+  --faisca-score-9: light-dark(#255231, #8abd94);
+  --faisca-score-10: light-dark(#1c4426, #9fd9aa);
 }
 
 :root[data-theme='light'] {
