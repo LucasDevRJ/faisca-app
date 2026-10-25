@@ -1213,6 +1213,30 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   comportamental e dão assunto para a sessão.
 - **Limite conhecido:** sem backup no plano Hobby (DEC-038).
 
+## DEC-065 — Fotos na Ação (telas) e aviso de privacidade versão 6
+- **Decisão:**
+  - no cartão da ação **avaliada**, as fotos aparecem como **miniaturas**; tocar abre a foto grande
+    numa janela ("Foto 1 de 3"), com **Anterior** e **Próxima** (também pelas setas do teclado);
+  - o paciente, dentro do prazo, tem **"Adicionar fotos"** (escolhe várias de uma vez; o app manda
+    uma por vez e mostra "Enviando 2 de 3…") e **"Remover foto"** na foto aberta, com confirmação.
+    O cartão mostra o prazo ("até seg, 28/09, às 14:00"), quantas fotos cabem ("2 de 10") e o lembrete
+    de que as fotos aparecem para a psicóloga e de conferir se outras pessoas na foto estão de acordo.
+    Mais de 20 MB, ou além do limite de 10, fica de fora com aviso, sem enviar;
+  - o seletor pede só JPEG, PNG e WebP: assim o iPhone converte a foto HEIC antes de enviar;
+  - depois do prazo, as fotos continuam à vista, sem adicionar nem remover; sem fotos e sem prazo,
+    o cartão não fala de fotos. A **terapeuta** vê as miniaturas e a foto grande, pelo endereço do
+    vínculo, sem botões de mudança;
+  - sem o aceite da versão que cita as fotos, a Ação funciona normalmente: "Adicionar fotos" (ou
+    "Ver as fotos", para a terapeuta) abre o pedido de aceite numa janela. Quem não aceitou pode
+    aceitar quando quiser, pela faixa do aviso ou pelo próprio cartão;
+  - o **aviso de privacidade** passa à **versão 6** (`2026-10.6` vira a atual): cita as fotos em "O
+    que guardamos", em "Quem vê" e em "Por quanto tempo" (remover a foto também a apaga);
+  - **card de Novidades** `2026-10-fotos-acao`, para pacientes e terapeutas.
+- **Motivo:** fechar o #95 com a API já no ar (DEC-064, DEC-056); trocar a versão do aviso no mesmo
+  PR que mostra o texto, para ninguém aceitar o que ainda não leu.
+- **Limite conhecido:** o envio da foto HEIC depende da conversão do próprio iPhone (testar no
+  aparelho da psicóloga); a foto sobe sem barra de progresso por arquivo.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

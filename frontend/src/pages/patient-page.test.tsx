@@ -538,6 +538,9 @@ describe('/pacientes/:id: aba Ação (DEC-052)', () => {
               observation: null,
               createdAt: '2026-09-23T20:00:00.000Z',
               updatedAt: '2026-09-23T20:00:00.000Z',
+              photos: [],
+              photosDeadline: null,
+              photosOpen: false,
             },
           ],
         }),
@@ -556,6 +559,100 @@ describe('/pacientes/:id: aba Ação (DEC-052)', () => {
     expect(screen.getByRole('img', { name: 'Conexão: 1 de 1 feita' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ação' })).toHaveAttribute('aria-pressed', 'true');
     expect(writes).toEqual([]);
+  });
+
+  it('fotos (DEC-065): pelo endereço do vínculo, só para ver, sem adicionar nem remover', async () => {
+    const { writes } = patientApi({ cycle: CYCLE });
+    const photoId = '00000000-0000-4000-b000-000000000001';
+    server.use(
+      http.get(`${BASE}/actions`, () =>
+        HttpResponse.json({
+          actions: [
+            {
+              id: '00000000-0000-4000-a000-000000000001',
+              actionDate: '2026-09-23',
+              name: 'Café com amiga',
+              category: 'CONEXAO',
+              status: 'AVALIADA',
+              expectation: 2,
+              pleasure: 8,
+              achievement: 5,
+              observation: null,
+              createdAt: '2026-09-23T20:00:00.000Z',
+              updatedAt: '2026-09-23T20:00:00.000Z',
+              photos: [{ id: photoId, createdAt: '2026-09-23T21:00:00.000Z' }],
+              photosDeadline: { date: '2026-09-28', time: '14:00' },
+              // Mesmo dentro do prazo do paciente, a terapeuta só vê.
+              photosOpen: true,
+            },
+          ],
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderRoute(`${path}?aba=acao`);
+
+    const card = await screen.findByRole('article', { name: 'Café com amiga' });
+    expect(within(card).queryByRole('button', { name: 'Adicionar fotos' })).not.toBeInTheDocument();
+    expect(card).not.toHaveTextContent('cabem até 10');
+    await user.click(within(card).getByRole('button', { name: 'Abrir a foto 1 de 1' }));
+
+    const viewer = await screen.findByRole('dialog', { name: 'Foto 1 de 1' });
+    expect(within(viewer).getByRole('img', { name: 'Foto 1 de 1 de Café com amiga' })).toHaveAttribute(
+      'src',
+      `/api/therapist/patients/${PATIENT_ID}/actions/00000000-0000-4000-a000-000000000001/photos/${photoId}?size=full`,
+    );
+    expect(within(viewer).queryByRole('button', { name: 'Remover foto' })).not.toBeInTheDocument();
+    expect(writes).toEqual([]);
+  });
+
+  it('fotos sem o aceite da terapeuta: "Ver as fotos" pede o aceite com o texto dela', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({
+          user: {
+            ...fakeUser,
+            profiles: { patient: false, therapist: true },
+            privacyUpToDate: false,
+            privacyAreas: { ...fakeUser.privacyAreas, actionPhotos: false },
+          },
+        }),
+      ),
+    );
+    patientApi({ cycle: CYCLE });
+    server.use(
+      http.get(`${BASE}/actions`, () =>
+        HttpResponse.json({
+          actions: [
+            {
+              id: '00000000-0000-4000-a000-000000000001',
+              actionDate: '2026-09-23',
+              name: 'Café com amiga',
+              category: 'CONEXAO',
+              status: 'AVALIADA',
+              expectation: 2,
+              pleasure: 8,
+              achievement: 5,
+              observation: null,
+              createdAt: '2026-09-23T20:00:00.000Z',
+              updatedAt: '2026-09-23T20:00:00.000Z',
+              photos: [{ id: '00000000-0000-4000-b000-000000000001', createdAt: '2026-09-23T21:00:00.000Z' }],
+              photosDeadline: null,
+              photosOpen: false,
+            },
+          ],
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderRoute(`${path}?aba=acao`);
+
+    const card = await screen.findByRole('article', { name: 'Café com amiga' });
+    expect(card).toHaveTextContent('Esta ação tem 1 foto.');
+    expect(within(card).queryByRole('img')).not.toBeInTheDocument();
+    await user.click(within(card).getByRole('button', { name: 'Ver as fotos' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Fotos da Ação' });
+    expect(dialog).toHaveTextContent('Para ver as fotos das ações dos seus pacientes, leia o que mudou e confirme.');
   });
 
   it('sem o aceite da Ação: pedido de aceite com o texto da terapeuta', async () => {

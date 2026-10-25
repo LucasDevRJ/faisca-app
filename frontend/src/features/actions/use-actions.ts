@@ -3,11 +3,13 @@ import { getApiError } from '../auth/auth-api';
 import {
   createAction,
   deleteAction,
+  deleteActionPhoto,
   evaluateAction,
   fetchAction,
   fetchActions,
   markActionNotDone,
   updateAction,
+  uploadActionPhoto,
   type CreateActionInput,
   type EvaluateActionInput,
   type UpdateActionInput,
@@ -54,3 +56,9 @@ export const useEvaluateAction = () =>
 export const useMarkActionNotDone = () =>
   useActionMutation(({ id, observation }: { id: string; observation?: string }) => markActionNotDone(id, observation));
 export const useDeleteAction = () => useActionMutation((id: string) => deleteAction(id));
+export const useAddActionPhoto = () =>
+  useActionMutation(({ actionId, file }: { actionId: string; file: File }) => uploadActionPhoto(actionId, file));
+export const useRemoveActionPhoto = () =>
+  useActionMutation(({ actionId, photoId }: { actionId: string; photoId: string }) =>
+    deleteActionPhoto(actionId, photoId),
+  );

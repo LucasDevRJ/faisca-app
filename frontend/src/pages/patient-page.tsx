@@ -554,6 +554,7 @@ function ToReadView({
         <ActionCard
           action={action}
           readOnly
+          patientId={patientId}
           footer={<ReadControl patientId={patientId} type="ACTION" record={action} label={action.name} />}
         />
       ),
@@ -862,6 +863,7 @@ function ActionsTab({ patientId, consented, query, range, inCycle, today }: Acti
                       key={action.id}
                       action={action}
                       readOnly
+                      patientId={patientId}
                       footer={<ReadControl patientId={patientId} type="ACTION" record={action} label={action.name} />}
                     />
                   ))}

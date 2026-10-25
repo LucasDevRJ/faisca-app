@@ -34,7 +34,8 @@ Para o paciente:
   de olhar a situação), com como a pessoa se sente depois dela.
 - **Episódios de tensão:** os momentos de tensão, com gráfico da semana e os dias de consulta marcados.
 - **Ação:** ações que a pessoa escolhe fazer no ciclo, de três tipos (Prazer, Conexão e Realização),
-  com a expectativa antes e o resultado depois.
+  com a expectativa antes e o resultado depois. Depois de contar como foi, dá para **adicionar até
+  10 fotos**, para lembrar dos bons momentos (a psicóloga também vê).
 - **Agenda de consultas e ciclo da consulta:** os registros se organizam pelo período entre uma
   sessão e outra; dá para levar a agenda para o calendário do celular.
 - **Vínculo com a psicóloga:** por código ou convite por e-mail; o paciente desfaz quando quiser.
@@ -59,7 +60,6 @@ Para todos:
   WhatsApp), sempre com texto neutro e com horário de silêncio.
 - Ajustes de acessibilidade para pessoas neurodivergentes (TEA, TDAH, dislexia, ansiedade):
   linguagem direta, uma coisa por vez, leitura confortável, sem pressão de tempo.
-- Fotos nos registros de Ação, para lembrar dos bons momentos.
 - Animação, som e vibração suaves ao salvar um registro (com opção de desligar).
 - Baixar uma cópia dos próprios dados (direito garantido pela LGPD).
 

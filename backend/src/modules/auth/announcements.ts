@@ -3,7 +3,8 @@
 // melhoria, acrescente o id no fim da lista, com o público, e o texto no front.
 // - 2026-10-explicacao-alternativa: explicação alternativa e "como me sinto agora" no RPD (todos).
 // - 2026-10-lido: marcas de leitura da terapeuta (DEC-058), só para a terapeuta.
-export const ANNOUNCEMENTS = ['2026-10-explicacao-alternativa', '2026-10-lido'] as const;
+// - 2026-10-fotos-acao: fotos nas ações avaliadas (DEC-065), para todos.
+export const ANNOUNCEMENTS = ['2026-10-explicacao-alternativa', '2026-10-lido', '2026-10-fotos-acao'] as const;
 
 export type Announcement = (typeof ANNOUNCEMENTS)[number];
 
@@ -13,6 +14,7 @@ type Audience = 'TODOS' | 'TERAPEUTA';
 const AUDIENCE: Record<Announcement, Audience> = {
   '2026-10-explicacao-alternativa': 'TODOS',
   '2026-10-lido': 'TERAPEUTA',
+  '2026-10-fotos-acao': 'TODOS',
 };
 
 export type Profiles = { patient: boolean; therapist: boolean };

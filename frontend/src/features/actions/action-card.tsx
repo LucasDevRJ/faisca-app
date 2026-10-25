@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { formatDateTime } from '../links/link-format';
+import { ActionPhotos } from './action-photos';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action } from './actions-api';
 
@@ -13,10 +14,11 @@ const STATUS_LABEL: Record<Action['status'], string> = {
 
 export type ActionCardAction = 'evaluate' | 'notDone' | 'delete';
 
-// readOnly: visão da terapeuta. Sem botões e com a hora em que o registro foi feito.
+// readOnly: visão da terapeuta. Sem botões e com a hora em que o registro foi feito; patientId
+// monta o endereço das fotos pelo vínculo.
 type ActionCardProps =
   | { action: Action; today: string; onAction: (kind: ActionCardAction, action: Action) => void; readOnly?: false }
-  | { action: Action; readOnly: true; footer?: ReactNode };
+  | { action: Action; readOnly: true; patientId: string; footer?: ReactNode };
 
 // A expectativa ao lado do resultado (DEC-052): "Esperava 3 · Prazer 7 · Realização 6". Só os
 // números, sem julgamento: comparar o que se esperava com o que aconteceu é o centro da Ação.
@@ -57,6 +59,11 @@ export function ActionCard(props: ActionCardProps) {
       </dl>
 
       {action.observation && <p className="whitespace-pre-line text-muted">{action.observation}</p>}
+
+      <ActionPhotos
+        action={action}
+        viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
+      />
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(action.createdAt)}</p>}
       {props.readOnly && props.footer}

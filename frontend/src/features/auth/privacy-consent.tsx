@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
+import { DialogFooter } from '../../components/ui/dialog';
 import { getApiError, type SessionUser } from './auth-api';
 import { useAcceptPrivacy, useSession } from './use-session';
 
@@ -15,6 +16,7 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   tensionEpisodes: 'os Episódios de tensão',
   appointmentSchedule: 'a agenda de consultas',
   actions: 'a Ação',
+  actionPhotos: 'as fotos da Ação',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
@@ -62,13 +64,31 @@ const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope:
       scope: 'inclusive com o acesso às ações e às notas dos meus pacientes como dados de saúde.',
     },
   },
+  // Fotos da Ação (DEC-064): as fotos que o paciente adiciona a uma ação avaliada.
+  actionPhotos: {
+    patient: {
+      intro: 'Para adicionar fotos às suas ações, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso das fotos que eu adicionar às minhas ações como dados de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver as fotos das ações dos seus pacientes, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso às fotos das ações dos meus pacientes como dados de saúde.',
+    },
+  },
 };
 
-type PrivacyConsentGateProps = { area: PrivacyArea; audience?: Audience };
+// onCancel: o pedido está numa janela (Dialog), que já tem o título; sem o cartão e com "Agora não".
+// onAccepted: depois do aceite salvo, para quem abriu a janela fechá-la.
+type PrivacyConsentGateProps = {
+  area: PrivacyArea;
+  audience?: Audience;
+  onCancel?: () => void;
+  onAccepted?: () => void;
+};
 
 // Novo aceite do aviso de privacidade, no lugar da área bloqueada. Mesmo consentimento do
 // cadastro: caixa desmarcada e explícita (DEC-036). Um aceite libera todas as áreas (DEC-042).
-export function PrivacyConsentGate({ area, audience = 'patient' }: PrivacyConsentGateProps) {
+export function PrivacyConsentGate({ area, audience = 'patient', onCancel, onAccepted }: PrivacyConsentGateProps) {
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const accept = useAcceptPrivacy();
@@ -81,17 +101,17 @@ export function PrivacyConsentGate({ area, audience = 'patient' }: PrivacyConsen
       return;
     }
     setError(null);
-    accept.mutate(undefined, { onError: (e) => setError(getApiError(e).message) });
+    accept.mutate(undefined, { onSuccess: () => onAccepted?.(), onError: (e) => setError(getApiError(e).message) });
   }
 
-  return (
-    <section
-      aria-labelledby="privacy-consent-title"
-      className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6"
-    >
-      <h2 id="privacy-consent-title" className="text-xl font-semibold">
-        Antes de começar
-      </h2>
+  const submit = (
+    <Button type="submit" disabled={accept.isPending}>
+      {accept.isPending ? 'Salvando…' : 'Aceitar e continuar'}
+    </Button>
+  );
+
+  const body = (
+    <>
       <p>
         Atualizamos o aviso de privacidade para incluir {AREA_NAME[area]}. {text.intro} O resto do Faísca
         continua igual.
@@ -114,12 +134,31 @@ export function PrivacyConsentGate({ area, audience = 'patient' }: PrivacyConsen
             , {text.scope}
           </span>
         </label>
-        <div>
-          <Button type="submit" disabled={accept.isPending}>
-            {accept.isPending ? 'Salvando…' : 'Aceitar e continuar'}
-          </Button>
-        </div>
+        {onCancel ? (
+          <DialogFooter>
+            <Button variant="secondary" onClick={onCancel}>
+              Agora não
+            </Button>
+            {submit}
+          </DialogFooter>
+        ) : (
+          <div>{submit}</div>
+        )}
       </form>
+    </>
+  );
+
+  if (onCancel) return <div className="flex flex-col gap-4">{body}</div>;
+
+  return (
+    <section
+      aria-labelledby="privacy-consent-title"
+      className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6"
+    >
+      <h2 id="privacy-consent-title" className="text-xl font-semibold">
+        Antes de começar
+      </h2>
+      {body}
     </section>
   );
 }

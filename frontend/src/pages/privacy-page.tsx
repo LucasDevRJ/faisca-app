@@ -10,11 +10,12 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-10.3 (DEC-042): entram os Episódios de tensão, com novo aceite para usá-los.
 // Versão 2026-10.4 (DEC-045): entra a agenda (hora, motivos e pausas), com novo aceite para usá-la.
 // Versão 2026-10.5 (DEC-051): entra a Ação, com novo aceite para usá-la.
+// Versão 2026-10.6 (DEC-064, DEC-065): entram as fotos da Ação, com novo aceite para usá-las.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
 // (DEC-058): um dado de trabalho dela, que o paciente não vê.
-const VERSION_LABEL = 'versão 5, de outubro de 2026';
+const VERSION_LABEL = 'versão 6, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -71,6 +72,11 @@ export function PrivacyPage() {
               observações.
             </li>
             <li>
+              Nas fotos da Ação: as fotos que você escolher adicionar a uma ação já avaliada, até 10 por ação.
+              Antes de guardar, tiramos os dados escondidos da foto, como o lugar onde ela foi tirada, e
+              diminuímos o tamanho. Se aparecerem outras pessoas, confira se elas estão de acordo.
+            </li>
+            <li>
               No Registro de Pensamentos (RPD): as situações que você descreve e, para cada uma, o pensamento
               automático, o quanto você acredita nele, as emoções e a intensidade de cada uma, o comportamento e
               a consequência e, se você escrever, a explicação alternativa e como você se sente depois dela.
@@ -107,7 +113,7 @@ export function PrivacyPage() {
             <li>Você vê tudo o que registrou.</li>
             <li>
               A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos, os
-              Episódios de tensão, a agenda com os motivos e a Ação, enquanto o vínculo existir. Você
+              Episódios de tensão, a agenda com os motivos, a Ação e as fotos das ações, enquanto o vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
               hora. A terapeuta pode marcar os seus registros como lidos, para se organizar. Essa marca é
               só dela: você não a vê.
@@ -133,7 +139,8 @@ export function PrivacyPage() {
         <Section title="Por quanto tempo">
           <p>
             Até você excluir a conta. A exclusão, em <strong>Conta</strong>, apaga tudo na hora. Não guardamos
-            cópias de segurança.
+            cópias de segurança. Uma foto também é apagada quando você a remove da ação, o que dá para fazer
+            até a próxima consulta depois de avaliá-la.
           </p>
         </Section>
 

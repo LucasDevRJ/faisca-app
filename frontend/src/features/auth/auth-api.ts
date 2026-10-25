@@ -13,7 +13,13 @@ export type SessionUser = {
   privacyUpToDate: boolean;
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o Registro de Pensamentos e os
   // Episódios de tensão ficam bloqueados; o resto do app funciona.
-  privacyAreas: { thoughtRecords: boolean; tensionEpisodes: boolean; appointmentSchedule: boolean; actions: boolean };
+  privacyAreas: {
+    thoughtRecords: boolean;
+    tensionEpisodes: boolean;
+    appointmentSchedule: boolean;
+    actions: boolean;
+    actionPhotos: boolean;
+  };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;
 };
