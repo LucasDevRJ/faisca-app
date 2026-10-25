@@ -12,7 +12,8 @@ function previewOf(text: string): string {
   return (lastSpace > PREVIEW / 2 ? cut.slice(0, lastSpace) : cut).trimEnd();
 }
 
-// Texto livre dos cartões (RPD e Tensão). Com o limite de 5000 caracteres (DEC-053), um texto
+// Texto livre dos cartões (RPD, Tensão e a observação da Ação). Com o limite de 5000 caracteres
+// (DEC-053, DEC-067), um texto
 // longo abre recolhido, com "Ver mais", para a lista e a visão da terapeuta seguirem legíveis.
 export function LongText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);

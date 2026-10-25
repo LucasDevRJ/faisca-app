@@ -254,6 +254,23 @@ describe('avaliar, não realizada, editar e excluir', () => {
     expect(edit.status).toBe(409);
   });
 
+  it('observação até 5000 caracteres, no Zod e no CHECK do banco (DEC-067)', async () => {
+    const long = await seedAction(patientId, { actionDate: dateOnlyToDate(day(-1)) });
+    const tooLong = await seedAction(patientId, { actionDate: dateOnlyToDate(day(-1)), name: 'Outra' });
+    const agent = await loginAgent();
+
+    const ok = await agent.post(`/actions/${long.id}/not-done`).send({ observation: 'a'.repeat(5000) });
+    const refused = await agent.post(`/actions/${tooLong.id}/not-done`).send({ observation: 'a'.repeat(5001) });
+
+    expect(ok.status).toBe(200);
+    expect(ok.body.action.observation).toHaveLength(5000);
+    expect(refused.status).toBe(400);
+    // O banco também barra, mesmo se a validação da API falhar.
+    await expect(
+      prisma.behavioralAction.update({ where: { id: tooLong.id }, data: { status: 'NAO_REALIZADA', observation: 'a'.repeat(5001) } }),
+    ).rejects.toThrow();
+  });
+
   it('avaliar ou marcar não realizada só a partir do dia da ação', async () => {
     const action = await seedAction(patientId, { actionDate: dateOnlyToDate(day(3)) });
     const agent = await loginAgent();

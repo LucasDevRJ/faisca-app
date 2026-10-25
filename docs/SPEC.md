@@ -137,7 +137,7 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 - **Planejar**: dia, nome (1 a 100 caracteres), tipo e **expectativa antes** (0 a 10, o quanto
   espera gostar). O dia vai de hoje até 7 dias à frente.
 - **Contar como foi** (a partir do dia da ação): **prazer depois** e **realização depois** (0 a 10)
-  e uma observação opcional (até 1000). A ação vira **avaliada**.
+  e uma observação opcional (até 5000, DEC-067). A ação vira **avaliada**.
 - **Não deu desta vez** (a partir do dia da ação): a ação fica registrada como **não realizada**,
   com observação opcional. Nem sempre dá para fazer tudo, e ver os ciclos com mais e com menos
   ações faz parte do acompanhamento.

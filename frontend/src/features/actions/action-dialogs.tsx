@@ -4,12 +4,10 @@ import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField } from '../../components/ui/text-field';
 import { getApiError } from '../auth/auth-api';
 import { SCORE_TEXT } from './action-labels';
-import type { Action } from './actions-api';
+import { OBSERVATION_MAX, type Action } from './actions-api';
 import { useDeleteAction, useEvaluateAction, useMarkActionNotDone } from './use-actions';
 
 // Diálogos da Ação (DEC-052): contar como foi, "não deu desta vez" e excluir a planejada.
-
-const OBSERVATION_MAX = 1000;
 
 function observationError(value: string) {
   return value.trim().length > OBSERVATION_MAX ? `A observação pode ter até ${OBSERVATION_MAX} caracteres.` : undefined;
@@ -72,6 +70,7 @@ export function EvaluateActionDialog({ action, onClose, onDone }: { action: Acti
           value={observation}
           onChange={(e) => setObservation(e.target.value)}
           error={errors.observation}
+          limit={OBSERVATION_MAX}
         />
         <DialogActions submitLabel="Salvar" pending={evaluate.isPending} onCancel={onClose} />
       </DialogForm>
@@ -105,6 +104,7 @@ export function NotDoneActionDialog({ action, onClose, onDone }: { action: Actio
           value={observation}
           onChange={(e) => setObservation(e.target.value)}
           error={error}
+          limit={OBSERVATION_MAX}
         />
         <DialogActions submitLabel="Salvar" pending={notDone.isPending} onCancel={onClose} />
       </DialogForm>

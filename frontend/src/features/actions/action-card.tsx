@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
+import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { ActionPhotos } from './action-photos';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
@@ -58,7 +59,12 @@ export function ActionCard(props: ActionCardProps) {
         ))}
       </dl>
 
-      {action.observation && <p className="whitespace-pre-line text-muted">{action.observation}</p>}
+      {/* Até 5000 caracteres (DEC-067): texto longo abre recolhido, com "Ver mais". */}
+      {action.observation && (
+        <div className="text-muted">
+          <LongText text={action.observation} />
+        </div>
+      )}
 
       <ActionPhotos
         action={action}

@@ -3,6 +3,9 @@ import { api } from '../../lib/api';
 // Chamadas às rotas /actions (DEC-051). O backend decide o dono pela sessão: o front nunca manda
 // id de usuário.
 
+// Limite da observação, igual ao da API (DEC-067; era 1000).
+export const OBSERVATION_MAX = 5000;
+
 export type ActionCategory = 'PRAZER' | 'CONEXAO' | 'REALIZACAO';
 export type ActionStatus = 'PLANEJADA' | 'AVALIADA' | 'NAO_REALIZADA';
 
