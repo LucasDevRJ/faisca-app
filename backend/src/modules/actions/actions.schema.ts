@@ -3,7 +3,8 @@ import { LIST_MAX_DAYS, THERAPIST_LIST_MAX_DAYS, listQuerySchema } from '../acti
 
 // Ação (SPEC, "Ação"; DEC-051). Os limites de texto são os das atividades, também no CHECK do banco.
 export const NAME_MAX = 100;
-export const OBSERVATION_MAX = 1000;
+// Igual ao CHECK do banco (DEC-067; era 1000).
+export const OBSERVATION_MAX = 5000;
 
 const dateSchema = z.iso.date({ error: 'Informe uma data válida (AAAA-MM-DD).' });
 

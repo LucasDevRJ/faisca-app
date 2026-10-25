@@ -223,7 +223,7 @@ export function CreateActivityDialog({
           <TextAreaField
             label="Quer anotar algo? (opcional)"
             value={observation}
-            maxLength={OBSERVATION_MAX}
+            limit={OBSERVATION_MAX}
             onChange={(e) => setObservation(e.target.value)}
             error={fieldError('observation')}
           />
@@ -427,7 +427,7 @@ export function CompleteActivityDialog({
         <TextAreaField
           label="Quer anotar algo? (opcional)"
           value={observation}
-          maxLength={OBSERVATION_MAX}
+          limit={OBSERVATION_MAX}
           onChange={(e) => setObservation(e.target.value)}
           error={fieldError('observation')}
         />
@@ -469,7 +469,7 @@ export function NotDoneDialog({
         <TextAreaField
           label="O que aconteceu? (opcional)"
           value={observation}
-          maxLength={OBSERVATION_MAX}
+          limit={OBSERVATION_MAX}
           onChange={(e) => setObservation(e.target.value)}
           error={error ?? submitError.apiErrors.observation}
         />

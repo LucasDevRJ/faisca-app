@@ -7,7 +7,7 @@ import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { addDays, isValidDateOnly } from '../activities/week';
 import { CATEGORIES, CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
-import type { Action, ActionCategory, CreateActionInput } from './actions-api';
+import { OBSERVATION_MAX, type Action, type ActionCategory, type CreateActionInput } from './actions-api';
 import { choiceCardClasses } from '../../components/ui/field-styles';
 import { FieldError } from '../../components/ui/field-error';
 
@@ -15,7 +15,6 @@ import { FieldError } from '../../components/ui/field-error';
 // registrar já com a avaliação. Na edição de uma planejada, só os campos dela.
 
 const NAME_MAX = 100;
-const OBSERVATION_MAX = 1000;
 // Mesmas janelas da API (DEC-051).
 const PLAN_AHEAD_DAYS = 7;
 const RECORD_BACK_DAYS = 7;
@@ -180,6 +179,7 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
             value={observation}
             onChange={(e) => setObservation(e.target.value)}
             error={fieldError('observation')}
+            limit={OBSERVATION_MAX}
           />
         </>
       )}

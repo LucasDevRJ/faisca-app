@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Button } from '../../components/ui/button';
+import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { isFinal, type Activity } from './activities-api';
 import { SCORE_TEXT, STATUS_LABEL } from './activity-labels';
@@ -56,7 +57,12 @@ export function ActivityCard(props: ActivityCardProps) {
         </dl>
       )}
 
-      {activity.observation && <p className="text-muted whitespace-pre-line">{activity.observation}</p>}
+      {/* Até 5000 caracteres (DEC-067): texto longo abre recolhido, com "Ver mais". */}
+      {activity.observation && (
+        <div className="text-muted">
+          <LongText text={activity.observation} />
+        </div>
+      )}
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(activity.createdAt)}</p>}
 

@@ -156,6 +156,41 @@ describe('/acao', () => {
     expect(writes[0]!.body).toEqual({ pleasure: 7, achievement: 6 });
   });
 
+  it('observação longa (DEC-067): 1500 caracteres passam; acima de 5000, aviso sem enviar', async () => {
+    const action = fakeAction({ name: 'Museu', expectation: 3 });
+    actionsApi([action]);
+    const writes = recordWrites();
+    const user = userEvent.setup();
+    renderRoute('/acao');
+
+    const card = await screen.findByRole('article', { name: 'Museu' });
+    await user.click(within(card).getByRole('button', { name: 'Conta como foi?' }));
+    const dialog = screen.getByRole('dialog', { name: 'Conta como foi?' });
+    fireEvent.change(within(dialog).getByLabelText('Prazer'), { target: { value: '7' } });
+    fireEvent.change(within(dialog).getByLabelText('Realização'), { target: { value: '6' } });
+    const observation = within(dialog).getByRole('textbox', { name: 'Observação (opcional)' });
+
+    fireEvent.change(observation, { target: { value: 'a'.repeat(5001) } });
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    expect(within(dialog).getByText('A observação pode ter até 5000 caracteres.')).toBeInTheDocument();
+    expect(writes).toEqual([]);
+
+    fireEvent.change(observation, { target: { value: 'Relato fictício. '.repeat(90) } });
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(writes).toHaveLength(1));
+    expect((writes[0]!.body as { observation: string }).observation.length).toBeGreaterThan(1000);
+  });
+
+  it('observação longa no cartão abre recolhida, com "Ver mais"', async () => {
+    actionsApi([
+      fakeAction({ name: 'Museu', status: 'AVALIADA', pleasure: 7, achievement: 6, actionDate: '2026-09-23', observation: 'Relato fictício. '.repeat(90) }),
+    ]);
+    renderRoute('/acao');
+
+    const card = await screen.findByRole('article', { name: 'Museu' });
+    expect(within(card).getByRole('button', { name: /Ver mais/ })).toBeInTheDocument();
+  });
+
   it('planejada de um dia que ainda não chegou: sem "Conta como foi?", com editar e excluir', async () => {
     actionsApi([fakeAction({ name: 'Cinema', actionDate: '2026-09-26' })]);
     const writes = recordWrites();

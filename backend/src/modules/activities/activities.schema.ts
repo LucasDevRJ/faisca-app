@@ -3,7 +3,8 @@ import { daysBetween } from '../../lib/dates.js';
 
 // Limites da DEC-028. Os mesmos valores estão nos CHECKs da migration.
 export const NAME_MAX = 100;
-export const OBSERVATION_MAX = 1000;
+// Igual ao CHECK do banco (DEC-067; era 1000).
+export const OBSERVATION_MAX = 5000;
 // Uma semana cabe folgada; um mês inteiro com as semanas das pontas também.
 export const LIST_MAX_DAYS = 42;
 // Terapeuta: o filtro "desde a última consulta" cobre até ~3 meses (DEC-033).
