@@ -19,10 +19,10 @@ function owner(req: Request) {
   return { userId: getAuthUser(req).id, id: actionIdSchema.parse(req.params).id };
 }
 
-// A imagem vai sem cache compartilhado: só o navegador de quem pediu guarda. A foto de um id não
-// muda (trocar é remover e adicionar outra), então pode ficar no cache dele por um dia.
+// Sem cache nenhum (DEC-066): a foto é dado de saúde e não pode ficar no disco do aparelho depois
+// de sair da conta ou de desfazer o vínculo. O custo é baixar de novo a cada visita.
 function sendPhoto(res: Response, image: Uint8Array) {
-  res.set({ 'Content-Type': 'image/webp', 'Cache-Control': 'private, max-age=86400' });
+  res.set({ 'Content-Type': 'image/webp', 'Cache-Control': 'no-store' });
   res.status(200).send(Buffer.from(image));
 }
 
