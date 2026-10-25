@@ -37,6 +37,7 @@
     "pino": "^10.3.1",
     "prisma": "^7.10.0",
     "resend": "^6.30.0",
+    "sharp": "^0.34.5",
     "zod": "^4.6.5"
   },
   "devDependencies": {
