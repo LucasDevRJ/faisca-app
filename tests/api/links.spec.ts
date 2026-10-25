@@ -29,7 +29,8 @@ test('paciente gera código, terapeuta vincula e o paciente revoga', async () =>
   );
 
   const status = await (await patient.get('/link')).json();
-  expect(status.link.therapist).toEqual({ name: 'Tina Fictícia', email: users.linkTherapist.email });
+  // Sem foto: avatarVersion null (DEC-061).
+  expect(status.link.therapist).toEqual({ name: 'Tina Fictícia', email: users.linkTherapist.email, avatarVersion: null });
 
   const list = await (await therapist.get('/links/patients')).json();
   expect(list.patients).toContainEqual(expect.objectContaining({ email: users.linkPatient.email }));

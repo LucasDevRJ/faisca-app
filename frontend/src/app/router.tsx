@@ -5,6 +5,7 @@ import { ActionsPage } from '../pages/actions-page';
 import { CheckEmailPage } from '../pages/check-email-page';
 import { AppointmentsPage } from '../pages/appointments-page';
 import { AccountPage } from '../pages/account-page';
+import { AnnouncementsPage } from '../pages/announcements-page';
 import { ConfirmEmailPage } from '../pages/confirm-email-page';
 import { InvitePage } from '../pages/invite-page';
 import { ErrorPage } from '../pages/error-page';
@@ -38,6 +39,7 @@ export const routes = [
             element: <AppLayout />,
             children: [
               { path: 'conta', element: <AccountPage /> },
+              { path: 'novidades', element: <AnnouncementsPage /> },
               {
                 element: <RequireProfile profile="patient" />,
                 children: [

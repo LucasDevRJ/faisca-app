@@ -18,6 +18,8 @@ const SENSITIVE_KEYS = [
   'codeHash',
   'therapistEmail',
   'name',
+  // Nome completo do perfil (DEC-061).
+  'fullName',
   'notes',
   'observation',
   // Notas da atividade: vontade, prazer e realização (DEC-028).

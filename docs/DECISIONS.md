@@ -1097,6 +1097,51 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   o perfil (#83).
 - **Limite conhecido:** o anel colorido da foto de perfil fica para o PR do perfil (#83).
 
+## DEC-060 — Página "O que há de novo"
+- **Decisão:**
+  - página **`/novidades`** com todas as novidades do app que valem para a pessoa, da mais nova
+    para a mais antiga, com a **data** em que cada uma entrou no ar e o texto do perfil dela
+    (paciente, terapeuta ou os dois). Uma novidade só para terapeutas não aparece para quem é só
+    paciente;
+  - os textos saem do card para `features/announcements/announcement-texts.tsx`, com `date` e
+    `patient`/`therapist` opcionais; card e página leem do mesmo lugar;
+  - selo **"Nova"** na novidade ainda não fechada. **Abrir a página não conta como "Entendi"**: o
+    card continua no topo até a pessoa tocar nele;
+  - entradas: seção "Novidades do Faísca" na Conta e o link "Ver todas as novidades" no card
+    (escondido na própria página);
+  - **`/novidades#<id>`** abre e foca direto uma novidade, para o link das mensagens de novidade
+    por canal (#82).
+- **Motivo:** o card mostra uma novidade por vez; quem perde um card, ou tem os dois perfis e só vê
+  a mais recente, não tinha como rever o que mudou. Só front, sem API.
+- **Limite conhecido:** a data é escrita à mão no texto de cada novidade, no dia em que ela vai ao ar.
+
+## DEC-061 — Perfil básico: nome completo e foto (API)
+- **Decisão:**
+  - **nome completo** opcional (`User.fullName`, até 120 caracteres, CHECK no banco), separado do
+    `name` ("Como podemos te chamar?"), que continua sendo o nome mostrado no app;
+  - **foto no próprio Postgres**, numa tabela à parte (`UserAvatar`), e não num serviço de
+    arquivos: já reduzida a 256×256 em WebP (~20 KB), ela tem a mesma proteção e as mesmas regras
+    dos outros dados. O serviço de arquivos fica para os laudos (#84), decidido lá;
+  - o servidor confere o **tipo pelos primeiros bytes do arquivo** (JPEG, PNG ou WebP; até 5 MB e
+    25 MP), antes de abri-lo, e processa uma foto por vez; o envio tem limite de 20 por hora por
+    conta, porque processar imagem é caro numa instância pequena. Ele também endireita pela
+    orientação da câmera, recorta no centro e **regrava sem metadados** (sem a localização GPS da
+    foto). O recorte manual fica no front; o servidor recorta de novo por garantia;
+  - rotas: `GET`/`PATCH /profile` e `GET`/`PUT`/`DELETE /profile/avatar`, sempre da própria
+    conta; `GET /link/therapist/avatar` para o paciente ver a foto da terapeuta vinculada; e
+    `GET /therapist/patients/:patientId/avatar`, dentro da cadeia de vínculo ativo (regra 1);
+  - fora dessas rotas, só a **versão da foto** (`avatarVersion`, a data da última troca) aparece
+    em `/link`, `/links/patients` e no resumo do paciente, para o front pedir a imagem certa sem
+    cache antigo. A regra do `backend/CLAUDE.md` foi atualizada;
+  - corpo grande demais passa a responder **413** (`PAYLOAD_TOO_LARGE`), e não 500;
+  - `fullName` entra no `redact` dos logs (regra 7);
+  - foto e nome completo são dados pessoais, mas não de saúde: o aviso de privacidade os cita
+    **sem novo aceite** (como na DEC-055), na etapa das telas;
+  - o **celular** fica para as notificações (#82): sem confirmação por código, seria um dado sem uso.
+- **Motivo:** o pedido do perfil (#83), com o menor risco possível: nada de serviço novo logo
+  depois do ataque ao Railway, e nada da foto que não seja necessário guardar.
+- **Limite conhecido:** como o Faísca não tem backup no plano Hobby (DEC-038), a foto também não tem.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
