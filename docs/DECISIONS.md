@@ -1162,6 +1162,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   só avisa por e-mail os casos confirmados, e nenhum chegou. Sem monitor de queda, o site fora do ar
   foi percebido por acaso: um monitor externo (ex.: UptimeRobot) fica recomendado.
 
+## DEC-063 — Paletas de cores (API)
+- **Decisão:**
+  - cinco paletas, escolhidas pelo usuário a partir de uma prévia: **Sálvia** (a atual e padrão),
+    **Lavanda**, **Oceano**, **Areia** e **Alto contraste**. Todas conferidas no contraste nos dois
+    temas: AA nas quatro coloridas e AAA no Alto contraste;
+  - a escolha fica **na conta** (`User.palette`, enum `Palette`; null = Sálvia), e não no aparelho,
+    para valer no celular e no computador. O tema (claro, escuro, automático) continua no aparelho;
+    paleta e tema se combinam;
+  - vem no `/auth/me` (`palette`, já resolvida para `SALVIA` quando vazia), para o app aplicar as
+    cores logo ao abrir, e muda pelo `PATCH /profile`, sempre da própria conta. O PATCH agora aceita
+    só os campos enviados (nome completo, paleta ou os dois); corpo vazio é 400;
+  - a lista de paletas do Zod (`PALETTES`) é conferida contra o enum do Prisma num teste;
+  - as notas de 0 a 10 e os gráficos acompanham a cor principal de cada paleta, num tom só, sem
+    vermelho e verde (nas telas).
+- **Motivo:** o pedido do perfil (#83): personalização, com uma opção de alto contraste que ajuda
+  quem enxerga pior. O enum evita guardar um nome de paleta que o app não conhece.
+- **Limite conhecido:** paleta nova pede migration (o enum) e um bloco de cores nas telas.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

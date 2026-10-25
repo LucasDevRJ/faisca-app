@@ -8,6 +8,7 @@ import {
   setSessionCookie,
   shouldRenewSession,
 } from '../lib/session.js';
+import type { Palette } from '../generated/prisma/client.js';
 
 export type AuthUser = {
   id: string;
@@ -19,6 +20,8 @@ export type AuthUser = {
   privacyVersion: string | null;
   // Última novidade vista (card de Novidades, DEC-054).
   seenAnnouncement: string | null;
+  // Paleta de cores escolhida (DEC-063); null = Sálvia.
+  palette: Palette | null;
 };
 
 function unauthenticated() {
@@ -44,6 +47,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
           sessionVersion: true,
           privacyVersion: true,
           seenAnnouncement: true,
+          palette: true,
         },
       })
     : null;
@@ -66,6 +70,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     hasTherapistProfile: user.hasTherapistProfile,
     privacyVersion: user.privacyVersion,
     seenAnnouncement: user.seenAnnouncement,
+    palette: user.palette,
   };
   next();
 };

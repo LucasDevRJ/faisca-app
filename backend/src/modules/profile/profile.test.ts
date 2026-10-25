@@ -2,9 +2,11 @@ import sharp from 'sharp';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
+import { Palette } from '../../generated/prisma/client.js';
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
+import { PALETTES } from './profile.schema.js';
 
 // Perfil básico (DEC-061). Dados e imagens fictícios (regra 5).
 const PASSWORD = 'senha-ficticia-123';
@@ -52,7 +54,9 @@ async function uploadAvatar(email: string) {
 describe('nome completo', () => {
   it('começa vazio, salva sem espaços nas pontas e apaga com texto vazio', async () => {
     const agent = await loginAgent(PATIENT);
-    expect((await agent.get('/profile')).body).toEqual({ profile: { fullName: null, avatarVersion: null } });
+    expect((await agent.get('/profile')).body).toEqual({
+      profile: { fullName: null, palette: 'SALVIA', avatarVersion: null },
+    });
 
     const saved = await agent.patch('/profile').send({ fullName: '  Paula Fictícia da Silva  ' });
     expect(saved.status).toBe(200);
@@ -74,6 +78,38 @@ describe('nome completo', () => {
     expect((await agent.patch('/profile').send({ fullName: 'Paula', userId: therapistId })).status).toBe(400);
     expect((await request(app).patch('/profile').send({ fullName: 'Paula' })).status).toBe(401);
     expect((await request(app).get('/profile')).status).toBe(401);
+  });
+});
+
+describe('paleta de cores (DEC-063)', () => {
+  it('começa na Sálvia, muda só a paleta e vem no /auth/me', async () => {
+    const agent = await loginAgent(PATIENT);
+    await agent.patch('/profile').send({ fullName: 'Paula Fictícia da Silva' });
+    expect((await agent.get('/auth/me')).body.user.palette).toBe('SALVIA');
+
+    const saved = await agent.patch('/profile').send({ palette: 'LAVANDA' });
+    expect(saved.status).toBe(200);
+    expect(saved.body.profile).toMatchObject({ palette: 'LAVANDA', fullName: 'Paula Fictícia da Silva' });
+    expect((await agent.get('/auth/me')).body.user.palette).toBe('LAVANDA');
+  });
+
+  it('a lista do Zod é a mesma do enum do banco', () => {
+    expect([...PALETTES]).toEqual(Object.values(Palette));
+  });
+
+  it('corpo vazio não muda nada: 400', async () => {
+    const agent = await loginAgent(PATIENT);
+    expect((await agent.patch('/profile').send({})).status).toBe(400);
+  });
+
+  it('só as paletas do Faísca', async () => {
+    const agent = await loginAgent(THERAPIST);
+
+    expect((await agent.patch('/profile').send({ palette: 'VERMELHO' })).status).toBe(400);
+    expect((await agent.patch('/profile').send({ palette: null })).status).toBe(400);
+    expect((await agent.patch('/profile').send({ palette: 'ALTO_CONTRASTE' })).body.profile.palette).toBe(
+      'ALTO_CONTRASTE',
+    );
   });
 });
 
