@@ -8,6 +8,8 @@ import { PrivacyUpdateBanner } from '../features/auth/privacy-consent';
 import { statusBadge } from '../features/appointments/agenda-format';
 import type { ListedPatient } from '../features/links/links-api';
 import { usePatientSummary } from '../features/therapist/use-therapist';
+import { Avatar } from '../features/profile/avatar';
+import { avatarUrls } from '../features/profile/profile-api';
 
 // Selo da agenda (DEC-045): "em pausa", "encerrada" ou "sem agenda". Vem do resumo de cada
 // paciente, que já passa pela checagem de vínculo; se não carregar, o item só fica sem selo.
@@ -25,7 +27,12 @@ function PatientItem({ patient }: { patient: ListedPatient }) {
         to={`/pacientes/${patient.id}`}
         className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft transition hover:border-primary"
       >
-        <span className="flex min-w-0 flex-col gap-1">
+        <Avatar
+          name={patient.name}
+          src={patient.avatarVersion ? avatarUrls.patient(patient.id, patient.avatarVersion) : null}
+          size="sm"
+        />
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-lg font-semibold text-primary-text">{patient.name}</span>
           <span className="break-all text-muted">{patient.email}</span>
           <span className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</span>

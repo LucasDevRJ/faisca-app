@@ -43,19 +43,16 @@ Para o paciente:
 Para a psicóloga:
 - Vê os registros dos pacientes vinculados, por ciclo da consulta ou por semana, com gráficos.
 - Tem acesso **só de leitura**: nunca altera o que o paciente escreveu.
+- Marca os registros como **lidos** e vê, fora do ciclo, tudo o que ainda está para ler.
 
 Para todos:
 - Tema claro e escuro, visual calmo (verde-sálvia, tons quentes), pensado para o celular, com
   campos de alto contraste.
-- Card de **Novidades** com as melhorias do app.
-
-## Chegando agora (em fase final)
-- **"Lido" da psicóloga:** marcar os registros já lidos e ver, fora do ciclo, o que está para ler.
-- **"O que há de novo":** uma página com o histórico das novidades do app.
-- **Perfil:** foto e nome completo (a parte do servidor já está no ar; as telas vêm a seguir).
+- Card de **Novidades** com as melhorias do app, e a página "O que há de novo" com o histórico.
+- **Perfil:** foto (com recorte) e nome completo, e **cinco paletas de cores** à escolha (Sálvia,
+  Lavanda, Oceano, Areia e Alto contraste), que valem em qualquer aparelho.
 
 ## Em breve (divulgar como "em desenvolvimento", nunca como pronto)
-- Paletas de cores à escolha, incluindo uma de alto contraste.
 - Notificações e lembretes pelo canal que a pessoa preferir (e-mail, notificação no celular ou
   WhatsApp), sempre com texto neutro e com horário de silêncio.
 - Ajustes de acessibilidade para pessoas neurodivergentes (TEA, TDAH, dislexia, ansiedade):

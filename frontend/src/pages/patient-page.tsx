@@ -50,6 +50,8 @@ import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { ThoughtRecordCard } from '../features/thought-records/thought-record-card';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
+import { Avatar } from '../features/profile/avatar';
+import { avatarUrls } from '../features/profile/profile-api';
 
 // Aba na URL (?aba=pensamentos ou ?aba=tensao), junto com o período (DEC-040, DEC-043).
 // Sem ?aba, Atividades. ?aba=para-ler é a visão dos registros para ler, fora do ciclo (DEC-058).
@@ -181,10 +183,17 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
         ‹ Meus pacientes
       </Link>
 
-      <section className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold break-words sm:text-4xl">{patient.name}</h1>
-        <p className="break-all text-muted">{patient.email}</p>
-        <p className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</p>
+      <section className="flex items-center gap-4">
+        <Avatar
+          name={patient.name}
+          src={patient.avatarVersion ? avatarUrls.patient(patient.id, patient.avatarVersion) : null}
+          size="lg"
+        />
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="text-3xl font-bold break-words sm:text-4xl">{patient.name}</h1>
+          <p className="break-all text-muted">{patient.email}</p>
+          <p className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</p>
+        </div>
       </section>
 
       <section

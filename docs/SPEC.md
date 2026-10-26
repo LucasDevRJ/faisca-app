@@ -22,6 +22,9 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - **Paleta de cores** (DEC-063, DEC-068): Sálvia (padrão), Lavanda, Oceano, Areia ou Alto contraste, salva na
   conta e combinada com o tema claro, escuro ou automático. Escolhida em **Conta → Seu perfil**, junto
   com o nome completo: ao tocar numa paleta, as cores mudam na hora, como prévia, e só ficam ao salvar.
+- **Foto de perfil** (DEC-069): em Seu perfil, escolhida e recortada num círculo antes de enviar; sem
+  foto, um círculo com as iniciais. Aparece no cartão do vínculo (a da terapeuta, para o paciente) e na
+  lista e na página do paciente (para a terapeuta).
 
 ## Atividades
 ### Estados

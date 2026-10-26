@@ -10,7 +10,8 @@ export type LinkStatus = {
     createdAt: string;
     // false = o paciente ainda não viu o aviso de novo vínculo.
     seen: boolean;
-    therapist: { name: string; email: string };
+    // avatarVersion: quando a foto dela mudou, ou null sem foto (DEC-061).
+    therapist: { name: string; email: string; avatarVersion: string | null };
   } | null;
   invite: { id: string; therapistEmail: string; createdAt: string } | null;
   // O código em si não volta: o banco só guarda o hash. Aparece só na resposta de quando é gerado.
@@ -19,7 +20,7 @@ export type LinkStatus = {
 
 export type GeneratedCode = { code: string; expiresAt: string };
 
-export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string };
+export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string; avatarVersion: string | null };
 // Na lista de pacientes: quantos registros a terapeuta ainda tem para ler (DEC-057).
 export type ListedPatient = LinkedPatient & { unreadCount: number };
 

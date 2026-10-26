@@ -65,7 +65,9 @@ describe('/conta: Seu perfil', () => {
 
     await user.click(within(section).getByRole('button', { name: 'Salvar perfil' }));
     await waitFor(() => expect(patches).toEqual([{ fullName: 'Ana Fictícia da Silva', palette: 'LAVANDA' }]));
-    expect(await within(section).findByRole('status')).toHaveTextContent('Pronto, perfil salvo.');
+    await waitFor(() =>
+      expect(within(section).getAllByRole('status').map((status) => status.textContent)).toContain('Pronto, perfil salvo.'),
+    );
     expect(document.documentElement.dataset.palette).toBe('lavanda');
     expect(localStorage.getItem('faisca:palette')).toBe('lavanda');
   });

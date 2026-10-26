@@ -27,7 +27,7 @@ afterEach(() => {
 });
 
 const summary: PatientSummary = {
-  patient: { id: PATIENT_ID, name: 'Paula Fictícia', email: 'paula@faisca.test', linkedAt: '2026-09-01T15:00:00.000Z' },
+  patient: { id: PATIENT_ID, name: 'Paula Fictícia', email: 'paula@faisca.test', linkedAt: '2026-09-01T15:00:00.000Z', avatarVersion: null },
   today: TODAY,
   lastAppointment: null,
   nextAppointment: null,
@@ -309,12 +309,13 @@ describe('lista de pacientes e Novidades', () => {
       http.get('*/api/links/patients', () =>
         HttpResponse.json({
           patients: [
-            { id: PATIENT_ID, name: 'Paula Fictícia', email: 'paula@faisca.test', linkedAt: '2026-09-01T15:00:00.000Z', unreadCount: 4 },
+            { id: PATIENT_ID, name: 'Paula Fictícia', email: 'paula@faisca.test', linkedAt: '2026-09-01T15:00:00.000Z', avatarVersion: null, unreadCount: 4 },
             {
               id: '00000000-0000-4000-8000-00000000000b',
               name: 'Pedro Fictício',
               email: 'pedro@faisca.test',
               linkedAt: '2026-09-02T15:00:00.000Z',
+              avatarVersion: null,
               unreadCount: 0,
             },
           ],
