@@ -1282,6 +1282,25 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a foto de perfil fica para o próximo PR (recorte com react-easy-crop). Ao
   sair da conta, a paleta da última pessoa continua no aparelho até a próxima entrar.
 
+## DEC-069 — Foto de perfil (telas)
+- **Decisão:**
+  - em **Seu perfil**, acima do nome: a foto num **círculo com anel na cor principal da paleta**;
+    sem foto (ou se ela não carregar), as **iniciais** do nome no mesmo círculo (só letras: "Ana
+    (fictícia)" vira "AF"). Botões "Escolher foto" / "Trocar foto" e "Remover foto", com confirmação;
+  - ao escolher, abre o **recorte** (react-easy-crop 6.2.4, aprovado pelo usuário): círculo,
+    arrastar para posicionar e zoom pelo controle ou com dois dedos. O app desenha só o pedaço
+    escolhido num quadrado de 512 px e envia em JPEG; a API recorta de novo, reduz a 256 px e tira os
+    metadados (DEC-061). O seletor pede só JPEG, PNG e WebP, para o iPhone converter a HEIC;
+  - a foto salva na hora (sem o "Salvar perfil"), porque já passou pela confirmação do recorte;
+  - onde aparece: a da **terapeuta** no cartão do vínculo, em Conta (ajuda a conferir que é a pessoa
+    certa); a do **paciente** na lista "Meus pacientes" e no topo da página dele, para a terapeuta. A
+    imagem é decorativa (o nome está sempre ao lado em texto), sem texto alternativo próprio;
+  - o aviso de privacidade cita a foto e quem a vê, **sem versão nova** (DEC-061).
+- **Motivo:** fechar o perfil básico (#83) com o menor risco: a imagem é tratada no servidor e só
+  aparece para quem tem vínculo.
+- **Limite conhecido:** a foto só aparece nos lugares acima; no topo do app (perto de "Conta") fica
+  para depois, se fizer falta.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

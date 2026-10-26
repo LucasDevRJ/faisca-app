@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import type { SessionUser } from '../auth/auth-api';
 import { SESSION_QUERY_KEY, useSession } from '../auth/use-session';
 import { applyPalette } from './palettes';
-import { fetchProfile, updateProfile } from './profile-api';
+import { deleteAvatar, fetchProfile, updateProfile, uploadAvatar, type Profile } from './profile-api';
 
 export const PROFILE_KEY = ['profile'] as const;
 
@@ -22,6 +22,23 @@ export function useUpdateProfile() {
         user ? { ...user, palette: profile.palette } : user,
       );
     },
+  });
+}
+
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: uploadAvatar,
+    onSuccess: (profile) => queryClient.setQueryData(PROFILE_KEY, profile),
+  });
+}
+
+export function useDeleteAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAvatar,
+    onSuccess: () =>
+      queryClient.setQueryData<Profile>(PROFILE_KEY, (profile) => (profile ? { ...profile, avatarVersion: null } : profile)),
   });
 }
 

@@ -13,6 +13,7 @@ const patient = {
   name: 'Paula Fictícia',
   email: 'paula@faisca.test',
   linkedAt: '2026-09-28T15:00:00.000Z',
+  avatarVersion: null,
 };
 
 describe('/convite', () => {
@@ -151,7 +152,7 @@ describe('aviso de novo vínculo em /registros', () => {
       method: 'CODE',
       createdAt: '2026-09-28T15:00:00Z',
       seen: false,
-      therapist: { name: 'Tereza Fictícia', email: 'tereza@faisca.test' },
+      therapist: { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null },
     },
     invite: null,
     code: null,

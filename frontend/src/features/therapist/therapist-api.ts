@@ -20,7 +20,7 @@ export type Highlight = {
 export type SessionWhen = { date: string; time: string | null; kind: 'RECORRENTE' | 'AVULSA' };
 
 export type PatientSummary = {
-  patient: { id: string; name: string; email: string; linkedAt: string };
+  patient: { id: string; name: string; email: string; linkedAt: string; avatarVersion: string | null };
   // O "hoje" da API, no fuso de São Paulo: a tela usa o mesmo dia do destaque.
   today: string;
   // Só quando e de que tipo: os motivos ficam na agenda, que pede o aceite (DEC-045).

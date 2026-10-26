@@ -7,7 +7,7 @@ import { renderRoute } from '../test/render';
 import { apiError, fakeUser, loggedIn, server } from '../test/server';
 
 // Terapeuta fictícia (regra 5).
-const therapist = { name: 'Tereza Fictícia', email: 'tereza@faisca.test' };
+const therapist = { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null };
 const noLink: LinkStatus = { link: null, invite: null, code: null };
 
 function linkStatus(status: LinkStatus) {

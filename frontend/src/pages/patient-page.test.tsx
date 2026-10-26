@@ -21,7 +21,7 @@ function appointment(date: string): SessionWhen {
 
 function summary(overrides: Partial<PatientSummary> = {}): PatientSummary {
   return {
-    patient: { id: PATIENT_ID, name: 'Paula Fictícia', email: 'paula@faisca.test', linkedAt: '2026-09-01T15:00:00.000Z' },
+    patient: { id: PATIENT_ID, name: 'Paula Fictícia', email: 'paula@faisca.test', linkedAt: '2026-09-01T15:00:00.000Z', avatarVersion: null },
     today: TODAY,
     lastAppointment: appointment('2026-09-17'),
     nextAppointment: appointment('2026-09-28'),

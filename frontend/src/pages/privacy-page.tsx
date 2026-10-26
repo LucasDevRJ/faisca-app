@@ -14,8 +14,9 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
-// (DEC-058): um dado de trabalho dela, que o paciente não vê. E também para o nome completo e a
-// paleta do perfil (DEC-061, DEC-068): dados pessoais da própria conta, que não são de saúde.
+// (DEC-058): um dado de trabalho dela, que o paciente não vê. E também para o nome completo, a
+// paleta e a foto do perfil (DEC-061, DEC-068, DEC-069): dados pessoais da própria conta, que não são
+// de saúde.
 const VERSION_LABEL = 'versão 6, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
@@ -61,7 +62,8 @@ export function PrivacyPage() {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li>
               Da sua conta: nome, e-mail e senha. A senha é guardada de um jeito que nem nós conseguimos ler. Se
-              você quiser, também o nome completo e a paleta de cores que escolher no seu perfil.
+              você quiser, também o nome completo, a paleta de cores e uma foto de perfil. A foto é guardada
+              pequena e sem os dados escondidos, como o lugar onde foi tirada.
             </li>
             <li>O que você registra: atividades, datas, notas de 0 a 10 e observações.</li>
             <li>
@@ -120,7 +122,11 @@ export function PrivacyPage() {
               hora. A terapeuta pode marcar os seus registros como lidos, para se organizar. Essa marca é
               só dela: você não a vê.
             </li>
-            <li>Se você é terapeuta, o seu nome e o seu e-mail aparecem para os pacientes vinculados.</li>
+            <li>
+              Se você é terapeuta, o seu nome, o seu e-mail e a sua foto de perfil, se tiver, aparecem para os
+              pacientes vinculados. Se você é paciente, a sua foto de perfil, se tiver, aparece para a terapeuta
+              vinculada.
+            </li>
           </ul>
         </Section>
 

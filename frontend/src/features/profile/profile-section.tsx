@@ -5,13 +5,16 @@ import { choiceCardClasses } from '../../components/ui/field-styles';
 import { TextField } from '../../components/ui/text-field';
 import { getApiError } from '../auth/auth-api';
 import { useSession } from '../auth/use-session';
+import { AvatarEditor } from './avatar-editor';
 import { applyPalette, PALETTE_OPTIONS, type Palette } from './palettes';
 import { FULL_NAME_MAX, type Profile } from './profile-api';
 import { useProfile, useUpdateProfile } from './use-profile';
 
-// "Seu perfil", em Conta (DEC-061, DEC-063, DEC-068): nome completo e paleta de cores, tudo opcional.
+// "Seu perfil", em Conta (DEC-061, DEC-063, DEC-068, DEC-069): foto, nome completo e paleta de
+// cores, tudo opcional. A foto salva na hora; nome e paleta, no "Salvar perfil".
 export function ProfileSection() {
   const profile = useProfile();
+  const { data: user } = useSession();
 
   return (
     <section aria-labelledby="profile-title" className="flex flex-col gap-3">
@@ -20,7 +23,12 @@ export function ProfileSection() {
       </h2>
       {profile.isPending && <p className="text-muted">Carregando seu perfil…</p>}
       {profile.isError && <Alert tone="attention">{getApiError(profile.error).message}</Alert>}
-      {profile.data && <ProfileForm profile={profile.data} />}
+      {profile.data && (
+        <div className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6">
+          <AvatarEditor profile={profile.data} name={user?.name ?? ''} />
+          <ProfileForm profile={profile.data} />
+        </div>
+      )}
     </section>
   );
 }
@@ -50,7 +58,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 border-t border-border pt-5">
       {update.isError && !nameError && <Alert tone="attention">{getApiError(update.error).message}</Alert>}
 
       <TextField

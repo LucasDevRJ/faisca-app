@@ -12,6 +12,7 @@ const patient: LinkedPatient = {
   name: 'Paula Fictícia',
   email: 'paula@faisca.test',
   linkedAt: '2026-09-28T15:00:00.000Z',
+  avatarVersion: null,
 };
 
 beforeEach(() => {

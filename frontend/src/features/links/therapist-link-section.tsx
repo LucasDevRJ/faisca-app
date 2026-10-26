@@ -6,6 +6,8 @@ import { formatDate, formatDateTime } from './link-format';
 import type { GeneratedCode, LinkStatus } from './links-api';
 import { InviteDialog, RevokeLinkDialog } from './link-dialogs';
 import { useCancelInvite, useGenerateLinkCode, useLinkStatus } from './use-links';
+import { Avatar } from '../profile/avatar';
+import { avatarUrls } from '../profile/profile-api';
 
 // "Minha terapeuta" em /conta (SPEC, "Vínculo"). A tela segue a situação que a API devolve:
 // vínculo ativo, convite pendente, código gerado agora ou nada ainda.
@@ -64,14 +66,22 @@ function LinkState({ status, generated, generating, generateError, onGenerate, o
     const { therapist, createdAt } = status.link;
     return (
       <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-soft">
-        <dl className="flex flex-col gap-1">
-          <dt className="sr-only">Nome</dt>
-          <dd className="text-lg font-semibold">{therapist.name}</dd>
-          <dt className="sr-only">E-mail</dt>
-          <dd className="break-all text-muted">{therapist.email}</dd>
-          <dt className="sr-only">Vínculo desde</dt>
-          <dd className="text-sm text-muted">Acompanha seus registros desde {formatDate(createdAt)}</dd>
-        </dl>
+        <div className="flex items-center gap-4">
+          {/* A foto ajuda a conferir que é a pessoa certa (DEC-061). */}
+          <Avatar
+            name={therapist.name}
+            src={therapist.avatarVersion ? avatarUrls.myTherapist(therapist.avatarVersion) : null}
+            size="md"
+          />
+          <dl className="flex min-w-0 flex-col gap-1">
+            <dt className="sr-only">Nome</dt>
+            <dd className="text-lg font-semibold">{therapist.name}</dd>
+            <dt className="sr-only">E-mail</dt>
+            <dd className="break-all text-muted">{therapist.email}</dd>
+            <dt className="sr-only">Vínculo desde</dt>
+            <dd className="text-sm text-muted">Acompanha seus registros desde {formatDate(createdAt)}</dd>
+          </dl>
+        </div>
         <p className="text-sm text-muted">
           O acesso é só de leitura: atividades, Registro de Pensamentos, Episódios de tensão, Ação (com as
           fotos) e consultas, sem alterar nada.
