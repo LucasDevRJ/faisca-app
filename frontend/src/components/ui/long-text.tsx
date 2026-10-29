@@ -32,7 +32,8 @@ export function LongText({ text }: { text: string }) {
         aria-expanded={expanded}
         aria-controls={id}
         onClick={() => setExpanded((value) => !value)}
-        className="rounded-sm text-sm font-medium text-primary-text underline underline-offset-4"
+        // 44 px de altura para o toque no celular; a margem negativa mantém o espaço do texto.
+        className="-my-3 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-primary-text underline underline-offset-4"
       >
         {expanded ? 'Ver menos' : 'Ver mais'}
       </button>

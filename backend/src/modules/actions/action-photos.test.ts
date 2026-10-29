@@ -60,10 +60,13 @@ function seedAction(userId: string, data: Partial<BehavioralAction> = {}) {
   });
 }
 
-// Uma "foto de celular" fictícia, maior que a foto guardada, com metadados de câmera.
+// Uma "foto de celular" fictícia, maior que a foto guardada, com metadados de câmera e uma
+// localização fictícia no XMP (onde alguns celulares também guardam o GPS).
+const FAKE_XMP = "<x:xmpmeta xmlns:x='adobe:ns:meta/'><rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'><rdf:Description xmlns:exif='http://ns.adobe.com/exif/1.0/' exif:GPSLatitude='22,54.0S'/></rdf:RDF></x:xmpmeta>";
 function cameraPhoto(width = 3000, height = 2000) {
   return sharp({ create: { width, height, channels: 3, background: '#8fa9b8' } })
     .withExif({ IFD0: { Make: 'Camera Ficticia' } })
+    .withXmp(FAKE_XMP)
     .jpeg()
     .toBuffer();
 }
@@ -109,6 +112,8 @@ describe('adicionar e remover fotos', () => {
     const fullMeta = await sharp(full.body as Buffer).metadata();
     expect([full.headers['content-type'], fullMeta.width, fullMeta.height]).toEqual(['image/webp', 2560, 1707]);
     expect(fullMeta.exif).toBeUndefined();
+    expect(fullMeta.xmp).toBeUndefined();
+    expect(fullMeta.iptc).toBeUndefined();
     // Dado de saúde: nada fica no cache do aparelho (DEC-066).
     expect(full.headers['cache-control']).toBe('no-store');
     const thumb = await agent.get(`/actions/${action.id}/photos/${res.body.photo.id}`).buffer(true);
@@ -212,6 +217,21 @@ describe('adicionar e remover fotos', () => {
       .set('Content-Type', 'image/jpeg')
       .send(Buffer.alloc(20 * 1024 * 1024 + 1));
     expect(big.status).toBe(413);
+  });
+
+  it('"bomba de imagem": arquivo pequeno com mais de 50 MP é recusado antes de abrir', async () => {
+    const action = await seedAction(patientId);
+    const agent = await loginAgent(PATIENT);
+    // ~50,1 MP numa cor só: o PNG fica com poucos KB, mas descomprimido passaria de 150 MB.
+    const bomb = await sharp({ create: { width: 7080, height: 7080, channels: 3, background: '#000' } })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+    expect(bomb.length).toBeLessThan(1024 * 1024);
+
+    const res = await agent.post(`/actions/${action.id}/photos`).set('Content-Type', 'image/png').send(bomb);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('INVALID_IMAGE');
+    expect(await prisma.actionPhoto.count()).toBe(0);
   });
 });
 

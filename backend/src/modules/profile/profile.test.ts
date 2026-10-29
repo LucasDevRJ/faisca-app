@@ -40,6 +40,8 @@ async function loginAgent(email: string) {
 function cameraPhoto() {
   return sharp({ create: { width: 800, height: 600, channels: 3, background: '#4f6f58' } })
     .withExif({ IFD0: { Make: 'Camera Ficticia', Copyright: 'Pessoa Ficticia' } })
+    // Localização fictícia no XMP, onde alguns celulares também guardam o GPS.
+    .withXmp("<x:xmpmeta xmlns:x='adobe:ns:meta/'><rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'><rdf:Description xmlns:exif='http://ns.adobe.com/exif/1.0/' exif:GPSLatitude='22,54.0S'/></rdf:RDF></x:xmpmeta>")
     .jpeg()
     .toBuffer();
 }
@@ -128,6 +130,8 @@ describe('foto de perfil', () => {
     const meta = await sharp(res.body as Buffer).metadata();
     expect([meta.format, meta.width, meta.height]).toEqual(['webp', 256, 256]);
     expect(meta.exif).toBeUndefined();
+    expect(meta.xmp).toBeUndefined();
+    expect(meta.iptc).toBeUndefined();
   });
 
   it('o tipo é conferido pelo conteúdo, e não pelo Content-Type', async () => {
