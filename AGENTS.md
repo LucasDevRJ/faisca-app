@@ -13,8 +13,8 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
 - `docs/`: SPEC, DECISIONS, DEPLOY (passo a passo do deploy e da troca de segredos) e
   APRESENTACAO (o que o Faísca é, para divulgação; atualizar quando uma funcionalidade entra no ar).
-- `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-migration`, `nova-decisao`,
-  `finalizar-mudanca` e `deploy-checklist`).
+- `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-tela`, `nova-migration`,
+  `nova-decisao`, `finalizar-mudanca` e `deploy-checklist`).
 - `.claude/agents/`: subagentes do projeto (`revisor-regras` para as regras invioláveis e
   `revisor-telas` para tom, cores, contraste, acessibilidade e celular).
 - `.claude/settings.json` e `.claude/hooks/`: permissões e hooks do Claude Code (bloqueiam `.env`,

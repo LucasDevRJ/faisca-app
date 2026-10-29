@@ -17,6 +17,10 @@
 - Campos e opções usam `fieldClasses` e `choiceCardClasses` (`components/ui/field-styles.ts`) e o
   erro usa `FieldError`; a borda de campo é `border-field-border` (3:1), nunca a dos cartões (DEC-059).
 
+## Passo a passo
+- Tela nova ou alterada: siga a skill `nova-tela` (quem vê, aceite, dados, visual,
+  acessibilidade, celular, testes e conferência no navegador).
+
 ## Tom
 - Textos acolhedores: "Conta como foi?" em vez de "Tarefa pendente";
   "Tudo bem, quer contar o que aconteceu?" para atividade não realizada.
