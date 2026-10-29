@@ -1301,6 +1301,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a foto só aparece nos lugares acima; no topo do app (perto de "Conta") fica
   para depois, se fizer falta.
 
+## DEC-070 — Proteção da main com CI obrigatório
+- **Decisão:**
+  - a `main` passa a exigir **PR** (sem aprovação de outra pessoa: o projeto tem um dono só) e o CI
+    verde nos quatro jobs: `backend`, `frontend`, `playwright` e `migrations`;
+  - a branch **não** precisa estar atualizada com a `main` para o merge: senão cada merge obrigaria
+    a atualizar e rodar de novo o CI dos outros PRs abertos;
+  - force push e exclusão da `main` ficam bloqueados;
+  - a regra **não** vale para administradores: o dono mantém uma saída para correção de emergência;
+  - os quatro workflows rodam em **todo PR**, com um job `changes` que confere se o PR mexe na área;
+    se não mexe, o job principal é pulado, e o GitHub conta pulado como aprovado (PR #111). Sem
+    isso, um PR que não toca numa área esperaria para sempre pelo resultado dela;
+  - com a proteção, o **merge automático** do GitHub passa a funcionar: ligado no PR, o merge
+    acontece sozinho quando o CI fica verde.
+- **Motivo:** item 2 do plano de Engenharia de Contexto (#92, #77). Nenhum código entra na `main`
+  sem passar pelo CI, e o merge deixa de depender de alguém lembrar de conferir os checks.
+- **Limite conhecido:** o dono ainda pode contornar a regra como administrador; isso fica
+  reservado a emergências, e o hook do Claude Code continua bloqueando force push na `main`.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
