@@ -182,6 +182,9 @@ acompanhar, conferir e avisar quem usa. **Mudança de contrato da API vai em doi
 do front** (DEC-056), porque a Vercel publica minutos antes do Railway. O `/health` devolve o
 commit no ar (`version`), para conferir que a API nova já entrou.
 
+- **Proteção da `main` (DEC-070):** só entra por PR, com os quatro jobs do CI verdes (`backend`,
+  `frontend`, `playwright`, `migrations`; os que não têm a ver com o PR aparecem como pulados). Com
+  o merge automático ligado no PR, ele entra sozinho quando o CI fica verde.
 - **Merge na `main`:**
   - o Railway espera o CI, roda as migrations no pre-deploy e só troca a versão se o healthcheck
     passar. Se a migration falhar, a versão anterior continua no ar;
