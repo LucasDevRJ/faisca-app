@@ -2,9 +2,6 @@ name: Frontend CI
 
 on:
   pull_request:
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
   push:
     branches: [main]
     paths:
@@ -15,7 +12,36 @@ permissions:
   contents: read
 
 jobs:
+  # Proteção da main (#77): o job principal precisa dar resultado em todo PR, senão o GitHub
+  # espera para sempre. Este job confere se o PR mexeu na área; se não mexeu, o principal é
+  # pulado (o GitHub conta pulado como aprovado) e ninguém espera teste à toa.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.diff.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: diff
+        name: O PR mexe nesta área?
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BASE"...HEAD | grep -qE '^(frontend/|\.github/workflows/frontend-ci\.yml$)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Nada desta área mudou: o job principal fica pulado."
+          fi
+
   frontend:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
