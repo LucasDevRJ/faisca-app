@@ -102,6 +102,14 @@ model AuthToken {
   usedAt    DateTime?
   createdAt DateTime      @default(now())
 
+  // Confirmação de e-mail (DEC-072): os dados do cadastro que gerou este link. Confirmar aplica
+  // esses dados na conta, e não os do primeiro cadastro. Assim, quem se cadastra antes com o
+  // e-mail de outra pessoa não fica com a senha dela. Vazios nos outros tipos de link.
+  pendingPasswordHash String?
+  pendingName         String?
+  pendingPatient      Boolean?
+  pendingTherapist    Boolean?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, type])

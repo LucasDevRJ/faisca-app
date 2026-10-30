@@ -13,6 +13,15 @@ export function createAuthRoutes(mailer: Mailer) {
 
   // Limites da DEC-025. Os de e-mail valem por endereço e por IP ao mesmo tempo.
   const signupLimit = createRateLimit({ windowMinutes: 60, limit: 5, key: 'ip' });
+  // Tetos do cadastro por e-mail (DEC-072). O curto conta e-mail e IP juntos, para outra pessoa
+  // não gastar a cota da dona do e-mail; o folgado, só por e-mail, barra quem troca de "IP" para
+  // mandar e-mails sem fim a alguém.
+  const signupEmailLimits = [
+    createRateLimit({ windowMinutes: 60, limit: 3, key: 'ip+email' }),
+    createRateLimit({ windowMinutes: 60, limit: 10, key: 'email' }),
+  ];
+  // A confirmação confere a senha do cadastro (DEC-072): limite de erros por IP.
+  const confirmLimit = createRateLimit({ windowMinutes: 15, limit: 10, key: 'ip', onlyFailures: true });
   const loginLimit = createRateLimit({
     windowMinutes: 15,
     limit: 10,
@@ -31,8 +40,8 @@ export function createAuthRoutes(mailer: Mailer) {
     createRateLimit({ windowMinutes: 60, limit: 10, key: 'ip' }),
   ];
 
-  router.post('/auth/signup', signupLimit, controller.signup);
-  router.post('/auth/confirm-email', controller.confirmEmail);
+  router.post('/auth/signup', ...signupEmailLimits, signupLimit, controller.signup);
+  router.post('/auth/confirm-email', confirmLimit, controller.confirmEmail);
   router.post('/auth/resend-confirmation', ...emailLimits(), controller.resendConfirmation);
   router.post('/auth/login', loginEmailLimit, loginLimit, controller.login);
   router.post('/auth/logout', controller.logout);

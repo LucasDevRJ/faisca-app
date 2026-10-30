@@ -198,8 +198,174 @@ describe('POST /auth/confirm-email', () => {
   });
 });
 
+// Tomada de conta antes da confirmação (DEC-072): alguém se cadastra primeiro com o e-mail de
+// outra pessoa e uma senha que só ele conhece. Confirmar precisa aplicar o cadastro do link
+// clicado, e não o primeiro.
+describe('cadastro de outra pessoa com o mesmo e-mail, antes da confirmação (DEC-072)', () => {
+  const INTRUDER_PASSWORD = 'senha-do-intruso-123';
+  const intruderBody = {
+    ...signupBody,
+    name: 'Intruso Fictício',
+    password: INTRUDER_PASSWORD,
+    profiles: { patient: true, therapist: true },
+  };
+
+  it('quem se cadastrou antes não fica com a conta: vale a senha do cadastro confirmado', async () => {
+    await request(app).post('/auth/signup').send(intruderBody);
+    const intruderToken = mailer.lastTokenTo(EMAIL);
+    await request(app).post('/auth/signup').send(signupBody);
+    const ownerToken = mailer.lastTokenTo(EMAIL);
+    expect(ownerToken).not.toBe(intruderToken);
+
+    expect((await request(app).post('/auth/confirm-email').send({ token: ownerToken })).status).toBe(204);
+
+    const intruder = await request(app).post('/auth/login').send({ email: EMAIL, password: INTRUDER_PASSWORD });
+    expect(intruder.status).toBe(401);
+    await loginAgent();
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
+    expect([user.name, user.hasPatientProfile, user.hasTherapistProfile]).toEqual(['Ana Fictícia', true, false]);
+    // O link do outro cadastro deixou de valer e não troca mais a senha.
+    expect((await request(app).post('/auth/confirm-email').send({ token: intruderToken })).status).toBe(400);
+    await loginAgent();
+  });
+
+  it('um cadastro depois do seu não invalida o seu link', async () => {
+    await request(app).post('/auth/signup').send(signupBody);
+    const ownerToken = mailer.lastTokenTo(EMAIL);
+    await request(app).post('/auth/signup').send(intruderBody);
+
+    expect((await request(app).post('/auth/confirm-email').send({ token: ownerToken })).status).toBe(204);
+    expect((await request(app).post('/auth/login').send({ email: EMAIL, password: INTRUDER_PASSWORD })).status).toBe(401);
+    await loginAgent();
+  });
+
+  it('o e-mail de cada cadastro cumprimenta pelo nome daquele cadastro', async () => {
+    await request(app).post('/auth/signup').send(intruderBody);
+    await request(app).post('/auth/signup').send(signupBody);
+
+    expect(mailer.lastTo(EMAIL)?.text).toContain('Ana Fictícia');
+  });
+
+  it('confirmar derruba sessões de antes da confirmação', async () => {
+    await request(app).post('/auth/signup').send(signupBody);
+    const before = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
+
+    await request(app).post('/auth/confirm-email').send({ token: mailer.lastTokenTo(EMAIL) });
+
+    const after = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
+    expect(after.sessionVersion).toBe(before.sessionVersion + 1);
+  });
+
+  it('com cadastros diferentes pendentes, o reenvio não manda nada (quem pediu refaz o cadastro)', async () => {
+    await request(app).post('/auth/signup').send(signupBody);
+    await request(app).post('/auth/signup').send(intruderBody);
+    const sentBefore = mailer.sent.length;
+
+    const res = await request(app).post('/auth/resend-confirmation').send({ email: EMAIL });
+
+    expect(res.status).toBe(204);
+    expect(mailer.sent).toHaveLength(sentBefore);
+  });
+
+  it('cada link novo apaga os vencidos da conta (sem guardar senha além do prazo)', async () => {
+    await request(app).post('/auth/signup').send(signupBody);
+    await prisma.authToken.updateMany({ data: { expiresAt: new Date(Date.now() - 1000) } });
+
+    await request(app).post('/auth/signup').send(signupBody);
+
+    expect(await prisma.authToken.count()).toBe(1);
+  });
+
+  it('com a senha: o link de outro cadastro não confirma com a sua senha, e o link não se gasta', async () => {
+    await request(app).post('/auth/signup').send(intruderBody);
+    const intruderToken = mailer.lastTokenTo(EMAIL);
+    await request(app).post('/auth/signup').send(signupBody);
+    const ownerToken = mailer.lastTokenTo(EMAIL);
+
+    const wrong = await request(app).post('/auth/confirm-email').send({ token: intruderToken, password: PASSWORD });
+    expect(wrong.status).toBe(400);
+    expect(wrong.body.error.code).toBe('WRONG_SIGNUP_PASSWORD');
+    expect((await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } })).emailConfirmedAt).toBeNull();
+
+    expect((await request(app).post('/auth/confirm-email').send({ token: ownerToken, password: PASSWORD })).status).toBe(204);
+    expect((await request(app).post('/auth/login').send({ email: EMAIL, password: INTRUDER_PASSWORD })).status).toBe(401);
+    await loginAgent();
+  });
+
+  it('com a senha errada, o próprio link continua valendo para tentar de novo', async () => {
+    await request(app).post('/auth/signup').send(signupBody);
+    const token = mailer.lastTokenTo(EMAIL);
+
+    expect((await request(app).post('/auth/confirm-email').send({ token, password: 'outra-senha-123' })).status).toBe(400);
+    expect((await request(app).post('/auth/confirm-email').send({ token, password: PASSWORD })).status).toBe(204);
+  });
+
+  it('links vencidos: o reenvio não manda nada (quem pediu refaz o cadastro)', async () => {
+    await request(app).post('/auth/signup').send(intruderBody);
+    await request(app).post('/auth/signup').send(signupBody);
+    await prisma.authToken.updateMany({ data: { expiresAt: new Date(Date.now() - 1000) } });
+    const sentBefore = mailer.sent.length;
+
+    await request(app).post('/auth/resend-confirmation').send({ email: EMAIL });
+
+    expect(mailer.sent).toHaveLength(sentBefore);
+  });
+
+  it('no máximo 3 cadastros por hora com o mesmo e-mail e IP', async () => {
+    for (let i = 0; i < 3; i++) {
+      expect((await request(app).post('/auth/signup').send(intruderBody)).status).toBe(202);
+    }
+    const res = await request(app).post('/auth/signup').send(intruderBody);
+
+    expect(res.status).toBe(429);
+  });
+
+  it('"esqueci a senha" antes de confirmar apaga os links de confirmação pendentes', async () => {
+    await request(app).post('/auth/signup').send(intruderBody);
+    await request(app).post('/auth/forgot-password').send({ email: EMAIL });
+    const resetToken = mailer.lastTokenTo(EMAIL);
+
+    await request(app).post('/auth/reset-password').send({ token: resetToken, password: 'nova-senha-da-dona-1' });
+
+    expect(await prisma.authToken.count({ where: { type: 'EMAIL_CONFIRMATION', usedAt: null } })).toBe(0);
+    await loginAgent(EMAIL, 'nova-senha-da-dona-1');
+  });
+
+  it('dois links diferentes clicados ao mesmo tempo: um confirma, o outro é recusado sem erro', async () => {
+    await request(app).post('/auth/signup').send(signupBody);
+    const first = mailer.lastTokenTo(EMAIL);
+    await request(app).post('/auth/resend-confirmation').send({ email: EMAIL });
+    const second = mailer.lastTokenTo(EMAIL);
+
+    const results = await Promise.all([
+      request(app).post('/auth/confirm-email').send({ token: first }),
+      request(app).post('/auth/confirm-email').send({ token: second }),
+    ]);
+
+    expect(results.map((r) => r.status).sort()).toEqual([204, 400]);
+  });
+
+  it('o banco recusa dados de cadastro incompletos no link (CHECK)', async () => {
+    const user = await createConfirmedUser({ email: 'outra@faisca.test' });
+    await expect(
+      prisma.authToken.create({
+        data: {
+          userId: user.id,
+          type: 'PASSWORD_RESET',
+          tokenHash: 'hash-ficticio',
+          expiresAt: new Date(Date.now() + 60_000),
+          pendingPasswordHash: 'x',
+          pendingName: 'Fictícia',
+          pendingPatient: true,
+          pendingTherapist: false,
+        },
+      }),
+    ).rejects.toThrow();
+  });
+});
+
 describe('POST /auth/resend-confirmation', () => {
-  it('envia um link novo e invalida o anterior', async () => {
+  it('envia um link novo do mesmo cadastro; confirmado por um, o outro deixa de valer (DEC-072)', async () => {
     await request(app).post('/auth/signup').send(signupBody);
     const oldToken = mailer.lastTokenTo(EMAIL);
 
@@ -207,8 +373,11 @@ describe('POST /auth/resend-confirmation', () => {
     const newToken = mailer.lastTokenTo(EMAIL);
 
     expect(res.status).toBe(204);
-    expect((await request(app).post('/auth/confirm-email').send({ token: oldToken })).status).toBe(400);
+    expect(newToken).not.toBe(oldToken);
     expect((await request(app).post('/auth/confirm-email').send({ token: newToken })).status).toBe(204);
+    expect((await request(app).post('/auth/confirm-email').send({ token: oldToken })).status).toBe(400);
+    // O reenvio leva os dados do cadastro: a senha dele é a que vale.
+    await loginAgent();
   });
 
   it('responde 204 sem enviar nada para e-mail sem conta ou já confirmado', async () => {
