@@ -1,0 +1,35 @@
+name: Audit CI (dependências)
+
+# Falhas conhecidas nas dependências que vão para produção (DEC-071). Só avisa: não está entre os
+# checks obrigatórios da main, para uma falha publicada num dia qualquer não travar todos os PRs
+# (inclusive uma correção urgente que não tem a ver com ela). Roda em todo PR e toda segunda de
+# manhã, porque falhas novas aparecem sem ninguém mexer no código.
+on:
+  pull_request:
+  schedule:
+    - cron: '0 11 * * 1' # segunda, 8h em São Paulo
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [backend, frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # Lê só o package-lock.json: não instala nada nem roda scripts de pacote.
+      - name: npm audit (produção, alta ou crítica)
+        run: npm audit --omit=dev --audit-level=high

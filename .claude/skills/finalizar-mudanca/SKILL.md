@@ -74,9 +74,11 @@ Só se mudou o que a pessoa vê:
 Rode os subagentes de revisão que se aplicam (o CLAUDE.md exige):
 - tocou em `backend/` → `revisor-regras` (as 8 regras invioláveis);
 - tocou em `frontend/src` ou nos textos de e-mail (`backend/src/modules/*/*.emails.ts`) →
-  `revisor-telas` (tom, cores, contraste, acessibilidade, celular e testes de tela).
+  `revisor-telas` (tom, cores, contraste, acessibilidade, celular e testes de tela);
+- tocou em login, sessão, senha, vínculo, envio de arquivo ou dependências (`package.json`) →
+  `revisor-seguranca` no modo diff.
 
-Os dois podem rodar ao mesmo tempo, porque só leem. Corrija o que apontarem ou leve a decisão ao
+Eles podem rodar ao mesmo tempo, porque só leem. Corrija o que apontarem ou leve a decisão ao
 usuário, e rode de novo o revisor sobre a correção.
 
 ## 7. Documentação
@@ -95,7 +97,7 @@ Mostre uma tabela com cada verificação e o resultado real:
 | Lint e typecheck | ✅ / ❌ com a mensagem |
 | Front / Backend / Playwright | quantos passaram, quantos falharam e por quê |
 | Tela | o que foi conferido |
-| `revisor-regras` / `revisor-telas` | veredito de cada um, ou "não exigido" |
+| `revisor-regras` / `revisor-telas` / `revisor-seguranca` | veredito de cada um, ou "não exigido" |
 
 Depois, proponha a mensagem de commit (Conventional Commits, em pt-BR, `Closes #N` ou `Refs #N`)
 e **peça confirmação antes de commit, push, PR ou merge**. Mande a mensagem por heredoc, porque o
