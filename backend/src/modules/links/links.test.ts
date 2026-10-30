@@ -303,6 +303,8 @@ describe('convite por e-mail', () => {
     const email = mailer.lastTo(THERAPIST);
     expect(email?.text).toContain('http://localhost:5173/convite?token=');
     expect(email?.text).toContain('Paula Fictícia');
+    // O nome fica no corpo, nunca no assunto (DEC-074).
+    expect(email?.subject).toBe('Você recebeu um convite para o Faísca');
     const stored = await prisma.linkInvite.findFirstOrThrow();
     expect(stored.tokenHash).toBe(hashToken(token));
     expect(stored.tokenHash).not.toBe(token);

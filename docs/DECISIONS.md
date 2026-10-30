@@ -1403,6 +1403,25 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   descartado (ela vê a resposta neutra e pede de novo depois); juntar pedidos iguais por e-mail
   fica para quando houver sinal de abuso.
 
+## DEC-074 — Teto de fotos por conta e convite sem o nome no assunto
+- **Decisão:**
+  - além das 10 por ação (DEC-064), **cada conta guarda até 300 fotos**, somando todas as ações. Acima
+    disso, o envio recebe 409 `ACCOUNT_PHOTO_LIMIT` com a orientação de remover uma foto de alguma
+    ação que ainda esteja no prazo. O limite é conferido antes de tratar a imagem e de novo na transação,
+    com a conta e depois a ação travadas (sempre nessa ordem), para dois envios juntos não passarem;
+  - o assunto do e-mail de convite passa a ser fixo: **"Você recebeu um convite para o Faísca"**. O
+    nome de quem convida continua no corpo, escapado, com o aviso "se não conhece quem enviou, pode
+    ignorar".
+- **Motivo:** a revisão de segurança (DEC-071) apontou que o teto por ação não segurava quem cria
+  ações sem fim: com até 20 MB enviados por foto, uma conta podia encher o Postgres do Railway e
+  derrubar o app para todos. 300 são 30 ações cheias, muito acima do uso real, e o usuário
+  escolheu esse número. O nome é escrito livremente no cadastro, então no assunto ele virava um
+  meio de mandar phishing com o domínio do Faísca (ex.: um "nome" que imita um banco).
+- **Limite conhecido:** fotos de ações com o prazo já fechado não podem ser apagadas (DEC-064), então
+  quem chegar ao teto só libera espaço nas ações ainda no prazo. Enviando várias fotos de uma vez
+  no limite, a tela repete o aviso para cada uma (mostrar uma vez só fica para um PR do front). Rever o número se alguém chegar
+  perto em uso real.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

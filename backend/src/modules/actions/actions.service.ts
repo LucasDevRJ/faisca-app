@@ -48,6 +48,9 @@ export type PublicAction = {
 
 // Fotos (DEC-064): até 10 por ação; a grande cabe em 2560 px e a miniatura é um quadrado de 400 px.
 export const MAX_PHOTOS = 10;
+// Teto por conta (DEC-074): o limite por ação não segura quem cria ações sem fim, e cada foto
+// ocupa o banco. 300 são 30 ações cheias.
+export const MAX_PHOTOS_PER_ACCOUNT = 300;
 // Câmeras de celular de até 50 MP; a fila de lib/images.ts trata uma foto por vez na API toda.
 const PHOTO_MAX_PIXELS = 50_000_000;
 const PHOTO_OUTPUTS = [
@@ -138,6 +141,14 @@ async function freezeMissingDeadlines(actions: ActionWithPhotos[], sessions: Ses
 
 function photoLimit() {
   return new AppError(409, 'PHOTO_LIMIT', `Cada ação tem espaço para até ${MAX_PHOTOS} fotos.`);
+}
+
+function accountPhotoLimit() {
+  return new AppError(
+    409,
+    'ACCOUNT_PHOTO_LIMIT',
+    `Sua conta chegou ao limite de ${MAX_PHOTOS_PER_ACCOUNT} fotos. Para adicionar outra, remova uma foto de alguma ação que ainda esteja no prazo.`,
+  );
 }
 
 function photoNotFound() {
@@ -327,13 +338,24 @@ export function createActionsService() {
     await assertPhotosOpen(userId, action);
     // Confere o limite antes de tratar a imagem, que é a parte cara; a transação confere de novo.
     if ((await prisma.actionPhoto.count({ where: { actionId: id } })) >= MAX_PHOTOS) throw photoLimit();
+    if ((await prisma.actionPhoto.count({ where: { action: { userId } } })) >= MAX_PHOTOS_PER_ACCOUNT) {
+      throw accountPhotoLimit();
+    }
     // Trata a imagem fora da transação: é a parte demorada.
     const [image, thumbnail] = await processImage(upload, PHOTO_MAX_PIXELS, PHOTO_OUTPUTS);
     const photo = await prisma.$transaction(async (tx) => {
-      // Trava a ação: dois envios ao mesmo tempo não passam juntos do limite.
-      await tx.$queryRaw`SELECT id FROM "BehavioralAction" WHERE id = ${id}::uuid FOR UPDATE`;
+      // Trava a conta e depois a ação, sempre nessa ordem: dois envios ao mesmo tempo, na mesma
+      // ação ou em ações diferentes, não passam juntos dos limites. NO KEY: não segura quem só
+      // grava em outra tabela que aponta para a conta.
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
+      const locked = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "BehavioralAction" WHERE id = ${id}::uuid FOR UPDATE`;
+      // A ação (ou a conta) foi apagada enquanto a imagem era tratada.
+      if (locked.length === 0) throw notFound();
       if ((await tx.actionPhoto.count({ where: { actionId: id } })) >= MAX_PHOTOS) {
         throw photoLimit();
+      }
+      if ((await tx.actionPhoto.count({ where: { action: { userId } } })) >= MAX_PHOTOS_PER_ACCOUNT) {
+        throw accountPhotoLimit();
       }
       const created = await tx.actionPhoto.create({
         data: { actionId: id, image: new Uint8Array(image!), thumbnail: new Uint8Array(thumbnail!) },
