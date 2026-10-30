@@ -151,8 +151,8 @@ describe('POST /auth/confirm-email', () => {
     await request(app).post('/auth/signup').send(signupBody);
     const token = mailer.lastTokenTo(EMAIL);
 
-    const first = await request(app).post('/auth/confirm-email').send({ token });
-    const second = await request(app).post('/auth/confirm-email').send({ token });
+    const first = await request(app).post('/auth/confirm-email').send({ token, password: PASSWORD });
+    const second = await request(app).post('/auth/confirm-email').send({ token, password: PASSWORD });
 
     expect(first.status).toBe(204);
     expect(second.status).toBe(400);
@@ -166,7 +166,7 @@ describe('POST /auth/confirm-email', () => {
     const token = mailer.lastTokenTo(EMAIL);
     await prisma.authToken.updateMany({ data: { expiresAt: new Date(Date.now() - 1000) } });
 
-    const res = await request(app).post('/auth/confirm-email').send({ token });
+    const res = await request(app).post('/auth/confirm-email').send({ token, password: PASSWORD });
 
     expect(res.status).toBe(400);
   });
@@ -180,7 +180,7 @@ describe('POST /auth/confirm-email', () => {
   });
 
   it('recusa token inventado', async () => {
-    const res = await request(app).post('/auth/confirm-email').send({ token: 'token-inventado' });
+    const res = await request(app).post('/auth/confirm-email').send({ token: 'token-inventado', password: PASSWORD });
 
     expect(res.status).toBe(400);
   });
@@ -190,8 +190,8 @@ describe('POST /auth/confirm-email', () => {
     const token = mailer.lastTokenTo(EMAIL);
 
     const results = await Promise.all([
-      request(app).post('/auth/confirm-email').send({ token }),
-      request(app).post('/auth/confirm-email').send({ token }),
+      request(app).post('/auth/confirm-email').send({ token, password: PASSWORD }),
+      request(app).post('/auth/confirm-email').send({ token, password: PASSWORD }),
     ]);
 
     expect(results.map((r) => r.status).sort()).toEqual([204, 400]);
@@ -217,7 +217,7 @@ describe('cadastro de outra pessoa com o mesmo e-mail, antes da confirmação (D
     const ownerToken = mailer.lastTokenTo(EMAIL);
     expect(ownerToken).not.toBe(intruderToken);
 
-    expect((await request(app).post('/auth/confirm-email').send({ token: ownerToken })).status).toBe(204);
+    expect((await request(app).post('/auth/confirm-email').send({ token: ownerToken, password: PASSWORD })).status).toBe(204);
 
     const intruder = await request(app).post('/auth/login').send({ email: EMAIL, password: INTRUDER_PASSWORD });
     expect(intruder.status).toBe(401);
@@ -225,7 +225,7 @@ describe('cadastro de outra pessoa com o mesmo e-mail, antes da confirmação (D
     const user = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
     expect([user.name, user.hasPatientProfile, user.hasTherapistProfile]).toEqual(['Ana Fictícia', true, false]);
     // O link do outro cadastro deixou de valer e não troca mais a senha.
-    expect((await request(app).post('/auth/confirm-email').send({ token: intruderToken })).status).toBe(400);
+    expect((await request(app).post('/auth/confirm-email').send({ token: intruderToken, password: PASSWORD })).status).toBe(400);
     await loginAgent();
   });
 
@@ -234,7 +234,7 @@ describe('cadastro de outra pessoa com o mesmo e-mail, antes da confirmação (D
     const ownerToken = mailer.lastTokenTo(EMAIL);
     await request(app).post('/auth/signup').send(intruderBody);
 
-    expect((await request(app).post('/auth/confirm-email').send({ token: ownerToken })).status).toBe(204);
+    expect((await request(app).post('/auth/confirm-email').send({ token: ownerToken, password: PASSWORD })).status).toBe(204);
     expect((await request(app).post('/auth/login').send({ email: EMAIL, password: INTRUDER_PASSWORD })).status).toBe(401);
     await loginAgent();
   });
@@ -250,22 +250,32 @@ describe('cadastro de outra pessoa com o mesmo e-mail, antes da confirmação (D
     await request(app).post('/auth/signup').send(signupBody);
     const before = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
 
-    await request(app).post('/auth/confirm-email').send({ token: mailer.lastTokenTo(EMAIL) });
+    await request(app).post('/auth/confirm-email').send({ token: mailer.lastTokenTo(EMAIL), password: PASSWORD });
 
     const after = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
     expect(after.sessionVersion).toBe(before.sessionVersion + 1);
   });
 
-  it('com cadastros diferentes pendentes, o reenvio não manda nada (quem pediu refaz o cadastro)', async () => {
+  it('com cadastros diferentes, o reenvio manda o mais recente, que só confirma com a senha dele', async () => {
     await request(app).post('/auth/signup').send(signupBody);
     await request(app).post('/auth/signup').send(intruderBody);
-    const sentBefore = mailer.sent.length;
 
-    const res = await request(app).post('/auth/resend-confirmation').send({ email: EMAIL });
+    await request(app).post('/auth/resend-confirmation').send({ email: EMAIL });
+    const resent = mailer.lastTokenTo(EMAIL);
 
-    expect(res.status).toBe(204);
-    expect(mailer.sent).toHaveLength(sentBefore);
+    const wrong = await request(app).post('/auth/confirm-email').send({ token: resent, password: PASSWORD });
+    expect(wrong.body.error.code).toBe('WRONG_SIGNUP_PASSWORD');
+    expect((await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } })).emailConfirmedAt).toBeNull();
   });
+
+  it('confirmar sem a senha do cadastro é recusado (400), sem gastar o link', async () => {
+    await request(app).post('/auth/signup').send(signupBody);
+    const token = mailer.lastTokenTo(EMAIL);
+
+    expect((await request(app).post('/auth/confirm-email').send({ token })).status).toBe(400);
+    expect((await request(app).post('/auth/confirm-email').send({ token, password: PASSWORD })).status).toBe(204);
+  });
+
 
   it('cada link novo apaga os vencidos da conta (sem guardar senha além do prazo)', async () => {
     await request(app).post('/auth/signup').send(signupBody);
@@ -338,8 +348,8 @@ describe('cadastro de outra pessoa com o mesmo e-mail, antes da confirmação (D
     const second = mailer.lastTokenTo(EMAIL);
 
     const results = await Promise.all([
-      request(app).post('/auth/confirm-email').send({ token: first }),
-      request(app).post('/auth/confirm-email').send({ token: second }),
+      request(app).post('/auth/confirm-email').send({ token: first, password: PASSWORD }),
+      request(app).post('/auth/confirm-email').send({ token: second, password: PASSWORD }),
     ]);
 
     expect(results.map((r) => r.status).sort()).toEqual([204, 400]);
@@ -374,8 +384,8 @@ describe('POST /auth/resend-confirmation', () => {
 
     expect(res.status).toBe(204);
     expect(newToken).not.toBe(oldToken);
-    expect((await request(app).post('/auth/confirm-email').send({ token: newToken })).status).toBe(204);
-    expect((await request(app).post('/auth/confirm-email').send({ token: oldToken })).status).toBe(400);
+    expect((await request(app).post('/auth/confirm-email').send({ token: newToken, password: PASSWORD })).status).toBe(204);
+    expect((await request(app).post('/auth/confirm-email').send({ token: oldToken, password: PASSWORD })).status).toBe(400);
     // O reenvio leva os dados do cadastro: a senha dele é a que vale.
     await loginAgent();
   });

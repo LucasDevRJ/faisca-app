@@ -1346,14 +1346,15 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   - **confirmar exige a senha daquele cadastro**: o link de outra pessoa com o mesmo e-mail só
     confirma com a senha dela, que a dona não sabe. A senha é conferida antes de usar o link, então
     um erro de digitação não o gasta. Link de antes desta DEC, sem os dados do cadastro, confere com
-    a senha da conta. A API passa a aceitar a senha neste PR; a tela passa a pedi-la e a API a
-    exigi-la no PR seguinte (a Vercel publica antes do Railway, DEC-056);
+    a senha da conta. A tela do link pede "a senha que você escolheu ao criar a conta", com o
+    atalho "esqueceu a senha? crie uma nova" (que também confirma o e-mail). Entrou em dois PRs: a
+    API aceitando a senha e depois a tela pedindo e a API exigindo (a Vercel publica antes do
+    Railway, DEC-056);
   - confirmar aplica os dados do link clicado, incrementa o `sessionVersion` (derruba qualquer
     sessão anterior) e apaga os outros links de confirmação. Conta já confirmada não muda;
-  - o reenvio copia os dados do cadastro pendente; se não houver nenhum válido (links vencidos) ou
-    houver **cadastros diferentes**, não manda nada e quem pediu refaz o cadastro. Quando a senha
-    passar a ser obrigatória (PR seguinte), o reenvio volta a mandar o link do cadastro mais
-    recente, porque ele só confirma com a senha daquele cadastro;
+  - o reenvio manda o link do cadastro pendente mais recente, que só confirma com a senha daquele
+    cadastro; sem nenhum cadastro pendente válido (links vencidos), não manda nada e quem pediu
+    refaz o cadastro;
   - limites do cadastro: **3 por hora por e-mail e IP juntos** (outra pessoa não gasta a cota da
     dona do e-mail) e **10 por hora só por e-mail** (barra quem troca de "IP" para mandar e-mails
     sem fim), além do limite por IP. A confirmação tem limite de erros por IP;

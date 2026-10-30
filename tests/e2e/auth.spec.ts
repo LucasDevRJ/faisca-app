@@ -51,8 +51,11 @@ test('cadastro, confirmação pelo link do e-mail e primeiro login', async ({ pa
   await expect(page.getByRole('heading', { name: 'Confira seu e-mail' })).toBeVisible();
   await expect(page.getByText(email)).toBeVisible();
 
-  // Abre o link do e-mail como a pessoa faria.
+  // Abre o link do e-mail como a pessoa faria e confirma com a senha do cadastro (DEC-072).
   await page.goto(await latestEmailLink(request, email));
+  await expect(page.getByRole('heading', { name: 'Confirme seu e-mail' })).toBeVisible();
+  await page.getByLabel('Senha do cadastro', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Confirmar e-mail' }).click();
   await expect(page.getByRole('heading', { name: 'E-mail confirmado' })).toBeVisible();
   // O token sai da barra de endereço depois de lido.
   await expect(page).toHaveURL(/\/confirmar-email$/);

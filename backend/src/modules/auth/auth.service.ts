@@ -129,13 +129,13 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
   }
 
   // pending: os dados do cadastro que pediu este link. Sem eles (reenvio), o link copia os do
-  // cadastro que ainda tem link válido. Se houver cadastros diferentes pendentes (outra pessoa
-  // com o mesmo e-mail), o reenvio não manda nada: não dá para saber de quem é, e quem pediu
-  // refaz o cadastro, que gera o link dele (DEC-072).
+  // cadastro pendente mais recente: ele só confirma com a senha daquele cadastro (DEC-072), então
+  // não importa de quem seja. Sem nenhum cadastro pendente válido, não manda nada (quem pediu
+  // refaz o cadastro).
   async function sendConfirmation(user: Pick<User, 'id' | 'name' | 'email'>, pending?: PendingSignup) {
     let data = pending;
     if (!data) {
-      const valid = await prisma.authToken.findMany({
+      const latest = await prisma.authToken.findFirst({
         where: {
           userId: user.id,
           type: 'EMAIL_CONFIRMATION',
@@ -145,10 +145,7 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
         },
         orderBy: { createdAt: 'desc' },
       });
-      // Sem um cadastro pendente válido (links vencidos) ou com mais de um, não dá para saber
-      // de quem é a conta: quem pediu refaz o cadastro, que gera o link dele.
-      const latest = valid[0];
-      if (!latest || new Set(valid.map((token) => token.pendingPasswordHash)).size > 1) return;
+      if (!latest) return;
       data = {
         passwordHash: latest.pendingPasswordHash!,
         name: latest.pendingName!,
@@ -220,24 +217,22 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
     // Confirmar aplica os dados do cadastro que gerou o link (DEC-072), derruba qualquer sessão
     // anterior e invalida os outros links de confirmação. Conta já confirmada não muda: um link
     // antigo usado depois não troca a senha de ninguém.
-    async confirmEmail(token: string, password?: string): Promise<void> {
+    async confirmEmail(token: string, password: string): Promise<void> {
       // A senha precisa ser a do cadastro que gerou o link (DEC-072): o link de outra pessoa com o
       // mesmo e-mail só confirma com a senha dela. Conferida antes de usar o link, para um erro de
       // digitação não gastá-lo. Link sem os dados do cadastro (de antes da DEC-072) confere com a
       // senha da conta.
-      if (password !== undefined) {
-        const row = await prisma.authToken.findFirst({
-          where: { tokenHash: hashToken(token), type: 'EMAIL_CONFIRMATION', usedAt: null, expiresAt: { gt: new Date() } },
-          include: { user: { select: { passwordHash: true } } },
-        });
-        if (!row) throw invalidToken();
-        if (!(await verifyPassword(password, row.pendingPasswordHash ?? row.user.passwordHash))) {
-          throw new AppError(
-            400,
-            'WRONG_SIGNUP_PASSWORD',
-            'A senha não confere com a deste cadastro. Use o link do e-mail do seu cadastro mais recente ou faça o cadastro de novo.',
-          );
-        }
+      const pendingRow = await prisma.authToken.findFirst({
+        where: { tokenHash: hashToken(token), type: 'EMAIL_CONFIRMATION', usedAt: null, expiresAt: { gt: new Date() } },
+        include: { user: { select: { passwordHash: true } } },
+      });
+      if (!pendingRow) throw invalidToken();
+      if (!(await verifyPassword(password, pendingRow.pendingPasswordHash ?? pendingRow.user.passwordHash))) {
+        throw new AppError(
+          400,
+          'WRONG_SIGNUP_PASSWORD',
+          'A senha não confere com a deste cadastro. Use o link do e-mail do seu cadastro mais recente ou faça o cadastro de novo.',
+        );
       }
 
       const userId = await prisma.$transaction(async (tx) => {

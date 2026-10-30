@@ -441,7 +441,7 @@ describe('convite por e-mail', () => {
       // Ainda sem vínculo: a conta não foi confirmada.
       expect(await activeLinks()).toHaveLength(0);
 
-      const confirm = await request(app).post('/auth/confirm-email').send({ token: mailer.lastTokenTo(NEW_THERAPIST) });
+      const confirm = await request(app).post('/auth/confirm-email').send({ token: mailer.lastTokenTo(NEW_THERAPIST), password: PASSWORD });
 
       expect(confirm.status).toBe(204);
       expect(await activeLinks()).toEqual([
@@ -455,7 +455,7 @@ describe('convite por e-mail', () => {
       await signup(inviteToken);
       await (await loginAgent(PATIENT)).delete('/link/invite');
 
-      const confirm = await request(app).post('/auth/confirm-email').send({ token: mailer.lastTokenTo(NEW_THERAPIST) });
+      const confirm = await request(app).post('/auth/confirm-email').send({ token: mailer.lastTokenTo(NEW_THERAPIST), password: PASSWORD });
 
       expect(confirm.status).toBe(204);
       expect(await activeLinks()).toHaveLength(0);

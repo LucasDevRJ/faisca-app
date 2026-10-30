@@ -46,9 +46,11 @@ export const loginSchema = z.object({
 export const emailOnlySchema = z.object({ email: emailSchema });
 
 
-// Confirmação de e-mail (DEC-072): a senha do cadastro que gerou o link. Opcional só até o front
-// passar a enviá-la (PR seguinte, que a torna obrigatória); quando vem, precisa conferir.
-export const confirmEmailSchema = z.object({ token: tokenSchema, password: z.string().min(1).max(200).optional() });
+// Confirmação de e-mail (DEC-072): a senha do cadastro que gerou o link.
+export const confirmEmailSchema = z.object({
+  token: tokenSchema,
+  password: z.string().min(1, { error: 'Digite a senha que você escolheu no cadastro.' }).max(200),
+});
 
 // Ativa o perfil que não foi escolhido no cadastro (SPEC, "Contas e perfis").
 export const addProfileSchema = z.strictObject({ profile: z.enum(['patient', 'therapist']) });

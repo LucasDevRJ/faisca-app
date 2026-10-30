@@ -97,8 +97,9 @@ export async function signup(input: SignupInput): Promise<void> {
   await api.post('/auth/signup', input);
 }
 
-export async function confirmEmail(token: string): Promise<void> {
-  await api.post('/auth/confirm-email', { token });
+// A senha do cadastro que gerou o link (DEC-072).
+export async function confirmEmail(input: { token: string; password: string }): Promise<void> {
+  await api.post('/auth/confirm-email', input);
 }
 
 export async function resendConfirmation(email: string): Promise<void> {

@@ -5,8 +5,9 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 
 ## Contas e perfis
 - Cadastro com **nome, e-mail e senha**; o e-mail precisa ser confirmado antes do primeiro uso.
-  Se houver mais de um cadastro com o mesmo e-mail ainda não confirmado, vale o do link clicado
-  (nome, senha e perfis daquele cadastro), e os outros links deixam de valer (DEC-072).
+  Para confirmar, a página do link pede a senha escolhida no cadastro. Se houver mais de um cadastro
+  com o mesmo e-mail ainda não confirmado, cada link só confirma com a senha do próprio cadastro e
+  aplica os dados dele (nome, senha e perfis); os outros links deixam de valer (DEC-072).
 - O cadastro exige concordar com o **aviso de privacidade** (caixa de marcar, não marcada por padrão).
 - No cadastro, a pessoa escolhe como vai usar o Faísca (um ou os dois perfis):
   - **Paciente**: registra atividades, consultas e lembretes; vincula e revoga sua terapeuta.
