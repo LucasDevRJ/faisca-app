@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
+import { runDetached, type RunAfterResponse } from './lib/background.js';
 import { logger } from './lib/logger.js';
 import { createResendMailer, type Mailer } from './lib/mailer.js';
 import { errorHandler } from './middlewares/error-handler.js';
@@ -22,10 +23,12 @@ import { healthRoutes } from './modules/health/health.routes.js';
 export type AppDependencies = {
   // Os testes passam um mailer em memória; em dev e produção é o Resend.
   mailer?: Mailer;
+  // Os testes que leem o e-mail logo depois da requisição rodam o trabalho antes de responder (DEC-073).
+  runAfterResponse?: RunAfterResponse;
 };
 
 // O app fica separado do server.ts para os testes usarem o Supertest sem abrir porta.
-export function createApp({ mailer = createResendMailer() }: AppDependencies = {}) {
+export function createApp({ mailer = createResendMailer(), runAfterResponse = runDetached }: AppDependencies = {}) {
   const app = express();
 
   // Número de proxies na frente da API (DEC-023). Mantém req.ip, usado no rate limit,
@@ -43,13 +46,20 @@ export function createApp({ mailer = createResendMailer() }: AppDependencies = {
   });
 
   app.use(helmet());
+  // As respostas trazem registros de terapia: nada fica guardado no aparelho nem em proxies
+  // (DEC-073). Quem precisa de outro valor, como a foto de perfil, troca na própria rota.
+  // Logo no começo, para valer também nos erros do CORS e do express.json.
+  app.use((_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
   // credentials: true porque a autenticação usa cookie httpOnly (DEC-010).
   app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
   app.use(healthRoutes);
-  app.use(createAuthRoutes(mailer));
+  app.use(createAuthRoutes(mailer, runAfterResponse));
   app.use(createActivitiesRoutes());
   app.use(createAppointmentsRoutes());
   app.use(createThoughtRecordsRoutes());

@@ -25,6 +25,7 @@ const { logger } = await import('../src/lib/logger.js');
 const { prisma } = await import('../src/lib/prisma.js');
 const { hashPassword } = await import('../src/lib/password.js');
 const { FakeMailer } = await import('../src/test/fake-mailer.js');
+const { runInline } = await import('../src/lib/background.js');
 
 // Usuários fictícios (regra 5). As mesmas credenciais estão em tests/fixtures/users.ts.
 const SEED_PASSWORD = 'senha-ficticia-123';
@@ -109,7 +110,8 @@ server.get('/__test__/emails/latest', (req, res) => {
   }
   res.json(message);
 });
-server.use(createApp({ mailer }));
+// Os testes leem o e-mail logo depois do pedido: o envio acontece antes da resposta (DEC-073).
+server.use(createApp({ mailer, runAfterResponse: runInline }));
 
 server.listen(env.PORT, () => {
   logger.warn({ port: env.PORT }, 'API de testes E2E no ar (banco faisca_test)');

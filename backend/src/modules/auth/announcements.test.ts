@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
+import { runInline } from '../../lib/background.js';
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
@@ -16,7 +17,7 @@ let mailer: FakeMailer;
 beforeEach(async () => {
   await resetDatabase();
   mailer = new FakeMailer();
-  app = createApp({ mailer });
+  app = createApp({ mailer, runAfterResponse: runInline });
   await createConfirmedUser({ email: PATIENT });
 });
 

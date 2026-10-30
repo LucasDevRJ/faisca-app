@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { RunAfterResponse } from '../../lib/background.js';
 import type { Mailer } from '../../lib/mailer.js';
 import { createRateLimit } from '../../middlewares/rate-limit.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
@@ -7,8 +8,8 @@ import { createAuthController } from './auth.controller.js';
 import { createAuthService } from './auth.service.js';
 
 // O proxy remove o /api (DEC-023): o front chama /api/auth/login e aqui chega /auth/login.
-export function createAuthRoutes(mailer: Mailer) {
-  const controller = createAuthController(createAuthService(mailer, createLinksService(mailer)));
+export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterResponse) {
+  const controller = createAuthController(createAuthService(mailer, createLinksService(mailer)), runAfterResponse);
   const router = Router();
 
   // Limites da DEC-025. Os de e-mail valem por endereço e por IP ao mesmo tempo.

@@ -1,4 +1,5 @@
 import type { RequestHandler } from 'express';
+import type { RunAfterResponse } from '../../lib/background.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import { clearSessionCookie, setSessionCookie } from '../../lib/session.js';
 import {
@@ -14,9 +15,12 @@ import {
 } from './auth.schema.js';
 import { toPublicUser, type AuthService } from './auth.service.js';
 
-export function createAuthController(service: AuthService) {
+// Cadastro, "esqueci a senha" e reenvio validam o pedido e respondem; buscar a conta e mandar o
+// e-mail fica para depois da resposta, para o tempo não dizer se a conta existe (DEC-073).
+export function createAuthController(service: AuthService, runAfterResponse: RunAfterResponse) {
   const signup: RequestHandler = async (req, res) => {
-    await service.signup(signupSchema.parse(req.body));
+    const input = await service.prepareSignup(signupSchema.parse(req.body));
+    await runAfterResponse('signup', () => service.signup(input));
     // 202: o pedido foi aceito, mas a conta só vale depois de confirmar o e-mail.
     res.status(202).json({
       message: 'Se estiver tudo certo, você vai receber um e-mail para confirmar sua conta.',
@@ -30,7 +34,8 @@ export function createAuthController(service: AuthService) {
   };
 
   const resendConfirmation: RequestHandler = async (req, res) => {
-    await service.resendConfirmation(emailOnlySchema.parse(req.body).email);
+    const { email } = emailOnlySchema.parse(req.body);
+    await runAfterResponse('resend-confirmation', () => service.resendConfirmation(email));
     res.status(204).end();
   };
 
@@ -74,7 +79,8 @@ export function createAuthController(service: AuthService) {
   };
 
   const forgotPassword: RequestHandler = async (req, res) => {
-    await service.forgotPassword(emailOnlySchema.parse(req.body).email);
+    const { email } = emailOnlySchema.parse(req.body);
+    await runAfterResponse('forgot-password', () => service.forgotPassword(email));
     res.status(204).end();
   };
 
