@@ -8,7 +8,7 @@ import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import type { Session } from '../appointments/sessions.js';
-import { arePhotosOpen, MAX_PHOTOS, photosDeadlineFor } from './actions.service.js';
+import { arePhotosOpen, MAX_PHOTOS, MAX_PHOTOS_PER_ACCOUNT, photosDeadlineFor } from './actions.service.js';
 
 // Fotos da Ação (DEC-064). Dados e imagens fictícios (regra 5).
 const PHOTOS_VERSION = '2026-10.6';
@@ -142,6 +142,49 @@ describe('adicionar e remover fotos', () => {
     expect(over.status).toBe(409);
     expect(over.body.error.code).toBe('PHOTO_LIMIT');
     expect(await prisma.actionPhoto.count()).toBe(MAX_PHOTOS);
+  });
+
+  it(`até ${MAX_PHOTOS_PER_ACCOUNT} fotos por conta, somando todas as ações (DEC-074)`, async () => {
+    // Ações já cheias, com bytes fictícios: o teto conta linhas, não abre as imagens.
+    const tiny = new Uint8Array([1]);
+    for (let i = 0; i < MAX_PHOTOS_PER_ACCOUNT / MAX_PHOTOS; i++) {
+      const full = await seedAction(patientId);
+      await prisma.actionPhoto.createMany({
+        data: Array.from({ length: MAX_PHOTOS }, () => ({ actionId: full.id, image: tiny, thumbnail: tiny })),
+      });
+    }
+    const action = await seedAction(patientId);
+    const agent = await loginAgent(PATIENT);
+
+    const over = await upload(agent, action.id, await cameraPhoto(20, 20));
+
+    expect(over.status).toBe(409);
+    expect(over.body.error.code).toBe('ACCOUNT_PHOTO_LIMIT');
+    expect(await prisma.actionPhoto.count({ where: { actionId: action.id } })).toBe(0);
+    // A conta de outra pessoa não entra na conta.
+    const other = await seedAction(otherPatientId);
+    const otherAgent = await loginAgent(OTHER_PATIENT);
+    expect((await upload(otherAgent, other.id, await cameraPhoto(20, 20))).status).toBe(201);
+  });
+
+  it('com 299 fotos na conta, dois envios juntos em ações diferentes: um entra, o outro é 409', async () => {
+    const tiny = new Uint8Array([1]);
+    for (let i = 0; i < MAX_PHOTOS_PER_ACCOUNT / MAX_PHOTOS; i++) {
+      const full = await seedAction(patientId);
+      // A última ação fica com uma vaga a menos: 299 na conta.
+      const count = i === 0 ? MAX_PHOTOS - 1 : MAX_PHOTOS;
+      await prisma.actionPhoto.createMany({
+        data: Array.from({ length: count }, () => ({ actionId: full.id, image: tiny, thumbnail: tiny })),
+      });
+    }
+    const [first, second] = [await seedAction(patientId), await seedAction(patientId)];
+    const agent = await loginAgent(PATIENT);
+    const photo = await cameraPhoto(20, 20);
+
+    const results = await Promise.all([upload(agent, first.id, photo), upload(agent, second.id, photo)]);
+
+    expect(results.map((r) => r.status).sort()).toEqual([201, 409]);
+    expect(await prisma.actionPhoto.count()).toBe(MAX_PHOTOS_PER_ACCOUNT);
   });
 
   it('remover apaga de verdade; a mesma foto de novo é 404', async () => {

@@ -10,7 +10,9 @@ export function inviteEmail(to: string, patientName: string, token: string): Ema
   url.searchParams.set('token', token);
   return {
     to,
-    subject: `${patientName} convidou você para o Faísca`,
+    // O nome é escrito por quem se cadastra: fora do assunto, ninguém usa o convite para mandar
+    // um assunto falso com o domínio do Faísca (DEC-074). No corpo ele aparece escapado.
+    subject: 'Você recebeu um convite para o Faísca',
     html: layout(
       [
         `Olá! <strong>${escapeHtml(patientName)}</strong> quer compartilhar com você os registros de atividades feitos no Faísca.`,

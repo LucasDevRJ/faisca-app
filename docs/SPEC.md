@@ -156,6 +156,7 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
   mostrada de forma neutra, sem placar.
 - Usar a Ação exige ter aceitado uma versão do aviso de privacidade que a cite.
 - **Fotos** (DEC-064): na ação avaliada, até 10 fotos opcionais, que aparecem para a psicóloga.
+  Cada conta guarda até 300 fotos no total, somando todas as ações (DEC-074).
   Dá para adicionar e remover até a hora da próxima consulta depois da avaliação (sem consulta
   marcada, sem prazo). As fotos pedem o aceite da versão do aviso que as cita. No cartão, as fotos
   aparecem como miniaturas e abrem maiores ao tocar, com anterior e próxima (DEC-065); a terapeuta
