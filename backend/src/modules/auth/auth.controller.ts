@@ -10,7 +10,7 @@ import {
   loginSchema,
   resetPasswordSchema,
   signupSchema,
-  tokenOnlySchema,
+  confirmEmailSchema,
 } from './auth.schema.js';
 import { toPublicUser, type AuthService } from './auth.service.js';
 
@@ -24,7 +24,8 @@ export function createAuthController(service: AuthService) {
   };
 
   const confirmEmail: RequestHandler = async (req, res) => {
-    await service.confirmEmail(tokenOnlySchema.parse(req.body).token);
+    const { token, password } = confirmEmailSchema.parse(req.body);
+    await service.confirmEmail(token, password);
     res.status(204).end();
   };
 

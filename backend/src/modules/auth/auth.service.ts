@@ -61,6 +61,9 @@ function invalidToken() {
   return new AppError(400, 'INVALID_TOKEN', 'Este link é inválido, já foi usado ou expirou.');
 }
 
+// Os dados de um cadastro, guardados no link de confirmação que ele gerou (DEC-072).
+type PendingSignup = { passwordHash: string; name: string; patient: boolean; therapist: boolean };
+
 export function createAuthService(mailer: Mailer, links: LinksService) {
   // Falha no envio não derruba a requisição: a pessoa pode pedir o e-mail de novo.
   // O log leva só o tipo do e-mail, nunca o destinatário nem o link.
@@ -72,17 +75,29 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
     }
   }
 
-  // Um token novo invalida os anteriores do mesmo tipo que ainda não foram usados.
-  async function issueToken(userId: string, type: AuthTokenType): Promise<string> {
+  // Um token novo invalida os anteriores do mesmo tipo que ainda não foram usados. Exceção: a
+  // confirmação de e-mail (DEC-072). Cada cadastro tem o próprio link, com os próprios dados, e
+  // um cadastro de outra pessoa com o mesmo e-mail não pode invalidar o link da dona.
+  async function issueToken(userId: string, type: AuthTokenType, pending?: PendingSignup): Promise<string> {
     const token = generateToken();
     await prisma.$transaction([
-      prisma.authToken.deleteMany({ where: { userId, type, usedAt: null } }),
+      prisma.authToken.deleteMany({
+        where:
+          type === 'EMAIL_CONFIRMATION'
+            ? // Só os vencidos: não guardar hash de senha nem nome além do prazo do link.
+              { userId, type, usedAt: null, expiresAt: { lte: new Date() } }
+            : { userId, type, usedAt: null },
+      }),
       prisma.authToken.create({
         data: {
           userId,
           type,
           tokenHash: hashToken(token),
           expiresAt: new Date(Date.now() + TOKEN_TTL_MS[type]),
+          pendingPasswordHash: pending?.passwordHash,
+          pendingName: pending?.name,
+          pendingPatient: pending?.patient,
+          pendingTherapist: pending?.therapist,
         },
       }),
     ]);
@@ -99,8 +114,8 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       data: { usedAt: now },
     });
     if (count === 0) throw invalidToken();
-    const { userId } = await tx.authToken.findUniqueOrThrow({ where: { tokenHash } });
-    return { userId, now };
+    const row = await tx.authToken.findUniqueOrThrow({ where: { tokenHash } });
+    return { userId: row.userId, now, row };
   }
 
   // Guarda na conta nova qual convite ela veio aceitar. Token inválido é ignorado em silêncio:
@@ -113,9 +128,36 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
     });
   }
 
-  async function sendConfirmation(user: Pick<User, 'id' | 'name' | 'email'>) {
-    const token = await issueToken(user.id, 'EMAIL_CONFIRMATION');
-    await sendSafely('confirmation', confirmationEmail(user.email, user.name, token));
+  // pending: os dados do cadastro que pediu este link. Sem eles (reenvio), o link copia os do
+  // cadastro que ainda tem link válido. Se houver cadastros diferentes pendentes (outra pessoa
+  // com o mesmo e-mail), o reenvio não manda nada: não dá para saber de quem é, e quem pediu
+  // refaz o cadastro, que gera o link dele (DEC-072).
+  async function sendConfirmation(user: Pick<User, 'id' | 'name' | 'email'>, pending?: PendingSignup) {
+    let data = pending;
+    if (!data) {
+      const valid = await prisma.authToken.findMany({
+        where: {
+          userId: user.id,
+          type: 'EMAIL_CONFIRMATION',
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+          pendingPasswordHash: { not: null },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      // Sem um cadastro pendente válido (links vencidos) ou com mais de um, não dá para saber
+      // de quem é a conta: quem pediu refaz o cadastro, que gera o link dele.
+      const latest = valid[0];
+      if (!latest || new Set(valid.map((token) => token.pendingPasswordHash)).size > 1) return;
+      data = {
+        passwordHash: latest.pendingPasswordHash!,
+        name: latest.pendingName!,
+        patient: latest.pendingPatient!,
+        therapist: latest.pendingTherapist!,
+      };
+    }
+    const token = await issueToken(user.id, 'EMAIL_CONFIRMATION', data);
+    await sendSafely('confirmation', confirmationEmail(user.email, data?.name ?? user.name, token));
   }
 
   return {
@@ -124,9 +166,17 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       // O hash vem antes da busca para os dois caminhos levarem o mesmo tempo.
       const passwordHash = await hashPassword(input.password);
       const existing = await prisma.user.findUnique({ where: { email: input.email } });
+      const pending: PendingSignup = {
+        passwordHash,
+        name: input.name,
+        patient: input.profiles.patient,
+        therapist: input.profiles.therapist,
+      };
 
       if (existing) {
-        // Conta não confirmada: reenvia a confirmação sem alterar nome nem senha.
+        // Conta não confirmada: manda um link com os dados DESTE cadastro, sem mexer na conta.
+        // Quem confirma decide qual cadastro vale (DEC-072): alguém que se cadastrou antes com o
+        // e-mail de outra pessoa não fica com a conta dela.
         // Conta confirmada que veio por convite: entra e aceita pela tela do convite.
         if (!existing.emailConfirmedAt) {
           // Quem refaz o cadastro aceitou o aviso de novo: guarda o aceite mais recente.
@@ -135,7 +185,7 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
             data: { privacyAcceptedAt: new Date(), privacyVersion: PRIVACY_VERSION },
           });
           await attachInvite(existing.id, input.inviteToken);
-          await sendConfirmation(existing);
+          await sendConfirmation(existing, pending);
         } else {
           await sendSafely('account-exists', accountExistsEmail(existing.email));
         }
@@ -164,16 +214,53 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       }
 
       await attachInvite(user.id, input.inviteToken);
-      await sendConfirmation(user);
+      await sendConfirmation(user, pending);
     },
 
-    async confirmEmail(token: string): Promise<void> {
-      const userId = await prisma.$transaction(async (tx) => {
-        const { userId, now } = await consumeToken(tx, token, 'EMAIL_CONFIRMATION');
-        await tx.user.updateMany({
-          where: { id: userId, emailConfirmedAt: null },
-          data: { emailConfirmedAt: now },
+    // Confirmar aplica os dados do cadastro que gerou o link (DEC-072), derruba qualquer sessão
+    // anterior e invalida os outros links de confirmação. Conta já confirmada não muda: um link
+    // antigo usado depois não troca a senha de ninguém.
+    async confirmEmail(token: string, password?: string): Promise<void> {
+      // A senha precisa ser a do cadastro que gerou o link (DEC-072): o link de outra pessoa com o
+      // mesmo e-mail só confirma com a senha dela. Conferida antes de usar o link, para um erro de
+      // digitação não gastá-lo. Link sem os dados do cadastro (de antes da DEC-072) confere com a
+      // senha da conta.
+      if (password !== undefined) {
+        const row = await prisma.authToken.findFirst({
+          where: { tokenHash: hashToken(token), type: 'EMAIL_CONFIRMATION', usedAt: null, expiresAt: { gt: new Date() } },
+          include: { user: { select: { passwordHash: true } } },
         });
+        if (!row) throw invalidToken();
+        if (!(await verifyPassword(password, row.pendingPasswordHash ?? row.user.passwordHash))) {
+          throw new AppError(
+            400,
+            'WRONG_SIGNUP_PASSWORD',
+            'A senha não confere com a deste cadastro. Use o link do e-mail do seu cadastro mais recente ou faça o cadastro de novo.',
+          );
+        }
+      }
+
+      const userId = await prisma.$transaction(async (tx) => {
+        // A conta primeiro: dois links diferentes clicados juntos esperam a vez, sem deadlock.
+        const pending = await tx.authToken.findUnique({ where: { tokenHash: hashToken(token) }, select: { userId: true } });
+        if (pending) await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${pending.userId}::uuid FOR UPDATE`;
+        const { userId, now, row } = await consumeToken(tx, token, 'EMAIL_CONFIRMATION');
+        const { count } = await tx.user.updateMany({
+          where: { id: userId, emailConfirmedAt: null },
+          data: {
+            emailConfirmedAt: now,
+            sessionVersion: { increment: 1 },
+            ...(row.pendingPasswordHash && {
+              passwordHash: row.pendingPasswordHash,
+              name: row.pendingName!,
+              hasPatientProfile: row.pendingPatient!,
+              hasTherapistProfile: row.pendingTherapist!,
+            }),
+          },
+        });
+        if (count > 0) {
+          await tx.authToken.deleteMany({ where: { userId, type: 'EMAIL_CONFIRMATION', usedAt: null } });
+        }
         return userId;
       });
       // Fora da transação: se o convite não vale mais, a confirmação continua valendo.
@@ -266,10 +353,15 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
           where: { id: userId },
           data: { passwordHash, sessionVersion: { increment: 1 } },
         });
-        await tx.user.updateMany({
+        const { count } = await tx.user.updateMany({
           where: { id: userId, emailConfirmedAt: null },
           data: { emailConfirmedAt: now },
         });
+        // Confirmou agora: os links de confirmação pendentes, com dados de cadastro, não servem
+        // mais e não devem ficar guardados (DEC-072).
+        if (count > 0) {
+          await tx.authToken.deleteMany({ where: { userId, type: 'EMAIL_CONFIRMATION', usedAt: null } });
+        }
       });
     },
   };
