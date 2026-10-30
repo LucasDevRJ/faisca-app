@@ -72,7 +72,9 @@ test('cadastro → confirmação por e-mail → login', async ({ request }) => {
   const token = new URL(/https?:\/\/\S+/.exec((await mail.json()).text)![0]).searchParams.get('token');
   expect(token).toBeTruthy();
 
-  const confirm = await request.post('/auth/confirm-email', { data: { token } });
+  // Sem a senha do cadastro, o link não confirma (DEC-072).
+  expect((await request.post('/auth/confirm-email', { data: { token } })).status()).toBe(400);
+  const confirm = await request.post('/auth/confirm-email', { data: { token, password } });
   expect(confirm.status()).toBe(204);
 
   const login = await request.post('/auth/login', { data: { email, password } });
