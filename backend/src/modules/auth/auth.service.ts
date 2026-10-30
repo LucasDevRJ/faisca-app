@@ -61,6 +61,9 @@ function invalidToken() {
   return new AppError(400, 'INVALID_TOKEN', 'Este link é inválido, já foi usado ou expirou.');
 }
 
+// O cadastro já com a senha trocada pelo hash (DEC-073).
+type PreparedSignup = Omit<SignupInput, 'password'> & { passwordHash: string };
+
 // Os dados de um cadastro, guardados no link de confirmação que ele gerou (DEC-072).
 type PendingSignup = { passwordHash: string; name: string; patient: boolean; therapist: boolean };
 
@@ -159,9 +162,16 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
 
   return {
     // A resposta é sempre a mesma, exista ou não a conta (DEC-025).
-    async signup(input: SignupInput): Promise<void> {
-      // O hash vem antes da busca para os dois caminhos levarem o mesmo tempo.
-      const passwordHash = await hashPassword(input.password);
+    // O hash da senha, antes da resposta (DEC-073): sempre acontece, exista a conta ou não, então
+    // não muda o tempo; e assim a parte que ocupa a CPU não entra na fila do trabalho depois da
+    // resposta, que fica só com banco e e-mail.
+    async prepareSignup({ password, ...input }: SignupInput): Promise<PreparedSignup> {
+      return { ...input, passwordHash: await hashPassword(password) };
+    },
+
+    // A resposta é sempre a mesma, exista ou não a conta (DEC-025). Roda depois da resposta (DEC-073).
+    async signup(input: PreparedSignup): Promise<void> {
+      const { passwordHash } = input;
       const existing = await prisma.user.findUnique({ where: { email: input.email } });
       const pending: PendingSignup = {
         passwordHash,

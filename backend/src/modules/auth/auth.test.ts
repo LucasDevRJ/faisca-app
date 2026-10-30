@@ -1,7 +1,9 @@
 import { SignJWT } from 'jose';
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../app.js';
+import { runInline } from '../../lib/background.js';
+import type { EmailMessage, Mailer } from '../../lib/mailer.js';
 import { prisma } from '../../lib/prisma.js';
 import { hashToken } from '../../lib/secure-token.js';
 import { SESSION_COOKIE } from '../../lib/session.js';
@@ -27,7 +29,7 @@ beforeEach(async () => {
   await resetDatabase();
   // App novo a cada teste: mailer vazio e contadores de rate limit zerados.
   mailer = new FakeMailer();
-  app = createApp({ mailer });
+  app = createApp({ mailer, runAfterResponse: runInline });
 });
 
 function sessionCookie(res: request.Response): string | undefined {
@@ -408,6 +410,45 @@ describe('POST /auth/resend-confirmation', () => {
     const res = await request(app).post('/auth/resend-confirmation').send({ email: EMAIL });
 
     expect(res.status).toBe(429);
+  });
+});
+
+// Mailer que fica preso no envio até o teste soltar: mostra se a resposta esperou o e-mail.
+class StuckMailer implements Mailer {
+  readonly sent: EmailMessage[] = [];
+  release!: () => void;
+  private readonly gate = new Promise<void>((resolve) => (this.release = resolve));
+
+  async send(message: EmailMessage) {
+    this.sent.push(message);
+    await this.gate;
+  }
+}
+
+describe('resposta antes do e-mail (DEC-073)', () => {
+  it.each([
+    ['/auth/forgot-password', { email: EMAIL }, 204],
+    ['/auth/resend-confirmation', { email: EMAIL }, 204],
+    ['/auth/signup', signupBody, 202],
+  ] as const)('%s responde sem esperar o envio, e o e-mail sai depois', async (path, body, status) => {
+    if (path === '/auth/forgot-password') await createConfirmedUser({ email: EMAIL });
+    if (path === '/auth/resend-confirmation') await request(app).post('/auth/signup').send(signupBody);
+    const stuck = new StuckMailer();
+    const detachedApp = createApp({ mailer: stuck });
+
+    const res = await request(detachedApp).post(path).send(body);
+
+    expect(res.status).toBe(status);
+    await vi.waitFor(() => expect(stuck.sent.map((m) => m.to)).toEqual([EMAIL]));
+    stuck.release();
+  });
+
+  it('pedido inválido continua recusado na hora (400)', async () => {
+    const detachedApp = createApp({ mailer: new StuckMailer() });
+
+    const res = await request(detachedApp).post('/auth/forgot-password').send({ email: 'nao-e-email' });
+
+    expect(res.status).toBe(400);
   });
 });
 

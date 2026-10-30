@@ -36,6 +36,16 @@ describe('GET /health', () => {
   });
 });
 
+describe('Cache-Control (DEC-073)', () => {
+  it('toda resposta sai com no-store, inclusive erro', async () => {
+    const ok = await request(app).get('/health');
+    const missing = await request(app).get('/nao-existe');
+    const denied = await request(app).get('/activities');
+
+    for (const res of [ok, missing, denied]) expect(res.headers['cache-control']).toBe('no-store');
+  });
+});
+
 describe('rota inexistente', () => {
   it('responde 404 em JSON', async () => {
     const res = await request(app).get('/nao-existe');
@@ -55,5 +65,7 @@ describe('JSON malformado', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('INVALID_JSON');
     expect(JSON.stringify(res.body)).not.toContain('segredo');
+    // O no-store vem antes do express.json (DEC-073).
+    expect(res.headers['cache-control']).toBe('no-store');
   });
 });

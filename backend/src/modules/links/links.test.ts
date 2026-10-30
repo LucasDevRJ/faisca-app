@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
+import { runInline } from '../../lib/background.js';
 import { hashLinkCode } from '../../lib/link-code.js';
 import { prisma } from '../../lib/prisma.js';
 import { hashToken } from '../../lib/secure-token.js';
@@ -22,7 +23,7 @@ let therapistId: string;
 beforeEach(async () => {
   await resetDatabase();
   mailer = new FakeMailer();
-  app = createApp({ mailer });
+  app = createApp({ mailer, runAfterResponse: runInline });
   patientId = (await createConfirmedUser({ name: 'Paula Fictícia', email: PATIENT })).id;
   therapistId = (
     await createConfirmedUser({ name: 'Tereza Fictícia', email: THERAPIST, patient: false, therapist: true })

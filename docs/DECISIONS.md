@@ -1373,6 +1373,36 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   cadastro (a pessoa ajusta em Conta). O convite anexado a um cadastro (`attachInvite`) ainda vale
   para a conta inteira, e não para o link: revisar nas próximas correções de segurança.
 
+## DEC-073 — Respostas de conta no mesmo tempo e `no-store` como padrão da API
+- **Decisão:**
+  - cadastro, "esqueci a senha" e reenvio da confirmação **validam o pedido e respondem**; buscar a
+    conta, gerar o link e mandar o e-mail acontecem **depois da resposta** (`lib/background.ts`).
+    Pedido inválido continua recebendo 400 na hora. Uma falha nesse trabalho vai para o log só com
+    o tipo da tarefa e o nome e o código do erro, sem a mensagem (que pode citar o e-mail); a
+    pessoa vê a mesma resposta neutra da DEC-025 e pode pedir de novo. Os testes que leem o e-mail
+    logo depois do pedido (Vitest e a API do Playwright) rodam o trabalho antes de responder
+    (`runInline`);
+  - o **hash da senha do cadastro continua antes da resposta**: ele sempre acontece, exista a
+    conta ou não, então não muda o tempo, e a parte que ocupa a CPU não entra na fila;
+  - o trabalho depois da resposta tem **teto: 4 tarefas de uma vez e até 50 esperando de cada
+    tipo**; o que passar disso é descartado com aviso no log. Sem teto, quem forja IPs encheria a
+    memória; com cota por tipo, uma enxurrada de cadastros não barra o "esqueci a senha" de
+    ninguém. No deploy, a API espera até 5 s pelas tarefas pendentes antes de encerrar;
+  - **toda resposta da API sai com `Cache-Control: no-store`**, inclusive erros do CORS e do JSON
+    (o middleware vem logo depois do `helmet`). Quem precisa de outro valor troca na própria rota (a
+    foto de perfil continua `private, no-cache`, DEC-061).
+- **Motivo:** a revisão de segurança (DEC-071) mostrou que o texto já era igual (DEC-025), mas o
+  tempo não: com conta, a API esperava o banco e o Resend; sem conta, respondia na hora. Medindo o
+  tempo, dava para descobrir quem usa o Faísca, um app de terapia. Responder antes do trabalho
+  deixa o tempo igual sem atrasar todo mundo; um tempo mínimo fixo deixaria tudo mais lento e
+  ainda vazaria quando o Resend demorasse. O `no-store` padrão evita que registros de terapia
+  fiquem guardados no aparelho ou em proxies por esquecimento numa rota nova.
+- **Limite conhecido:** se a API reiniciar (deploy) no instante entre a resposta e o envio, o
+  e-mail não sai; a pessoa pede de novo. Dentro de um mesmo tipo a cota é dividida: quem tem
+  muitos IPs pode lotar a fila de "esqueci a senha" e o pedido de outra pessoa naquele momento é
+  descartado (ela vê a resposta neutra e pede de novo depois); juntar pedidos iguais por e-mail
+  fica para quando houver sinal de abuso.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
