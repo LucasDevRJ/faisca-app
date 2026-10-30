@@ -11,6 +11,7 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 
 ## Estrutura
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
+- `backup/`: serviço de cópia de segurança do banco (cron no Railway, DEC-075; roteiro no DEPLOY).
 - `docs/`: SPEC, DECISIONS, DEPLOY (passo a passo do deploy e da troca de segredos) e
   APRESENTACAO (o que o Faísca é, para divulgação; atualizar quando uma funcionalidade entra no ar).
 - `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-tela`, `nova-migration`,

@@ -1,0 +1,131 @@
+name: Backup CI
+
+# Testa a cópia de segurança de ponta a ponta (DEC-075): o faisca_backup, só com leitura, faz a
+# cópia; ela sai criptografada com uma chave descartável e volta inteira num banco vazio. Backup
+# que nunca foi restaurado não é backup. Dados fictícios (regra 5). Roda em pull_request, como os
+# outros workflows: o push na main não repete o teste.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # Proteção da main (#77): ver o comentário no migrations-ci.yml.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.diff.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: diff
+        name: O PR mexe nesta área?
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BASE"...HEAD | grep -qE '^(backup/|\.github/workflows/backup-ci\.yml$)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Nada desta área mudou: o job principal fica pulado."
+          fi
+
+  backup:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Script sem erros de shell
+        run: shellcheck backup/backup.sh
+
+      - name: Banco de origem com dados fictícios e o faisca_backup só de leitura
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE origem"
+          psql -v ON_ERROR_STOP=1 -d origem <<'SQL'
+          CREATE TABLE "Activity" (id serial PRIMARY KEY, name text NOT NULL);
+          INSERT INTO "Activity" (name) SELECT 'Atividade fictícia ' || n FROM generate_series(1, 50) n;
+          CREATE ROLE faisca_backup LOGIN PASSWORD 'backup';
+          GRANT USAGE ON SCHEMA public TO faisca_backup;
+          GRANT SELECT ON ALL TABLES IN SCHEMA public TO faisca_backup;
+          GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO faisca_backup;
+          SQL
+
+      - name: O faisca_backup não grava nem lê os hashes das senhas
+        run: |
+          if PGUSER=faisca_backup PGPASSWORD=backup psql -d origem -c "INSERT INTO \"Activity\" (name) VALUES ('x')" 2>/dev/null; then
+            echo "::error::O faisca_backup conseguiu gravar: ele precisa ser só de leitura (regra 6)."
+            exit 1
+          fi
+          if PGUSER=faisca_backup PGPASSWORD=backup psql -d origem -c "SELECT rolpassword FROM pg_authid" 2>/dev/null; then
+            echo "::error::O faisca_backup conseguiu ler o pg_authid (hashes das senhas)."
+            exit 1
+          fi
+
+      - name: Imagem do backup
+        run: docker build -t faisca-backup backup
+
+      - name: Cópia com uma chave descartável
+        run: |
+          mkdir -m 777 out key
+          docker run --rm --entrypoint sh -v "$PWD/key:/key" faisca-backup \
+            -c 'age-keygen -o /key/id.txt 2>/dev/null && age-keygen -y /key/id.txt > /key/recipient.txt'
+          docker run --rm --network host -v "$PWD/out:/out" -v "$PWD/key:/key:ro" \
+            -e PGHOST=localhost -e PGUSER=faisca_backup -e PGPASSWORD=backup -e PGDATABASE=origem \
+            -e AGE_RECIPIENT_FILE=/key/recipient.txt \
+            -e BACKUP_OUTPUT_DIR=/out \
+            faisca-backup
+          ls out/*.dump.age
+
+      - name: Uma chave a mais no arquivo faz o backup parar
+        run: |
+          { cat key/recipient.txt; cat key/recipient.txt; } > key/two.txt
+          if docker run --rm --network host -v "$PWD/out:/out" -v "$PWD/key:/key:ro" \
+            -e PGHOST=localhost -e PGUSER=faisca_backup -e PGPASSWORD=backup -e PGDATABASE=origem \
+            -e AGE_RECIPIENT_FILE=/key/two.txt -e BACKUP_OUTPUT_DIR=/out faisca-backup; then
+            echo "::error::O backup aceitou duas chaves públicas."
+            exit 1
+          fi
+
+      - name: A cópia não se abre sem a chave
+        run: |
+          if docker run --rm -v "$PWD/out:/out:ro" --entrypoint sh faisca-backup \
+            -c 'pg_restore --list /out/*.dump.age' > /dev/null 2>&1; then
+            echo "::error::A cópia abriu sem a chave: não está criptografada."
+            exit 1
+          fi
+
+      - name: Restaura num banco vazio e confere os dados
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE restaurado"
+          docker run --rm --network host -v "$PWD/out:/out:ro" -v "$PWD/key:/key:ro" --entrypoint sh \
+            -e PGPASSWORD=postgres faisca-backup \
+            -c 'age --decrypt --identity /key/id.txt /out/*.dump.age | pg_restore --exit-on-error --no-owner -h localhost -U postgres -d restaurado'
+          count=$(psql -tA -d restaurado -c 'SELECT count(*) FROM "Activity"')
+          if [ "$count" != "50" ]; then
+            echo "::error::Esperava 50 linhas restauradas, vieram $count."
+            exit 1
+          fi
+          echo "Restauração conferida: $count linhas."

@@ -1422,6 +1422,50 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   no limite, a tela repete o aviso para cada uma (mostrar uma vez só fica para um PR do front). Rever o número se alguém chegar
   perto em uso real.
 
+## DEC-075 — Cópia de segurança diária, criptografada e fora do Railway
+- **Decisão:**
+  - o Faísca passa a ter **cópia de segurança do banco** (substitui o "sem backup" da DEC-038). Um
+    serviço próprio no Railway (`backup/`, Postgres 18) faz o `pg_dump` pela **rede privada**: o
+    banco continua fechado para a internet. Ele confere se a cópia abre,
+    **criptografa com `age`** antes de sair e envia para o **Cloudflare R2**, fora do Railway;
+  - a cópia é feita pelo **`faisca_backup`**, que só tem `SELECT` no schema `public`, inclusive nas
+    tabelas futuras (`ALTER DEFAULT PRIVILEGES`). O papel `pg_read_all_data` foi descartado porque
+    também lê o `pg_authid`, onde ficam os hashes das senhas. O `faisca_app` e o `faisca_migrator`
+    não mudam (regra 6). A conexão vem das variáveis `PG*` do libpq, sem senha na linha de comando;
+  - em texto claro, a cópia **nunca toca o disco**: ela sai do `pg_dump` direto para o `age`, e uma
+    cópia do fluxo passa inteira por um `pg_restore` que não grava nada. O log registra o SHA-256,
+    que é conferido antes de restaurar. A chave pública precisa ser uma só, senão o script para;
+  - a **chave pública** fica no repositório (`backup/age-recipient.txt`). A **chave privada** fica só
+    com o autor, no gerenciador de senhas e em papel. Nunca vai para o Railway, o GitHub ou uma conversa;
+  - **retenção:** 7 cópias diárias (`daily/`, 7 dias) e 4 semanais, as de domingo (`weekly/`, 28
+    dias). Quem apaga as antigas são as regras de expiração do R2. Por até um dia, até a expiração
+    rodar, pode haver uma a mais. Uma **trava de retenção** do R2 impede apagar ou sobrescrever uma
+    cópia antes do prazo, mesmo com a chave de envio (6 e 27 dias, um a menos que a expiração);
+  - o CI (`backup-ci.yml`) testa o ciclo inteiro com dados fictícios: cópia pelo usuário só de
+    leitura, criptografia com uma chave descartável, cópia que não abre sem a chave e restauração
+    num banco vazio;
+  - **ordem de entrada:** a cópia **diária** (o `cronSchedule`) só entra junto com o **aviso de
+    privacidade novo, em versão nova e com novo aceite** (DEC-036). A mudança é material: dado de
+    saúde passa a sair do Railway e a ficar guardado depois da exclusão. Até lá, o serviço roda com
+    `BACKUP_TEST_ONLY=1`, que só grava na pasta `test/`, **sem trava**. A cópia de teste é apagada à
+    mão logo depois do teste de restauração (e expira em 1 dia), para o aviso atual, que diz "não
+    guardamos cópias de segurança", seguir verdadeiro na prática. Sem cron, **cada deploy** do
+    serviço roda o script uma vez;
+  - a restauração é testada à mão, uma vez por mês, num contêiner descartável, porque precisa da
+    chave privada.
+- **Motivo:** com o cadastro aberto e uso real, um volume corrompido, um erro de migration ou um
+  incidente como o do Railway em out/2026 (DEC-062) apagaria registros de terapia para sempre. O
+  backup do Railway só existe no plano Pro (~US$ 20/mês), enquanto o R2 tem 10 GB grátis e não cobra
+  para baixar uma cópia. Rodar no GitHub Actions obrigaria a deixar o banco aberto na internet.
+  Criptografar antes de sair faz uma cópia vazada ser inútil sem a chave. A preocupação da DEC-038
+  (dados de saúde fora do controle do app) fica atendida porque nada sai do Railway em texto claro.
+- **Limite conhecido:** quem exclui a conta continua nas cópias **por até 5 semanas**, até elas
+  expirarem. O mesmo vale para uma foto removida da Ação. O aviso de privacidade novo precisa dizer
+  as duas coisas. O "sem backup" citado nos limites da DEC-064 e da DEC-065 deixa de valer com esta
+  decisão. Se a chave privada se perder, as cópias
+  ficam inúteis. A chave de envio do R2 também consegue ler, mas sem a chave privada o que ela lê não
+  serve para nada. A restauração em produção (banco novo) está descrita, mas não foi ensaiada.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
