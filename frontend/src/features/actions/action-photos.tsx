@@ -145,7 +145,15 @@ function AddPhotos({ action }: { action: Action }) {
         await add.mutateAsync({ actionId: action.id, file: files[i]! });
         sent += 1;
       } catch (error) {
-        notes.push(`"${files[i]!.name}": ${getApiError(error).message}`);
+        const { code, message } = getApiError(error);
+        // Limite cheio: as próximas seriam recusadas pelo mesmo motivo. Avisa uma vez e para de enviar.
+        if (code === 'ACCOUNT_PHOTO_LIMIT' || code === 'PHOTO_LIMIT') {
+          const left = files.length - 1 - i;
+          notes.push(left === 0 ? message : `${message} ${left === 1 ? 'A outra não foi enviada.' : 'As outras não foram enviadas.'}`);
+          setProblems([...notes]);
+          break;
+        }
+        notes.push(`"${files[i]!.name}": ${message}`);
         setProblems([...notes]);
       }
     }

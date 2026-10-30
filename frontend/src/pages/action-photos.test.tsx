@@ -55,7 +55,14 @@ const CYCLE = {
 
 // Responde o ciclo e a ação; guarda as fotos enviadas (com o tipo) e as removidas. O envio é
 // conferido na chamada ao Axios: o File do jsdom não passa pelo Request do Node que o MSW usa.
-function photosApi(action: Action | (() => Action), { failUpload = false, failRemove = false } = {}) {
+function photosApi(
+  action: Action | (() => Action),
+  {
+    failUpload = false,
+    failRemove = false,
+    limit = null as { room: number; code: string; message: string } | null,
+  } = {},
+) {
   const uploads: { path: string; name: string; type: unknown }[] = [];
   const removed: string[] = [];
   vi.spyOn(api, 'post').mockImplementation(async (path, body, config) => {
@@ -64,6 +71,11 @@ function photosApi(action: Action | (() => Action), { failUpload = false, failRe
     if (failUpload) {
       throw Object.assign(new AxiosError('falha'), {
         response: { status: 400, data: { error: { code: 'INVALID_IMAGE', message: 'Não foi possível ler esta imagem.' } } },
+      });
+    }
+    if (limit && uploads.length > limit.room) {
+      throw Object.assign(new AxiosError('falha'), {
+        response: { status: 409, data: { error: { code: limit.code, message: limit.message } } },
       });
     }
     return { data: { photo: photo(99) }, status: 201 };
@@ -170,6 +182,51 @@ describe('/acao: fotos da ação avaliada', () => {
     const card = await screen.findByRole('article', { name: 'Café com amiga' });
     await user.upload(fileInput(card), new File(['x'], 'quebrada.jpg', { type: 'image/jpeg' }));
     expect(await within(card).findByRole('alert')).toHaveTextContent('"quebrada.jpg": Não foi possível ler esta imagem.');
+  });
+
+  // PHOTO_LIMIT: a ação ganhou fotos noutro aparelho e o espaço que a tela calculou ficou velho.
+  it.each([
+    {
+      code: 'ACCOUNT_PHOTO_LIMIT',
+      message: 'Sua conta chegou ao limite de 300 fotos. Para adicionar outra, remova uma foto de alguma ação que ainda esteja no prazo.',
+    },
+    { code: 'PHOTO_LIMIT', message: 'Cada ação tem espaço para até 10 fotos.' },
+  ])('limite cheio ($code): avisa uma vez só e não manda as que faltam (DEC-074)', async ({ code, message }) => {
+    const { uploads } = photosApi(fakeAction(), { limit: { room: 1, code, message } });
+    const user = userEvent.setup();
+    renderRoute('/acao');
+
+    const card = await screen.findByRole('article', { name: 'Café com amiga' });
+    await user.upload(
+      fileInput(card),
+      ['a', 'b', 'c', 'd'].map((n) => new File([n], `${n}.jpg`, { type: 'image/jpeg' })),
+    );
+
+    const alert = await within(card).findByRole('alert');
+    expect(within(alert).getAllByRole('listitem')).toHaveLength(1);
+    expect(alert).toHaveTextContent(`${message} As outras não foram enviadas.`);
+    expect(alert).not.toHaveTextContent('b.jpg');
+    // A primeira coube; a segunda bateu no limite; a terceira e a quarta nem foram enviadas.
+    expect(uploads.map((u) => u.name)).toEqual(['a.jpg', 'b.jpg']);
+    expect(within(card).getByRole('status')).toHaveTextContent('Pronto, a foto foi adicionada.');
+  });
+
+  it.each([
+    { names: ['a', 'b', 'c'], expected: 'Cada ação tem espaço para até 10 fotos. A outra não foi enviada.' },
+    { names: ['a', 'b'], expected: 'Cada ação tem espaço para até 10 fotos.' },
+  ])('limite cheio com $names.length fotos: diz só o que de fato ficou sem enviar', async ({ names, expected }) => {
+    const message = 'Cada ação tem espaço para até 10 fotos.';
+    photosApi(fakeAction(), { limit: { room: 1, code: 'PHOTO_LIMIT', message } });
+    const user = userEvent.setup();
+    renderRoute('/acao');
+
+    const card = await screen.findByRole('article', { name: 'Café com amiga' });
+    await user.upload(
+      fileInput(card),
+      names.map((n) => new File([n], `${n}.jpg`, { type: 'image/jpeg' })),
+    );
+
+    expect((await within(card).findByRole('alert')).textContent).toBe(expected);
   });
 
   it('"Adicionar fotos" manda uma por vez, com o tipo da foto, e avisa a que passa de 20 MB', async () => {
