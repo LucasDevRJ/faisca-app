@@ -22,6 +22,12 @@ export type AuthUser = {
   seenAnnouncement: string | null;
   // Paleta de cores escolhida (DEC-063); null = Sálvia.
   palette: Palette | null;
+  // Ajustes de acessibilidade da conta (DEC-076).
+  directLanguage: boolean;
+  oneThingAtATime: boolean;
+  comfortableReading: boolean;
+  noTimePressure: boolean;
+  reducedMotion: boolean;
 };
 
 function unauthenticated() {
@@ -48,6 +54,11 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
           privacyVersion: true,
           seenAnnouncement: true,
           palette: true,
+          directLanguage: true,
+          oneThingAtATime: true,
+          comfortableReading: true,
+          noTimePressure: true,
+          reducedMotion: true,
         },
       })
     : null;
@@ -71,6 +82,11 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     privacyVersion: user.privacyVersion,
     seenAnnouncement: user.seenAnnouncement,
     palette: user.palette,
+    directLanguage: user.directLanguage,
+    oneThingAtATime: user.oneThingAtATime,
+    comfortableReading: user.comfortableReading,
+    noTimePressure: user.noTimePressure,
+    reducedMotion: user.reducedMotion,
   };
   next();
 };

@@ -284,8 +284,19 @@ await prisma.$transaction(async (tx) => {
 });
 
 // Perfil básico (DEC-061): nome completo da paciente dev e uma foto fictícia (um quadrado de cor)
-// para a terapeuta dev. A paciente fica sem foto, para ver as iniciais.
-await prisma.user.update({ where: { id: patient.id }, data: { fullName: 'Paciente Dev Fictícia da Silva' } });
+// para a terapeuta dev. A paciente fica sem foto, para ver as iniciais. Os ajustes de
+// acessibilidade começam desligados (DEC-076).
+await prisma.user.update({
+  where: { id: patient.id },
+  data: {
+    fullName: 'Paciente Dev Fictícia da Silva',
+    directLanguage: false,
+    oneThingAtATime: false,
+    comfortableReading: false,
+    noTimePressure: false,
+    reducedMotion: false,
+  },
+});
 const devPhoto = await sharp({ create: { width: 512, height: 512, channels: 3, background: '#9cc2a5' } })
   .png()
   .toBuffer();

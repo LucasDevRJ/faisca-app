@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
 import type { LinksService } from '../links/links.service.js';
+import { toAccessibilitySettings, type AccessibilitySettings } from '../profile/profile.service.js';
 import { accountDeletedEmail, accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
 import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 import { CURRENT_ANNOUNCEMENT, pendingAnnouncement, type Announcement } from './announcements.js';
@@ -34,12 +35,26 @@ export type PublicUser = {
   pendingAnnouncement: Announcement | null;
   // Paleta de cores da conta (DEC-063): vem no /auth/me para o app aplicar as cores ao abrir.
   palette: Palette;
+  // Ajustes de acessibilidade da conta (DEC-076): vêm no /auth/me para o app aplicá-los ao abrir.
+  accessibility: AccessibilitySettings;
 };
 
 export function toPublicUser(
   user: Pick<
     User,
-    'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile' | 'privacyVersion' | 'seenAnnouncement' | 'palette'
+    | 'id'
+    | 'name'
+    | 'email'
+    | 'hasPatientProfile'
+    | 'hasTherapistProfile'
+    | 'privacyVersion'
+    | 'seenAnnouncement'
+    | 'palette'
+    | 'directLanguage'
+    | 'oneThingAtATime'
+    | 'comfortableReading'
+    | 'noTimePressure'
+    | 'reducedMotion'
   >,
 ): PublicUser {
   return {
@@ -54,6 +69,7 @@ export function toPublicUser(
       therapist: user.hasTherapistProfile,
     }),
     palette: user.palette ?? 'SALVIA',
+    accessibility: toAccessibilitySettings(user),
   };
 }
 
