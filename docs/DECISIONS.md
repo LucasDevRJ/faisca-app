@@ -1319,6 +1319,25 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o dono ainda pode contornar a regra como administrador; isso fica
   reservado a emergências, e o hook do Claude Code continua bloqueando force push na `main`.
 
+## DEC-071 — Revisor de segurança e npm audit no CI
+- **Decisão:**
+  - subagente **`revisor-seguranca`**, só de leitura, em dois modos: **por área** (backend,
+    frontend, testes, dependências), para revisar o código inteiro uma área por vez, e **pelo
+    diff**, antes de PR que mexa em login, sessão, senha, vínculo, envio de arquivo ou
+    dependências. Ele entrega uma lista priorizada (alta, média, baixa) com `arquivo:linha`, o
+    cenário de ataque e o teste que provaria a falha; **não corrige**: o usuário aprova e cada
+    correção sai num PR pequeno, com um teste que falha antes e passa depois. Não substitui pentest;
+  - workflow **`audit-ci.yml`**: `npm audit --omit=dev --audit-level=high` no backend e no
+    frontend, em todo PR e toda segunda de manhã. **Só avisa** (escolha do usuário): não entra nos
+    checks obrigatórios da main (DEC-070), para uma falha publicada num dia qualquer não travar
+    todos os PRs, inclusive uma correção urgente sem relação com ela;
+  - **alertas do Dependabot** ligados no GitHub, sem os PRs automáticos de atualização (escolha do
+    usuário, para evitar barulho). A varredura de segredos do GitHub já estava ativa.
+- **Motivo:** item 3 do plano de Engenharia de Contexto (#92). A falha do `sharp` (corrigida no
+  #109) mostrou que dependência fica insegura sem ninguém mexer no código.
+- **Limite conhecido:** o `npm audit` só conhece falhas publicadas; a revisão lê o código, mas
+  não ataca o app em execução.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
