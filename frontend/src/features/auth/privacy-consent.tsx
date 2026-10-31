@@ -117,12 +117,18 @@ export function PrivacyConsentGate({ area, audience = 'patient', onCancel, onAcc
         continua igual.
       </p>
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-        {error && <Alert tone="attention">{error}</Alert>}
-        <label className="flex cursor-pointer items-start gap-3">
+        {error && (
+          <div id="privacy-consent-error">
+            <Alert tone="attention">{error}</Alert>
+          </div>
+        )}
+        <label className="flex min-h-11 cursor-pointer items-start gap-3">
           <input
             type="checkbox"
             checked={checked}
             onChange={(e) => setChecked(e.target.checked)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'privacy-consent-error' : undefined}
             className="mt-0.5"
           />
           <span>
@@ -179,7 +185,8 @@ export function PrivacyUpdateBanner({ gatedArea }: { gatedArea?: PrivacyArea }) 
   if (gatedArea && !user.privacyAreas[gatedArea]) return null;
 
   const missing = (Object.keys(AREA_NAME) as PrivacyArea[]).filter((area) => !user.privacyAreas[area]);
-  if (missing.length === 0) return null;
+  // Versão nova sem área nova (2026-10.7, DEC-078): nada a liberar, então o aceite fica na faixa.
+  if (missing.length === 0) return <PrivacyVersionConsent />;
 
   return (
     <Alert>
@@ -189,5 +196,66 @@ export function PrivacyUpdateBanner({ gatedArea }: { gatedArea?: PrivacyArea }) 
         Ver o que mudou
       </Link>
     </Alert>
+  );
+}
+
+// Aceite de uma versão do aviso que não traz área nova (DEC-078): as cópias de segurança mudam onde
+// e por quanto tempo os dados ficam, mas não liberam nem bloqueiam nada. Mesmo consentimento do
+// cadastro: caixa desmarcada e explícita (DEC-036). A faixa some depois do aceite.
+function PrivacyVersionConsent() {
+  const [checked, setChecked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const accept = useAcceptPrivacy();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!checked) {
+      setError('Para aceitar, marque que você leu e concorda com o aviso.');
+      return;
+    }
+    setError(null);
+    accept.mutate(undefined, { onError: (e) => setError(getApiError(e).message) });
+  }
+
+  return (
+    <section
+      aria-labelledby="privacy-version-title"
+      className="flex flex-col gap-3 rounded-md border-l-4 border-primary bg-bg px-4 py-3 text-text"
+    >
+      {/* Parágrafo, e não título: a faixa fica acima do <h1> da tela e não pode quebrar a ordem dos títulos. */}
+      <p id="privacy-version-title" className="font-semibold">
+        O aviso de privacidade mudou
+      </p>
+      <p>
+        Agora o Faísca faz uma cópia de segurança por dia, criptografada, que expira em até 5 semanas.{' '}
+        {/* Outra aba: a pessoa lê o aviso sem perder a caixa marcada. */}
+        <Link to="/privacidade" target="_blank" rel="noopener" className={linkClass}>
+          Ver o que mudou
+        </Link>
+      </p>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
+        {error && (
+          <div id="privacy-version-error">
+            <Alert tone="attention">{error}</Alert>
+          </div>
+        )}
+        <label className="flex min-h-11 cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => setChecked(e.target.checked)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'privacy-version-error' : undefined}
+            className="mt-0.5"
+          />
+          <span>Li e concordo com o aviso de privacidade.</span>
+        </label>
+        <div>
+          <Button type="submit" disabled={accept.isPending}>
+            {accept.isPending ? 'Salvando…' : 'Aceitar'}
+          </Button>
+        </div>
+      </form>
+    </section>
   );
 }

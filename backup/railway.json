@@ -6,6 +6,7 @@
     "watchPatterns": ["/backup/**"]
   },
   "deploy": {
-    "restartPolicyType": "NEVER"
+    "restartPolicyType": "NEVER",
+    "cronSchedule": "0 6 * * *"
   }
 }

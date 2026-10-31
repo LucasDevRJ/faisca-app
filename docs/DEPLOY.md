@@ -208,7 +208,8 @@ docker run --rm -it alpine sh -c "apk add -q age && age-keygen"
 
 Ele mostra a chave pública (`# public key: age1...`) e a privada (`AGE-SECRET-KEY-1...`).
 
-- **A privada** (a linha `AGE-SECRET-KEY-1...` inteira) vai para o gerenciador de senhas e para um papel guardado. Ela não entra em
+- **A privada** (a linha `AGE-SECRET-KEY-1...` inteira, **com o prefixo `AGE-SECRET-KEY-`**: sem ele, o
+  `age` não reconhece a chave) vai para o gerenciador de senhas e para um papel guardado. Ela não entra em
   arquivo do computador, no Railway, no GitHub nem em conversa. **Sem ela, as cópias não abrem.**
 - **A pública** (`age1...`) vai, sozinha, numa linha, para `backup/age-recipient.txt`, por PR. Ela
   pode ser pública.
@@ -267,7 +268,7 @@ das próximas migrations já nascerem com leitura para o `faisca_backup`. O pape
 
    | Variável | Valor |
    |---|---|
-   | `PGHOST` | `${{Postgres.RAILWAY_PRIVATE_DOMAIN}}` |
+   | `PGHOST` | `${{faisca.RAILWAY_PRIVATE_DOMAIN}}` |
    | `PGUSER` | `faisca_backup` |
    | `PGPASSWORD` | a senha do passo 3 |
    | `PGDATABASE` | `railway` |
@@ -277,13 +278,21 @@ das próximas migrations já nascerem com leitura para o `faisca_backup`. O pape
    | `R2_SECRET_ACCESS_KEY` | do passo 2.5 |
    | `BACKUP_TEST_ONLY` | `1` (só até o aviso novo entrar; ver o passo 5) |
 
+   Cuidados que já custaram tempo:
+   - na referência do `PGHOST`, o nome é o do **serviço do banco** no projeto. No Faísca ele se chama
+     `faisca` (num projeto novo, costuma ser `Postgres`). O valor resolvido é `postgres.railway.internal`;
+   - confira se não sobrou uma `}` a mais no fim da referência;
+   - o `R2_ENDPOINT` é só `https://<account id>.r2.cloudflarestorage.com`, sem barra nem o nome do
+     bucket no fim (o bucket vai no `R2_BUCKET`).
+
 4. **Deploy.** Sem `cronSchedule`, **cada deploy** do serviço roda o script uma vez e para. Isso vale
    também para merges que mexem em `backup/` e para *Redeploy*. No log aparece
    `backup: test/faisca-<data>.dump.age (N bytes) enviado`, e o arquivo aparece no R2. Faça o
    teste de restauração (seção 5) e **apague a cópia de `test/`** no R2 logo depois.
-5. **A cópia diária** começa quando o `railway.json` ganha `"cronSchedule": "0 6 * * *"` (3h em
-   São Paulo), no mesmo PR do aviso de privacidade novo (DEC-075). Com o aviso no ar, **apague a
-   variável `BACKUP_TEST_ONLY`** e faça o deploy do serviço.
+5. **A cópia diária** roda pelo `"cronSchedule": "0 6 * * *"` do `railway.json` (3h em São Paulo),
+   que entrou junto com o aviso de privacidade versão 7 (DEC-075, DEC-078). Com o aviso no ar,
+   **apague a variável `BACKUP_TEST_ONLY`** e faça o deploy do serviço. Enquanto ela existir, as
+   execuções do cron gravam só em `test/`, que expira em 1 dia.
 
 ### 5. Testar a restauração (uma vez por mês)
 
@@ -293,7 +302,9 @@ computador, e o contêiner leva tudo embora ao parar.
 
 1. No R2, baixe a cópia mais recente de `daily/` (no primeiro teste, a de `test/`). Confira se o
    SHA-256 do arquivo bate com o do log do serviço no Railway (`backup: ... sha256 <valor>
-   enviado`). Se não bater, a cópia não saiu do Faísca: não restaure.
+   enviado`). Se não bater, a cópia não saiu do Faísca: não restaure. O painel do R2 baixa o
+   arquivo com o nome da pasta na frente (`test_faisca-...`, `daily_faisca-...`): use o nome do
+   arquivo baixado nos comandos abaixo.
 
    ```sh
    docker run --rm -v "$PWD:/b:ro" alpine sha256sum /b/faisca-<data>.dump.age

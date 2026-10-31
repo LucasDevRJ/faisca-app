@@ -84,6 +84,9 @@ describe('POST /auth/delete-account', () => {
 
     const email = mailer.lastTo(PATIENT);
     expect(email?.subject).toBe('Sua conta no Faísca foi excluída');
+    // O prazo das cópias de segurança (DEC-078), no texto e no HTML.
+    expect(email?.text).toContain('expiram em até 5 semanas');
+    expect(email?.html).toContain('expiram em até 5 semanas');
     expect(email?.text).not.toContain('Caminhada');
     expect(email?.text).not.toMatch(/https?:\/\//);
   });

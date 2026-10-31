@@ -31,14 +31,15 @@ async function loginAgent(email = PATIENT) {
 const ALTERNATIVE = '2026-10-explicacao-alternativa';
 const READ_MARKS = '2026-10-lido';
 const PHOTOS = '2026-10-fotos-acao';
+const BACKUPS = '2026-10-copias-seguranca';
 
 describe('card de Novidades (DEC-054, DEC-058)', () => {
   it('a paciente vê a novidade que é para ela até tocar em "Entendi"; fica no banco', async () => {
     const agent = await loginAgent();
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(PHOTOS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(BACKUPS);
 
-    const seen = await agent.post('/auth/announcement-seen').send({ announcement: PHOTOS });
+    const seen = await agent.post('/auth/announcement-seen').send({ announcement: BACKUPS });
     expect(seen.status).toBe(200);
     expect(seen.body.user.pendingAnnouncement).toBeNull();
     expect((await request.agent(app).post('/auth/login').send({ email: PATIENT, password: PASSWORD })).body.user
@@ -49,10 +50,10 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     await createConfirmedUser({ email: 'terapeuta@faisca.test', patient: false, therapist: true });
     const agent = await loginAgent('terapeuta@faisca.test');
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(PHOTOS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(BACKUPS);
     // A anterior não pode ser marcada no lugar da que está aparecendo.
     expect((await agent.post('/auth/announcement-seen').send({ announcement: READ_MARKS })).status).toBe(400);
-    expect((await agent.post('/auth/announcement-seen').send({ announcement: PHOTOS })).status).toBe(200);
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: BACKUPS })).status).toBe(200);
   });
 
   it('conta nova não recebe como novidade o que já existia no cadastro', async () => {
@@ -76,7 +77,7 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
 
     expect((await agent.post('/auth/announcement-seen').send({ announcement: 'novidade-antiga' })).status).toBe(400);
     expect((await agent.post('/auth/announcement-seen').send({})).status).toBe(400);
-    expect((await request(app).post('/auth/announcement-seen').send({ announcement: PHOTOS })).status).toBe(401);
+    expect((await request(app).post('/auth/announcement-seen').send({ announcement: BACKUPS })).status).toBe(401);
   });
 
   it('a pendente é a mais recente para o perfil, depois da última vista', () => {
@@ -84,12 +85,13 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     const therapist = { patient: false, therapist: true };
     const both = { patient: true, therapist: true };
 
-    expect(pendingAnnouncement(null, patient)).toBe(PHOTOS);
-    expect(pendingAnnouncement(null, therapist)).toBe(PHOTOS);
-    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(PHOTOS);
-    expect(pendingAnnouncement(ALTERNATIVE, therapist)).toBe(PHOTOS);
-    expect(pendingAnnouncement(READ_MARKS, both)).toBe(PHOTOS);
-    expect(pendingAnnouncement(PHOTOS, both)).toBeNull();
-    expect(pendingAnnouncement('desconhecida', patient)).toBe(PHOTOS);
+    expect(pendingAnnouncement(null, patient)).toBe(BACKUPS);
+    expect(pendingAnnouncement(null, therapist)).toBe(BACKUPS);
+    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(BACKUPS);
+    expect(pendingAnnouncement(ALTERNATIVE, therapist)).toBe(BACKUPS);
+    expect(pendingAnnouncement(READ_MARKS, both)).toBe(BACKUPS);
+    expect(pendingAnnouncement(PHOTOS, both)).toBe(BACKUPS);
+    expect(pendingAnnouncement(BACKUPS, both)).toBeNull();
+    expect(pendingAnnouncement('desconhecida', patient)).toBe(BACKUPS);
   });
 });

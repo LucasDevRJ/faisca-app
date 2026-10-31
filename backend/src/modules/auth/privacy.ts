@@ -7,7 +7,8 @@
 // - 2026-10.4: entra a agenda, com hora, motivos e pausas (DEC-045).
 // - 2026-10.5: entra a Ação (DEC-051).
 // - 2026-10.6: entram as fotos da Ação (DEC-064).
-export const PRIVACY_VERSIONS = ['2026-10', '2026-10.2', '2026-10.3', '2026-10.4', '2026-10.5', '2026-10.6'] as const;
+// - 2026-10.7: entram as cópias de segurança (DEC-075, DEC-078). Sem área nova: nada é bloqueado.
+export const PRIVACY_VERSIONS = ['2026-10', '2026-10.2', '2026-10.3', '2026-10.4', '2026-10.5', '2026-10.6', '2026-10.7'] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 
@@ -15,7 +16,7 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // "a última da lista", porque a API conhece uma versão antes de o texto dela estar no ar (DEC-064):
 // a 2026-10.6 (fotos da Ação) só virou a atual no PR das telas, junto com o texto do aviso
 // (DEC-065). Sem isso, alguém aceitaria uma versão cujo texto ainda não viu.
-export const PRIVACY_VERSION: PrivacyVersion = '2026-10.6';
+export const PRIVACY_VERSION: PrivacyVersion = '2026-10.7';
 
 // Cada área de dado novo exige a versão do aviso que passou a citá-la (DEC-042). Assim, uma versão
 // nova não bloqueia de novo o que a pessoa já tinha liberado: quem aceitou a 2026-10.2 segue no RPD

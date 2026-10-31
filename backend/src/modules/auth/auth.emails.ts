@@ -64,7 +64,7 @@ export function accountExistsEmail(to: string): EmailMessage {
 }
 
 // Enviado depois de excluir a conta (DEC-035): se não foi a própria pessoa, ela fica sabendo.
-// Sem link: não há mais conta para entrar.
+// Sem link: não há mais conta para entrar. Conta o prazo das cópias de segurança (DEC-075, DEC-078).
 export function accountDeletedEmail(to: string, name: string): EmailMessage {
   return {
     to,
@@ -72,11 +72,14 @@ export function accountDeletedEmail(to: string, name: string): EmailMessage {
     html: layout([
       `Olá, ${escapeHtml(name)}.`,
       'Sua conta no Faísca foi excluída, junto com os registros, as consultas e os vínculos.',
+      'As cópias de segurança do Faísca, que são criptografadas e não são abertas, expiram em até 5 semanas. Depois disso, não sobra nada da sua conta.',
       'Obrigado por ter usado o Faísca. Se quiser voltar um dia, é só criar uma conta nova.',
     ]),
     text: `Olá, ${name}.
 
 Sua conta no Faísca foi excluída, junto com os registros, as consultas e os vínculos.
+
+As cópias de segurança do Faísca, que são criptografadas e não são abertas, expiram em até 5 semanas. Depois disso, não sobra nada da sua conta.
 
 Obrigado por ter usado o Faísca. Se quiser voltar um dia, é só criar uma conta nova.`,
   };

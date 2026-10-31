@@ -11,13 +11,15 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-10.4 (DEC-045): entra a agenda (hora, motivos e pausas), com novo aceite para usá-la.
 // Versão 2026-10.5 (DEC-051): entra a Ação, com novo aceite para usá-la.
 // Versão 2026-10.6 (DEC-064, DEC-065): entram as fotos da Ação, com novo aceite para usá-las.
+// Versão 2026-10.7 (DEC-075, DEC-078): entram as cópias de segurança. Pede o aceite de novo, mas não
+// bloqueia nenhuma área: não há dado novo, muda onde e por quanto tempo os dados ficam.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
 // (DEC-058): um dado de trabalho dela, que o paciente não vê. E também para o nome completo, a
 // paleta e a foto do perfil (DEC-061, DEC-068, DEC-069): dados pessoais da própria conta, que não são
 // de saúde.
-const VERSION_LABEL = 'versão 6, de outubro de 2026';
+const VERSION_LABEL = 'versão 7, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -133,22 +135,27 @@ export function PrivacyPage() {
         <Section title="Onde ficam">
           <p>
             Nos servidores do Railway (banco de dados e API) e da Vercel (site), nos{' '}
-            <strong>Estados Unidos</strong>. Os e-mails saem pelo Resend, a partir de servidores em São Paulo.
+            <strong>Estados Unidos</strong>. Os e-mails saem pelo Resend, a partir de servidores em São Paulo. As
+            cópias de segurança ficam no Cloudflare R2, também <strong>fora do Brasil</strong>.
           </p>
         </Section>
 
         <Section title="Como protegemos">
           <p>
             Conexão sempre criptografada (HTTPS). A terapeuta só consegue ler, nunca alterar nada. Códigos e
-            links de vínculo são guardados de forma que não possam ser lidos.
+            links de vínculo são guardados de forma que não possam ser lidos. Todo dia fazemos uma cópia de
+            segurança dos dados, criptografada antes de sair do servidor. Só quem cuida do Faísca tem a chave para
+            abri-la, e ela só é usada se acontecer um problema grave, como uma falha que apague dados.
           </p>
         </Section>
 
         <Section title="Por quanto tempo">
           <p>
-            Até você excluir a conta. A exclusão, em <strong>Conta</strong>, apaga tudo na hora. Não guardamos
-            cópias de segurança. Uma foto também é apagada quando você a remove da ação, o que dá para fazer
-            até a próxima consulta depois de avaliá-la.
+            Até você excluir a conta. A exclusão, em <strong>Conta</strong>, apaga tudo do app na hora. As cópias
+            de segurança expiram em até <strong>5 semanas</strong> e, até lá, não são abertas. Se precisarmos usar
+            uma cópia, apagamos de novo o que já tinha sido excluído. Uma foto também é apagada quando você a
+            remove da ação, o que dá para fazer até a próxima consulta depois de avaliá-la, e segue o mesmo prazo
+            nas cópias.
           </p>
         </Section>
 

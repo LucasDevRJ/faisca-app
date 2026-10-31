@@ -5,9 +5,11 @@ import { Dialog, DialogFooter, DialogForm } from '../../components/ui/dialog';
 import { PasswordField } from '../../components/ui/text-field';
 import { accountDeletedState } from './account-deleted';
 import { getApiError } from './auth-api';
+import { useLinkStatus } from '../links/use-links';
 import { useDeleteAccount } from './use-session';
 
-// SPEC ("Privacidade"), DEC-035: excluir a conta apaga tudo. Fica no fim de "Conta", discreto,
+// SPEC ("Privacidade"), DEC-035: excluir a conta apaga tudo (as cópias de segurança expiram em até 5 semanas,
+// DEC-078). Fica no fim de "Conta", discreto,
 // e só acontece depois de confirmar com a senha.
 export function DeleteAccountSection({ isPatient }: { isPatient: boolean }) {
   const [open, setOpen] = useState(false);
@@ -70,7 +72,11 @@ function DeleteAccountDialog({ isPatient, onClose }: { isPatient: boolean; onClo
             {isPatient && <li>sua agenda de consultas, com as pausas e os motivos;</li>}
             <li>seus vínculos: quem acompanha você, ou quem você acompanha, perde o acesso na hora.</li>
           </ul>
-          <p>Mandamos um e-mail avisando que a conta foi excluída.</p>
+          <p>
+            As cópias de segurança, criptografadas e que não são abertas, expiram em até 5 semanas. Mandamos um e-mail
+            avisando que a conta foi excluída.
+          </p>
+          {isPatient && <TakeABreak />}
         </div>
       }
       onClose={onClose}
@@ -93,5 +99,15 @@ function DeleteAccountDialog({ isPatient, onClose }: { isPatient: boolean; onClo
         </DialogFooter>
       </DialogForm>
     </Dialog>
+  );
+}
+
+// Para o paciente com vínculo ativo (DEC-078): quem só quer uma pausa não precisa apagar tudo. Sem
+// vínculo, não há o que desfazer, e a frase não aparece.
+function TakeABreak() {
+  const status = useLinkStatus();
+  if (!status.data?.link) return null;
+  return (
+    <p>Se quiser só dar um tempo, desfaça o vínculo em Conta e volte quando quiser. Seus registros continuam aqui.</p>
   );
 }

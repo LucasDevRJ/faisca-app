@@ -1509,6 +1509,42 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   exclusões. O log só serve enquanto o `userId` não for mascarado (comentário em
   `auth.service.ts`). A restauração em produção continua não ensaiada.
 
+## DEC-078 — Aviso de privacidade versão 7: cópias de segurança e cópia diária ligada
+- **Decisão:**
+  - o aviso de privacidade passa à **versão 7** (`2026-10.7`, "versão 7, de outubro de 2026"), que conta
+    as cópias de segurança da DEC-075. **Como protegemos:** uma cópia por dia, criptografada antes de
+    sair do servidor, que só quem cuida do Faísca consegue abrir e que só é usada num problema grave.
+    **Onde ficam:** no Cloudflare R2, fora do Brasil. **Por quanto tempo:** a exclusão apaga do app na
+    hora; as cópias expiram em até 5 semanas e, até lá, não são abertas; se uma cópia for usada, o que
+    já tinha sido excluído é apagado de novo (DEC-077); uma foto removida da Ação segue o mesmo prazo.
+    Sai o "não guardamos cópias de segurança";
+  - **sem área nova:** a versão não traz dado novo, muda onde e por quanto tempo os dados ficam. Por
+    isso não bloqueia nenhuma área (`PRIVACY_AREAS` não muda), mas pede o aceite de novo, como a
+    DEC-075 previa. Como a faixa de antes (DEC-043) só citava áreas bloqueadas e não apareceria, quem
+    está com o aviso desatualizado e sem área faltando vê no topo de Meus registros e de Meus
+    pacientes a faixa **"O aviso de privacidade mudou"**, com o resumo, o link "Ver o que mudou", a
+    caixa desmarcada "Li e concordo" e o botão "Aceitar". Ela some depois do aceite;
+  - o **e-mail de conta excluída** e a **janela de excluir conta** contam que as cópias expiram em até
+    5 semanas. Para o paciente com vínculo ativo, a janela lembra que dá para só dar um tempo:
+    desfazer o vínculo em Conta e voltar quando quiser, com os registros guardados (sem vínculo, a
+    frase não aparece);
+  - **card de Novidades** `2026-10-copias-seguranca`, para todos, com link para o aviso;
+  - a **cópia diária** entra no ar: `"cronSchedule": "0 6 * * *"` (3h em São Paulo) no
+    `backup/railway.json`. Depois do merge, com o aviso no ar, a variável `BACKUP_TEST_ONLY` é apagada
+    no Railway (roteiro no DEPLOY). Até isso acontecer, o cron grava só em `test/`, que expira em 1 dia;
+  - o roteiro do backup no DEPLOY ganha os tropeços da primeira configuração: o serviço do banco se
+    chama `faisca`, a `}` a mais no `PGHOST`, o `R2_ENDPOINT` sem bucket, a chave privada com o
+    prefixo `AGE-SECRET-KEY-` e o nome com a pasta na frente no download do R2.
+- **Motivo:** a DEC-075 condicionou a cópia diária a um aviso novo com novo aceite, porque dado de
+  saúde passa a sair do Railway e a ficar guardado depois da exclusão. Bloquear o app inteiro por uma
+  mudança sem dado novo seria desproporcional; uma faixa com aceite explícito informa e registra o
+  consentimento sem atrapalhar o uso. Lembrar o desvínculo na hora de excluir evita que alguém apague
+  tudo quando só queria uma pausa.
+- **Limite conhecido:** quem não aceitar a versão 7 continua usando o app, e os dados dessa pessoa
+  também entram nas cópias, porque a cópia é do banco inteiro. O aceite aqui registra que a pessoa foi
+  informada; quem não concordar pode excluir a conta, e as cópias expiram em até 5 semanas. A faixa
+  fica em Meus registros e Meus pacientes, e não em Conta nem nas páginas de formulário.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

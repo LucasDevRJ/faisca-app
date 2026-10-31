@@ -87,6 +87,34 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     ),
     link: { to: '/acao', label: 'Ver minhas ações' },
   },
+  // Cópias de segurança e aviso de privacidade versão 7 (DEC-078).
+  '2026-10-copias-seguranca': {
+    title: 'Novidade: cópias de segurança',
+    icon: '🔒',
+    date: '2026-10-31',
+    patient: (
+      <>
+        <p>
+          Agora o Faísca faz uma <strong>cópia de segurança</strong> por dia, criptografada, para os seus registros não se
+          perderem se acontecer um problema grave.
+        </p>
+        <p>
+          Se você excluir a conta, ela some do app na hora, e as cópias expiram em até 5 semanas. O aviso de privacidade
+          foi atualizado e pede o seu aceite de novo.
+        </p>
+      </>
+    ),
+    therapist: (
+      <>
+        <p>
+          Agora o Faísca faz uma <strong>cópia de segurança</strong> por dia, criptografada, para os registros não se
+          perderem se acontecer um problema grave.
+        </p>
+        <p>O aviso de privacidade foi atualizado e pede o seu aceite de novo.</p>
+      </>
+    ),
+    link: { to: '/privacidade', label: 'Ler o aviso de privacidade' },
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?
