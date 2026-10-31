@@ -4,7 +4,7 @@ import { prisma } from '../../lib/prisma.js';
 import { resetDatabase } from '../../test/db.js';
 import { DELETED_ACCOUNT_RETENTION_DAYS, pruneDeletedAccounts } from './deleted-accounts.js';
 
-// Lista de contas excluídas (DEC-076): fica o mesmo tempo que as cópias de segurança (DEC-075).
+// Lista de contas excluídas (DEC-077): fica o mesmo tempo que as cópias de segurança (DEC-075).
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NOW = new Date('2026-11-30T12:00:00Z');
 

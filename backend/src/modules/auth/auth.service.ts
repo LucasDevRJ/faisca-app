@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
 import type { LinksService } from '../links/links.service.js';
+import { toAccessibilitySettings, type AccessibilitySettings } from '../profile/profile.service.js';
 import { accountDeletedEmail, accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
 import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 import { CURRENT_ANNOUNCEMENT, pendingAnnouncement, type Announcement } from './announcements.js';
@@ -34,12 +35,26 @@ export type PublicUser = {
   pendingAnnouncement: Announcement | null;
   // Paleta de cores da conta (DEC-063): vem no /auth/me para o app aplicar as cores ao abrir.
   palette: Palette;
+  // Ajustes de acessibilidade da conta (DEC-076): vêm no /auth/me para o app aplicá-los ao abrir.
+  accessibility: AccessibilitySettings;
 };
 
 export function toPublicUser(
   user: Pick<
     User,
-    'id' | 'name' | 'email' | 'hasPatientProfile' | 'hasTherapistProfile' | 'privacyVersion' | 'seenAnnouncement' | 'palette'
+    | 'id'
+    | 'name'
+    | 'email'
+    | 'hasPatientProfile'
+    | 'hasTherapistProfile'
+    | 'privacyVersion'
+    | 'seenAnnouncement'
+    | 'palette'
+    | 'directLanguage'
+    | 'oneThingAtATime'
+    | 'comfortableReading'
+    | 'noTimePressure'
+    | 'reducedMotion'
   >,
 ): PublicUser {
   return {
@@ -54,6 +69,7 @@ export function toPublicUser(
       therapist: user.hasTherapistProfile,
     }),
     palette: user.palette ?? 'SALVIA',
+    accessibility: toAccessibilitySettings(user),
   };
 }
 
@@ -327,7 +343,7 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
 
     // SPEC ("Privacidade"), DEC-035: apaga a conta e, em cascata no banco, atividades, consultas,
     // vínculos, convites, códigos, tokens e o Registro de Pensamentos. As sessões abertas caem porque o requireAuth não
-    // acha mais o usuário. O id fica na lista de contas excluídas (DEC-076), para a conta não voltar
+    // acha mais o usuário. O id fica na lista de contas excluídas (DEC-077), para a conta não voltar
     // se uma cópia de segurança for restaurada.
     async deleteAccount(userId: string, password: string): Promise<void> {
       const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
@@ -340,7 +356,7 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
         if (count > 0) await tx.deletedAccount.create({ data: { userId } });
       });
       // O userId fica no log de propósito: se o banco sumir, é por ele que as contas excluídas depois
-      // da última cópia são apagadas de novo na restauração (DEC-076). Não mascarar.
+      // da última cópia são apagadas de novo na restauração (DEC-077). Não mascarar.
       logger.info({ userId }, 'Conta excluída');
       await sendSafely('account-deleted', accountDeletedEmail(user.email, user.name));
     },

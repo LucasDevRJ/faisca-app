@@ -38,6 +38,13 @@ model User {
   // Paleta de cores escolhida (DEC-063); null = Sálvia, a padrão. Combina com o tema claro/escuro,
   // que continua no aparelho.
   palette             Palette?
+  // Ajustes de acessibilidade (DEC-076, issue #87): abertos a todos, desligados por padrão. Ficam
+  // na conta para valer em qualquer aparelho.
+  directLanguage      Boolean   @default(false)
+  oneThingAtATime     Boolean   @default(false)
+  comfortableReading  Boolean   @default(false)
+  noTimePressure      Boolean   @default(false)
+  reducedMotion       Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -497,7 +504,7 @@ model ReadMark {
   @@index([therapistId, patientId])
 }
 
-// Contas excluídas nas últimas 5 semanas, só pelo id (DEC-076). Se um dia for preciso restaurar uma
+// Contas excluídas nas últimas 5 semanas, só pelo id (DEC-077). Se um dia for preciso restaurar uma
 // cópia de segurança (DEC-075), estas contas são apagadas de novo, para ninguém voltar depois de
 // excluir. Sem relação com o User (ele já não existe) e sem nome nem e-mail: fora das cópias de
 // segurança, o id não identifica ninguém. Some depois de 35 dias, depois das próprias cópias.

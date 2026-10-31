@@ -1466,7 +1466,29 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   ficam inúteis. A chave de envio do R2 também consegue ler, mas sem a chave privada o que ela lê não
   serve para nada. A restauração em produção (banco novo) está descrita, mas não foi ensaiada.
 
-## DEC-076 — Lista de contas excluídas, para a restauração não trazer ninguém de volta
+## DEC-076 — Ajustes de acessibilidade (API)
+- **Decisão:**
+  - cinco ajustes de acessibilidade na conta (`User`, booleanos, desligados por padrão; issue #87):
+    **`directLanguage`** (Linguagem direta), **`oneThingAtATime`** (Uma coisa por vez),
+    **`comfortableReading`** (Leitura confortável), **`noTimePressure`** (Sem pressão de tempo) e
+    **`reducedMotion`** (Menos movimento);
+  - ficam **na conta** (e não só no aparelho), para valerem no celular e no computador, e são
+    **abertos a todos** (paciente e terapeuta), sem precisar informar condição de saúde;
+  - vêm agrupados em `accessibility` no `GET /auth/me` (para o app aplicá-los logo ao abrir) e no
+    `GET /profile`, e mudam pelo `PATCH /profile` (`{ accessibility: { ... } }`, sempre da própria
+    conta). O `PATCH /profile` continua aceitando só os campos enviados (nome completo, paleta e/ou
+    qualquer subconjunto dos cinco ajustes); objeto `accessibility` vazio é 400;
+  - **sem nova versão do aviso de privacidade**: são preferências de interface da própria conta, como
+    a paleta (DEC-063), e não dados de saúde; a terapeuta não vê os ajustes do paciente. A pergunta
+    sobre neurodivergência e as condições de saúde entram na etapa do Perfil de saúde, com aceite
+    próprio.
+- **Motivo:** o "efeito rampa" e o fato de muitos adultos usarem os ajustes sem diagnóstico fechado:
+  qualquer pessoa (inclusive a terapeuta) pode ligar um ajuste quando quiser, sem precisar declarar
+  um diagnóstico. Subir a API antes das telas segue a DEC-056.
+- **Limite conhecido:** os efeitos visuais e de formulário de cada ajuste entram no PR das telas da
+  seção Acessibilidade.
+
+## DEC-077 — Lista de contas excluídas, para a restauração não trazer ninguém de volta
 - **Decisão:**
   - ao excluir a conta, o id dela entra na tabela **`DeletedAccount`**, na mesma transação. Só o id
     (um UUID aleatório) e a data: sem nome, sem e-mail e sem relação com nenhum outro dado;

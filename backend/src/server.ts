@@ -9,7 +9,7 @@ const server = createApp().listen(env.PORT, () => {
   logger.info({ port: env.PORT, env: env.NODE_ENV }, 'API do Faísca no ar');
 });
 
-// A lista de contas excluídas some depois do prazo das cópias de segurança (DEC-076).
+// A lista de contas excluídas some depois do prazo das cópias de segurança (DEC-077).
 const stopPrune = scheduleDeletedAccountsPrune();
 
 // Encerramento gracioso: o Railway manda SIGTERM a cada deploy.

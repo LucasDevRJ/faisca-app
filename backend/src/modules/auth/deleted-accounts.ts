@@ -1,7 +1,7 @@
 import { logger } from '../../lib/logger.js';
 import { prisma } from '../../lib/prisma.js';
 
-// Contas excluídas, só pelo id (DEC-076): a lista serve para apagar de novo essas contas depois de
+// Contas excluídas, só pelo id (DEC-077): a lista serve para apagar de novo essas contas depois de
 // restaurar uma cópia de segurança (DEC-075, docs/DEPLOY.md). Fica o mesmo tempo que as cópias.
 export const DELETED_ACCOUNT_RETENTION_DAYS = 35;
 

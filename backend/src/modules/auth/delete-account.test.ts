@@ -149,7 +149,7 @@ describe('POST /auth/delete-account', () => {
     expect(await prisma.activity.count({ where: { userId: patientId } })).toBe(1);
   });
 
-  // DEC-076: só o id, para apagar de novo se uma cópia de segurança for restaurada.
+  // DEC-077: só o id, para apagar de novo se uma cópia de segurança for restaurada.
   it('guarda só o id da conta excluída, sem nome nem e-mail', async () => {
     const agent = await loginAgent(PATIENT);
     expect((await agent.post('/auth/delete-account').send({ password: PASSWORD })).status).toBe(204);

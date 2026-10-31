@@ -324,7 +324,7 @@ computador, e o contêiner leva tudo embora ao parar.
 
 ### 6. Restaurar em produção (desastre)
 
-Não ensaiado ainda. **Antes de tudo, junte a lista de contas excluídas depois da cópia** (DEC-076).
+Não ensaiado ainda. **Antes de tudo, junte a lista de contas excluídas depois da cópia** (DEC-077).
 Sem isso, quem excluiu a conta nesse meio-tempo volta com a restauração:
 
 - se o banco atual ainda abre (o caso comum: uma migration ou um erro estragou dados), pelo

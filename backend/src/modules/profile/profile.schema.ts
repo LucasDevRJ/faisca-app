@@ -6,6 +6,18 @@ export const FULL_NAME_MAX = 120;
 // As paletas de cores (DEC-063), na mesma ordem do enum Palette do schema.prisma.
 export const PALETTES = ['SALVIA', 'LAVANDA', 'OCEANO', 'AREIA', 'ALTO_CONTRASTE'] as const;
 
+// Ajustes de acessibilidade (DEC-076, issue #87): abertos a todos, desligados por padrão. Cada
+// campo é opcional no PATCH, para mudar só o que vier.
+export const accessibilitySchema = z
+  .strictObject({
+    directLanguage: z.boolean().optional(),
+    oneThingAtATime: z.boolean().optional(),
+    comfortableReading: z.boolean().optional(),
+    noTimePressure: z.boolean().optional(),
+    reducedMotion: z.boolean().optional(),
+  })
+  .refine((input) => Object.keys(input).length > 0, { error: 'Escolha ao menos um ajuste de acessibilidade.' });
+
 // Cada campo é opcional: o PATCH muda só o que vier. Nome completo vazio (ou só espaços) apaga,
 // como null.
 export const updateProfileSchema = z.strictObject({
@@ -17,9 +29,10 @@ export const updateProfileSchema = z.strictObject({
     .nullable()
     .optional(),
   palette: z.enum(PALETTES, { error: 'Escolha uma das paletas do Faísca.' }).optional(),
+  accessibility: accessibilitySchema.optional(),
 })
   // Corpo vazio não muda nada: provavelmente é um engano de quem chamou.
-  .refine((input) => Object.keys(input).length > 0, { error: 'Envie o nome completo ou a paleta.' });
+  .refine((input) => Object.keys(input).length > 0, { error: 'Envie o nome completo, a paleta ou os ajustes de acessibilidade.' });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
