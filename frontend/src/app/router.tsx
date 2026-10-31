@@ -11,7 +11,9 @@ import { InvitePage } from '../pages/invite-page';
 import { ErrorPage } from '../pages/error-page';
 import { ForgotPasswordPage } from '../pages/forgot-password-page';
 import { LoginPage } from '../pages/login-page';
+import { MuralPage } from '../pages/mural-page';
 import { NotFoundPage } from '../pages/not-found-page';
+import { NoticesPage } from '../pages/notices-page';
 import { PatientPage } from '../pages/patient-page';
 import { PrivacyPage } from '../pages/privacy-page';
 import { PatientsPage } from '../pages/patients-page';
@@ -61,6 +63,8 @@ export const routes = [
                   { path: 'acao/nova', element: <NewActionPage /> },
                   { path: 'acao/:id/editar', element: <EditActionPage /> },
                   { path: 'consultas', element: <AppointmentsPage /> },
+                  // Avisos de quem acompanha (DEC-080).
+                  { path: 'avisos', element: <NoticesPage /> },
                 ],
               },
               {
@@ -68,6 +72,8 @@ export const routes = [
                 children: [
                   { path: 'pacientes', element: <PatientsPage /> },
                   { path: 'pacientes/:patientId', element: <PatientPage /> },
+                  // Mural de avisos da terapeuta (DEC-079, DEC-080).
+                  { path: 'mural', element: <MuralPage /> },
                 ],
               },
             ],

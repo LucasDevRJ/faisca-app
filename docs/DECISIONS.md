@@ -1579,6 +1579,32 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a lista do paciente traz todos os avisos, sem paginação; com centenas de
   avisos, valeria paginar. O limite por hora fica na memória da instância, como os outros.
 
+## DEC-080 — Mural de avisos (telas)
+- **Decisão:**
+  - **terapeuta:** página **`/mural`**, com atalho num cartão em Meus pacientes ("Abrir o mural").
+    No topo, o que os pacientes veem e o que ela não vê. Formulário "Novo aviso" com contador perto
+    dos 2000 caracteres. A lista "Publicados" mostra a data, "editado em…" e os botões **Editar**
+    (janela) e **Apagar** (confirmação: "Ele some para todos os seus pacientes"). Depois de salvar,
+    o aviso de status e o foco vão para a lista. O limite por hora aparece como "Você publicou vários
+    avisos seguidos. Tente de novo daqui a pouco.";
+  - **paciente:** cartão **"Avisos de <nome>"** em Meus registros, abaixo do aviso de novo vínculo,
+    **só quando há aviso**. Mostra o mais recente em até 3 linhas, com o selo "Novo", e o botão "Ver
+    avisos". Página **`/avisos`** com todos, do mais novo para o mais antigo;
+  - o selo é **"Novo", sem número**, para não virar cobrança. Ao abrir `/avisos`, os não vistos são
+    marcados na API, mas a lista em memória não muda: o selo **continua durante a visita** e some na
+    próxima vez que a lista carregar;
+  - os textos usam **o nome de quem acompanha**, e não "sua psicóloga" (#101). Sem vínculo, o texto é
+    neutro;
+  - o aviso de privacidade cita o mural em "O que guardamos" e em "Quem vê", **sem versão nova**
+    (DEC-079);
+  - card de Novidades `2026-10-mural`, para todos;
+  - no menu de quem tem os dois perfis, "Meus registros" fica marcado em `/avisos` e "Meus pacientes"
+    no `/mural`.
+- **Motivo:** a página própria não polui a lista de pacientes e dá espaço para ler e editar. O
+  cartão só com aviso não ocupa a tela de quem não tem vínculo. O selo que fica durante a visita
+  deixa a pessoa saber qual aviso é o novo; se sumisse ao abrir, ela não veria.
+- **Limite conhecido:** sem notificação até a #32. Quem não abre o app não fica sabendo do aviso.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

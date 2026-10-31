@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { buttonClasses } from '../components/ui/button-styles';
 import { Alert } from '../components/ui/alert';
 import { getApiError } from '../features/auth/auth-api';
 import { formatDate } from '../features/links/link-format';
@@ -65,6 +66,20 @@ export function PatientsPage() {
       <PrivacyUpdateBanner />
 
       <RedeemCodeForm />
+
+      {/* Atalho do mural de avisos (DEC-080): escrever para todos os pacientes de uma vez. */}
+      <section
+        aria-labelledby="mural-title"
+        className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6"
+      >
+        <h2 id="mural-title" className="text-xl font-semibold">
+          Mural de avisos
+        </h2>
+        <p className="text-muted">Escreva para todos os seus pacientes de uma vez: férias, feriados, mudança de horário.</p>
+        <Link to="/mural" className={`${buttonClasses('secondary')} self-start`}>
+          Abrir o mural
+        </Link>
+      </section>
 
       <section aria-labelledby="patients-title" className="flex flex-col gap-3">
         <h2 id="patients-title" className="text-2xl font-semibold">

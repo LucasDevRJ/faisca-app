@@ -145,6 +145,9 @@ export const handlers = [
   // Sem vínculo e sem pacientes, por padrão.
   http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
   http.get('*/api/links/patients', () => HttpResponse.json({ patients: [] })),
+  // Mural de avisos (DEC-080): nenhum aviso, por padrão.
+  http.get('*/api/notices', () => HttpResponse.json({ notices: [], unseenCount: 0 })),
+  http.get('*/api/therapist/notices', () => HttpResponse.json({ notices: [] })),
   // Nada para ler, por padrão (DEC-058).
   http.get('*/api/therapist/patients/:patientId/unread', () =>
     HttpResponse.json({

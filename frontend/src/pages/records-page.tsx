@@ -17,6 +17,7 @@ import { AppointmentsCard } from '../features/appointments/appointments-card';
 import { sessionDays } from '../features/appointments/appointments-api';
 import { useAgenda } from '../features/appointments/use-appointments';
 import { NewLinkNotice } from '../features/links/new-link-notice';
+import { NoticesCard } from '../features/notices/notices-card';
 import { formatDayHeading, todayInAppZone } from '../features/activities/week';
 import { WeekChart } from '../features/activities/week-chart';
 import { PatientCycleSummary } from '../features/cycle/cycle-summary';
@@ -43,6 +44,8 @@ export function RecordsPage() {
       </section>
 
       <NewLinkNotice />
+
+      <NoticesCard />
 
       <AppointmentsCard today={today} />
 

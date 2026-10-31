@@ -285,11 +285,14 @@ await prisma.$transaction(async (tx) => {
 
   // Mural da terapeuta dev (DEC-079): um aviso antigo, já visto pela paciente dev, e um novo.
   await tx.therapistNotice.deleteMany({ where: { therapistId: therapist.id } });
+  const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
   const oldNotice = await tx.therapistNotice.create({
     data: {
       therapistId: therapist.id,
       body: 'Atendo às terças e quintas. Se precisar remarcar, me avise com um dia de antecedência (aviso fictício).',
-      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      createdAt: tenDaysAgo,
+      // Sem isso, o @updatedAt marca agora e o aviso aparece como "editado".
+      updatedAt: tenDaysAgo,
     },
   });
   await tx.therapistNotice.create({

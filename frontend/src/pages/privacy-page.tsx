@@ -18,7 +18,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
 // (DEC-058): um dado de trabalho dela, que o paciente não vê. E também para o nome completo, a
 // paleta e a foto do perfil (DEC-061, DEC-068, DEC-069): dados pessoais da própria conta, que não são
-// de saúde.
+// de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já vi"
+// fica só com o paciente.
 const VERSION_LABEL = 'versão 7, de outubro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
@@ -92,6 +93,7 @@ export function PrivacyPage() {
               a 10 da tensão e da vontade de vocalizar, o que você fez e o que aconteceu depois.
             </li>
             <li>Seus vínculos com terapeutas.</li>
+            <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
             <li>No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro e a paleta de cores.</li>
             <li>
               Se você baixar o arquivo da agenda para o calendário do celular, ele leva só o dia e a hora de cada
@@ -128,6 +130,11 @@ export function PrivacyPage() {
               Se você é terapeuta, o seu nome, o seu e-mail e a sua foto de perfil, se tiver, aparecem para os
               pacientes vinculados. Se você é paciente, a sua foto de perfil, se tiver, aparece para a terapeuta
               vinculada.
+            </li>
+            <li>
+              Os avisos da terapeuta vinculada aparecem para você enquanto o vínculo existir. Só você sabe quais já
+              leu. Se você é terapeuta, os avisos que publica aparecem para todos os pacientes vinculados, que não
+              veem uns aos outros.
             </li>
           </ul>
         </Section>
