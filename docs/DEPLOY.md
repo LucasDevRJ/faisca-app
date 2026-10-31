@@ -324,7 +324,15 @@ computador, e o contêiner leva tudo embora ao parar.
 
 ### 6. Restaurar em produção (desastre)
 
-Não ensaiado ainda. Num Postgres novo do Railway:
+Não ensaiado ainda. **Antes de tudo, junte a lista de contas excluídas depois da cópia** (DEC-076).
+Sem isso, quem excluiu a conta nesse meio-tempo volta com a restauração:
+
+- se o banco atual ainda abre (o caso comum: uma migration ou um erro estragou dados), pelo
+  Console do Postgres: `SELECT "userId" FROM "DeletedAccount" WHERE "deletedAt" >= '<data da cópia>';`
+- se o banco sumiu, nos logs da API no Railway: as linhas `Conta excluída` depois da data da cópia
+  trazem o `userId` (o log do plano Hobby guarda poucos dias).
+
+Depois, num Postgres novo do Railway:
 
 1. crie o `faisca_migrator`, o `faisca_app` e o `faisca_backup` (passo 2.3 do deploy e passo 3
    acima);
@@ -332,7 +340,15 @@ Não ensaiado ainda. Num Postgres novo do Railway:
    restauradas já nascerem com as permissões do `faisca_app`;
 3. restaure como `faisca_migrator` com `pg_restore --no-owner --exit-on-error`, pelo mesmo
    contêiner descartável do passo 5, usando um TCP Proxy temporário (e remova o proxy depois);
-4. troque o `DATABASE_URL` e o `MIGRATION_DATABASE_URL` da API para o banco novo e faça o deploy.
+4. **apague de novo as contas da lista**, ainda como `faisca_migrator`, e registre cada uma como
+   excluída (os dados delas saem em cascata, como na exclusão pelo app):
+
+   ```sql
+   DELETE FROM "User" WHERE id IN ('<id 1>', '<id 2>');
+   INSERT INTO "DeletedAccount" ("userId") VALUES ('<id 1>'), ('<id 2>') ON CONFLICT DO NOTHING;
+   ```
+
+5. troque o `DATABASE_URL` e o `MIGRATION_DATABASE_URL` da API para o banco novo e faça o deploy.
 
 ## Trocar os segredos (incidente de segurança)
 

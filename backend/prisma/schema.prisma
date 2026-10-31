@@ -496,3 +496,12 @@ model ReadMark {
   @@unique([therapistId, actionId])
   @@index([therapistId, patientId])
 }
+
+// Contas excluídas nas últimas 5 semanas, só pelo id (DEC-076). Se um dia for preciso restaurar uma
+// cópia de segurança (DEC-075), estas contas são apagadas de novo, para ninguém voltar depois de
+// excluir. Sem relação com o User (ele já não existe) e sem nome nem e-mail: fora das cópias de
+// segurança, o id não identifica ninguém. Some depois de 35 dias, depois das próprias cópias.
+model DeletedAccount {
+  userId    String   @id @db.Uuid
+  deletedAt DateTime @default(now())
+}

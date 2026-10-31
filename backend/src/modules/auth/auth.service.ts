@@ -327,14 +327,20 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
 
     // SPEC ("Privacidade"), DEC-035: apaga a conta e, em cascata no banco, atividades, consultas,
     // vínculos, convites, códigos, tokens e o Registro de Pensamentos. As sessões abertas caem porque o requireAuth não
-    // acha mais o usuário.
+    // acha mais o usuário. O id fica na lista de contas excluídas (DEC-076), para a conta não voltar
+    // se uma cópia de segurança for restaurada.
     async deleteAccount(userId: string, password: string): Promise<void> {
       const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
       if (!(await verifyPassword(password, user.passwordHash))) {
         throw new AppError(400, 'INVALID_PASSWORD', 'A senha não confere.');
       }
-      // deleteMany: se dois pedidos chegarem juntos, o segundo não quebra.
-      await prisma.user.deleteMany({ where: { id: userId } });
+      await prisma.$transaction(async (tx) => {
+        // deleteMany: se dois pedidos chegarem juntos, o segundo não apaga nada e não quebra.
+        const { count } = await tx.user.deleteMany({ where: { id: userId } });
+        if (count > 0) await tx.deletedAccount.create({ data: { userId } });
+      });
+      // O userId fica no log de propósito: se o banco sumir, é por ele que as contas excluídas depois
+      // da última cópia são apagadas de novo na restauração (DEC-076). Não mascarar.
       logger.info({ userId }, 'Conta excluída');
       await sendSafely('account-deleted', accountDeletedEmail(user.email, user.name));
     },

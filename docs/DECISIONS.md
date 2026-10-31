@@ -1466,6 +1466,27 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   ficam inúteis. A chave de envio do R2 também consegue ler, mas sem a chave privada o que ela lê não
   serve para nada. A restauração em produção (banco novo) está descrita, mas não foi ensaiada.
 
+## DEC-076 — Lista de contas excluídas, para a restauração não trazer ninguém de volta
+- **Decisão:**
+  - ao excluir a conta, o id dela entra na tabela **`DeletedAccount`**, na mesma transação. Só o id
+    (um UUID aleatório) e a data: sem nome, sem e-mail e sem relação com nenhum outro dado;
+  - a lista fica **35 dias**, o prazo das cópias de segurança (DEC-075). A API apaga o que passou do
+    prazo ao subir e uma vez por dia (`setInterval`, sem `node-cron`: é o único job e é idempotente);
+  - ao restaurar uma cópia, as contas excluídas depois dela são apagadas de novo
+    (`docs/DEPLOY.md`, "Restaurar em produção"). Se o banco atual ainda abre, a lista vem dele; se
+    ele sumiu, vem do log `Conta excluída`, que já registrava o `userId`;
+  - o aviso de privacidade pode, então, prometer que uma conta excluída não volta com uma
+    restauração.
+- **Motivo:** uma cópia de segurança é uma foto do passado. Restaurar uma cópia de segunda depois de
+  alguém excluir a conta na terça traria a conta de volta, com os registros de saúde, contra o que
+  o aviso e a LGPD prometem. Fora das cópias de segurança, o id não identifica ninguém, e a lista
+  some depois delas (35 dias contra 28 da cópia semanal mais antiga). Ainda não há cópia guardada
+  de antes desta lista: as diárias só começam com o aviso novo (DEC-075).
+- **Limite conhecido:** se o banco sumir inteiro, a lista depende do log do Railway, que no plano
+  Hobby guarda poucos dias: uma restauração feita muito depois do desastre pode não achar todas as
+  exclusões. O log só serve enquanto o `userId` não for mascarado (comentário em
+  `auth.service.ts`). A restauração em produção continua não ensaiada.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
