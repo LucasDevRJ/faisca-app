@@ -42,4 +42,7 @@ export const users = {
   // Usadas só nos testes das fotos da Ação (api/action-photos.spec.ts, DEC-064).
   photosPatient: { email: 'fotos-paciente@faisca.test', password: SEED_PASSWORD },
   photosTherapist: { email: 'fotos-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só nos testes do mural de avisos (api/notices.spec.ts, DEC-079).
+  noticesPatient: { email: 'mural-paciente@faisca.test', password: SEED_PASSWORD },
+  noticesTherapist: { email: 'mural-terapeuta@faisca.test', password: SEED_PASSWORD },
 } as const;

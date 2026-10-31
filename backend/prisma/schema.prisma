@@ -68,6 +68,10 @@ model User {
   invitesSignedUp      LinkInvite[]      @relation("InviteSignupUser")
   linkCodes            LinkCode[]
   linkCodeAttempts     LinkCodeAttempt[]
+  // Mural de avisos (DEC-079): os avisos que esta conta publicou como terapeuta e os que ela já viu
+  // como paciente.
+  notices              TherapistNotice[]
+  noticesSeen          NoticeSeen[]
 
   // Foto de perfil (DEC-061), opcional.
   avatar UserAvatar?
@@ -502,6 +506,38 @@ model ReadMark {
   @@unique([therapistId, tensionEpisodeId])
   @@unique([therapistId, actionId])
   @@index([therapistId, patientId])
+}
+
+// Mural de avisos da terapeuta (DEC-079): mensagem de mão única para todos os pacientes com vínculo
+// ativo. É conteúdo da terapeuta, e não dado de paciente: ela cria, edita e apaga os próprios avisos.
+// Os pacientes não se veem entre si e não comentam. O texto tem de 1 a 2000 caracteres (CHECK na
+// migration) e some com a conta dela.
+model TherapistNotice {
+  id          String   @id @default(uuid()) @db.Uuid
+  therapistId String   @db.Uuid
+  body        String
+  createdAt   DateTime @default(now())
+  // Maior que o createdAt = editado. Editar não faz o aviso voltar a ser "novo" para o paciente.
+  updatedAt   DateTime @updatedAt
+
+  therapist User         @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  seenBy    NoticeSeen[]
+
+  @@index([therapistId, createdAt])
+}
+
+// O "já vi" do paciente num aviso do mural (DEC-079): tira o selo "Novo". Só o próprio paciente lê;
+// a terapeuta não sabe quem viu. Some com o aviso ou com a conta do paciente.
+model NoticeSeen {
+  noticeId  String   @db.Uuid
+  patientId String   @db.Uuid
+  seenAt    DateTime @default(now())
+
+  notice  TherapistNotice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  patient User            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@id([noticeId, patientId])
+  @@index([patientId])
 }
 
 // Contas excluídas nas últimas 5 semanas, só pelo id (DEC-077). Se um dia for preciso restaurar uma

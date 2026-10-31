@@ -1545,6 +1545,40 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   informada; quem não concordar pode excluir a conta, e as cópias expiram em até 5 semanas. A faixa
   fica em Meus registros e Meus pacientes, e não em Conta nem nas páginas de formulário.
 
+## DEC-079 — Mural de avisos da terapeuta (API)
+- **Decisão:**
+  - a terapeuta publica **avisos** para todos os pacientes com vínculo ativo de uma vez. É de **mão
+    única**: sem comentários, sem interação entre pacientes e sem lista de quem recebe. A ideia
+    inicial era um feed em que os pacientes também postassem e comentassem. Essa parte foi recusada
+    (ver o motivo);
+  - é a **terceira exceção da regra 1** do AGENTS.md ("terapeuta: só GET"), depois do vínculo
+    (DEC-031) e do "Lido" (DEC-057). Ela grava **só o próprio aviso**, nunca dado de paciente. As
+    escritas ficam num prefixo próprio, `POST`/`PATCH`/`DELETE /therapist/notices`, com a cadeia
+    sessão → perfil de terapeuta, sem vínculo (o aviso não é sobre um paciente).
+    `/therapist/patients/...` continua com o `onlyReads` antes de tudo. `GET /therapist/notices` lista
+    os dela. Aviso de outra terapeuta → 403; que não existe → 404;
+  - `TherapistNotice`: `therapistId`, `body` (1 a 2000 caracteres, CHECK na migration), `createdAt` e
+    `updatedAt`; some com a conta dela. Limite de **10 publicações por hora**;
+  - o paciente (`GET /notices`) vê **todos** os avisos da terapeuta com vínculo ativo, **inclusive os
+    de antes do vínculo**, do mais novo para o mais antigo, com `seen` e `unseenCount`. Sem vínculo,
+    lista vazia. `PUT /notices/seen` com `{ ids }` (até 100) grava o "já vi" em `NoticeSeen`. Um id de
+    outra terapeuta recusa o pedido inteiro (403), como no "Lido";
+  - o "já vi" é **só do paciente**: a terapeuta **não vê quem leu**. Um aviso **editado não volta a
+    ser "Novo"** (só mostra que foi editado), para uma correção de digitação não virar ruído;
+  - **sem notificação** nesta etapa: push e e-mail (#32) ainda não existem. Quando entrarem, o texto
+    é neutro e sem a palavra "psicóloga", porque a tela bloqueada revelaria que a pessoa faz terapia;
+  - o **aviso de privacidade** cita o mural no PR das telas, **sem versão nova**, como o "Lido" e a
+    foto do perfil (DEC-058, DEC-069): o aviso é conteúdo da terapeuta, e não dado de saúde do
+    paciente; o "já vi" fica só com ele. A v7 tinha acabado de pedir um aceite a todos;
+  - logs só com ids (regra 7); `body` entrou no `SENSITIVE_KEYS`.
+- **Motivo:** a terapeuta precisava avisar todos de uma vez (férias, feriados) sem mandar mensagem
+  um a um. O feed entre pacientes foi recusado mesmo como opcional: estar nele já revela quem é
+  paciente de quem, prints tiram o texto do app, uma postagem de crise ou um conselho errado chega a
+  quem leu, e a psicóloga passaria a responder por um espaço de grupo sem enquadre nem mediação.
+  Esconder quem leu evita a pressão do "ela vai ver que eu não li", pelo mesmo motivo da DEC-057.
+- **Limite conhecido:** a lista do paciente traz todos os avisos, sem paginação; com centenas de
+  avisos, valeria paginar. O limite por hora fica na memória da instância, como os outros.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
