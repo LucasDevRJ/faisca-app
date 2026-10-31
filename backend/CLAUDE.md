@@ -11,10 +11,12 @@
 - Rotas de terapeuta ficam sob `/therapist/patients/:patientId/...` e passam por um middleware
   que responde 403 a qualquer método diferente de GET **antes** de tudo, e também quando não há
   vínculo ativo com `:patientId`.
-- As únicas escritas do lado da terapeuta são os POSTs que criam o vínculo (`/links/redeem-code`
+- As escritas do lado da terapeuta são só três. Duas são os POSTs que criam o vínculo (`/links/redeem-code`
   e `/links/accept-invite`, DEC-031) e as marcas de leitura dela (`PUT`/`DELETE
   /therapist/read-marks/:patientId`, DEC-057), num prefixo próprio, com sessão, perfil e vínculo
-  ativo, e que só gravam na tabela `ReadMark`, nunca no registro do paciente. Nada fora de
+  ativo, e que só gravam na tabela `ReadMark`, nunca no registro do paciente. A terceira são os
+  avisos do mural dela (`POST`/`PATCH`/`DELETE /therapist/notices`, DEC-079), com sessão e perfil
+  de terapeuta: só gravam o próprio aviso (`TherapistNotice`), sem dado de paciente. Nada fora de
   `/therapist/patients/...` devolve dado de paciente além de nome, e-mail, o número de não lidos e
   a versão da foto (só se ela existe e quando mudou, DEC-061) dos vinculados (`GET /links/patients`).
   A foto em si fica em `/therapist/patients/:patientId/avatar`.

@@ -2,7 +2,8 @@
 // um segundo e-mail de verdade (DEC-032, DEC-033). Só roda em desenvolvimento.
 // Uso: npm run db:seed-dev (com a API de dev configurada no .env).
 //
-// - terapeuta.dev@faisca.test: terapeuta, com marcas de leitura fictícias na paciente dev (DEC-058);
+// - terapeuta.dev@faisca.test: terapeuta, com marcas de leitura fictícias na paciente dev (DEC-058)
+//   e dois avisos no mural (DEC-079);
 // - paciente.dev@faisca.test: paciente vinculada à terapeuta dev, com ~3 semanas de atividades,
 //   Registros de Pensamentos (com e sem explicação alternativa, um deles ainda aberto para
 //   adicionar até a próxima consulta; DEC-054), Episódios de tensão (um deles no dia da última consulta, para aparecer
@@ -281,6 +282,20 @@ await prisma.$transaction(async (tx) => {
       data: { therapistId: therapist.id, patientId: patient.id, tensionEpisodeId: firstEpisode.id, readAt: new Date() },
     });
   }
+
+  // Mural da terapeuta dev (DEC-079): um aviso antigo, já visto pela paciente dev, e um novo.
+  await tx.therapistNotice.deleteMany({ where: { therapistId: therapist.id } });
+  const oldNotice = await tx.therapistNotice.create({
+    data: {
+      therapistId: therapist.id,
+      body: 'Atendo às terças e quintas. Se precisar remarcar, me avise com um dia de antecedência (aviso fictício).',
+      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    },
+  });
+  await tx.therapistNotice.create({
+    data: { therapistId: therapist.id, body: 'Estarei de férias de 10 a 20 de dezembro (aviso fictício).' },
+  });
+  await tx.noticeSeen.create({ data: { noticeId: oldNotice.id, patientId: patient.id } });
 });
 
 // Perfil básico (DEC-061): nome completo da paciente dev e uma foto fictícia (um quadrado de cor)

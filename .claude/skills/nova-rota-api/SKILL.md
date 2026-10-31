@@ -15,8 +15,9 @@ em caso de dúvida, eles prevalecem sobre esta skill.
   - **B. Terapeuta sobre um paciente**: só GET e só com vínculo ativo.
   - **C. Sem dado de paciente**: conta, vínculo, health. Justifique por que não há dado de paciente.
 - Terapeuta escrevendo dado de paciente **não existe**. As únicas escritas da terapeuta são os
-  POSTs que criam o vínculo (DEC-031) e as marcas de leitura dela em `/therapist/read-marks`
-  (DEC-057, `src/modules/read-marks/`), que não tocam no registro. Se o pedido exigir outra,
+  POSTs que criam o vínculo (DEC-031), as marcas de leitura dela em `/therapist/read-marks`
+  (DEC-057, `src/modules/read-marks/`), que não tocam no registro, e os avisos do mural dela em
+  `/therapist/notices` (DEC-079, `src/modules/notices/`), que são conteúdo dela. Se o pedido exigir outra,
   pare e explique antes de continuar: é mudança de regra inviolável.
 
 ## 2. Estrutura

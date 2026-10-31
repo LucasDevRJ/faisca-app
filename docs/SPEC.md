@@ -230,10 +230,25 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   Os registros do paciente não são apagados: continuam na conta dele. Num vínculo novo, a terapeuta volta
   a ver tudo, inclusive o que foi registrado sem vínculo. A confirmação de desfazer conta isso.
 
+## Mural de avisos (DEC-079)
+- A terapeuta escreve **avisos** para todos os pacientes com vínculo ativo de uma vez (férias,
+  feriado, horários). É de **mão única**: os pacientes não comentam, não se veem entre si e não
+  sabem quem mais recebe.
+- Só texto, de 1 a 2000 caracteres, sem fotos. A terapeuta cria, edita e apaga os próprios avisos,
+  com um limite de publicações por hora.
+- O paciente vê **todos** os avisos da terapeuta com vínculo ativo, inclusive os de antes do
+  vínculo, do mais novo para o mais antigo. O selo **"Novo"** fica até ele abrir; esse "já vi" é só
+  dele. Um aviso editado não volta a ser novo. Ao desfazer o vínculo, deixa de ver na hora.
+- A terapeuta **não vê quem leu**.
+- Sem notificação por enquanto: o push e o e-mail de lembrete (#32) ainda não existem. Quando
+  entrarem, o aviso novo gera um texto neutro ("Você tem um aviso novo no Faísca"), com
+  liga/desliga.
+
 ## Autorização (regra inviolável)
 - No papel de terapeuta: somente requisições GET, e apenas de pacientes com vínculo ativo.
-  A exceção são os dois pedidos que criam o vínculo (digitar o código e aceitar o convite),
-  que não leem nem alteram dado de paciente (DEC-031).
+  As exceções não alteram dado de paciente: os dois pedidos que criam o vínculo (digitar o código e
+  aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057) e os avisos do
+  mural dela, que são conteúdo dela (DEC-079).
 - No papel de paciente: acesso somente aos próprios dados.
 - Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado ou dado de outra pessoa.
 - Tudo isso é garantido no backend, nunca só na interface.
