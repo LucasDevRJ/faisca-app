@@ -21,6 +21,7 @@ export async function resetDatabase() {
   await prisma.therapistLink.deleteMany();
   await prisma.userAvatar.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.deletedAccount.deleteMany();
 }
 
 // Usuário fictício já confirmado, para testes que não são sobre o cadastro.

@@ -149,6 +149,22 @@ describe('POST /auth/delete-account', () => {
     expect(await prisma.activity.count({ where: { userId: patientId } })).toBe(1);
   });
 
+  // DEC-077: só o id, para apagar de novo se uma cópia de segurança for restaurada.
+  it('guarda só o id da conta excluída, sem nome nem e-mail', async () => {
+    const agent = await loginAgent(PATIENT);
+    expect((await agent.post('/auth/delete-account').send({ password: PASSWORD })).status).toBe(204);
+
+    const rows = await prisma.deletedAccount.findMany();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toEqual({ userId: patientId, deletedAt: expect.any(Date) });
+  });
+
+  it('senha errada não entra na lista de contas excluídas', async () => {
+    const agent = await loginAgent(PATIENT);
+    expect((await agent.post('/auth/delete-account').send({ password: 'senha-errada-456' })).status).toBe(400);
+    expect(await prisma.deletedAccount.count()).toBe(0);
+  });
+
   it('responde 429 depois de 10 senhas erradas na mesma conta', async () => {
     const agent = await loginAgent(PATIENT);
     for (let i = 0; i < 10; i += 1) {
