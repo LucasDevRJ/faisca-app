@@ -5,11 +5,13 @@
 // - 2026-10-lido: marcas de leitura da terapeuta (DEC-058), só para a terapeuta.
 // - 2026-10-fotos-acao: fotos nas ações avaliadas (DEC-065), para todos.
 // - 2026-10-copias-seguranca: cópias de segurança e aviso de privacidade versão 7 (DEC-078), para todos.
+// - 2026-10-mural: mural de avisos da terapeuta (DEC-080), para todos.
 export const ANNOUNCEMENTS = [
   '2026-10-explicacao-alternativa',
   '2026-10-lido',
   '2026-10-fotos-acao',
   '2026-10-copias-seguranca',
+  '2026-10-mural',
 ] as const;
 
 export type Announcement = (typeof ANNOUNCEMENTS)[number];
@@ -22,6 +24,7 @@ const AUDIENCE: Record<Announcement, Audience> = {
   '2026-10-lido': 'TERAPEUTA',
   '2026-10-fotos-acao': 'TODOS',
   '2026-10-copias-seguranca': 'TODOS',
+  '2026-10-mural': 'TODOS',
 };
 
 export type Profiles = { patient: boolean; therapist: boolean };

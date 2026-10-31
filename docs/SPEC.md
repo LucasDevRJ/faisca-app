@@ -240,6 +240,10 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   vínculo, do mais novo para o mais antigo. O selo **"Novo"** fica até ele abrir; esse "já vi" é só
   dele. Um aviso editado não volta a ser novo. Ao desfazer o vínculo, deixa de ver na hora.
 - A terapeuta **não vê quem leu**.
+- **Telas** (DEC-080): a terapeuta escreve, edita e apaga em **Mural** (`/mural`), com atalho em Meus
+  pacientes. O paciente vê o aviso mais recente num cartão em Meus registros, que só aparece
+  quando há aviso, e todos em **Avisos** (`/avisos`). O selo "Novo" continua durante a visita e
+  some na próxima.
 - Sem notificação por enquanto: o push e o e-mail de lembrete (#32) ainda não existem. Quando
   entrarem, o aviso novo gera um texto neutro ("Você tem um aviso novo no Faísca"), com
   liga/desliga.

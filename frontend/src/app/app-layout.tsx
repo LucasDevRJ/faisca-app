@@ -13,9 +13,10 @@ export function AppLayout() {
   const logout = useLogout();
   const navigate = useNavigate();
   const bothProfiles = user?.profiles.patient && user.profiles.therapist;
-  // "Meus registros" segue marcado nas telas de Pensamentos, Tensão, Ação e Consultas, que são do mesmo perfil.
+  // "Meus registros" segue marcado nas telas de Pensamentos, Tensão, Ação, Consultas e Avisos, que são do
+  // mesmo perfil; "Meus pacientes", no Mural.
   const { pathname } = useLocation();
-  const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/acao', '/consultas'].some(
+  const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/acao', '/consultas', '/avisos'].some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 
@@ -47,7 +48,10 @@ export function AppLayout() {
           <NavLink to="/registros" className={({ isActive }) => navLinkClass({ isActive: isActive || inPatientArea })}>
             Meus registros
           </NavLink>
-          <NavLink to="/pacientes" className={navLinkClass}>
+          <NavLink
+            to="/pacientes"
+            className={({ isActive }) => navLinkClass({ isActive: isActive || pathname === '/mural' })}
+          >
             Meus pacientes
           </NavLink>
         </nav>

@@ -115,6 +115,24 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     ),
     link: { to: '/privacidade', label: 'Ler o aviso de privacidade' },
   },
+  // Mural de avisos da terapeuta (DEC-080).
+  '2026-10-mural': {
+    title: 'Novidade: mural de avisos',
+    icon: '📌',
+    date: '2026-10-31',
+    patient: (
+      <p>
+        Agora quem acompanha você pode deixar <strong>avisos</strong> no Faísca, como férias ou mudança de horário. Eles
+        aparecem em Meus registros. Só você sabe quais já leu.
+      </p>
+    ),
+    therapist: (
+      <p>
+        Agora você pode escrever <strong>avisos</strong> para todos os seus pacientes de uma vez, no Mural, em Meus
+        pacientes. Eles não veem uns aos outros, e você não vê quem leu.
+      </p>
+    ),
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?
