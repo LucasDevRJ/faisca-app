@@ -781,6 +781,11 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
         '2026-10.6',
         { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true },
       ],
+      // Cópias de segurança (DEC-078): versão nova sem área nova, libera o mesmo que a anterior.
+      [
+        '2026-10.7',
+        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true },
+      ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {

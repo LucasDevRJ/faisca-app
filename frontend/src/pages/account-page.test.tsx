@@ -259,6 +259,9 @@ describe('/conta: excluir conta', () => {
     await user.click(await screen.findByRole('button', { name: 'Excluir minha conta' }));
     const dialog = screen.getByRole('dialog', { name: 'Excluir sua conta?' });
     expect(dialog).toHaveTextContent('suas atividades, notas e observações');
+    // Cópias de segurança (DEC-078). Sem vínculo, nada de "dar um tempo".
+    expect(dialog).toHaveTextContent('expiram em até 5 semanas');
+    expect(dialog).not.toHaveTextContent('dar um tempo');
     await user.type(within(dialog).getByLabelText('Sua senha'), 'senha-ficticia-123');
     await user.click(within(dialog).getByRole('button', { name: 'Excluir minha conta' }));
 
@@ -318,5 +321,20 @@ describe('/conta: excluir conta', () => {
 
     expect(dialog).not.toHaveTextContent('suas atividades');
     expect(dialog).toHaveTextContent('seus vínculos');
+  });
+});
+
+describe('/conta: excluir conta, pausa em vez de excluir (DEC-078)', () => {
+  it('com vínculo ativo, a janela sugere desfazer o vínculo para só dar um tempo', async () => {
+    const user = userEvent.setup();
+    linkStatus({
+      ...noLink,
+      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, therapist },
+    });
+    renderRoute('/conta');
+
+    await user.click(await screen.findByRole('button', { name: 'Excluir minha conta' }));
+    const dialog = screen.getByRole('dialog', { name: 'Excluir sua conta?' });
+    expect(dialog).toHaveTextContent('Se quiser só dar um tempo, desfaça o vínculo em Conta');
   });
 });

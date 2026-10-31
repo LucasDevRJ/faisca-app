@@ -15,9 +15,13 @@ describe('/privacidade', () => {
       'mailto:lucaspereiradelima2020@gmail.com',
     );
     expect(screen.getByText(/Estados Unidos/)).toBeInTheDocument();
-    // Fatos do deploy (DEC-038): e-mails saem de São Paulo e não há backup.
+    // Fatos do deploy (DEC-038): e-mails saem de São Paulo. Cópias de segurança no R2, que expiram
+    // em até 5 semanas (DEC-075, DEC-078).
     expect(screen.getByText(/servidores em São Paulo/)).toBeInTheDocument();
-    expect(screen.getByText(/Não guardamos\s+cópias de segurança/)).toBeInTheDocument();
+    expect(screen.getByText('versão 7, de outubro de 2026')).toBeInTheDocument();
+    expect(screen.getByText(/cópias de segurança ficam no Cloudflare R2/)).toBeInTheDocument();
+    expect(screen.getByText(/As cópias\s+de segurança expiram em até/)).toBeInTheDocument();
+    expect(screen.queryByText(/Não guardamos/)).not.toBeInTheDocument();
     expect(screen.getByText(/CVV, no 188/)).toBeInTheDocument();
   });
 
