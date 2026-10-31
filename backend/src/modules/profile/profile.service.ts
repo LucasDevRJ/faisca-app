@@ -1,14 +1,36 @@
-import type { Palette } from '../../generated/prisma/client.js';
+import type { Palette, User } from '../../generated/prisma/client.js';
 import { processImage } from '../../lib/images.js';
 import { prisma } from '../../lib/prisma.js';
 import type { UpdateProfileInput } from './profile.schema.js';
 
-// Perfil básico (DEC-061): nome completo e foto, de paciente e de terapeuta.
+// Perfil básico (DEC-061) e ajustes de acessibilidade (DEC-076): de paciente e de terapeuta.
+
+export type AccessibilitySettings = {
+  directLanguage: boolean;
+  oneThingAtATime: boolean;
+  comfortableReading: boolean;
+  noTimePressure: boolean;
+  reducedMotion: boolean;
+};
+
+export function toAccessibilitySettings(
+  user: Pick<User, 'directLanguage' | 'oneThingAtATime' | 'comfortableReading' | 'noTimePressure' | 'reducedMotion'>,
+): AccessibilitySettings {
+  return {
+    directLanguage: user.directLanguage,
+    oneThingAtATime: user.oneThingAtATime,
+    comfortableReading: user.comfortableReading,
+    noTimePressure: user.noTimePressure,
+    reducedMotion: user.reducedMotion,
+  };
+}
 
 export type PublicProfile = {
   fullName: string | null;
   // Paleta de cores (DEC-063); sem escolha, a Sálvia.
   palette: Palette;
+  // Ajustes de acessibilidade (DEC-076).
+  accessibility: AccessibilitySettings;
   // Quando a foto mudou pela última vez (ISO), ou null sem foto. O front usa no endereço da
   // imagem para não mostrar uma antiga do cache.
   avatarVersion: string | null;
@@ -37,18 +59,41 @@ export function createProfileService() {
     async get(userId: string): Promise<PublicProfile> {
       const user = await prisma.user.findUniqueOrThrow({
         where: { id: userId },
-        select: { fullName: true, palette: true, avatar: { select: { updatedAt: true } } },
+        select: {
+          fullName: true,
+          palette: true,
+          directLanguage: true,
+          oneThingAtATime: true,
+          comfortableReading: true,
+          noTimePressure: true,
+          reducedMotion: true,
+          avatar: { select: { updatedAt: true } },
+        },
       });
       return {
         fullName: user.fullName,
         palette: user.palette ?? 'SALVIA',
+        accessibility: toAccessibilitySettings(user),
         avatarVersion: avatarVersion(user.avatar),
       };
     },
 
     async update(userId: string, input: UpdateProfileInput): Promise<PublicProfile> {
       // undefined = campo não enviado: o Prisma deixa como está.
-      await prisma.user.update({ where: { id: userId }, data: { fullName: input.fullName, palette: input.palette } });
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          fullName: input.fullName,
+          palette: input.palette,
+          ...(input.accessibility && {
+            directLanguage: input.accessibility.directLanguage,
+            oneThingAtATime: input.accessibility.oneThingAtATime,
+            comfortableReading: input.accessibility.comfortableReading,
+            noTimePressure: input.accessibility.noTimePressure,
+            reducedMotion: input.accessibility.reducedMotion,
+          }),
+        },
+      });
       return this.get(userId);
     },
 

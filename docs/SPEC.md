@@ -28,6 +28,11 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - **Foto de perfil** (DEC-069): em Seu perfil, escolhida e recortada num círculo antes de enviar; sem
   foto, um círculo com as iniciais. Aparece no cartão do vínculo (a da terapeuta, para o paciente) e na
   lista e na página do paciente (para a terapeuta).
+- **Ajustes de acessibilidade** (DEC-076): abertos a todos (paciente e terapeuta), desligados por padrão
+  e salvos na conta, em **Conta → Acessibilidade**: **Linguagem direta** (textos literais), **Uma coisa
+  por vez** (formulários em passos curtos), **Leitura confortável** (fonte maior e mais espaço entre
+  linhas e letras), **Sem pressão de tempo** (esconde contagens regressivas e prazos) e **Menos
+  movimento** (desliga animações e transições).
 
 ## Atividades
 ### Estados

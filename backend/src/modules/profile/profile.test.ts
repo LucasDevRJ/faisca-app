@@ -57,7 +57,18 @@ describe('nome completo', () => {
   it('começa vazio, salva sem espaços nas pontas e apaga com texto vazio', async () => {
     const agent = await loginAgent(PATIENT);
     expect((await agent.get('/profile')).body).toEqual({
-      profile: { fullName: null, palette: 'SALVIA', avatarVersion: null },
+      profile: {
+        fullName: null,
+        palette: 'SALVIA',
+        accessibility: {
+          directLanguage: false,
+          oneThingAtATime: false,
+          comfortableReading: false,
+          noTimePressure: false,
+          reducedMotion: false,
+        },
+        avatarVersion: null,
+      },
     });
 
     const saved = await agent.patch('/profile').send({ fullName: '  Paula Fictícia da Silva  ' });
@@ -112,6 +123,65 @@ describe('paleta de cores (DEC-063)', () => {
     expect((await agent.patch('/profile').send({ palette: 'ALTO_CONTRASTE' })).body.profile.palette).toBe(
       'ALTO_CONTRASTE',
     );
+  });
+});
+
+describe('ajustes de acessibilidade (DEC-076)', () => {
+  it('começam todos desligados, mudam só os enviados e vêm no /auth/me', async () => {
+    const agent = await loginAgent(PATIENT);
+    await agent.patch('/profile').send({ fullName: 'Paula Fictícia', palette: 'OCEANO' });
+    expect((await agent.get('/auth/me')).body.user.accessibility).toEqual({
+      directLanguage: false,
+      oneThingAtATime: false,
+      comfortableReading: false,
+      noTimePressure: false,
+      reducedMotion: false,
+    });
+
+    const first = await agent.patch('/profile').send({
+      accessibility: { comfortableReading: true, noTimePressure: true },
+    });
+    expect(first.status).toBe(200);
+    expect(first.body.profile).toMatchObject({
+      fullName: 'Paula Fictícia',
+      palette: 'OCEANO',
+      accessibility: {
+        directLanguage: false,
+        oneThingAtATime: false,
+        comfortableReading: true,
+        noTimePressure: true,
+        reducedMotion: false,
+      },
+    });
+    expect((await agent.get('/auth/me')).body.user.accessibility).toEqual(first.body.profile.accessibility);
+
+    const second = await agent.patch('/profile').send({
+      accessibility: { directLanguage: true, oneThingAtATime: true, reducedMotion: true, noTimePressure: false },
+    });
+    expect(second.status).toBe(200);
+    expect(second.body.profile.accessibility).toEqual({
+      directLanguage: true,
+      oneThingAtATime: true,
+      comfortableReading: true,
+      noTimePressure: false,
+      reducedMotion: true,
+    });
+  });
+
+  it('vale para a terapeuta também', async () => {
+    const agent = await loginAgent(THERAPIST);
+    const res = await agent.patch('/profile').send({ accessibility: { comfortableReading: true } });
+    expect(res.status).toBe(200);
+    expect(res.body.profile.accessibility.comfortableReading).toBe(true);
+  });
+
+  it('objeto de acessibilidade vazio, campo desconhecido ou não booleano: 400', async () => {
+    const agent = await loginAgent(PATIENT);
+
+    expect((await agent.patch('/profile').send({ accessibility: {} })).status).toBe(400);
+    expect((await agent.patch('/profile').send({ accessibility: { outroAjuste: true } })).status).toBe(400);
+    expect((await agent.patch('/profile').send({ accessibility: { directLanguage: 'sim' } })).status).toBe(400);
+    expect((await agent.patch('/profile').send({ accessibility: null })).status).toBe(400);
   });
 });
 
