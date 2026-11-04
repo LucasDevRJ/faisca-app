@@ -766,6 +766,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       appointmentSchedule: false,
       actions: false,
       actionPhotos: false,
+      aboutMe: false,
     };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
@@ -777,14 +778,13 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       // Ação (DEC-051).
       ['2026-10.5', { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true }],
       // Fotos da Ação (DEC-064).
-      [
-        '2026-10.6',
-        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true },
-      ],
+      ['2026-10.6', { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true }],
       // Cópias de segurança (DEC-078): versão nova sem área nova, libera o mesmo que a anterior.
+      ['2026-10.7', { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true }],
+      // "Sobre mim" (DEC-081).
       [
-        '2026-10.7',
-        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true },
+        '2026-11',
+        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true },
       ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],

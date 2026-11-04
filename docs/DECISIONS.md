@@ -1605,6 +1605,33 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   deixa a pessoa saber qual aviso é o novo; se sumisse ao abrir, ela não veria.
 - **Limite conhecido:** sem notificação até a #32. Quem não abre o app não fica sabendo do aviso.
 
+## DEC-081 — "Sobre mim" do paciente (API)
+- **Decisão:**
+  - tabela `PatientAbout`, **uma por paciente**, com três campos opcionais de texto livre:
+    `aboutMe` ("Sobre mim"), `goals` ("O que eu gostaria de trabalhar") e `habits` ("Hábitos que
+    quero deixar, ou já deixei"). Até **2000 caracteres** cada, no Zod e num CHECK no banco, que
+    também exige ao menos um campo preenchido. **Salvar tudo vazio apaga** o registro, em vez de
+    guardar uma linha vazia;
+  - rotas do paciente `GET`/`PUT /about-me`, sempre da própria conta (o PUT manda os três campos, sem
+    campo a mais); leitura da terapeuta em `GET /therapist/patients/:patientId/about-me`, dentro da
+    cadeia de vínculo ativo, **só leitura** (regra 1 sem exceção nova);
+  - entra no **"Para ler"** (DEC-057): a marca de leitura ganha `aboutId` (o CHECK de "um registro
+    por marca" passa a contar quatro colunas) e o tipo `ABOUT_ME`; mudou depois de lido, volta como
+    atualizado; o paciente apagar tudo apaga a marca junto. A resposta do "Para ler" ganha
+    `aboutMe` e `counts.aboutMe`, nulos sem o aceite;
+  - **área nova no aviso de privacidade** (`aboutMe`, versão `2026-11`), com aceite próprio, para
+    paciente e terapeuta. A API **conhece** a versão; a atual continua a `2026-10.7` até o PR das
+    telas trazer o texto do aviso (como na DEC-064/065);
+  - os três campos entram no `redact` dos logs (regra 7): é texto de saúde;
+  - as sugestões de "O que eu gostaria de trabalhar" ficam no front e **inserem texto editável**: a
+    API guarda só o texto, nunca um rótulo;
+  - sem IA nesta etapa: o "Fio do histórico" com IA é a etapa B (#108), depois da conversa com a
+    psicóloga.
+- **Motivo:** o pedido do usuário (31/10/2026): o paciente contar mais sobre si e sobre o que quer
+  trabalhar, para a psicóloga ter esse contexto ao ler os registros. Sem diagnóstico nem rótulo
+  clínico, por escolha do usuário.
+- **Limite conhecido:** o "Sobre mim" não tem histórico de versões: a terapeuta vê só o texto atual.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

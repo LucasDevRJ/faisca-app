@@ -308,7 +308,7 @@ describe('visão "Não lidos" e contador (DEC-057)', () => {
     expect(res.body.thoughtRecords[0].readStatus).toBe('NAO_LIDO');
     expect(res.body.tensionEpisodes).toEqual([]);
     expect(res.body.actions).toHaveLength(1);
-    expect(res.body.counts).toEqual({ thoughtRecords: 1, tensionEpisodes: 0, actions: 1 });
+    expect(res.body.counts).toEqual({ thoughtRecords: 1, tensionEpisodes: 0, actions: 1, aboutMe: null });
   });
 
   it('área sem o aceite do aviso vem como null', async () => {

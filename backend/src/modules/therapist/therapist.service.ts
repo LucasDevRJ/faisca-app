@@ -1,3 +1,4 @@
+import type { AboutMeService } from '../about-me/about-me.service.js';
 import { addDays, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import type { ListActionsQuery } from '../actions/actions.schema.js';
@@ -45,6 +46,7 @@ export function createTherapistService(
   tensionEpisodes: TensionEpisodesService,
   actions: ActionsService,
   readMarks: ReadMarksService,
+  aboutMe: AboutMeService,
 ) {
   return {
     async summary(therapistId: string, patientId: string) {
@@ -99,6 +101,14 @@ export function createTherapistService(
 
     async listActions(therapistId: string, patientId: string, query: ListActionsQuery) {
       return readMarks.withReadStatus(therapistId, 'ACTION', await actions.list(patientId, query));
+    },
+
+    // "Sobre mim" (DEC-081), com o status de leitura da terapeuta; null quando o paciente não contou nada.
+    async getAboutMe(therapistId: string, patientId: string) {
+      const current = await aboutMe.get(patientId);
+      if (!current) return null;
+      const [withStatus] = await readMarks.withReadStatus(therapistId, 'ABOUT_ME', [current]);
+      return withStatus ?? null;
     },
 
     // A visão "Não lidos" (DEC-057), fora do ciclo.
