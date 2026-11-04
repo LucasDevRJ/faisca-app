@@ -20,6 +20,7 @@ export type SessionUser = {
     appointmentSchedule: boolean;
     actions: boolean;
     actionPhotos: boolean;
+    aboutMe: boolean;
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;

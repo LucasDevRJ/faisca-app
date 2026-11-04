@@ -3,6 +3,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { buttonClasses } from '../components/ui/button-styles';
 import { getApiError } from '../features/auth/auth-api';
+import { AboutMeSection } from '../features/about-me/about-me-section';
 import { DeleteAccountSection } from '../features/auth/delete-account-section';
 import { useAddProfile, useSession } from '../features/auth/use-session';
 import { TherapistLinkSection } from '../features/links/therapist-link-section';
@@ -43,6 +44,9 @@ export function AccountPage() {
       </div>
 
       <ProfileSection />
+
+      {/* "Sobre mim" (DEC-082): só para quem é paciente; a psicóloga vinculada lê. */}
+      {user.profiles.patient && <AboutMeSection />}
 
       {user.profiles.patient && <TherapistLinkSection />}
 

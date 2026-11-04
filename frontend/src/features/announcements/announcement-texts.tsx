@@ -133,6 +133,19 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
       </p>
     ),
   },
+  // "Sobre mim" (DEC-082): só para pacientes.
+  '2026-11-sobre-mim': {
+    title: 'Novidade: o “Sobre mim”',
+    icon: '💬',
+    date: '2026-11-04',
+    patient: (
+      <p>
+        Agora você pode contar um pouco sobre você, o que gostaria de trabalhar na terapia e hábitos que quer deixar.
+        É opcional, e a sua psicóloga lê o que você escrever.
+      </p>
+    ),
+    link: { to: '/conta#sobre-mim', label: 'Abrir o Sobre mim' },
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?

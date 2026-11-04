@@ -1632,6 +1632,27 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   clínico, por escolha do usuário.
 - **Limite conhecido:** o "Sobre mim" não tem histórico de versões: a terapeuta vê só o texto atual.
 
+## DEC-082 — "Sobre mim" (telas) e aviso de privacidade versão 8
+- **Decisão:**
+  - em **Conta**, só para quem é paciente, a seção **"Sobre mim"**: *"Se quiser, conte um pouco sobre
+    você. Tudo é opcional, e a sua psicóloga lê o que você escrever aqui."*, com os três campos
+    (contador perto de 2000 caracteres) e o botão "Salvar". Nada de barra de "perfil completo";
+  - em "O que eu gostaria de trabalhar", **sugestões de tocar** (Ansiedade, Tristeza ou desânimo,
+    Autoestima, Relacionamentos, Socializar, Trabalho ou estudos, Sono, Rotina e organização, Lidar
+    com a raiva, Luto). Tocar insere o texto no campo, que continua editável; a sugestão já escrita
+    some da lista;
+  - na **página do paciente**, para a terapeuta, o cartão **"Sobre a Paula"**: só os campos
+    preenchidos, "Atualizado em dd/mm" e o "Marcar como lido" dela. Sem o aceite, uma linha curta e
+    o botão "Ler e aceitar", que abre o pedido numa janela (a página pode já ter o pedido grande
+    numa aba). O "Sobre mim" também entra na visão **"Para ler"**, pelo dia em que mudou;
+  - o **aviso de privacidade** passa à **versão 8** (`2026-11` vira a atual): cita o "Sobre mim" em
+    "O que guardamos" e em "Quem vê", com os pedidos de aceite próprios para paciente e terapeuta;
+  - **card de Novidades** `2026-11-sobre-mim`, **só para pacientes**: as novidades ganham o público
+    `PACIENTE`, e uma novidade só de paciente não esconde da terapeuta a anterior que ela não viu.
+- **Motivo:** fechar a etapa A do "Sobre mim" com a API já no ar (DEC-081, DEC-056), trocando a
+  versão do aviso no mesmo PR que mostra o texto. Textos aprovados pelo usuário.
+- **Limite conhecido:** os textos dizem "a sua psicóloga"; a revisão do feminino em todo o app é a #101.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

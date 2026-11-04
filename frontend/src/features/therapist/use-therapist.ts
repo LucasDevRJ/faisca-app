@@ -1,4 +1,5 @@
 import { skipToken, useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import { fetchPatientAboutMe } from '../about-me/about-me-api';
 import { PATIENTS_KEY } from '../links/use-links';
 import { fetchPatientUnread, markRead, unmarkRead, type ReadItem } from './read-marks-api';
 import type { CycleResponse } from '../cycle/cycle-api';
@@ -46,6 +47,15 @@ export function useReadMarks(patientId: string) {
   const mark = useMutation({ mutationFn: (items: ReadItem[]) => markRead(patientId, items), onSettled: refresh });
   const unmark = useMutation({ mutationFn: (items: ReadItem[]) => unmarkRead(patientId, items), onSettled: refresh });
   return { mark, unmark };
+}
+
+// "Sobre mim" do paciente (DEC-081): só com o aceite da versão do aviso que o cita.
+export function usePatientAboutMe(patientId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'about-me'],
+    queryFn: enabled ? () => fetchPatientAboutMe(patientId) : skipToken,
+    retry: retryUnlessForbidden,
+  });
 }
 
 export function usePatientSummary(patientId: string) {

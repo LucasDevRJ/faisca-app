@@ -55,6 +55,7 @@ describe('página "O que há de novo"', () => {
     const entries = screen.getAllByRole('article');
     expect(entries.map((entry) => within(entry).getByRole('heading').textContent)).toEqual([
       'Novidade fictícia mais nova',
+      'Novidade: o “Sobre mim”',
       'Novidade: mural de avisos',
       'Novidade: cópias de segurança',
       'Novidade: fotos na Ação',
@@ -63,7 +64,7 @@ describe('página "O que há de novo"', () => {
     expect(within(entries[0]!).getByText('30 de novembro de 2026')).toBeInTheDocument();
     expect(within(entries[0]!).getByText('Texto fictício para pacientes.')).toBeInTheDocument();
     expect(within(entries[0]!).queryByText('Texto fictício para terapeutas.')).not.toBeInTheDocument();
-    expect(within(entries[4]!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
+    expect(within(entries[5]!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
       'href',
       '/pensamentos',
     );

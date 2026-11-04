@@ -13,6 +13,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-10.6 (DEC-064, DEC-065): entram as fotos da Ação, com novo aceite para usá-las.
 // Versão 2026-10.7 (DEC-075, DEC-078): entram as cópias de segurança. Pede o aceite de novo, mas não
 // bloqueia nenhuma área: não há dado novo, muda onde e por quanto tempo os dados ficam.
+// Versão 2026-11 (DEC-081, DEC-082): entra o "Sobre mim", com novo aceite para usá-lo.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -20,7 +21,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // paleta e a foto do perfil (DEC-061, DEC-068, DEC-069): dados pessoais da própria conta, que não são
 // de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já vi"
 // fica só com o paciente.
-const VERSION_LABEL = 'versão 7, de outubro de 2026';
+const VERSION_LABEL = 'versão 8, de novembro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -92,6 +93,10 @@ export function PrivacyPage() {
               Nos Episódios de tensão: o dia e, se você informar, a hora de cada episódio, a situação, a nota de 0
               a 10 da tensão e da vontade de vocalizar, o que você fez e o que aconteceu depois.
             </li>
+            <li>
+              No “Sobre mim”, se você quiser contar: um pouco sobre você, o que gostaria de trabalhar na terapia e
+              hábitos que quer deixar ou já deixou. É tudo opcional, e apagar os três campos apaga o “Sobre mim”.
+            </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
             <li>No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro e a paleta de cores.</li>
@@ -121,7 +126,7 @@ export function PrivacyPage() {
             <li>Você vê tudo o que registrou.</li>
             <li>
               A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos, os
-              Episódios de tensão, a agenda com os motivos, a Ação e as fotos das ações, enquanto o vínculo existir. Você
+              Episódios de tensão, a agenda com os motivos, a Ação, as fotos das ações e o “Sobre mim”, enquanto o vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
               hora. A terapeuta pode marcar os seus registros como lidos, para se organizar. Essa marca é
               só dela: você não a vê.
