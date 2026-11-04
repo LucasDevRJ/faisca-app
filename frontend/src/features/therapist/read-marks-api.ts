@@ -1,4 +1,5 @@
 import { api } from '../../lib/api';
+import type { AboutMe } from '../about-me/about-me-api';
 import type { Action } from '../actions/actions-api';
 import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
@@ -11,7 +12,7 @@ export type ReadStatus = 'NAO_LIDO' | 'LIDO' | 'ATUALIZADO';
 export type ReadInfo = { readStatus: ReadStatus; readAt: string | null };
 export type WithRead<T> = T & ReadInfo;
 
-export type ReadType = 'THOUGHT_RECORD' | 'TENSION_EPISODE' | 'ACTION';
+export type ReadType = 'THOUGHT_RECORD' | 'TENSION_EPISODE' | 'ACTION' | 'ABOUT_ME';
 export type ReadItem = { type: ReadType; id: string };
 
 // Área sem o aceite do aviso vem como null (a tela simplesmente não a mostra).
@@ -19,7 +20,14 @@ export type UnreadResponse = {
   thoughtRecords: WithRead<ThoughtRecord>[] | null;
   tensionEpisodes: WithRead<TensionEpisode>[] | null;
   actions: WithRead<Action>[] | null;
-  counts: { thoughtRecords: number | null; tensionEpisodes: number | null; actions: number | null };
+  // O "Sobre mim" (DEC-081): no máximo um, quando não foi lido ou mudou depois.
+  aboutMe: WithRead<AboutMe>[] | null;
+  counts: {
+    thoughtRecords: number | null;
+    tensionEpisodes: number | null;
+    actions: number | null;
+    aboutMe: number | null;
+  };
 };
 
 export function isPending(record: ReadInfo): boolean {

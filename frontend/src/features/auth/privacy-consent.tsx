@@ -17,6 +17,7 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   appointmentSchedule: 'a agenda de consultas',
   actions: 'a Ação',
   actionPhotos: 'as fotos da Ação',
+  aboutMe: 'o “Sobre mim”',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
@@ -73,6 +74,17 @@ const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope:
     therapist: {
       intro: 'Para ver as fotos das ações dos seus pacientes, leia o que mudou e confirme.',
       scope: 'inclusive com o acesso às fotos das ações dos meus pacientes como dados de saúde.',
+    },
+  },
+  // "Sobre mim" (DEC-081, DEC-082): o que o paciente conta sobre si.
+  aboutMe: {
+    patient: {
+      intro: 'Para contar sobre você no “Sobre mim”, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso do que eu escrever no “Sobre mim” como dado de saúde.',
+    },
+    therapist: {
+      intro: 'Para ler o “Sobre mim” dos seus pacientes, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso ao “Sobre mim” dos meus pacientes como dado de saúde.',
     },
   },
 };

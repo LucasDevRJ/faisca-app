@@ -44,7 +44,8 @@ const emptyUnread: UnreadResponse = {
   thoughtRecords: [],
   tensionEpisodes: [],
   actions: [],
-  counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0 },
+  aboutMe: [],
+  counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 0 },
 };
 
 // A API simulada da terapeuta: resumo, semana (sem ciclo), os pensamentos e os registros para ler.
@@ -219,7 +220,8 @@ describe('registros para ler', () => {
     thoughtRecords: [withRead(old, 'NAO_LIDO')],
     tensionEpisodes: [withRead(episode, 'ATUALIZADO', '2026-09-02T12:00:00.000Z')],
     actions: [],
-    counts: { thoughtRecords: 1, tensionEpisodes: 1, actions: 0 },
+    aboutMe: [],
+    counts: { thoughtRecords: 1, tensionEpisodes: 1, actions: 0, aboutMe: 0 },
   };
 
   it('o card acima das abas, com a divisão e o contador nas abas', async () => {

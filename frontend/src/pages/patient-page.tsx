@@ -3,13 +3,14 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
+import { Dialog } from '../components/ui/dialog';
 import { buttonClasses } from '../components/ui/button-styles';
 import type { Activity } from '../features/activities/activities-api';
 import { ActionCard } from '../features/actions/action-card';
 import { ActionChart } from '../features/actions/action-chart';
 import { CycleGoal } from '../features/actions/cycle-goal';
 import { ActivityCard } from '../features/activities/activity-card';
-import { formatDayHeading, formatShortDay } from '../features/activities/week';
+import { formatDayHeading, formatShortDay, todayInAppZone } from '../features/activities/week';
 import { TherapistCycleSummary } from '../features/cycle/cycle-summary';
 import { PeriodNav } from '../features/cycle/period-nav';
 import { usePeriod } from '../features/cycle/use-period';
@@ -35,6 +36,7 @@ import type { PatientSummary } from '../features/therapist/therapist-api';
 import {
   isForbidden,
   patientCycleQuery,
+  usePatientAboutMe,
   usePatientActions,
   usePatientActivities,
   usePatientAppointments,
@@ -50,6 +52,7 @@ import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { ThoughtRecordCard } from '../features/thought-records/thought-record-card';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
+import { AboutMeCard } from '../features/about-me/about-me-card';
 import { Avatar } from '../features/profile/avatar';
 import { avatarUrls } from '../features/profile/profile-api';
 
@@ -132,7 +135,8 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
   const actionsConsented = Boolean(user?.privacyAreas.actions);
-  const anyReadConsented = consented || tensionConsented || actionsConsented;
+  const aboutConsented = Boolean(user?.privacyAreas.aboutMe);
+  const anyReadConsented = consented || tensionConsented || actionsConsented || aboutConsented;
   const requestedTab = parseTab(searchParams.get('aba'));
   // Sem aceite em nenhuma das três áreas, não há o que ler: um link salvo para "Para ler" abre o ciclo.
   const tab = requestedTab === 'para-ler' && !anyReadConsented ? null : requestedTab;
@@ -195,6 +199,8 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
           <p className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</p>
         </div>
       </section>
+
+      <PatientAboutMe patientId={patientId} firstName={firstName ?? patient.name} consented={aboutConsented} />
 
       <section
         aria-labelledby="appointments-title"
@@ -474,7 +480,10 @@ function ToReadView({
   const titleRef = useRef<HTMLHeadingElement>(null);
   const data = query.data;
   const pendingCount = data
-    ? (data.thoughtRecords ?? []).length + (data.tensionEpisodes ?? []).length + (data.actions ?? []).length
+    ? (data.thoughtRecords ?? []).length +
+      (data.tensionEpisodes ?? []).length +
+      (data.actions ?? []).length +
+      (data.aboutMe ?? []).length
     : 0;
   const previousCount = useRef(pendingCount);
   // Marcar tira o registro da lista e, com ele, o botão que tinha o foco. Sem isso o foco cairia no
@@ -521,7 +530,7 @@ function ToReadView({
     );
   }
 
-  const { thoughtRecords, tensionEpisodes, actions } = query.data;
+  const { thoughtRecords, tensionEpisodes, actions, aboutMe } = query.data;
   const entries: ToReadEntry[] = [
     ...(thoughtRecords ?? []).map((record) => ({
       key: `t-${record.id}`,
@@ -565,6 +574,20 @@ function ToReadView({
           readOnly
           patientId={patientId}
           footer={<ReadControl patientId={patientId} type="ACTION" record={action} label={action.name} />}
+        />
+      ),
+    })),
+    // "Sobre mim" (DEC-082): entra pelo dia em que mudou.
+    ...(aboutMe ?? []).map((about) => ({
+      key: `s-${about.id}`,
+      area: 'Sobre mim',
+      date: todayInAppZone(new Date(about.updatedAt)),
+      createdAt: about.updatedAt,
+      item: { type: 'ABOUT_ME' as const, id: about.id },
+      card: (
+        <AboutMeCard
+          aboutMe={about}
+          footer={<ReadControl patientId={patientId} type="ABOUT_ME" record={about} label="Sobre mim" />}
         />
       ),
     })),
@@ -883,5 +906,55 @@ function ActionsTab({ patientId, consented, query, range, inCycle, today }: Acti
       )}
       <ActionChart actions={actions} period={inCycle ? 'no ciclo' : 'na semana'} />
     </>
+  );
+}
+
+// "Sobre a Paula" (DEC-082): o que o paciente contou no "Sobre mim", só leitura, com o "Lido" dela.
+// Sem o aceite da versão do aviso que o cita, o pedido de aceite no lugar.
+function PatientAboutMe({ patientId, firstName, consented }: { patientId: string; firstName: string; consented: boolean }) {
+  const query = usePatientAboutMe(patientId, consented);
+  const about = query.data;
+  // O aceite numa janela: a página pode já ter o pedido grande numa aba, e dois iguais confundem.
+  const [askConsent, setAskConsent] = useState(false);
+
+  return (
+    <section aria-labelledby="patient-about-title" className="flex flex-col gap-3">
+      <h2 id="patient-about-title" className="text-lg font-semibold break-words">
+        Sobre {firstName}
+      </h2>
+      {!consented ? (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-muted">
+            Para ler o “Sobre mim” de {firstName}, aceite a versão nova do aviso de privacidade.
+          </p>
+          <Button variant="secondary" onClick={() => setAskConsent(true)}>
+            Ler e aceitar
+          </Button>
+          {askConsent && (
+            <Dialog title="“Sobre mim”" onClose={() => setAskConsent(false)}>
+              <PrivacyConsentGate
+                area="aboutMe"
+                audience="therapist"
+                onCancel={() => setAskConsent(false)}
+                onAccepted={() => setAskConsent(false)}
+              />
+            </Dialog>
+          )}
+        </div>
+      ) : query.isPending ? (
+        <p className="text-muted" aria-busy="true">
+          Carregando…
+        </p>
+      ) : query.isError ? (
+        <Alert tone="attention">Não conseguimos carregar o “Sobre mim”. Confira sua conexão e tente de novo.</Alert>
+      ) : about ? (
+        <AboutMeCard
+          aboutMe={about}
+          footer={<ReadControl patientId={patientId} type="ABOUT_ME" record={about} label="Sobre mim" />}
+        />
+      ) : (
+        <p className="break-words text-muted">{firstName} ainda não escreveu no “Sobre mim”.</p>
+      )}
+    </section>
   );
 }

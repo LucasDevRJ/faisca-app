@@ -53,6 +53,8 @@ Para todos:
 - Card de **Novidades** com as melhorias do app, e a página "O que há de novo" com o histórico.
 - **Perfil:** foto (com recorte) e nome completo, e **cinco paletas de cores** à escolha (Sálvia,
   Lavanda, Oceano, Areia e Alto contraste), que valem em qualquer aparelho.
+- **"Sobre mim":** o paciente conta, se quiser, um pouco sobre si, o que gostaria de trabalhar na
+  terapia e hábitos que quer deixar. A psicóloga lê e marca como lido.
 
 ## Em breve (divulgar como "em desenvolvimento", nunca como pronto)
 - Notificações e lembretes pelo canal que a pessoa preferir (e-mail, notificação no celular ou
