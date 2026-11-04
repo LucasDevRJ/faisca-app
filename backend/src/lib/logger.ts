@@ -12,6 +12,10 @@ const SENSITIVE_KEYS = [
   // Senha do cadastro guardada no link de confirmação (DEC-072).
   'pendingPasswordHash',
   'pendingName',
+  // "Sobre mim" do paciente (DEC-081): texto de saúde.
+  'aboutMe',
+  'goals',
+  'habits',
   'email',
   'token',
   'tokenHash',

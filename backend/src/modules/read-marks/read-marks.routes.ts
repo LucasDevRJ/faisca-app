@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createAboutMeService } from '../about-me/about-me.service.js';
 import { requireActiveLink } from '../../middlewares/require-patient-access.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
@@ -15,7 +16,12 @@ const PREFIX = '/therapist/read-marks/:patientId';
 
 export function createReadMarksRoutes() {
   const controller = createReadMarksController(
-    createReadMarksService(createThoughtRecordsService(), createTensionEpisodesService(), createActionsService()),
+    createReadMarksService(
+      createThoughtRecordsService(),
+      createTensionEpisodesService(),
+      createActionsService(),
+      createAboutMeService(),
+    ),
   );
   const router = Router();
 

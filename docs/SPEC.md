@@ -28,6 +28,11 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - **Foto de perfil** (DEC-069): em Seu perfil, escolhida e recortada num círculo antes de enviar; sem
   foto, um círculo com as iniciais. Aparece no cartão do vínculo (a da terapeuta, para o paciente) e na
   lista e na página do paciente (para a terapeuta).
+- **"Sobre mim"** (DEC-081), só para o paciente, em Conta: três campos opcionais de texto livre, até
+  2000 caracteres cada: "Sobre mim", "O que eu gostaria de trabalhar" (com sugestões de tocar, que
+  inserem texto editável) e "Hábitos que quero deixar (ou já deixei)". Salvar tudo vazio apaga. A
+  terapeuta com vínculo ativo só lê, num cartão na página do paciente, e ele entra no "Para ler"
+  quando muda. Pede o aceite da versão do aviso que o cita.
 - **Ajustes de acessibilidade** (DEC-076): abertos a todos (paciente e terapeuta), desligados por padrão
   e salvos na conta, em **Conta → Acessibilidade**: **Linguagem direta** (textos literais), **Uma coisa
   por vez** (formulários em passos curtos), **Leitura confortável** (fonte maior e mais espaço entre
@@ -194,7 +199,7 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
     da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
 - **Período**: a tela abre no **ciclo da consulta** (seção "Ciclo da consulta"), o mesmo que o paciente vê, nas três abas; dá para alternar para a semana e navegar entre ciclos ou semanas. O ciclo substitui o antigo destaque e o filtro "desde a última consulta" (DEC-050).
-- **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão ou Ação como **lido**
+- **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão, Ação ou o "Sobre mim" (DEC-081) como **lido**
   (e desfaz), ou **todos da lista aberta** de uma vez. Nunca marca sozinho ao abrir. Um registro
   que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada) volta
   a contar, como **atualizado**. A visão **Para ler** junta as três áreas fora do ciclo, do mais

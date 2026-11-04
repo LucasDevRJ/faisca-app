@@ -3,6 +3,7 @@ import { onlyReads, requireActiveLink } from '../../middlewares/require-patient-
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
+import { createAboutMeService } from '../about-me/about-me.service.js';
 import { createActionsController } from '../actions/actions.controller.js';
 import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesService } from '../activities/activities.service.js';
@@ -23,6 +24,7 @@ export function createTherapistRoutes() {
   const thoughtRecords = createThoughtRecordsService();
   const tensionEpisodes = createTensionEpisodesService();
   const actions = createActionsService();
+  const aboutMe = createAboutMeService();
   const controller = createTherapistController(
     createTherapistService(
       createActivitiesService(),
@@ -30,7 +32,8 @@ export function createTherapistRoutes() {
       thoughtRecords,
       tensionEpisodes,
       actions,
-      createReadMarksService(thoughtRecords, tensionEpisodes, actions),
+      createReadMarksService(thoughtRecords, tensionEpisodes, actions, aboutMe),
+      aboutMe,
     ),
   );
   const profile = createProfileController(createProfileService());
@@ -58,6 +61,8 @@ export function createTherapistRoutes() {
     requirePrivacy('actionPhotos'),
     createActionsController(actions).therapistPhoto,
   );
+  // "Sobre mim" do paciente (DEC-081): também pede o aceite da versão do aviso que o cita.
+  router.get(`${PREFIX}/about-me`, requirePrivacy('aboutMe'), controller.aboutMe);
   // Foto de perfil do paciente (DEC-061): dado pessoal, não de saúde, sem aceite próprio.
   router.get(`${PREFIX}/avatar`, profile.patientAvatar);
   // Não lidos (DEC-057): o aceite é conferido por área dentro do service. Escrever as marcas fica

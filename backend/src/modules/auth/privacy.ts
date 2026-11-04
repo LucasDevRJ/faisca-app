@@ -8,14 +8,25 @@
 // - 2026-10.5: entra a Ação (DEC-051).
 // - 2026-10.6: entram as fotos da Ação (DEC-064).
 // - 2026-10.7: entram as cópias de segurança (DEC-075, DEC-078). Sem área nova: nada é bloqueado.
-export const PRIVACY_VERSIONS = ['2026-10', '2026-10.2', '2026-10.3', '2026-10.4', '2026-10.5', '2026-10.6', '2026-10.7'] as const;
+// - 2026-11: entra o "Sobre mim" (DEC-081).
+export const PRIVACY_VERSIONS = [
+  '2026-10',
+  '2026-10.2',
+  '2026-10.3',
+  '2026-10.4',
+  '2026-10.5',
+  '2026-10.6',
+  '2026-10.7',
+  '2026-11',
+] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 
 // A versão atual: a que o cadastro e o novo aceite gravam e a que o app pede. Fica explícita, e não
 // "a última da lista", porque a API conhece uma versão antes de o texto dela estar no ar (DEC-064):
 // a 2026-10.6 (fotos da Ação) só virou a atual no PR das telas, junto com o texto do aviso
-// (DEC-065). Sem isso, alguém aceitaria uma versão cujo texto ainda não viu.
+// (DEC-065). Sem isso, alguém aceitaria uma versão cujo texto ainda não viu. O mesmo vale para a
+// 2026-11 ("Sobre mim", DEC-081): conhecida aqui, vira a atual no PR das telas.
 export const PRIVACY_VERSION: PrivacyVersion = '2026-10.7';
 
 // Cada área de dado novo exige a versão do aviso que passou a citá-la (DEC-042). Assim, uma versão
@@ -30,6 +41,8 @@ export const PRIVACY_AREAS = {
   actions: '2026-10.5',
   // Fotos da Ação (DEC-064): fazem parte do registro de saúde e podem mostrar outras pessoas.
   actionPhotos: '2026-10.6',
+  // "Sobre mim" (DEC-081): o que o paciente conta sobre si, o que quer trabalhar e os hábitos.
+  aboutMe: '2026-11',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -48,5 +61,6 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     appointmentSchedule: coversArea(acceptedVersion, 'appointmentSchedule'),
     actions: coversArea(acceptedVersion, 'actions'),
     actionPhotos: coversArea(acceptedVersion, 'actionPhotos'),
+    aboutMe: coversArea(acceptedVersion, 'aboutMe'),
   };
 }

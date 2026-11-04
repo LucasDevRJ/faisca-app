@@ -61,5 +61,10 @@ export function createTherapistController(service: TherapistService) {
     res.status(200).json(await service.unread(user.id, patientId, user.privacyVersion));
   };
 
-  return { summary, activities, appointments, cycle, thoughtRecords, tensionEpisodes, actions, unread };
+  const aboutMe: RequestHandler = async (req, res) => {
+    const { patientId } = patientParamsSchema.parse(req.params);
+    res.status(200).json({ aboutMe: await service.getAboutMe(getAuthUser(req).id, patientId) });
+  };
+
+  return { summary, activities, appointments, cycle, thoughtRecords, tensionEpisodes, actions, aboutMe, unread };
 }

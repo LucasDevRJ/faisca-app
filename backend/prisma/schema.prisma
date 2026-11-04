@@ -71,6 +71,8 @@ model User {
   // Mural de avisos (DEC-079): os avisos que esta conta publicou como terapeuta e os que ela já viu
   // como paciente.
   notices              TherapistNotice[]
+  // "Sobre mim" do paciente (DEC-081): um só por conta.
+  about                PatientAbout?
   noticesSeen          NoticeSeen[]
 
   // Foto de perfil (DEC-061), opcional.
@@ -492,6 +494,8 @@ model ReadMark {
   thoughtRecordId  String?  @db.Uuid
   tensionEpisodeId String?  @db.Uuid
   actionId         String?  @db.Uuid
+  // "Sobre mim" do paciente (DEC-081): também entra no "Para ler".
+  aboutId          String?  @db.Uuid
   // Quando foi lido. Se o registro mudar depois (updatedAt maior), volta a contar como não lido.
   readAt           DateTime @default(now())
 
@@ -500,11 +504,13 @@ model ReadMark {
   thoughtRecord  ThoughtRecord?    @relation(fields: [thoughtRecordId], references: [id], onDelete: Cascade)
   tensionEpisode TensionEpisode?   @relation(fields: [tensionEpisodeId], references: [id], onDelete: Cascade)
   action         BehavioralAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  about          PatientAbout?     @relation(fields: [aboutId], references: [id], onDelete: Cascade)
 
   // Uma marca por terapeuta e registro. NULL não colide no Postgres: vale para a coluna preenchida.
   @@unique([therapistId, thoughtRecordId])
   @@unique([therapistId, tensionEpisodeId])
   @@unique([therapistId, actionId])
+  @@unique([therapistId, aboutId])
   @@index([therapistId, patientId])
 }
 
@@ -547,4 +553,24 @@ model NoticeSeen {
 model DeletedAccount {
   userId    String   @id @db.Uuid
   deletedAt DateTime @default(now())
+}
+
+// "Sobre mim" do paciente (DEC-081): o que ele quiser contar, tudo opcional, em texto livre (até
+// 2000 caracteres por campo, CHECK no banco). A terapeuta com vínculo ativo só lê. Sem nenhum campo
+// preenchido, o registro não existe (salvar tudo vazio apaga). Dado de saúde: fora dos logs.
+model PatientAbout {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  // "Sobre mim": rotina, gostos, o que é importante.
+  aboutMe   String?
+  // "O que eu gostaria de trabalhar".
+  goals     String?
+  // "Hábitos que quero deixar (ou já deixei)".
+  habits    String?
+  createdAt DateTime @default(now())
+  // Mudou depois de lido: volta para o "Para ler" da terapeuta (DEC-057).
+  updatedAt DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readMarks ReadMark[]
 }
