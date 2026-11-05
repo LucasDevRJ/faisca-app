@@ -22,3 +22,7 @@
 - Antes de abrir PR que toque em `backend/`, rode o subagente `revisor-regras` e relate o veredito.
 - Antes de abrir PR que toque em `frontend/src` ou nos textos de e-mail, rode o subagente
   `revisor-telas` e relate o veredito.
+- Antes de abrir PR que toque em login, sessão, senha, verificação em duas etapas, passkey,
+  vínculo, envio de arquivo, cabeçalhos de segurança (CSP, CORS, cookies), criptografia ou
+  dependências (`package.json`), rode o subagente `revisor-seguranca` no modo diff e relate o
+  veredito. Achado sério se corrige antes do PR; o resto vira issue, combinado com o usuário.

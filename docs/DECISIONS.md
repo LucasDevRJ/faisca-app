@@ -1668,6 +1668,19 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o total só conta as áreas com aceite (como o `unreadCount`), e só aparece
   quando ela abre o app.
 
+## DEC-084 — Revisor de segurança obrigatório nos PRs sensíveis
+- **Decisão:** o `revisor-seguranca` (DEC-071), no modo diff, passa a ser **exigido pelo
+  CLAUDE.md** antes de abrir PR que toque em login, sessão, senha, verificação em duas etapas,
+  passkey, vínculo, envio de arquivo, cabeçalhos de segurança (CSP, CORS, cookies), criptografia ou
+  dependências, como já são o `revisor-regras` e o `revisor-telas`. O veredito vai no relatório
+  e no PR. Achado sério se corrige antes do PR; o resto vira issue, combinado com o usuário. A
+  skill `finalizar-mudanca` segue a mesma lista.
+- **Motivo:** os registros são dado de saúde e identificam a pessoa, e as próximas etapas de
+  segurança (#134 a #138) mexem justamente em login, sessão e criptografia. Antes, o revisor era
+  só uma recomendação da skill, e podia ficar de fora. Pedido do usuário.
+- **Limite conhecido:** continua sendo leitura do código, sem atacar o app em execução (o ZAP no CI
+  é a #116), e depende de o agente seguir o CLAUDE.md; não há check no CI que o exija.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
