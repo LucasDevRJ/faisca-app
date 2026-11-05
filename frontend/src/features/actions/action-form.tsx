@@ -6,6 +6,7 @@ import { buttonClasses } from '../../components/ui/button-styles';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { addDays, isValidDateOnly } from '../activities/week';
+import { useAccessibility } from '../profile/use-profile';
 import { CATEGORIES, CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import { OBSERVATION_MAX, type Action, type ActionCategory, type CreateActionInput } from './actions-api';
 import { choiceCardClasses } from '../../components/ui/field-styles';
@@ -34,6 +35,8 @@ type ActionFormProps = {
 };
 
 export function ActionForm({ today, initial, editing, submitLabel, pending, apiError, cancelTo, onSubmit }: ActionFormProps) {
+  const { oneThingAtATime } = useAccessibility();
+  const [step, setStep] = useState(0);
   const [alreadyDone, setAlreadyDone] = useState(false);
   const [actionDate, setActionDate] = useState(initial?.actionDate ?? today);
   const [name, setName] = useState(initial?.name ?? '');
@@ -58,10 +61,9 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
     return undefined;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function validate(): Errors {
     const trimmed = name.trim();
-    const next: Errors = {
+    return {
       actionDate: dateError(),
       name: !trimmed ? 'Conte qual é a ação.' : trimmed.length > NAME_MAX ? `O nome pode ter até ${NAME_MAX} caracteres.` : undefined,
       category: category ? undefined : 'Escolha o tipo da ação.',
@@ -70,8 +72,44 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
       achievement: alreadyDone && achievement === null ? 'Escolha uma nota.' : undefined,
       observation: observation.trim().length > OBSERVATION_MAX ? `A observação pode ter até ${OBSERVATION_MAX} caracteres.` : undefined,
     };
+  }
+
+  const totalSteps = alreadyDone ? 3 : 2;
+  const maxStep = totalSteps - 1;
+
+  function stepBelongsToKey(key: string): number {
+    if (key === 'category') return 0;
+    if (key === 'name' || key === 'actionDate' || key === 'expectation') return 1;
+    return 2;
+  }
+
+  function handleNext() {
+    const allErrors = validate();
+    const stepErrors: Errors = {};
+    for (const [key, value] of Object.entries(allErrors)) {
+      if (value && stepBelongsToKey(key) === step) stepErrors[key] = value;
+    }
+    setErrors(stepErrors);
+    if (Object.values(stepErrors).some(Boolean)) return;
+    setStep((current) => Math.min(current + 1, maxStep));
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (oneThingAtATime && step < maxStep) {
+      handleNext();
+      return;
+    }
+    const next = validate();
     setErrors(next);
-    if (Object.values(next).some(Boolean)) return;
+    if (Object.values(next).some(Boolean)) {
+      if (oneThingAtATime) {
+        const firstErrorKey = Object.keys(next).find((k) => next[k]);
+        if (firstErrorKey) setStep(stepBelongsToKey(firstErrorKey));
+      }
+      return;
+    }
+    const trimmed = name.trim();
     const base = { actionDate, name: trimmed, category: category!, expectation: expectation! };
     onSubmit(
       alreadyDone
@@ -82,80 +120,96 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
 
   const fieldError = (key: string) => errors[key] ?? apiError?.fields[key];
   const topError = apiError && !Object.keys(apiError.fields).length ? apiError.message : null;
+  const showStep = (index: number) => !oneThingAtATime || step === index;
+  const isLastStep = !oneThingAtATime || step === maxStep;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
       {topError && <Alert tone="attention">{topError}</Alert>}
 
-      {!editing && (
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1.5 font-medium">Esta ação</legend>
-          <div role="group" className="grid grid-cols-2 gap-2 sm:flex">
-            <Button type="button" variant={alreadyDone ? 'secondary' : 'primary'} aria-pressed={!alreadyDone} onClick={() => setAlreadyDone(false)}>
-              Vou fazer
-            </Button>
-            <Button type="button" variant={alreadyDone ? 'primary' : 'secondary'} aria-pressed={alreadyDone} onClick={() => setAlreadyDone(true)}>
-              Já fiz
-            </Button>
-          </div>
-        </fieldset>
+      {oneThingAtATime && (
+        <p role="status" className="text-sm font-medium text-muted">
+          Passo {step + 1} de {totalSteps}
+        </p>
       )}
 
-      <fieldset
-        className="flex flex-col gap-2"
-        aria-describedby={fieldError('category') ? 'action-category-error' : undefined}
-      >
-        <legend className="mb-1.5 font-medium">Tipo</legend>
-        {CATEGORIES.map((value) => (
-          <label key={value} className={`flex min-h-11 items-start gap-3 p-3 ${choiceCardClasses}`}>
-            <input
-              type="radio"
-              name="category"
-              value={value}
-              checked={category === value}
-              onChange={() => setCategory(value)}
-              className="mt-0.5"
-            />
-            <span className="flex flex-col">
-              <span className="font-medium">{CATEGORY_TEXT[value].label}</span>
-              <span className="text-sm text-muted">{CATEGORY_TEXT[value].description}</span>
-            </span>
-          </label>
-        ))}
-        {fieldError('category') && <FieldError id="action-category-error">{fieldError('category')!}</FieldError>}
-      </fieldset>
+      {showStep(0) && (
+        <>
+          {!editing && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1.5 font-medium">Esta ação</legend>
+              <div role="group" className="grid grid-cols-2 gap-2 sm:flex">
+                <Button type="button" variant={alreadyDone ? 'secondary' : 'primary'} aria-pressed={!alreadyDone} onClick={() => setAlreadyDone(false)}>
+                  Vou fazer
+                </Button>
+                <Button type="button" variant={alreadyDone ? 'primary' : 'secondary'} aria-pressed={alreadyDone} onClick={() => setAlreadyDone(true)}>
+                  Já fiz
+                </Button>
+              </div>
+            </fieldset>
+          )}
 
-      <TextField
-        label="O que você vai fazer?"
-        // Exemplo do tipo escolhido (DEC-052): ajuda quem trava na hora de pensar.
-        placeholder={category ? CATEGORY_TEXT[category].placeholder : 'Escolha o tipo para ver um exemplo'}
-        hint={category ? CATEGORY_TEXT[category].examples : undefined}
-        maxLength={NAME_MAX}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        error={fieldError('name')}
-      />
+          <fieldset
+            className="flex flex-col gap-2"
+            aria-describedby={fieldError('category') ? 'action-category-error' : undefined}
+          >
+            <legend className="mb-1.5 font-medium">Tipo</legend>
+            {CATEGORIES.map((value) => (
+              <label key={value} className={`flex min-h-11 items-start gap-3 p-3 ${choiceCardClasses}`}>
+                <input
+                  type="radio"
+                  name="category"
+                  value={value}
+                  checked={category === value}
+                  onChange={() => setCategory(value)}
+                  className="mt-0.5"
+                />
+                <span className="flex flex-col">
+                  <span className="font-medium">{CATEGORY_TEXT[value].label}</span>
+                  <span className="text-sm text-muted">{CATEGORY_TEXT[value].description}</span>
+                </span>
+              </label>
+            ))}
+            {fieldError('category') && <FieldError id="action-category-error">{fieldError('category')!}</FieldError>}
+          </fieldset>
+        </>
+      )}
 
-      <TextField
-        label="Dia"
-        hint={alreadyDone ? `Hoje ou até ${RECORD_BACK_DAYS} dias atrás.` : `Hoje ou até ${PLAN_AHEAD_DAYS} dias à frente.`}
-        type="date"
-        value={actionDate}
-        onChange={(e) => setActionDate(e.target.value)}
-        error={fieldError('actionDate')}
-      />
+      {showStep(1) && (
+        <>
+          <TextField
+            label="O que você vai fazer?"
+            // Exemplo do tipo escolhido (DEC-052): ajuda quem trava na hora de pensar.
+            placeholder={category ? CATEGORY_TEXT[category].placeholder : 'Escolha o tipo para ver um exemplo'}
+            hint={category ? CATEGORY_TEXT[category].examples : undefined}
+            maxLength={NAME_MAX}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            error={fieldError('name')}
+          />
 
-      <ScoreField
-        label={SCORE_TEXT.expectation.label}
-        hint="Antes de fazer: o quanto você espera gostar."
-        minLabel={SCORE_TEXT.expectation.min}
-        maxLabel={SCORE_TEXT.expectation.max}
-        value={expectation}
-        onChange={setExpectation}
-        error={fieldError('expectation')}
-      />
+          <TextField
+            label="Dia"
+            hint={alreadyDone ? `Hoje ou até ${RECORD_BACK_DAYS} dias atrás.` : `Hoje ou até ${PLAN_AHEAD_DAYS} dias à frente.`}
+            type="date"
+            value={actionDate}
+            onChange={(e) => setActionDate(e.target.value)}
+            error={fieldError('actionDate')}
+          />
 
-      {alreadyDone && (
+          <ScoreField
+            label={SCORE_TEXT.expectation.label}
+            hint="Antes de fazer: o quanto você espera gostar."
+            minLabel={SCORE_TEXT.expectation.min}
+            maxLabel={SCORE_TEXT.expectation.max}
+            value={expectation}
+            onChange={setExpectation}
+            error={fieldError('expectation')}
+          />
+        </>
+      )}
+
+      {alreadyDone && showStep(2) && (
         <>
           <ScoreField
             label={SCORE_TEXT.pleasure.label}
@@ -185,9 +239,27 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
       )}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Salvando…' : submitLabel}
-        </Button>
+        {isLastStep ? (
+          <Button key="submit" type="submit" disabled={pending}>
+            {pending ? 'Salvando…' : submitLabel}
+          </Button>
+        ) : (
+          <Button key="next" type="button" onClick={handleNext}>
+            Próximo ›
+          </Button>
+        )}
+        {oneThingAtATime && step > 0 && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setErrors({});
+              setStep((current) => Math.max(current - 1, 0));
+            }}
+          >
+            ‹ Anterior
+          </Button>
+        )}
         <Link to={cancelTo} className={buttonClasses('secondary')}>
           Cancelar
         </Link>

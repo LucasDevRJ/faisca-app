@@ -11,6 +11,14 @@ try {
   if (palette === 'lavanda' || palette === 'oceano' || palette === 'areia' || palette === 'alto-contraste') {
     document.documentElement.dataset.palette = palette;
   }
+  // Acessibilidade visual (issue #87): leitura confortável e menos movimento. Mantenha as chaves
+  // iguais às de src/features/profile/accessibility.ts.
+  if (localStorage.getItem('faisca:comfortable-reading') === 'true') {
+    document.documentElement.dataset.comfortableReading = 'true';
+  }
+  if (localStorage.getItem('faisca:reduced-motion') === 'true') {
+    document.documentElement.dataset.reducedMotion = 'true';
+  }
 } catch {
   // localStorage indisponível (modo privado etc.): fica o tema do sistema e a Sálvia.
 }

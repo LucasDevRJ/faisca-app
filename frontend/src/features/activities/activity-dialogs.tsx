@@ -3,6 +3,7 @@ import { Dialog, DialogActions, DialogForm } from '../../components/ui/dialog';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { getApiError } from '../auth/auth-api';
+import { useAccessibility } from '../profile/use-profile';
 import type { Activity } from './activities-api';
 import { NAME_MAX, OBSERVATION_MAX, SCORE_TEXT } from './activity-labels';
 import {
@@ -359,6 +360,7 @@ export function CompleteActivityDialog({
   onClose: () => void;
   onDone: DialogDone;
 }) {
+  const { directLanguage } = useAccessibility();
   const [wantBefore, setWantBefore] = useState<number | null>(null);
   const [pleasure, setPleasure] = useState<number | null>(null);
   const [achievement, setAchievement] = useState<number | null>(null);
@@ -396,7 +398,7 @@ export function CompleteActivityDialog({
   const fieldError = (key: string) => errors[key] ?? submitError.apiErrors[key];
 
   return (
-    <Dialog title="Conta como foi?" description={activity.name} onClose={onClose}>
+    <Dialog title={directLanguage ? 'Avaliar atividade' : 'Conta como foi?'} description={activity.name} onClose={onClose}>
       <DialogForm onSubmit={handleSubmit} error={submitError.message}>
         {asksWant && (
           <ScoreField
@@ -446,6 +448,7 @@ export function NotDoneDialog({
   onClose: () => void;
   onDone: DialogDone;
 }) {
+  const { directLanguage } = useAccessibility();
   const [observation, setObservation] = useState('');
   const [error, setError] = useState<string>();
   const notDone = useMarkNotDone();
@@ -464,7 +467,11 @@ export function NotDoneDialog({
   }
 
   return (
-    <Dialog title="Tudo bem, quer contar o que aconteceu?" description={activity.name} onClose={onClose}>
+    <Dialog
+      title={directLanguage ? 'Registrar que não realizou' : 'Tudo bem, quer contar o que aconteceu?'}
+      description={activity.name}
+      onClose={onClose}
+    >
       <DialogForm onSubmit={handleSubmit} error={submitError.message}>
         <TextAreaField
           label="O que aconteceu? (opcional)"

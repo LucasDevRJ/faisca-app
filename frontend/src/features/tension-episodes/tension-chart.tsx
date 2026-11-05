@@ -12,6 +12,8 @@ import {
 } from 'recharts';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { addDays, daysBetween, formatDayHeading, formatDayMonth } from '../activities/week';
+import { prefersReducedMotion } from '../profile/accessibility';
+import { useAccessibility } from '../profile/use-profile';
 import { toChartPoints, type ChartPoint } from './tension-chart-points';
 import { FIELD_TEXT, formatEpisodeTime } from './tension-episode-labels';
 import type { TensionEpisode } from './tension-episodes-api';
@@ -30,10 +32,6 @@ type SeriesKey = (typeof SERIES)[number]['key'];
 // A partir daqui, o eixo marca um dia por semana em vez de todos.
 const DAILY_TICKS_UP_TO = 14;
 
-function prefersReducedMotion() {
-  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-}
-
 type TensionChartProps = {
   episodes: TensionEpisode[];
   range: { from: string; to: string };
@@ -44,6 +42,7 @@ type TensionChartProps = {
 };
 
 export function TensionChart({ episodes, range, appointmentDays, period }: TensionChartProps) {
+  const { reducedMotion } = useAccessibility();
   if (episodes.length === 0) return null;
 
   const days = daysBetween(range.from, range.to) + 1;
@@ -54,7 +53,7 @@ export function TensionChart({ episodes, range, appointmentDays, period }: Tensi
   const consultations = appointmentDays
     .filter((day) => day >= range.from && day <= range.to)
     .map((day) => daysBetween(range.from, day));
-  const animate = !prefersReducedMotion();
+  const animate = !prefersReducedMotion(reducedMotion);
 
   return (
     <figure className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft">

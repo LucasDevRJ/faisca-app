@@ -1,5 +1,6 @@
 import { isAxiosError } from 'axios';
 import { api } from '../../lib/api';
+import type { AccessibilitySettings } from '../profile/accessibility';
 import type { Palette } from '../profile/palettes';
 
 // Chamadas às rotas /auth da API (DEC-025). A sessão fica no cookie httpOnly:
@@ -26,6 +27,8 @@ export type SessionUser = {
   pendingAnnouncement: string | null;
   // Paleta de cores da conta (DEC-063); sem escolha, a Sálvia.
   palette: Palette;
+  // Ajustes de acessibilidade da conta (DEC-076); desligados por padrão.
+  accessibility?: AccessibilitySettings;
 };
 
 export type SignupInput = {

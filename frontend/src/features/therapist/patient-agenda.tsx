@@ -3,6 +3,7 @@ import { formatDayMonth, nowTimeInAppZone } from '../activities/week';
 import { describePause, describeSchedule, formatSessionDay, formatSessionDistance } from '../appointments/agenda-format';
 import type { Session } from '../appointments/appointments-api';
 import { PrivacyConsentGate } from '../auth/privacy-consent';
+import { useAccessibility } from '../profile/use-profile';
 import { usePatientAppointments } from './use-therapist';
 
 // Agenda do paciente na visão da terapeuta (DEC-045): só leitura, com os motivos de desmarcar e
@@ -19,12 +20,13 @@ function tagOf(session: Session): string | null {
 }
 
 function SessionRow({ session, today }: { session: Session; today: string }) {
+  const { noTimePressure } = useAccessibility();
   const tag = tagOf(session);
   return (
     <li className="flex flex-col gap-1 border-t border-border pt-2 first:border-t-0 first:pt-0">
       <p className={session.status === 'DESMARCADA' ? 'text-muted line-through' : ''}>
         <span className="inline-block font-medium first-letter:uppercase">{formatSessionDay(session)}</span>
-        <span className="text-muted"> · {formatSessionDistance(session, today)}</span>
+        {!noTimePressure && <span className="text-muted"> · {formatSessionDistance(session, today)}</span>}
       </p>
       {tag && <span className="text-sm text-muted">{tag}</span>}
       {session.reason && <p className="text-sm text-muted">Motivo: {session.reason}</p>}

@@ -5,6 +5,7 @@ import { Dialog, DialogFooter } from '../../components/ui/dialog';
 import { getApiError } from '../auth/auth-api';
 import { PrivacyConsentGate } from '../auth/privacy-consent';
 import { useSession } from '../auth/use-session';
+import { useAccessibility } from '../profile/use-profile';
 import { formatAlternativeDeadline } from '../thought-records/thought-record-labels';
 import { actionPhotoUrl, MAX_ACTION_PHOTOS, type Action } from './actions-api';
 import { useAddActionPhoto, useRemoveActionPhoto } from './use-actions';
@@ -116,6 +117,7 @@ export function ActionPhotos({ action, viewer }: { action: Action; viewer: Photo
 
 // "Adicionar fotos": escolhe várias, manda uma por vez e mostra o andamento.
 function AddPhotos({ action }: { action: Action }) {
+  const { noTimePressure } = useAccessibility();
   const input = useRef<HTMLInputElement>(null);
   const add = useAddActionPhoto();
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -166,7 +168,10 @@ function AddPhotos({ action }: { action: Action }) {
     if (!progress) input.current?.click();
   }
 
-  const deadline = action.photosDeadline ? `Dá para adicionar ou remover ${formatAlternativeDeadline(action.photosDeadline)}. ` : '';
+  const deadline =
+    !noTimePressure && action.photosDeadline
+      ? `Dá para adicionar ou remover ${formatAlternativeDeadline(action.photosDeadline)}. `
+      : '';
 
   return (
     <div className="flex flex-col gap-2">

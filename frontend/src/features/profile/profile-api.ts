@@ -1,7 +1,8 @@
 import { api } from '../../lib/api';
+import type { AccessibilitySettings } from './accessibility';
 import type { Palette } from './palettes';
 
-// Perfil básico (DEC-061, DEC-063): sempre da própria conta, pela sessão.
+// Perfil básico e acessibilidade (DEC-061, DEC-063, DEC-076): sempre da própria conta, pela sessão.
 
 export const FULL_NAME_MAX = 120;
 
@@ -10,9 +11,14 @@ export type Profile = {
   palette: Palette;
   // Quando a foto mudou pela última vez, ou null sem foto.
   avatarVersion: string | null;
+  accessibility?: AccessibilitySettings;
 };
 
-export type UpdateProfileInput = { fullName?: string | null; palette?: Palette };
+export type UpdateProfileInput = {
+  fullName?: string | null;
+  palette?: Palette;
+  accessibility?: Partial<AccessibilitySettings>;
+};
 
 export async function fetchProfile(): Promise<Profile> {
   const { data } = await api.get<{ profile: Profile }>('/profile');

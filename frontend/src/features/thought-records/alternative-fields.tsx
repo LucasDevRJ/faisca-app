@@ -1,5 +1,6 @@
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField } from '../../components/ui/text-field';
+import { useAccessibility } from '../profile/use-profile';
 import type { AlternativeState } from './alternative-state';
 import { FIELD_TEXT, INTENSITY_TEXT, TEXT_MAX } from './thought-record-labels';
 import type { Emotion } from './thought-records-api';
@@ -20,6 +21,7 @@ type AlternativeFieldsProps = {
 };
 
 export function AlternativeFields({ state, onChange, emotions, error, optional = true }: AlternativeFieldsProps) {
+  const { directLanguage } = useAccessibility();
   const written = state.text.trim().length > 0;
 
   return (
@@ -46,7 +48,9 @@ export function AlternativeFields({ state, onChange, emotions, error, optional =
           </label>
           {state.feelNow && (
             <>
-              <p className="text-sm text-muted">{FIELD_TEXT.feelNow.hint}</p>
+              <p className="text-sm text-muted">
+                {directLanguage ? FIELD_TEXT.feelNow.directHint : FIELD_TEXT.feelNow.hint}
+              </p>
               {emotions.map(({ emotion, name, before }) => (
                 <div key={emotion} className="rounded-md border border-border p-3">
                   <ScoreField

@@ -28,7 +28,11 @@ export function emotionName(entry: Pick<EmotionEntry, 'emotion' | 'otherLabel'>)
 export const FIELD_TEXT = {
   situationDate: { label: 'Dia da situação' },
   situation: { label: 'Situação', hint: 'O que aconteceu? Onde você estava, com quem?' },
-  automaticThought: { label: 'Pensamento automático', hint: 'O que passou pela sua cabeça na hora?' },
+  automaticThought: {
+    label: 'Pensamento automático',
+    hint: 'O que passou pela sua cabeça na hora?',
+    directHint: 'O que você pensou naquele momento?',
+  },
   beliefLevel: { label: 'O quanto acredito nesse pensamento', min: 'Nada', max: 'Totalmente' },
   emotions: { label: 'Emoções', hint: 'Marque uma ou mais e diga a intensidade de cada uma.' },
   behavior: { label: 'Comportamento', hint: 'O que você fez?' },
@@ -42,6 +46,7 @@ export const FIELD_TEXT = {
     label: 'Como me sinto agora',
     toggle: 'Quero dizer como me sinto agora',
     hint: 'Depois de pensar na alternativa, quanto pesa cada emoção agora?',
+    directHint: 'Depois de escrever a explicação alternativa, qual é a intensidade de cada emoção agora?',
   },
 } as const;
 
