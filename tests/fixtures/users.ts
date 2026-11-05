@@ -45,4 +45,6 @@ export const users = {
   // Usadas só nos testes do mural de avisos (api/notices.spec.ts, DEC-079).
   noticesPatient: { email: 'mural-paciente@faisca.test', password: SEED_PASSWORD },
   noticesTherapist: { email: 'mural-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usada só no "Sair de todos os aparelhos" (api/sessions.spec.ts, DEC-085): as sessões dela caem.
+  sessions: { email: 'sessoes@faisca.test', password: SEED_PASSWORD },
 } as const;

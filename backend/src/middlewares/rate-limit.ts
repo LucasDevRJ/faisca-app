@@ -8,8 +8,9 @@ import { logger } from '../lib/logger.js';
 type LimitOptions = {
   windowMinutes: number;
   limit: number;
-  // 'user' só vale depois do requireAuth.
-  key: 'ip' | 'email' | 'ip+email' | 'user';
+  // 'user' e 'session' só valem depois do requireAuth. 'session' separa os aparelhos da mesma
+  // conta, pelo id da sessão no JWT (DEC-085).
+  key: 'ip' | 'email' | 'ip+email' | 'user' | 'session';
   // Conta só as tentativas que falharam (usado no login).
   onlyFailures?: boolean;
 };
@@ -36,6 +37,7 @@ export function createRateLimit({ windowMinutes, limit, key, onlyFailures = fals
       if (key === 'ip') return clientIp(req);
       if (key === 'email') return `email:${bodyEmail(req)}`;
       if (key === 'user') return `user:${req.user?.id ?? clientIp(req)}`;
+      if (key === 'session') return `session:${req.user?.id ?? clientIp(req)}|${req.sessionId ?? ''}`;
       return `${clientIp(req)}|${bodyEmail(req)}`;
     },
     handler: (_req, res) => {

@@ -70,7 +70,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
   }
 
   if (shouldRenewSession(session.issuedAt)) {
-    await setSessionCookie(res, user.id, user.sessionVersion);
+    await setSessionCookie(res, user.id, user.sessionVersion, session.sessionId);
   }
 
   req.user = {
@@ -88,6 +88,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     noTimePressure: user.noTimePressure,
     reducedMotion: user.reducedMotion,
   };
+  req.sessionId = session.sessionId;
   next();
 };
 

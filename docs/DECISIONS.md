@@ -1681,6 +1681,43 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** continua sendo leitura do código, sem atacar o app em execução (o ZAP no CI
   é a #116), e depende de o agente seguir o CLAUDE.md; não há check no CI que o exija.
 
+## DEC-085 — "Sair de todos os aparelhos" e "Trocar senha" (API)
+- **Decisão:**
+  - `POST /auth/logout-all`, com sessão: confere a **senha** (escolha do usuário) e sobe o
+    `sessionVersion` da própria conta (DEC-025), o que derruba **todas** as sessões abertas,
+    inclusive a de quem pediu; apaga o cookie e responde 204. O corpo só aceita `password`: um id
+    a mais é 400, e a conta é sempre a da sessão. Senha errada é 400 `INVALID_PASSWORD` e não
+    derruba nada;
+  - os limites de erros de senha passam a valer para "Excluir conta", "Sair de todos" e "Trocar
+    senha" **juntos** (trocar de rota não dá tentativas novas para adivinhar a senha com uma
+    sessão aberta): **10 a cada 15 min por sessão** e um teto de **30 por conta**. Por sessão, e não só por conta, para
+    quem roubou uma sessão não travar, errando de propósito, o "Sair de todos" da dona (achado do
+    `revisor-seguranca`);
+  - para isso, o JWT ganha um **id de sessão** (`sid`, aleatório), criado no login e mantido nas
+    renovações diárias: um cookie roubado, com todas as renovações dele, conta como uma sessão só, e
+    dois logins no mesmo segundo não dividem o contador. Tokens de antes desta decisão, sem `sid`,
+    usam o `iat` original no lugar, que também segue nas renovações: ninguém sai da conta no deploy;
+  - `POST /auth/change-password`, com sessão: `{ currentPassword, newPassword }`, a nova com a
+    política do cadastro (8 caracteres a 72 bytes). Atual errada é 400 `INVALID_PASSWORD`; nova
+    igual à atual, 400 `SAME_PASSWORD`. Grava a nova e sobe o `sessionVersion`: os **outros**
+    aparelhos saem, e **este continua** (escolha do usuário), com um cookie novo da mesma sessão.
+    Manda um **e-mail neutro, sem link** ("se não foi você, use Esqueci a senha"), para quem teve a
+    senha trocada por outra pessoa ficar sabendo, sem um link que sirva de isca. Os links de
+    "Esqueci a senha" ainda abertos deixam de valer na troca, e, se o `requireAuth` renovou o
+    cookie no mesmo pedido, só o cookie novo vai na resposta (achados do `revisor-seguranca`);
+  - log só com o id da conta (regra 7); `currentPassword` e `newPassword` entram na lista de
+    campos ocultos do logger. Sem migration: o `sessionVersion` já existia.
+- **Motivo:** fecha o limite conhecido da DEC-025 (um JWT copiado, ou outro aparelho logado,
+  continuava valendo por até 30 dias depois do "Sair"). Pedir a senha impede que alguém com o
+  celular desbloqueado expulse a dona da conta dos outros aparelhos sem saber a senha. API antes
+  das telas (DEC-056). Antes, trocar a senha só era possível pelo "Esqueci a senha", por e-mail.
+- **Limite conhecido:** não há lista de aparelhos conectados (o JWT não fica guardado no banco);
+  quando a #32 (push) existir, "Sair de todos" também deve apagar as inscrições de push dos outros
+  aparelhos. Um pedido do outro aparelho que já passou pelo `requireAuth` antes da troca termina
+  com a sessão antiga (janela de milissegundos, própria do JWT com versão). Tokens sem `sid`
+  emitidos antes do deploy seguem com um contador por renovação até vencerem (até 30 dias); o
+  usuário preferiu não obrigar todos a entrar de novo.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

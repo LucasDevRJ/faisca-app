@@ -71,6 +71,8 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   // Só para o mural de avisos (api/notices.spec.ts, DEC-079).
   { name: 'Quésia Fictícia', email: 'mural-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-10.7' },
   { name: 'Rosa Fictícia', email: 'mural-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.7' },
+  // Só para o "Sair de todos os aparelhos" (api/sessions.spec.ts, DEC-085): as sessões dela caem.
+  { name: 'Sara Fictícia', email: 'sessoes@faisca.test', patient: true, therapist: false },
 ];
 
 await prisma.activity.deleteMany();
