@@ -7,6 +7,8 @@ import {
   addProfileSchema,
   announcementSeenSchema,
   deleteAccountSchema,
+  logoutAllSchema,
+  changePasswordSchema,
   emailOnlySchema,
   loginSchema,
   resetPasswordSchema,
@@ -78,6 +80,22 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
     res.status(204).end();
   };
 
+  const logoutAll: RequestHandler = async (req, res) => {
+    const { password } = logoutAllSchema.parse(req.body);
+    await service.logoutAll(getAuthUser(req).id, password);
+    clearSessionCookie(res);
+    res.status(204).end();
+  };
+
+  // Os outros aparelhos caem (sessionVersion novo); este continua, com um cookie novo da mesma sessão.
+  const changePassword: RequestHandler = async (req, res) => {
+    const input = changePasswordSchema.parse(req.body);
+    const user = getAuthUser(req);
+    const sessionVersion = await service.changePassword(user.id, input);
+    await setSessionCookie(res, user.id, sessionVersion, req.sessionId);
+    res.status(204).end();
+  };
+
   const forgotPassword: RequestHandler = async (req, res) => {
     const { email } = emailOnlySchema.parse(req.body);
     await runAfterResponse('forgot-password', () => service.forgotPassword(email));
@@ -100,6 +118,8 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
     acceptPrivacy,
     announcementSeen,
     deleteAccount,
+    logoutAll,
+    changePassword,
     forgotPassword,
     resetPassword,
   };

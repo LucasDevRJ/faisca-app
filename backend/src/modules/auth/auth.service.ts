@@ -7,8 +7,14 @@ import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
 import type { LinksService } from '../links/links.service.js';
 import { toAccessibilitySettings, type AccessibilitySettings } from '../profile/profile.service.js';
-import { accountDeletedEmail, accountExistsEmail, confirmationEmail, passwordResetEmail } from './auth.emails.js';
-import type { AddProfileInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
+import {
+  accountDeletedEmail,
+  accountExistsEmail,
+  confirmationEmail,
+  passwordChangedEmail,
+  passwordResetEmail,
+} from './auth.emails.js';
+import type { AddProfileInput, ChangePasswordInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 import { CURRENT_ANNOUNCEMENT, pendingAnnouncement, type Announcement } from './announcements.js';
 import { PRIVACY_VERSION, privacyAreas, type PrivacyArea } from './privacy.js';
 
@@ -359,6 +365,43 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       // da última cópia são apagadas de novo na restauração (DEC-077). Não mascarar.
       logger.info({ userId }, 'Conta excluída');
       await sendSafely('account-deleted', accountDeletedEmail(user.email, user.name));
+    },
+
+    // "Sair de todos os aparelhos" (DEC-085): confere a senha e sobe o sessionVersion, o que
+    // derruba todas as sessões abertas, inclusive a de quem pediu (DEC-025).
+    async logoutAll(userId: string, password: string): Promise<void> {
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+      if (!(await verifyPassword(password, user.passwordHash))) {
+        throw new AppError(400, 'INVALID_PASSWORD', 'A senha não confere.');
+      }
+      await prisma.user.update({ where: { id: userId }, data: { sessionVersion: { increment: 1 } } });
+      logger.info({ userId }, 'Saiu de todos os aparelhos');
+    },
+
+    // "Trocar senha" (DEC-085): confere a atual, grava a nova e sobe o sessionVersion, o que derruba
+    // os outros aparelhos. Devolve o sessionVersion novo para o controller manter este aparelho.
+    async changePassword(userId: string, input: ChangePasswordInput): Promise<number> {
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+      if (!(await verifyPassword(input.currentPassword, user.passwordHash))) {
+        throw new AppError(400, 'INVALID_PASSWORD', 'A senha atual não confere.');
+      }
+      if (await verifyPassword(input.newPassword, user.passwordHash)) {
+        throw new AppError(400, 'SAME_PASSWORD', 'Escolha uma senha diferente da atual.');
+      }
+      const passwordHash = await hashPassword(input.newPassword);
+      // Links de "Esqueci a senha" ainda abertos deixam de valer: quem tinha um não troca a senha
+      // de novo depois desta troca.
+      const [, { sessionVersion }] = await prisma.$transaction([
+        prisma.authToken.deleteMany({ where: { userId, type: 'PASSWORD_RESET', usedAt: null } }),
+        prisma.user.update({
+          where: { id: userId },
+          data: { passwordHash, sessionVersion: { increment: 1 } },
+          select: { sessionVersion: true },
+        }),
+      ]);
+      logger.info({ userId }, 'Senha trocada');
+      await sendSafely('password-changed', passwordChangedEmail(user.email, user.name));
+      return sessionVersion;
     },
 
     async forgotPassword(email: string): Promise<void> {

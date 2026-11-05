@@ -33,9 +33,14 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
   // forjar o X-Forwarded-For e trocar de "IP" a cada tentativa. Mais folgado que o de cima, para
   // não travar a dona da conta por causa de tentativas de outra pessoa.
   const loginEmailLimit = createRateLimit({ windowMinutes: 15, limit: 20, key: 'email', onlyFailures: true });
-  // Excluir a conta confere a senha: mesmo limite do login, por conta, para ninguém testar
-  // senhas por aqui com uma sessão aberta.
-  const deleteAccountLimit = createRateLimit({ windowMinutes: 15, limit: 10, key: 'user', onlyFailures: true });
+  // Excluir a conta, "Sair de todos os aparelhos" e "Trocar senha" conferem a senha, para ninguém
+  // testar senhas por aqui com uma sessão aberta (DEC-085). Os contadores valem para as três rotas
+  // juntas: trocar de rota não dá tentativas novas. Por sessão, o mesmo limite do login; por conta, um teto mais
+  // folgado, para quem roubou uma sessão não travar o "Sair de todos" da dona da conta.
+  const passwordCheckLimits = [
+    createRateLimit({ windowMinutes: 15, limit: 10, key: 'session', onlyFailures: true }),
+    createRateLimit({ windowMinutes: 15, limit: 30, key: 'user', onlyFailures: true }),
+  ];
   const emailLimits = () => [
     createRateLimit({ windowMinutes: 60, limit: 3, key: 'email' }),
     createRateLimit({ windowMinutes: 60, limit: 10, key: 'ip' }),
@@ -50,7 +55,9 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
   router.post('/auth/profiles', requireAuth, controller.addProfile);
   router.post('/auth/accept-privacy', requireAuth, controller.acceptPrivacy);
   router.post('/auth/announcement-seen', requireAuth, controller.announcementSeen);
-  router.post('/auth/delete-account', requireAuth, deleteAccountLimit, controller.deleteAccount);
+  router.post('/auth/delete-account', requireAuth, ...passwordCheckLimits, controller.deleteAccount);
+  router.post('/auth/logout-all', requireAuth, ...passwordCheckLimits, controller.logoutAll);
+  router.post('/auth/change-password', requireAuth, ...passwordCheckLimits, controller.changePassword);
   router.post('/auth/forgot-password', ...emailLimits(), controller.forgotPassword);
   router.post('/auth/reset-password', controller.resetPassword);
 

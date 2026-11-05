@@ -9,6 +9,8 @@ import { env } from '../config/env.js';
 const SENSITIVE_KEYS = [
   'password',
   'passwordHash',
+  'currentPassword',
+  'newPassword',
   // Senha do cadastro guardada no link de confirmação (DEC-072).
   'pendingPasswordHash',
   'pendingName',

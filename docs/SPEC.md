@@ -17,6 +17,10 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   Quem tem um perfil só nunca vê telas do outro.
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.
 - Recuperação de senha por e-mail.
+- **Sair de todos os aparelhos**, em Conta: confirmado com a senha, encerra todas as sessões da
+  própria conta, inclusive a do aparelho em uso (DEC-085).
+- **Trocar senha**, em Conta: pede a senha atual e a nova; os outros aparelhos saem da conta, este
+  continua, e chega um e-mail neutro, sem link, avisando da troca (DEC-085).
 - **Perfil básico** (paciente e terapeuta, tudo opcional; DEC-061): **nome completo**, além do
   "Como podemos te chamar?", e **foto**. A foto é guardada reduzida (256×256) e sem os metadados
   da câmera, como a localização. A terapeuta vê a foto dos pacientes com vínculo ativo; o paciente

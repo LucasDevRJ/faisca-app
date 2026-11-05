@@ -85,6 +85,28 @@ Obrigado por ter usado o Faísca. Se quiser voltar um dia, é só criar uma cont
   };
 }
 
+// Aviso de senha trocada (DEC-085): sem link, para não servir de isca; quem não trocou usa o
+// "Esqueci a senha" da tela de entrar.
+export function passwordChangedEmail(to: string, name: string): EmailMessage {
+  return {
+    to,
+    subject: 'A senha da sua conta no Faísca foi trocada',
+    html: layout([
+      `Olá, ${escapeHtml(name)}.`,
+      'A senha da sua conta no Faísca foi trocada agora há pouco. Por segurança, saímos da sua conta nos outros aparelhos.',
+      'Se foi você, está tudo certo e não precisa fazer nada.',
+      'Se não foi você, abra o Faísca, toque em "Esqueci a senha" na tela de entrada e crie uma senha nova.',
+    ]),
+    text: `Olá, ${name}.
+
+A senha da sua conta no Faísca foi trocada agora há pouco. Por segurança, saímos da sua conta nos outros aparelhos.
+
+Se foi você, está tudo certo e não precisa fazer nada.
+
+Se não foi você, abra o Faísca, toque em "Esqueci a senha" na tela de entrada e crie uma senha nova.`,
+  };
+}
+
 export function passwordResetEmail(to: string, name: string, token: string): EmailMessage {
   const url = link('/redefinir-senha', token);
   return {
