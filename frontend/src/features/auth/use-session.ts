@@ -13,6 +13,8 @@ import {
 } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
+// Marca que a sessão terminou sem a pessoa pedir (DEC-087), para o RequireAuth levar o aviso.
+export const SESSION_ENDED_KEY = ['session', 'ended'] as const;
 
 // Quem está logado. `data` é null quando não há sessão.
 export function useSession() {
@@ -29,7 +31,10 @@ export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: login,
-    onSuccess: (user) => queryClient.setQueryData(SESSION_QUERY_KEY, user),
+    onSuccess: (user) => {
+      queryClient.removeQueries({ queryKey: SESSION_ENDED_KEY, exact: true });
+      queryClient.setQueryData(SESSION_QUERY_KEY, user);
+    },
   });
 }
 

@@ -1737,6 +1737,27 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   com a "Trocar senha" na mesma seção, ela aponta para a "Trocar senha".
 - **Limite conhecido:** sem lista dos aparelhos conectados (DEC-085).
 
+## DEC-087 — Sessão terminada em outro aparelho: o app percebe e avisa
+- **Decisão:**
+  - enquanto alguém está logado, o app (`SessionWatcher`, dentro do `RequireAuth`), a cada **401 da
+    API**, confirma a sessão em `GET /auth/me`. Se ela acabou mesmo, apaga da memória os dados da
+    conta (consultas e envios em andamento) e leva para entrar, guardando a tela de volta
+    (`?next=`), com o aviso **"Sua sessão terminou. Entre de novo para continuar."**, que recebe o
+    foco (a pessoa não pediu para sair). A confirmação evita que um pedido que saiu com o cookie de
+    antes de uma troca de senha neste aparelho derrube a sessão nova;
+  - o app também **confere a sessão** (`GET /auth/me`) ao **voltar para a tela** (aba ou PWA de novo
+    visível) e ao **trocar de tela**, no máximo uma vez a cada 15 s: a tela nova pode vir da memória,
+    sem nenhuma ida à API;
+  - o aviso vai no state da navegação, como os de conta excluída e de "Sair de todos"; a marca é
+    apagada ao mostrar o aviso e ao entrar de novo. Uma resposta atrasada da conferência não põe de
+    volta uma conta que já saiu (achados do `revisor-seguranca`).
+- **Motivo:** no teste do usuário, depois de "Sair de todos" no computador, o celular continuou
+  mostrando a tela e só pedia para entrar ao tentar uma ação, sem explicar por quê. O servidor já
+  barrava tudo (DEC-085); faltava o aparelho perceber e limpar a tela. Pedido do usuário.
+- **Limite conhecido:** com o app fechado ou parado na mesma tela, o aparelho só percebe na próxima
+  ida à API, na volta para o app ou na troca de tela; aviso instantâneo dependeria de push (#32) ou
+  de uma conexão aberta.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

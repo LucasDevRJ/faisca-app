@@ -18,7 +18,9 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.
 - Recuperação de senha por e-mail.
 - **Sair de todos os aparelhos**, em Conta: confirmado com a senha, encerra todas as sessões da
-  própria conta, inclusive a do aparelho em uso (DEC-085).
+  própria conta, inclusive a do aparelho em uso (DEC-085). Os outros aparelhos percebem na
+  próxima ida à API, ao voltar para o app ou ao trocar de tela, e levam para entrar com o aviso
+  "Sua sessão terminou" (DEC-087).
 - **Trocar senha**, em Conta: pede a senha atual e a nova; os outros aparelhos saem da conta, este
   continua, e chega um e-mail neutro, sem link, avisando da troca (DEC-085).
 - **Perfil básico** (paciente e terapeuta, tudo opcional; DEC-061): **nome completo**, além do
