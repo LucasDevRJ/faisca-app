@@ -75,8 +75,10 @@ Rode os subagentes de revisão que se aplicam (o CLAUDE.md exige):
 - tocou em `backend/` → `revisor-regras` (as 8 regras invioláveis);
 - tocou em `frontend/src` ou nos textos de e-mail (`backend/src/modules/*/*.emails.ts`) →
   `revisor-telas` (tom, cores, contraste, acessibilidade, celular e testes de tela);
-- tocou em login, sessão, senha, vínculo, envio de arquivo ou dependências (`package.json`) →
-  `revisor-seguranca` no modo diff.
+- tocou em login, sessão, senha, verificação em duas etapas, passkey, vínculo, envio de arquivo,
+  cabeçalhos de segurança (CSP, CORS, cookies), criptografia ou dependências (`package.json`) →
+  `revisor-seguranca` no modo diff. Achado sério se corrige antes do PR; o resto vira issue,
+  combinado com o usuário.
 
 Eles podem rodar ao mesmo tempo, porque só leem. Corrija o que apontarem ou leve a decisão ao
 usuário, e rode de novo o revisor sobre a correção.
