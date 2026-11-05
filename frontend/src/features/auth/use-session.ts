@@ -13,7 +13,7 @@ import {
 } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
-// Marca que a sessão terminou sem a pessoa pedir (DEC-087), para o RequireAuth levar o aviso.
+// Marca que a sessão terminou sem a pessoa pedir (DEC-088), para o RequireAuth levar o aviso.
 export const SESSION_ENDED_KEY = ['session', 'ended'] as const;
 
 // Quem está logado. `data` é null quando não há sessão.

@@ -22,6 +22,9 @@
   acessibilidade, celular, testes e conferência no navegador).
 
 ## Tom
-- Textos acolhedores: "Conta como foi?" em vez de "Tarefa pendente";
+- Por padrão, textos acolhedores: "Conta como foi?" em vez de "Tarefa pendente";
   "Tudo bem, quer contar o que aconteceu?" para atividade não realizada.
-- Nada de sequências, pontos, streaks ou mensagens que gerem culpa.
+- Quando a pessoa liga **Linguagem direta** em Conta (`useAccessibility().directLanguage`, DEC-076),
+  os textos ficam literais e objetivos, sem expressões figuradas ("Avaliar atividade", "Registrar
+  que não realizou", "O que você pensou naquele momento?"). Nos dois modos, nada de sequências,
+  pontos, streaks ou mensagens que gerem culpa.

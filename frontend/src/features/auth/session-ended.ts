@@ -1,4 +1,4 @@
-// Avisa a tela de entrar que a sessão terminou sem a pessoa pedir (DEC-087): "Sair de todos" em
+// Avisa a tela de entrar que a sessão terminou sem a pessoa pedir (DEC-088): "Sair de todos" em
 // outro aparelho, senha trocada em outro aparelho ou sessão vencida. Vai no state da navegação,
 // como os avisos de conta excluída e de "Sair de todos".
 export type SessionEndedState = { sessionEnded: true };

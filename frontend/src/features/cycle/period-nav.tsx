@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { addDays, formatDayMonth, formatWeekRange } from '../activities/week';
+import { useAccessibility } from '../profile/use-profile';
 import { countdown, CYCLE_MAX_DAYS, type Audience } from './cycle-format';
 import type { Period } from './use-period';
 
@@ -21,6 +22,7 @@ type PeriodNavProps = {
 };
 
 export function PeriodNav({ period, today, audience, onCycle, onWeek, currentMonday, actions, summary }: PeriodNavProps) {
+  const { noTimePressure } = useAccessibility();
   const { cycle, monday } = period;
   const inCycle = period.mode === 'cycle' && cycle !== null;
 
@@ -33,7 +35,7 @@ export function PeriodNav({ period, today, audience, onCycle, onWeek, currentMon
   } else {
     title = formatWeekRange(monday!);
   }
-  const note = inCycle && cycle.session ? countdown(cycle.session, today, audience) : null;
+  const note = !noTimePressure && inCycle && cycle.session ? countdown(cycle.session, today, audience) : null;
 
   const previous = inCycle ? cycle.previous : addDays(monday!, -7);
   const next = inCycle ? cycle.next : addDays(monday!, 7);

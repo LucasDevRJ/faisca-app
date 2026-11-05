@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderRoute } from '../test/render';
 import { apiError, fakeUser, server } from '../test/server';
 
-// A sessão termina em outro aparelho (DEC-087): o primeiro 401 tira da conta, e voltar para o
+// A sessão termina em outro aparelho (DEC-088): o primeiro 401 tira da conta, e voltar para o
 // app confere a sessão. Dados fictícios (regra 5).
 const ENDED = 'Sua sessão terminou. Entre de novo para continuar.';
 

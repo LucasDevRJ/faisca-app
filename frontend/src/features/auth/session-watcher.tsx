@@ -10,7 +10,7 @@ import { SESSION_ENDED_KEY, SESSION_QUERY_KEY } from './use-session';
 const RECHECK_AFTER_MS = 15_000;
 
 // Só existe enquanto alguém está logado (dentro do RequireAuth). A sessão pode terminar em outro
-// aparelho ("Sair de todos", senha trocada) sem este saber (DEC-087). Então:
+// aparelho ("Sair de todos", senha trocada) sem este saber (DEC-088). Então:
 // - um 401 da API faz o app confirmar a sessão e, se ela acabou mesmo, apagar a memória; o
 //   RequireAuth leva para entrar, com o aviso de sessão terminada;
 // - ao voltar para o app (aba ou PWA de novo na tela) e ao trocar de tela, confere a sessão, porque

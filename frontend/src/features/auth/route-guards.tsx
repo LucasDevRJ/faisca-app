@@ -37,7 +37,7 @@ export function RequireAuth() {
     // Com o #, para um link como /novidades#<id> voltar para a novidade certa depois do login.
     const next = location.pathname + location.search + location.hash;
     const target = next === '/' ? '/entrar' : `/entrar?next=${encodeURIComponent(next)}`;
-    // A sessão terminou em outro aparelho (SessionWatcher, DEC-087): a tela de entrar avisa.
+    // A sessão terminou em outro aparelho (SessionWatcher, DEC-088): a tela de entrar avisa.
     const ended = queryClient.getQueryData(SESSION_ENDED_KEY) === true;
     return <Navigate to={target} replace state={ended ? sessionEndedState : undefined} />;
   }

@@ -14,6 +14,7 @@ import { useRangeActions } from '../features/actions/use-actions';
 import { formatDayHeading, todayInAppZone } from '../features/activities/week';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { useSession } from '../features/auth/use-session';
+import { useAccessibility } from '../features/profile/use-profile';
 import { PeriodNav } from '../features/cycle/period-nav';
 import { cycleQuery } from '../features/cycle/use-cycle';
 import { usePeriod } from '../features/cycle/use-period';
@@ -86,6 +87,7 @@ function RepeatFromPrevious({ previous, enabled }: { previous: string; enabled: 
 // (ciclo da consulta ou semana) fica na URL, como nas outras abas (DEC-050).
 export function ActionsPage() {
   const { data: user } = useSession();
+  const { directLanguage } = useAccessibility();
   const location = useLocation();
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [notice, setNotice] = useState<string | null>((location.state as ActionsPageState)?.notice ?? null);
@@ -191,7 +193,9 @@ export function ActionsPage() {
 
         {list.isSuccess && actions.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-            Nenhuma ação {inCycle ? 'neste ciclo' : 'nesta semana'} ainda. Que tal escolher uma pequena?
+            {directLanguage
+              ? `Nenhuma ação registrada ${inCycle ? 'neste ciclo' : 'nesta semana'}.`
+              : `Nenhuma ação ${inCycle ? 'neste ciclo' : 'nesta semana'} ainda. Que tal escolher uma pequena?`}
           </p>
         )}
 

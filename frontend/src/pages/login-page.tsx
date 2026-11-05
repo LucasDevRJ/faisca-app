@@ -29,7 +29,7 @@ export function LoginPage() {
   const accountDeleted = readAccountDeleted(location.state) && login.isIdle;
   // Acabou de sair de todos os aparelhos (DEC-085): some do mesmo jeito.
   const loggedOutEverywhere = readLoggedOutEverywhere(location.state) && login.isIdle;
-  // A sessão terminou sem a pessoa pedir, por exemplo por "Sair de todos" em outro aparelho (DEC-087).
+  // A sessão terminou sem a pessoa pedir, por exemplo por "Sair de todos" em outro aparelho (DEC-088).
   const sessionEnded = readSessionEnded(location.state) && login.isIdle;
   const sessionEndedRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();

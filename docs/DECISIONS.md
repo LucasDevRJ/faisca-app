@@ -1737,7 +1737,53 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   com a "Trocar senha" na mesma seção, ela aponta para a "Trocar senha".
 - **Limite conhecido:** sem lista dos aparelhos conectados (DEC-085).
 
-## DEC-087 — Sessão terminada em outro aparelho: o app percebe e avisa
+## DEC-087 — Seção "Acessibilidade" em Conta e efeito dos 5 ajustes nas telas
+- **Decisão:**
+  - em **Conta**, abaixo de "Seu perfil" e para todos os perfis (paciente e terapeuta), a seção
+    **"Acessibilidade"** (issue #87, com a API da DEC-076 já no ar): cinco caixas de seleção
+    independentes, desligadas por padrão, e o botão **"Salvar acessibilidade"** (`PATCH /profile` com
+    `{ accessibility }`);
+  - **Leitura confortável** (`comfortableReading`) e **Menos movimento** (`reducedMotion`) têm
+    **prévia na hora** em Conta (como a paleta na DEC-068) e só ficam gravados no aparelho e na conta
+    ao salvar; sair de Conta sem salvar volta aos ajustes da conta. Os dois ficam em
+    `data-comfortable-reading="true"` e `data-reduced-motion="true"` no `<html>` e no `localStorage`
+    (`faisca:comfortable-reading` e `faisca:reduced-motion`), lidos pelo `theme-init.js` antes do
+    React para o app abrir já com a fonte e sem animação;
+  - efeito de cada ajuste nas telas (`useAccessibility()`):
+    - **Linguagem direta (`directLanguage`):** troca expressões figuradas por textos literais e
+      objetivos ("Conta como foi?" → "Avaliar atividade" / "Avaliar ação"; "Tudo bem, quer contar o
+      que aconteceu?" e "Tudo bem, não deu desta vez" → "Registrar que não realizou"; "Não deu desta
+      vez" → "Não realizada"; "O que passou pela sua cabeça na hora?" → "O que você pensou naquele
+      momento?"; "quanto pesa cada emoção agora?" → "qual é a intensidade de cada emoção agora?";
+      "Quando algo mexer com você…" → "Quando uma situação causar emoção ou pensamento forte…"). A
+      regra de tom no `frontend/CLAUDE.md` e no `revisor-telas` passa a cobrir os dois modos;
+    - **Uma coisa por vez (`oneThingAtATime`):** divide em passos curtos, com "Passo X de N",
+      "‹ Anterior" e "Próximo ›" (validando o passo atual antes de avançar), os três formulários em
+      página própria: **Pensamentos** (5 passos: dia e situação; pensamento e crença; emoções;
+      comportamento e consequência; explicação alternativa e salvar), **Tensão** (3 passos: dia, hora
+      e situação; tensão e vontade de vocalizar; o que fez, o que aconteceu depois e salvar) e
+      **Ação** (2 passos em "Vou fazer", ou 3 em "Já fiz": modo e tipo; ação, dia e expectativa; e,
+      em "Já fiz", prazer, realização e observação). As janelas curtas (`Dialog`) continuam numa tela
+      só;
+    - **Leitura confortável (`comfortableReading`):** aumenta a fonte base (`112.5%` no `:root`) e o
+      espaçamento entre linhas (`1.75`), letras (`0.02em`) e palavras (`0.08em`);
+    - **Sem pressão de tempo (`noTimePressure`):** esconde a contagem de dias para a consulta no
+      cabeçalho do ciclo ("Sua consulta é daqui a N dias"), a distância em dias nas consultas ("em N
+      dias" / "há N dias", para paciente e terapeuta) e o texto de prazo para adicionar explicação
+      alternativa e fotos da Ação ("até…");
+    - **Menos movimento (`reducedMotion`):** desliga animações e transições no CSS e nos gráficos
+      (`ScoreChart` e `TensionChart`), mesmo sem `prefers-reduced-motion` ligado no aparelho;
+  - o aviso de privacidade passa a citar os ajustes de acessibilidade na conta e no aparelho, **sem
+    versão nova** (DEC-076).
+- **Motivo:** fechar a Parte 1b da #87 com a API já no ar (DEC-076, DEC-056). Aplicar leitura
+  confortável e menos movimento no `theme-init.js` evita um salto de fonte ou animação no primeiro
+  quadro. Validar cada passo antes de avançar em "Uma coisa por vez" evita que a pessoa chegue ao fim
+  e descubra um erro num passo que já saiu da tela.
+- **Limite conhecido:** "Linguagem direta" cobre os botões, títulos de janela, dicas e estados vazios
+  com linguagem figurada nas áreas principais; textos que já eram diretos continuam iguais nos dois
+  modos. As condições de saúde, remédios e contatos de emergência ficam para a Parte 2 da #87.
+
+## DEC-088 — Sessão terminada em outro aparelho: o app percebe e avisa
 - **Decisão:**
   - enquanto alguém está logado, o app (`SessionWatcher`, dentro do `RequireAuth`), a cada **401 da
     API**, confirma a sessão em `GET /auth/me`. Se ela acabou mesmo, apaga da memória os dados da

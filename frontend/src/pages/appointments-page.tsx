@@ -24,6 +24,7 @@ import {
 } from '../features/appointments/appointment-dialogs';
 import { CALENDAR_URL, type AgendaResponse, type Session } from '../features/appointments/appointments-api';
 import { useAgenda, useResumeAgenda, useUndoSessionChange } from '../features/appointments/use-appointments';
+import { useAccessibility } from '../features/profile/use-profile';
 
 type OpenDialog =
   | { kind: 'schedule' | 'pause' | 'end' | 'extra' }
@@ -48,13 +49,14 @@ function SessionTag({ session }: { session: Session }) {
 }
 
 function SessionItem({ session, today, actions }: { session: Session; today: string; actions: ReactNode }) {
+  const { noTimePressure } = useAccessibility();
   const cancelled = session.status === 'DESMARCADA';
   return (
     <li className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4">
       <div className="flex flex-wrap items-center gap-2">
         <p className={cancelled ? 'text-muted line-through' : ''}>
           <span className="inline-block font-semibold first-letter:uppercase">{formatSessionDay(session)}</span>
-          <span className="text-muted"> · {formatSessionDistance(session, today)}</span>
+          {!noTimePressure && <span className="text-muted"> · {formatSessionDistance(session, today)}</span>}
         </p>
         <SessionTag session={session} />
       </div>

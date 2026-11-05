@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { Button } from '../../components/ui/button';
 import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
+import { useAccessibility } from '../profile/use-profile';
 import { isFinal, type Activity } from './activities-api';
 import { SCORE_TEXT, STATUS_LABEL } from './activity-labels';
 
@@ -25,6 +26,7 @@ type ActivityCardProps =
 // e o backend responderia 409. Esconder os botões é conforto, não segurança.
 export function ActivityCard(props: ActivityCardProps) {
   const { activity } = props;
+  const { directLanguage } = useAccessibility();
   const titleId = useId();
   const final = isFinal(activity.status);
   // Concluir ou marcar "não aconteceu" só a partir do dia da atividade (DEC-028).
@@ -73,7 +75,7 @@ export function ActivityCard(props: ActivityCardProps) {
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {dayArrived && (
               <Button className="col-span-2 sm:col-auto" onClick={() => props.onAction('complete', activity)}>
-                Conta como foi?
+                {directLanguage ? 'Avaliar atividade' : 'Conta como foi?'}
               </Button>
             )}
             {activity.status === 'PLANEJADA' && (
