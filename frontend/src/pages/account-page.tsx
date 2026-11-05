@@ -5,6 +5,7 @@ import { buttonClasses } from '../components/ui/button-styles';
 import { getApiError } from '../features/auth/auth-api';
 import { AboutMeSection } from '../features/about-me/about-me-section';
 import { DeleteAccountSection } from '../features/auth/delete-account-section';
+import { SecuritySection } from '../features/auth/security-section';
 import { useAddProfile, useSession } from '../features/auth/use-session';
 import { TherapistLinkSection } from '../features/links/therapist-link-section';
 import { ProfileSection } from '../features/profile/profile-section';
@@ -62,6 +63,9 @@ export function AccountPage() {
           Ver o que há de novo
         </Link>
       </section>
+
+      {/* Trocar senha e sair de todos os aparelhos (DEC-086), antes de "Excluir conta". */}
+      <SecuritySection />
 
       <DeleteAccountSection isPatient={user.profiles.patient} />
     </>

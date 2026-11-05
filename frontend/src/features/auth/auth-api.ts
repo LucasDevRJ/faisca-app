@@ -94,6 +94,17 @@ export async function deleteAccount(password: string): Promise<void> {
   await api.post('/auth/delete-account', { password });
 }
 
+// "Sair de todos os aparelhos" e "Trocar senha" (DEC-085).
+export async function logoutAll(password: string): Promise<void> {
+  await api.post('/auth/logout-all', { password });
+}
+
+export type ChangePasswordInput = { currentPassword: string; newPassword: string };
+
+export async function changePassword(input: ChangePasswordInput): Promise<void> {
+  await api.post('/auth/change-password', input);
+}
+
 export async function signup(input: SignupInput): Promise<void> {
   await api.post('/auth/signup', input);
 }

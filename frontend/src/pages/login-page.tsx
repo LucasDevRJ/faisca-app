@@ -7,6 +7,7 @@ import { PasswordField, TextField } from '../components/ui/text-field';
 import { getApiError, resendConfirmation } from '../features/auth/auth-api';
 import { AuthLayout } from '../features/auth/auth-layout';
 import { readAccountDeleted } from '../features/auth/account-deleted';
+import { readLoggedOutEverywhere } from '../features/auth/logged-out-everywhere';
 import { safeNextPath, useLogin } from '../features/auth/use-session';
 import { validateEmail } from '../features/auth/validation';
 import { inviteState, readInviteToken } from '../features/links/invite-state';
@@ -25,6 +26,8 @@ export function LoginPage() {
   const login = useLogin();
   // Acabou de excluir a conta (DEC-035): o aviso some quando a pessoa tenta entrar.
   const accountDeleted = readAccountDeleted(location.state) && login.isIdle;
+  // Acabou de sair de todos os aparelhos (DEC-085): some do mesmo jeito.
+  const loggedOutEverywhere = readLoggedOutEverywhere(location.state) && login.isIdle;
   const resend = useMutation({ mutationFn: resendConfirmation });
 
   const apiError = login.error ? getApiError(login.error) : null;
@@ -50,6 +53,7 @@ export function LoginPage() {
     <AuthLayout title="Que bom te ver" description="Entre para continuar seus registros.">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
         {accountDeleted && <Alert>Sua conta foi excluída. Obrigado por ter usado o Faísca.</Alert>}
+        {loggedOutEverywhere && <Alert>Pronto, você saiu de todos os aparelhos. Entre de novo para continuar.</Alert>}
         {apiError && !notConfirmed && <Alert tone="attention">{apiError.message}</Alert>}
 
         {notConfirmed && (
