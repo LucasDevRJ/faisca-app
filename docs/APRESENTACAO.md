@@ -43,7 +43,8 @@ Para o paciente:
 Para a psicóloga:
 - Vê os registros dos pacientes vinculados, por ciclo da consulta ou por semana, com gráficos.
 - Tem acesso **só de leitura**: nunca altera o que o paciente escreveu.
-- Marca os registros como **lidos** e vê, fora do ciclo, tudo o que ainda está para ler.
+- Marca os registros como **lidos** e vê, fora do ciclo, tudo o que ainda está para ler. Em Meus
+  pacientes, vê o total para ler de todos, e quem tem algo pendente aparece primeiro.
 - Escreve **avisos** para todos os pacientes de uma vez (férias, feriados, horários), num mural de
   mão única: os pacientes não veem uns aos outros, e ela não vê quem leu.
 

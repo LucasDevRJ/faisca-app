@@ -203,7 +203,8 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
   (e desfaz), ou **todos da lista aberta** de uma vez. Nunca marca sozinho ao abrir. Um registro
   que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada) volta
   a contar, como **atualizado**. A visão **Para ler** junta as três áreas fora do ciclo, do mais
-  antigo ao mais novo, e a lista de pacientes mostra quantos faltam ler. As marcas são da
+  antigo ao mais novo, e a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
+  algo para ler no topo, e o total de todos ("12 registros para ler, de 2 pacientes"). As marcas são da
   terapeuta: o paciente não as vê, e uma terapeuta nova começa sem nenhuma. Nas telas, o texto
   fala em **"para ler"** (DEC-058).
 - O perfil de terapeuta não recebe notificações.

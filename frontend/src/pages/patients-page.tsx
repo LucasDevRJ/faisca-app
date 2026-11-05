@@ -9,6 +9,7 @@ import { PrivacyUpdateBanner } from '../features/auth/privacy-consent';
 import { statusBadge } from '../features/appointments/agenda-format';
 import type { ListedPatient } from '../features/links/links-api';
 import { usePatientSummary } from '../features/therapist/use-therapist';
+import { toReadLabel } from '../features/therapist/read-format';
 import { Avatar } from '../features/profile/avatar';
 import { avatarUrls } from '../features/profile/profile-api';
 
@@ -55,6 +56,32 @@ function PatientItem({ patient }: { patient: ListedPatient }) {
   );
 }
 
+// Total para ler de todos os pacientes (DEC-083): só aparece quando há algo; tudo lido, some, sem
+// "parabéns" nem cor de alerta. Os números de cada um ficam na lista logo abaixo.
+function ToReadTotal({ patients }: { patients: ListedPatient[] }) {
+  const pending = patients.filter((patient) => patient.unreadCount > 0);
+  if (pending.length === 0) return null;
+  const total = pending.reduce((sum, patient) => sum + patient.unreadCount, 0);
+
+  return (
+    <section
+      aria-labelledby="to-read-total-title"
+      className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6"
+    >
+      <h2 id="to-read-total-title" className="text-xl font-semibold">
+        {toReadLabel(total)}
+      </h2>
+      <p className="text-muted">de {pending.length === 1 ? '1 paciente' : `${pending.length} pacientes`}</p>
+    </section>
+  );
+}
+
+// Quem tem algo para ler sobe, do maior para o menor número (DEC-083); o resto segue a ordem da API.
+// O sort é estável: empates e quem não tem nada para ler mantêm a ordem em que vieram.
+function byToRead(patients: ListedPatient[]): ListedPatient[] {
+  return [...patients].sort((a, b) => b.unreadCount - a.unreadCount);
+}
+
 // "Meus pacientes" (SPEC, "Visão da terapeuta"): o campo de código e a lista de quem tem
 // vínculo ativo. Cada item leva aos registros do paciente (/pacientes/:id, DEC-033).
 export function PatientsPage() {
@@ -64,6 +91,7 @@ export function PatientsPage() {
     <>
       <h1 className="text-4xl font-bold">Meus pacientes</h1>
       <PrivacyUpdateBanner />
+      {patients.data && <ToReadTotal patients={patients.data} />}
 
       <RedeemCodeForm />
 
@@ -94,7 +122,7 @@ export function PatientsPage() {
         )}
         {patients.data && patients.data.length > 0 && (
           <ul className="flex flex-col gap-3">
-            {patients.data.map((patient) => (
+            {byToRead(patients.data).map((patient) => (
               <PatientItem key={patient.id} patient={patient} />
             ))}
           </ul>
