@@ -18,9 +18,10 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
 // (DEC-058): um dado de trabalho dela, que o paciente não vê. E também para o nome completo, a
-// paleta e a foto do perfil (DEC-061, DEC-068, DEC-069): dados pessoais da própria conta, que não são
-// de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já vi"
-// fica só com o paciente.
+// paleta, os ajustes de acessibilidade e a foto do perfil (DEC-061, DEC-068, DEC-069, DEC-076):
+// dados pessoais e preferências de interface da própria conta, que não são de saúde. E para o
+// mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já vi" fica só com o
+// paciente.
 const VERSION_LABEL = 'versão 8, de novembro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
@@ -66,8 +67,8 @@ export function PrivacyPage() {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li>
               Da sua conta: nome, e-mail e senha. A senha é guardada de um jeito que nem nós conseguimos ler. Se
-              você quiser, também o nome completo, a paleta de cores e uma foto de perfil. A foto é guardada
-              pequena e sem os dados escondidos, como o lugar onde foi tirada.
+              você quiser, também o nome completo, a paleta de cores, os ajustes de acessibilidade e uma foto de
+              perfil. A foto é guardada pequena e sem os dados escondidos, como o lugar onde foi tirada.
             </li>
             <li>O que você registra: atividades, datas, notas de 0 a 10 e observações.</li>
             <li>
@@ -99,7 +100,10 @@ export function PrivacyPage() {
             </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
-            <li>No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro e a paleta de cores.</li>
+            <li>
+              No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro, a paleta de cores e os
+              ajustes de leitura confortável e de menos movimento.
+            </li>
             <li>
               Se você baixar o arquivo da agenda para o calendário do celular, ele leva só o dia e a hora de cada
               sessão, com o texto “Consulta”, sem motivos.

@@ -8,6 +8,7 @@ import { DeleteAccountSection } from '../features/auth/delete-account-section';
 import { SecuritySection } from '../features/auth/security-section';
 import { useAddProfile, useSession } from '../features/auth/use-session';
 import { TherapistLinkSection } from '../features/links/therapist-link-section';
+import { AccessibilitySection } from '../features/profile/accessibility-section';
 import { ProfileSection } from '../features/profile/profile-section';
 
 const profileInfo = {
@@ -45,6 +46,8 @@ export function AccountPage() {
       </div>
 
       <ProfileSection />
+
+      <AccessibilitySection />
 
       {/* "Sobre mim" (DEC-082): só para quem é paciente; a psicóloga vinculada lê. */}
       {user.profiles.patient && <AboutMeSection />}

@@ -13,6 +13,7 @@ import { cycleQuery } from '../features/cycle/use-cycle';
 import { usePeriod } from '../features/cycle/use-period';
 import { daysInRange } from '../features/therapist/period';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
+import { useAccessibility } from '../features/profile/use-profile';
 import { ThoughtRecordCard } from '../features/thought-records/thought-record-card';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import {
@@ -28,6 +29,7 @@ export type ThoughtsPageState = { notice?: string } | null;
 // O período (ciclo da consulta ou semana) fica na URL, como em /registros (DEC-029, DEC-050).
 export function ThoughtsPage() {
   const { data: user } = useSession();
+  const { directLanguage } = useAccessibility();
   const location = useLocation();
   const [toDelete, setToDelete] = useState<ThoughtRecord | null>(null);
   const [notice, setNotice] = useState<string | null>((location.state as ThoughtsPageState)?.notice ?? null);
@@ -48,7 +50,9 @@ export function ThoughtsPage() {
     <section className="flex flex-col gap-2">
       <h1 className="text-3xl font-bold sm:text-4xl">Registro de Pensamentos</h1>
       <p className="text-muted sm:text-lg">
-        Quando algo mexer com você, anote a situação, o que pensou, o que sentiu, o que fez e o que veio depois.
+        {directLanguage
+          ? 'Quando uma situação causar emoção ou pensamento forte, anote a situação, o pensamento, as emoções, o que fez e o que aconteceu depois.'
+          : 'Quando algo mexer com você, anote a situação, o que pensou, o que sentiu, o que fez e o que veio depois.'}
       </p>
     </section>
   );
@@ -127,7 +131,9 @@ export function ThoughtsPage() {
 
         {week.isSuccess && records.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-            Nada anotado {here}. Quando algo mexer com você, dá para anotar aqui.
+            {directLanguage
+              ? `Nada anotado ${here}. Use "Novo registro" para anotar uma situação.`
+              : `Nada anotado ${here}. Quando algo mexer com você, dá para anotar aqui.`}
           </p>
         )}
 

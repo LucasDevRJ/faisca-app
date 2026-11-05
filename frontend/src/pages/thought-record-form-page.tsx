@@ -8,6 +8,7 @@ import { getApiError, type ApiErrorInfo } from '../features/auth/auth-api';
 import { useSession } from '../features/auth/use-session';
 import { isValidDateOnly, todayInAppZone } from '../features/activities/week';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
+import { useAccessibility } from '../features/profile/use-profile';
 import { AlternativeFields } from '../features/thought-records/alternative-fields';
 import {
   emotionsAfter,
@@ -167,6 +168,7 @@ export function EditThoughtRecordPage() {
 export function AddAlternativePage() {
   const { id = '' } = useParams();
   const { data: user } = useSession();
+  const { noTimePressure } = useAccessibility();
   const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const record = useThoughtRecord(id, consented);
   const add = useAddAlternative();
@@ -265,8 +267,9 @@ export function AddAlternativePage() {
         </div>
       </dl>
       <p className="text-muted">
-        Você pode adicionar a explicação alternativa uma vez, {formatAlternativeDeadline(data.alternativeDeadline)}.
-        Depois de salva, ela fica como está.
+        {noTimePressure
+          ? 'Você pode adicionar a explicação alternativa uma vez. Depois de salva, ela fica como está.'
+          : `Você pode adicionar a explicação alternativa uma vez, ${formatAlternativeDeadline(data.alternativeDeadline)}. Depois de salva, ela fica como está.`}
       </p>
       <AddAlternativeForm
         record={data}

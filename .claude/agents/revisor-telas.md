@@ -27,11 +27,14 @@ escreveu este código: revise o que está no diff, não o que se pretendia fazer
 
 ## As 7 áreas
 1. **Tom** (telas e e-mails)
-   - Textos acolhedores, em pt-BR, como "Conta como foi?" e "Tudo bem, quer contar o que
-     aconteceu?".
-   - Nada que gere culpa ou pressão: "atrasado", "você falhou", "não fez", "prazo perdido",
-     contagem regressiva, sequências (streaks), pontos, placar, ranking, comparação com metas.
-     Uma meta aparece como espaços a preencher, nunca como "faltam".
+   - Por padrão, textos acolhedores, em pt-BR, como "Conta como foi?" e "Tudo bem, quer contar o que
+     aconteceu?". Com **Linguagem direta** ligada (`directLanguage`, DEC-076), textos literais e
+     objetivos, sem metáforas ou expressões figuradas ("Avaliar atividade", "Registrar que não
+     realizou", "O que você pensou naquele momento?").
+   - Nos dois modos, nada que gere culpa ou pressão: "atrasado", "você falhou", "prazo perdido",
+     sequências (streaks), pontos, placar, ranking, comparação com metas. Uma meta aparece como
+     espaços a preencher, nunca como "faltam". Com **Sem pressão de tempo** ligada (`noTimePressure`),
+     também não aparecem distâncias em dias para a consulta nem prazos nos cartões.
    - O RPD usa termos clínicos suaves (DEC-039): "Registro de Pensamentos", "pensamento
      automático"; nunca "pensamento disfuncional" ou "distorção".
    - E-mails: além de neutros (regra 3 do AGENTS.md, conferida pelo `revisor-regras`), devem ser

@@ -317,6 +317,11 @@
     }
   }
 
+  :root[data-reduced-motion='true'] input:is([type='checkbox'], [type='radio']):not(.sr-only),
+  :root[data-reduced-motion='true'] input:is([type='checkbox'], [type='radio']):not(.sr-only)::before {
+    transition: none;
+  }
+
   /* Alto contraste do sistema: volta ao controle nativo, que o sistema sabe desenhar. */
   @media (forced-colors: active) {
     input:is([type='checkbox'], [type='radio']):not(.sr-only) {
@@ -398,7 +403,18 @@
   }
 }
 
-/* Animações sutis, e nenhuma para quem pediu menos movimento. */
+/* Leitura confortável: fonte maior e mais respiro entre linhas, letras e palavras (DEC-087). */
+:root[data-comfortable-reading='true'] {
+  font-size: 112.5%;
+}
+
+:root[data-comfortable-reading='true'] body {
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+  word-spacing: 0.08em;
+}
+
+/* Animações sutis, e nenhuma para quem pediu menos movimento (sistema ou ajuste na conta). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -408,4 +424,13 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+:root[data-reduced-motion='true'] *,
+:root[data-reduced-motion='true'] *::before,
+:root[data-reduced-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

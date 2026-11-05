@@ -3,6 +3,7 @@ import { setupServer } from 'msw/node';
 import type { Activity } from '../features/activities/activities-api';
 import type { AgendaResponse, Session } from '../features/appointments/appointments-api';
 import type { SessionUser } from '../features/auth/auth-api';
+import { DEFAULT_ACCESSIBILITY } from '../features/profile/accessibility';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 
@@ -16,6 +17,7 @@ export const fakeUser: SessionUser = {
   privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true },
   pendingAnnouncement: null,
   palette: 'SALVIA',
+  accessibility: DEFAULT_ACCESSIBILITY,
 };
 
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
@@ -128,7 +130,14 @@ export const loggedIn = http.get('*/api/auth/me', () => HttpResponse.json({ user
 // Respostas padrão da API simulada. Cada teste pode sobrescrever com server.use(...).
 export const handlers = [
   http.get('*/api/profile', () =>
-    HttpResponse.json({ profile: { fullName: null, palette: 'SALVIA', avatarVersion: null } }),
+    HttpResponse.json({
+      profile: {
+        fullName: null,
+        palette: 'SALVIA',
+        avatarVersion: null,
+        accessibility: DEFAULT_ACCESSIBILITY,
+      },
+    }),
   ),
   http.get('*/api/health', () =>
     HttpResponse.json({ status: 'ok', timestamp: '2026-01-01T12:00:00.000Z' }),

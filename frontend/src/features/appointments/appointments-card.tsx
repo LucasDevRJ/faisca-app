@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { todayInAppZone } from '../activities/week';
+import { useAccessibility } from '../profile/use-profile';
 import { describePause, formatSessionDay, formatSessionDistance } from './agenda-format';
 import { useAgenda } from './use-appointments';
 
@@ -9,12 +10,13 @@ type SessionWhen = { date: string; time: string | null };
 
 // Também usada na visão da terapeuta (pacientes/:id), dentro de um <dl>.
 export function AppointmentLine({ label, session, today }: { label: string; session: SessionWhen; today: string }) {
+  const { noTimePressure } = useAccessibility();
   return (
     <div className="flex flex-col">
       <dt className="text-sm text-muted">{label}</dt>
       <dd className="font-semibold">
         <span className="inline-block first-letter:uppercase">{formatSessionDay(session)}</span>
-        <span className="font-normal text-muted"> · {formatSessionDistance(session, today)}</span>
+        {!noTimePressure && <span className="font-normal text-muted"> · {formatSessionDistance(session, today)}</span>}
       </dd>
     </div>
   );

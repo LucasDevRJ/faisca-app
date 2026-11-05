@@ -6,6 +6,7 @@ import { buttonClasses } from '../../components/ui/button-styles';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { isValidDateOnly, todayInAppZone } from '../activities/week';
+import { useAccessibility } from '../profile/use-profile';
 import { AlternativeFields } from './alternative-fields';
 import { emotionsAfter, initialAlternativeState, validateAlternative } from './alternative-state';
 import {
@@ -57,6 +58,8 @@ export function ThoughtRecordForm({
   cancelTo,
   onSubmit,
 }: ThoughtRecordFormProps) {
+  const { oneThingAtATime, directLanguage } = useAccessibility();
+  const [step, setStep] = useState(0);
   const [date, setDate] = useState(initial?.situationDate ?? initialDate);
   const [texts, setTexts] = useState<Record<TextKey, string>>({
     situation: initial?.situation ?? '',
@@ -111,11 +114,40 @@ export function ThoughtRecordForm({
     return { ...next, ...validateAlternative(alternative, selected) };
   }
 
+  function stepBelongsToKey(key: string): number {
+    if (key === 'situationDate' || key === 'situation') return 0;
+    if (key === 'automaticThought' || key === 'beliefLevel') return 1;
+    if (key === 'emotions' || key === 'otherLabel' || key.startsWith('intensity.')) return 2;
+    if (key === 'behavior' || key === 'consequence') return 3;
+    return 4;
+  }
+
+  function handleNext() {
+    const allErrors = validate();
+    const stepErrors: Errors = {};
+    for (const [key, value] of Object.entries(allErrors)) {
+      if (value && stepBelongsToKey(key) === step) stepErrors[key] = value;
+    }
+    setErrors(stepErrors);
+    if (Object.values(stepErrors).some(Boolean)) return;
+    setStep((current) => Math.min(current + 1, 4));
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (oneThingAtATime && step < 4) {
+      handleNext();
+      return;
+    }
     const next = validate();
     setErrors(next);
-    if (Object.values(next).some(Boolean)) return;
+    if (Object.values(next).some(Boolean)) {
+      if (oneThingAtATime) {
+        const firstErrorKey = Object.keys(next).find((k) => next[k]);
+        if (firstErrorKey) setStep(stepBelongsToKey(firstErrorKey));
+      }
+      return;
+    }
 
     const alternativeText = alternative.text.trim();
     const after = emotionsAfter(alternative, selected);
@@ -146,7 +178,11 @@ export function ThoughtRecordForm({
   const textArea = (key: TextKey) => (
     <TextAreaField
       label={FIELD_TEXT[key].label}
-      hint={FIELD_TEXT[key].hint}
+      hint={
+        key === 'automaticThought' && directLanguage
+          ? FIELD_TEXT.automaticThought.directHint
+          : FIELD_TEXT[key].hint
+      }
       value={texts[key]}
       limit={TEXT_MAX}
       onChange={(e) => setTexts((current) => ({ ...current, [key]: e.target.value }))}
@@ -154,92 +190,136 @@ export function ThoughtRecordForm({
     />
   );
 
+  const showStep = (index: number) => !oneThingAtATime || step === index;
+  const isLastStep = !oneThingAtATime || step === 4;
+
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
       {apiError && <Alert tone="attention">{apiError.message}</Alert>}
 
-      <TextField
-        label={FIELD_TEXT.situationDate.label}
-        type="date"
-        value={date}
-        max={todayInAppZone()}
-        onChange={(e) => setDate(e.target.value)}
-        error={fieldError('situationDate')}
-      />
-      {textArea('situation')}
-      {textArea('automaticThought')}
-      <ScoreField
-        label={FIELD_TEXT.beliefLevel.label}
-        minLabel={FIELD_TEXT.beliefLevel.min}
-        maxLabel={FIELD_TEXT.beliefLevel.max}
-        value={belief}
-        onChange={setBelief}
-        error={fieldError('beliefLevel')}
-      />
-
-      <fieldset
-        className="flex flex-col gap-3"
-        aria-describedby={fieldError('emotions') ? 'emotions-hint emotions-error' : 'emotions-hint'}
-      >
-        <legend className="mb-1 font-medium">{FIELD_TEXT.emotions.label}</legend>
-        <p id="emotions-hint" className="text-sm text-muted">
-          {FIELD_TEXT.emotions.hint}
+      {oneThingAtATime && (
+        <p role="status" className="text-sm font-medium text-muted">
+          Passo {step + 1} de 5
         </p>
-        <div className="flex flex-wrap gap-2">
-          {EMOTIONS.map((emotion) => (
-            <label key={emotion} className={`flex min-h-11 items-center gap-2 px-3 ${choiceCardClasses}`}>
-              <input
-                type="checkbox"
-                checked={Boolean(emotions[emotion])}
-                onChange={(e) => toggleEmotion(emotion, e.target.checked)}
-              />
-              {EMOTION_LABEL[emotion]}
-            </label>
-          ))}
-        </div>
-        {fieldError('emotions') && <FieldError id="emotions-error">{fieldError('emotions')!}</FieldError>}
+      )}
 
-        {selected.map((emotion) => (
-          <div key={emotion} className="flex flex-col gap-3 rounded-md border border-border p-3">
-            {emotion === 'OUTRA' && (
-              <TextField
-                label="Qual emoção?"
-                value={emotions.OUTRA!.otherLabel}
-                maxLength={OTHER_LABEL_MAX}
-                onChange={(e) => updateEmotion('OUTRA', { otherLabel: e.target.value })}
-                error={fieldError('otherLabel')}
-              />
-            )}
-            <ScoreField
-              label={`Intensidade: ${emotion === 'OUTRA' ? emotions.OUTRA!.otherLabel.trim() || 'outra' : EMOTION_LABEL[emotion].toLowerCase()}`}
-              minLabel={INTENSITY_TEXT.min}
-              maxLabel={INTENSITY_TEXT.max}
-              value={emotions[emotion]!.intensity}
-              onChange={(intensity) => updateEmotion(emotion, { intensity })}
-              error={fieldError(`intensity.${emotion}`)}
-            />
+      {showStep(0) && (
+        <>
+          <TextField
+            label={FIELD_TEXT.situationDate.label}
+            type="date"
+            value={date}
+            max={todayInAppZone()}
+            onChange={(e) => setDate(e.target.value)}
+            error={fieldError('situationDate')}
+          />
+          {textArea('situation')}
+        </>
+      )}
+
+      {showStep(1) && (
+        <>
+          {textArea('automaticThought')}
+          <ScoreField
+            label={FIELD_TEXT.beliefLevel.label}
+            minLabel={FIELD_TEXT.beliefLevel.min}
+            maxLabel={FIELD_TEXT.beliefLevel.max}
+            value={belief}
+            onChange={setBelief}
+            error={fieldError('beliefLevel')}
+          />
+        </>
+      )}
+
+      {showStep(2) && (
+        <fieldset
+          className="flex flex-col gap-3"
+          aria-describedby={fieldError('emotions') ? 'emotions-hint emotions-error' : 'emotions-hint'}
+        >
+          <legend className="mb-1 font-medium">{FIELD_TEXT.emotions.label}</legend>
+          <p id="emotions-hint" className="text-sm text-muted">
+            {FIELD_TEXT.emotions.hint}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {EMOTIONS.map((emotion) => (
+              <label key={emotion} className={`flex min-h-11 items-center gap-2 px-3 ${choiceCardClasses}`}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(emotions[emotion])}
+                  onChange={(e) => toggleEmotion(emotion, e.target.checked)}
+                />
+                {EMOTION_LABEL[emotion]}
+              </label>
+            ))}
           </div>
-        ))}
-      </fieldset>
+          {fieldError('emotions') && <FieldError id="emotions-error">{fieldError('emotions')!}</FieldError>}
 
-      {textArea('behavior')}
-      {textArea('consequence')}
+          {selected.map((emotion) => (
+            <div key={emotion} className="flex flex-col gap-3 rounded-md border border-border p-3">
+              {emotion === 'OUTRA' && (
+                <TextField
+                  label="Qual emoção?"
+                  value={emotions.OUTRA!.otherLabel}
+                  maxLength={OTHER_LABEL_MAX}
+                  onChange={(e) => updateEmotion('OUTRA', { otherLabel: e.target.value })}
+                  error={fieldError('otherLabel')}
+                />
+              )}
+              <ScoreField
+                label={`Intensidade: ${emotion === 'OUTRA' ? emotions.OUTRA!.otherLabel.trim() || 'outra' : EMOTION_LABEL[emotion].toLowerCase()}`}
+                minLabel={INTENSITY_TEXT.min}
+                maxLabel={INTENSITY_TEXT.max}
+                value={emotions[emotion]!.intensity}
+                onChange={(intensity) => updateEmotion(emotion, { intensity })}
+                error={fieldError(`intensity.${emotion}`)}
+              />
+            </div>
+          ))}
+        </fieldset>
+      )}
 
-      <AlternativeFields
-        state={alternative}
-        onChange={setAlternative}
-        emotions={selected.map((emotion) => ({
-          emotion,
-          name: emotion === 'OUTRA' ? emotions.OUTRA!.otherLabel.trim() || 'Outra' : emotionName({ emotion, otherLabel: null }),
-          before: emotions[emotion]!.intensity,
-        }))}
-        error={fieldError}
-      />
+      {showStep(3) && (
+        <>
+          {textArea('behavior')}
+          {textArea('consequence')}
+        </>
+      )}
+
+      {showStep(4) && (
+        <AlternativeFields
+          state={alternative}
+          onChange={setAlternative}
+          emotions={selected.map((emotion) => ({
+            emotion,
+            name: emotion === 'OUTRA' ? emotions.OUTRA!.otherLabel.trim() || 'Outra' : emotionName({ emotion, otherLabel: null }),
+            before: emotions[emotion]!.intensity,
+          }))}
+          error={fieldError}
+        />
+      )}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Salvando…' : submitLabel}
-        </Button>
+        {isLastStep ? (
+          <Button key="submit" type="submit" disabled={pending}>
+            {pending ? 'Salvando…' : submitLabel}
+          </Button>
+        ) : (
+          <Button key="next" type="button" onClick={handleNext}>
+            Próximo ›
+          </Button>
+        )}
+        {oneThingAtATime && step > 0 && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setErrors({});
+              setStep((current) => Math.max(current - 1, 0));
+            }}
+          >
+            ‹ Anterior
+          </Button>
+        )}
         <Link to={cancelTo} className={buttonClasses('secondary')}>
           Cancelar
         </Link>

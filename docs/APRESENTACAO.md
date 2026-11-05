@@ -56,12 +56,16 @@ Para todos:
   Lavanda, Oceano, Areia e Alto contraste), que valem em qualquer aparelho.
 - **"Sobre mim":** o paciente conta, se quiser, um pouco sobre si, o que gostaria de trabalhar na
   terapia e hábitos que quer deixar. A psicóloga lê e marca como lido.
+- **Acessibilidade:** cinco ajustes independentes em Conta, abertos a todos (paciente e psicóloga) e
+  salvos na conta: **Linguagem direta** (textos literais, sem expressões figuradas), **Uma coisa por
+  vez** (formulários longos divididos em passos curtos), **Leitura confortável** (fonte maior e mais
+  espaço entre linhas e letras), **Sem pressão de tempo** (esconde contagens de dias e prazos) e
+  **Menos movimento** (desliga animações e transições).
 
 ## Em breve (divulgar como "em desenvolvimento", nunca como pronto)
 - Notificações e lembretes pelo canal que a pessoa preferir (e-mail, notificação no celular ou
   WhatsApp), sempre com texto neutro e com horário de silêncio.
-- Ajustes de acessibilidade para pessoas neurodivergentes (TEA, TDAH, dislexia, ansiedade):
-  linguagem direta, uma coisa por vez, leitura confortável, sem pressão de tempo.
+- Perfil de saúde opcional (condições, remédios e contatos de emergência), com consentimento próprio.
 - Animação, som e vibração suaves ao salvar um registro (com opção de desligar).
 - Baixar uma cópia dos próprios dados (direito garantido pela LGPD).
 

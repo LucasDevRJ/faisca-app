@@ -1,5 +1,7 @@
 import { Bar, BarChart, LabelList, Legend, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { formatShortDay } from '../features/activities/week';
+import { prefersReducedMotion } from '../features/profile/accessibility';
+import { useAccessibility } from '../features/profile/use-profile';
 import { useMediaQuery } from '../lib/use-media-query';
 
 // Três notas de 0 a 10 por item (atividade ou ação). No celular, barras horizontais (DEC-044): o
@@ -27,18 +29,15 @@ type ScoreChartProps = {
 const MAX_WITHOUT_SCROLL = 8;
 const WIDTH_PER_ITEM = 96;
 
-function prefersReducedMotion() {
-  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-}
-
 function shortName(name: string) {
   return name.length > 14 ? `${name.slice(0, 13)}…` : name;
 }
 
 function ColumnChart({ items, labels }: { items: ScoreChartItem[]; labels: ScoreChartProps['labels'] }) {
+  const { reducedMotion } = useAccessibility();
   const data = items.map((item) => ({ id: item.id, name: shortName(item.name), s0: item.values[0], s1: item.values[1], s2: item.values[2] }));
   const minWidth = items.length > MAX_WITHOUT_SCROLL ? items.length * WIDTH_PER_ITEM : undefined;
-  const animate = !prefersReducedMotion();
+  const animate = !prefersReducedMotion(reducedMotion);
 
   return (
     <div className="overflow-x-auto" aria-hidden="true">

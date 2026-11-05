@@ -6,6 +6,7 @@ import { buttonClasses } from '../../components/ui/button-styles';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { isValidDateOnly, nowTimeInAppZone, todayInAppZone } from '../activities/week';
+import { useAccessibility } from '../profile/use-profile';
 import { FIELD_TEXT, TEXT_MAX } from './tension-episode-labels';
 import type { TensionEpisode, TensionEpisodeInput } from './tension-episodes-api';
 
@@ -44,6 +45,8 @@ export function TensionEpisodeForm({
   cancelTo,
   onSubmit,
 }: TensionEpisodeFormProps) {
+  const { oneThingAtATime } = useAccessibility();
+  const [step, setStep] = useState(0);
   const [date, setDate] = useState(initial?.episodeDate ?? initialDate);
   const [time, setTime] = useState(initial?.episodeTime ?? '');
   const [texts, setTexts] = useState<Record<TextKey, string>>({
@@ -76,11 +79,38 @@ export function TensionEpisodeForm({
     return next;
   }
 
+  function stepBelongsToKey(key: string): number {
+    if (key === 'episodeDate' || key === 'episodeTime' || key === 'situation') return 0;
+    if (key === 'tensionLevel' || key === 'vocalizeUrge') return 1;
+    return 2;
+  }
+
+  function handleNext() {
+    const allErrors = validate();
+    const stepErrors: Errors = {};
+    for (const [key, value] of Object.entries(allErrors)) {
+      if (value && stepBelongsToKey(key) === step) stepErrors[key] = value;
+    }
+    setErrors(stepErrors);
+    if (Object.values(stepErrors).some(Boolean)) return;
+    setStep((current) => Math.min(current + 1, 2));
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (oneThingAtATime && step < 2) {
+      handleNext();
+      return;
+    }
     const next = validate();
     setErrors(next);
-    if (Object.values(next).some(Boolean)) return;
+    if (Object.values(next).some(Boolean)) {
+      if (oneThingAtATime) {
+        const firstErrorKey = Object.keys(next).find((k) => next[k]);
+        if (firstErrorKey) setStep(stepBelongsToKey(firstErrorKey));
+      }
+      return;
+    }
 
     onSubmit({
       episodeDate: date,
@@ -106,53 +136,94 @@ export function TensionEpisodeForm({
     />
   );
 
+  const showStep = (index: number) => !oneThingAtATime || step === index;
+  const isLastStep = !oneThingAtATime || step === 2;
+
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
       {apiError && <Alert tone="attention">{apiError.message}</Alert>}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          label={FIELD_TEXT.episodeDate.label}
-          type="date"
-          value={date}
-          max={todayInAppZone()}
-          onChange={(e) => setDate(e.target.value)}
-          error={fieldError('episodeDate')}
-        />
-        <TextField
-          label={FIELD_TEXT.episodeTime.label}
-          hint={FIELD_TEXT.episodeTime.hint}
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          error={fieldError('episodeTime')}
-        />
-      </div>
-      {textArea('situation')}
-      <ScoreField
-        label={FIELD_TEXT.tensionLevel.label}
-        minLabel={FIELD_TEXT.tensionLevel.min}
-        maxLabel={FIELD_TEXT.tensionLevel.max}
-        value={scores.tensionLevel}
-        onChange={(tensionLevel) => setScores((current) => ({ ...current, tensionLevel }))}
-        error={fieldError('tensionLevel')}
-      />
-      <ScoreField
-        label={FIELD_TEXT.vocalizeUrge.label}
-        hint={FIELD_TEXT.vocalizeUrge.hint}
-        minLabel={FIELD_TEXT.vocalizeUrge.min}
-        maxLabel={FIELD_TEXT.vocalizeUrge.max}
-        value={scores.vocalizeUrge}
-        onChange={(vocalizeUrge) => setScores((current) => ({ ...current, vocalizeUrge }))}
-        error={fieldError('vocalizeUrge')}
-      />
-      {textArea('behavior')}
-      {textArea('consequence')}
+      {oneThingAtATime && (
+        <p role="status" className="text-sm font-medium text-muted">
+          Passo {step + 1} de 3
+        </p>
+      )}
+
+      {showStep(0) && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextField
+              label={FIELD_TEXT.episodeDate.label}
+              type="date"
+              value={date}
+              max={todayInAppZone()}
+              onChange={(e) => setDate(e.target.value)}
+              error={fieldError('episodeDate')}
+            />
+            <TextField
+              label={FIELD_TEXT.episodeTime.label}
+              hint={FIELD_TEXT.episodeTime.hint}
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              error={fieldError('episodeTime')}
+            />
+          </div>
+          {textArea('situation')}
+        </>
+      )}
+
+      {showStep(1) && (
+        <>
+          <ScoreField
+            label={FIELD_TEXT.tensionLevel.label}
+            minLabel={FIELD_TEXT.tensionLevel.min}
+            maxLabel={FIELD_TEXT.tensionLevel.max}
+            value={scores.tensionLevel}
+            onChange={(tensionLevel) => setScores((current) => ({ ...current, tensionLevel }))}
+            error={fieldError('tensionLevel')}
+          />
+          <ScoreField
+            label={FIELD_TEXT.vocalizeUrge.label}
+            hint={FIELD_TEXT.vocalizeUrge.hint}
+            minLabel={FIELD_TEXT.vocalizeUrge.min}
+            maxLabel={FIELD_TEXT.vocalizeUrge.max}
+            value={scores.vocalizeUrge}
+            onChange={(vocalizeUrge) => setScores((current) => ({ ...current, vocalizeUrge }))}
+            error={fieldError('vocalizeUrge')}
+          />
+        </>
+      )}
+
+      {showStep(2) && (
+        <>
+          {textArea('behavior')}
+          {textArea('consequence')}
+        </>
+      )}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Salvando…' : submitLabel}
-        </Button>
+        {isLastStep ? (
+          <Button key="submit" type="submit" disabled={pending}>
+            {pending ? 'Salvando…' : submitLabel}
+          </Button>
+        ) : (
+          <Button key="next" type="button" onClick={handleNext}>
+            Próximo ›
+          </Button>
+        )}
+        {oneThingAtATime && step > 0 && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setErrors({});
+              setStep((current) => Math.max(current - 1, 0));
+            }}
+          >
+            ‹ Anterior
+          </Button>
+        )}
         <Link to={cancelTo} className={buttonClasses('secondary')}>
           Cancelar
         </Link>

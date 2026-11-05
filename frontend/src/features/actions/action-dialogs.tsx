@@ -3,6 +3,7 @@ import { Dialog, DialogActions, DialogForm } from '../../components/ui/dialog';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField } from '../../components/ui/text-field';
 import { getApiError } from '../auth/auth-api';
+import { useAccessibility } from '../profile/use-profile';
 import { SCORE_TEXT } from './action-labels';
 import { OBSERVATION_MAX, type Action } from './actions-api';
 import { useDeleteAction, useEvaluateAction, useMarkActionNotDone } from './use-actions';
@@ -20,6 +21,7 @@ function optional(value: string) {
 type Done = (message?: string) => void;
 
 export function EvaluateActionDialog({ action, onClose, onDone }: { action: Action; onClose: () => void; onDone: Done }) {
+  const { directLanguage } = useAccessibility();
   const [pleasure, setPleasure] = useState<number | null>(null);
   const [achievement, setAchievement] = useState<number | null>(null);
   const [observation, setObservation] = useState('');
@@ -43,7 +45,7 @@ export function EvaluateActionDialog({ action, onClose, onDone }: { action: Acti
 
   return (
     <Dialog
-      title="Conta como foi?"
+      title={directLanguage ? 'Avaliar ação' : 'Conta como foi?'}
       description={`${action.name} · você esperava ${action.expectation} de 10`}
       onClose={onClose}
     >
@@ -79,6 +81,7 @@ export function EvaluateActionDialog({ action, onClose, onDone }: { action: Acti
 }
 
 export function NotDoneActionDialog({ action, onClose, onDone }: { action: Action; onClose: () => void; onDone: Done }) {
+  const { directLanguage } = useAccessibility();
   const [observation, setObservation] = useState('');
   const [error, setError] = useState<string>();
   const notDone = useMarkActionNotDone();
@@ -93,7 +96,7 @@ export function NotDoneActionDialog({ action, onClose, onDone }: { action: Actio
 
   return (
     <Dialog
-      title="Tudo bem, não deu desta vez"
+      title={directLanguage ? 'Registrar que não realizou' : 'Tudo bem, não deu desta vez'}
       description="A ação continua registrada. Quer contar o que aconteceu?"
       onClose={onClose}
     >

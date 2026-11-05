@@ -5,6 +5,7 @@ import { buttonClasses } from '../../components/ui/button-styles';
 import { LongText } from '../../components/ui/long-text';
 import { formatDayMonth } from '../activities/week';
 import { formatDateTime } from '../links/link-format';
+import { useAccessibility } from '../profile/use-profile';
 import {
   alternativeAddedLater,
   emotionName,
@@ -23,6 +24,7 @@ type ThoughtRecordCardProps =
 // fixo e o backend responderia 409: esconder os botões é conforto, não segurança.
 export function ThoughtRecordCard(props: ThoughtRecordCardProps) {
   const { record } = props;
+  const { noTimePressure } = useAccessibility();
   const titleId = useId();
   const canChange = !props.readOnly && record.editable;
   // Depois do dia, sem alternativa: o botão de adicionar até a consulta, ou o convite para agendar.
@@ -74,7 +76,9 @@ export function ThoughtRecordCard(props: ThoughtRecordCardProps) {
           <Link to={`/pensamentos/${record.id}/alternativa`} className={buttonClasses('secondary')}>
             Adicionar explicação alternativa
           </Link>
-          <span className="text-sm text-muted">{formatAlternativeDeadline(record.alternativeDeadline)}</span>
+          {!noTimePressure && (
+            <span className="text-sm text-muted">{formatAlternativeDeadline(record.alternativeDeadline)}</span>
+          )}
         </div>
       )}
       {missingAlternative && record.alternativeDeadline === null && (

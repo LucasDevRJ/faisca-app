@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
+import { useAccessibility } from '../profile/use-profile';
 import { ActionPhotos } from './action-photos';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action } from './actions-api';
@@ -25,9 +26,12 @@ type ActionCardProps =
 // números, sem julgamento: comparar o que se esperava com o que aconteceu é o centro da Ação.
 export function ActionCard(props: ActionCardProps) {
   const { action } = props;
+  const { directLanguage } = useAccessibility();
   const titleId = useId();
   const planned = action.status === 'PLANEJADA';
   const dayArrived = !props.readOnly && action.actionDate <= props.today;
+  const statusLabel =
+    action.status === 'NAO_REALIZADA' && directLanguage ? 'Não realizada' : STATUS_LABEL[action.status];
 
   const scores = (['expectation', 'pleasure', 'achievement'] as const)
     .filter((key) => action[key] !== null)
@@ -47,7 +51,7 @@ export function ActionCard(props: ActionCardProps) {
             {CATEGORY_TEXT[action.category].label}
           </span>
         </div>
-        <span className="rounded-sm bg-bg px-2 py-0.5 text-sm text-muted">{STATUS_LABEL[action.status]}</span>
+        <span className="rounded-sm bg-bg px-2 py-0.5 text-sm text-muted">{statusLabel}</span>
       </div>
 
       <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
@@ -80,10 +84,10 @@ export function ActionCard(props: ActionCardProps) {
           {dayArrived && (
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <Button className="col-span-2 sm:col-auto" onClick={() => props.onAction('evaluate', action)}>
-                Conta como foi?
+                {directLanguage ? 'Avaliar ação' : 'Conta como foi?'}
               </Button>
               <Button variant="secondary" className="col-span-2 sm:col-auto" onClick={() => props.onAction('notDone', action)}>
-                Não deu desta vez
+                {directLanguage ? 'Não realizada' : 'Não deu desta vez'}
               </Button>
             </div>
           )}

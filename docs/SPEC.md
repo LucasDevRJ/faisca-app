@@ -37,11 +37,13 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   inserem texto editável) e "Hábitos que quero deixar (ou já deixei)". Salvar tudo vazio apaga. A
   terapeuta com vínculo ativo só lê, num cartão na página do paciente, e ele entra no "Para ler"
   quando muda. Pede o aceite da versão do aviso que o cita.
-- **Ajustes de acessibilidade** (DEC-076): abertos a todos (paciente e terapeuta), desligados por padrão
-  e salvos na conta, em **Conta → Acessibilidade**: **Linguagem direta** (textos literais), **Uma coisa
-  por vez** (formulários em passos curtos), **Leitura confortável** (fonte maior e mais espaço entre
-  linhas e letras), **Sem pressão de tempo** (esconde contagens regressivas e prazos) e **Menos
-  movimento** (desliga animações e transições).
+- **Ajustes de acessibilidade** (DEC-076, DEC-087): abertos a todos (paciente e terapeuta), desligados por
+  padrão e salvos na conta, em **Conta → Acessibilidade**: **Linguagem direta** (textos literais, sem
+  expressões figuradas), **Uma coisa por vez** (formulários de Pensamentos, Tensão e Ação divididos em
+  passos curtos, com validação por passo), **Leitura confortável** (fonte maior e mais espaço entre
+  linhas, letras e palavras, com prévia na hora), **Sem pressão de tempo** (esconde contagens
+  regressivas, distâncias em dias para consultas e prazos de alternativa e fotos) e **Menos movimento**
+  (desliga animações e transições, inclusive nos gráficos, com prévia na hora).
 
 ## Atividades
 ### Estados
@@ -288,7 +290,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 
 ## Tom e interface
 - Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
-- Textos acolhedores ("Conta como foi?"), sem gamificação nem mensagens que gerem culpa.
+- Textos acolhedores ("Conta como foi?") por padrão, ou literais e objetivos com **Linguagem direta** ligada ("Avaliar atividade", DEC-087); nos dois modos, sem gamificação nem mensagens que gerem culpa.
 - PWA instalável; usar o app exige conexão.
 - **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
   tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra
