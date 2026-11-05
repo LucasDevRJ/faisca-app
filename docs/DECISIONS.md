@@ -1653,6 +1653,21 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   versão do aviso no mesmo PR que mostra o texto. Textos aprovados pelo usuário.
 - **Limite conhecido:** os textos dizem "a sua psicóloga"; a revisão do feminino em todo o app é a #101.
 
+## DEC-083 — Total "para ler" em Meus pacientes
+- **Decisão:**
+  - no topo de **Meus pacientes**, um card com o total de todos os pacientes: **"12 registros para
+    ler"** e, embaixo, **"de 2 pacientes"** (no singular, "1 registro" e "1 paciente"). Só aparece
+    quando há algo para ler; tudo lido, some, sem "parabéns" nem cor de alerta (DEC-058). Sem link:
+    os números de cada um ficam na lista logo abaixo;
+  - na lista, quem tem algo para ler **sobe**, do maior para o menor número; empates e quem não tem
+    nada seguem a ordem de antes;
+  - só no front: soma o `unreadCount` que a lista já traz (DEC-057), sem rota nova.
+- **Motivo:** um registro importante de um ciclo passado só era visto ao abrir o paciente certo.
+  Enquanto não há notificação para a terapeuta (os resumos do dia da consulta e semanal, na #82,
+  dependem da #32), o total na tela inicial dela mostra que há algo pendente. Pedido do usuário.
+- **Limite conhecido:** o total só conta as áreas com aceite (como o `unreadCount`), e só aparece
+  quando ela abre o app.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

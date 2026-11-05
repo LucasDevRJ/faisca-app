@@ -333,6 +333,56 @@ describe('lista de pacientes e Novidades', () => {
     expect(within(pedro).queryByText(/para ler/)).not.toBeInTheDocument();
   });
 
+  // Total de todos os pacientes no topo e quem tem algo para ler sobe na lista (DEC-083).
+  function listed(id: string, name: string, unreadCount: number) {
+    return { id, name, email: `${id.slice(-1)}@faisca.test`, linkedAt: '2026-09-01T15:00:00.000Z', avatarVersion: null, unreadCount };
+  }
+
+  it('o total no topo soma todos e quem tem algo para ler sobe, do maior para o menor', async () => {
+    server.use(
+      http.get('*/api/links/patients', () =>
+        HttpResponse.json({
+          patients: [
+            listed('00000000-0000-4000-8000-00000000000a', 'Ana Fictícia', 0),
+            listed('00000000-0000-4000-8000-00000000000b', 'Bruno Fictício', 2),
+            listed('00000000-0000-4000-8000-00000000000c', 'Carla Fictícia', 0),
+            listed('00000000-0000-4000-8000-00000000000d', 'Davi Fictício', 10),
+          ],
+        }),
+      ),
+      http.get('*/api/therapist/patients/:id', () => HttpResponse.json(summary)),
+    );
+    renderRoute('/pacientes');
+
+    const total = await screen.findByRole('region', { name: '12 registros para ler' });
+    expect(within(total).getByText('de 2 pacientes')).toBeInTheDocument();
+    const list = screen.getByRole('region', { name: 'Vinculados' });
+    const names = within(list)
+      .getAllByRole('link')
+      .map((link) => link.textContent?.match(/(Ana|Bruno|Carla|Davi)/)?.[1]);
+    expect(names).toEqual(['Davi', 'Bruno', 'Ana', 'Carla']);
+  });
+
+  it('um registro de um paciente: singular; tudo lido: sem o total', async () => {
+    let unread = 1;
+    server.use(
+      http.get('*/api/links/patients', () =>
+        HttpResponse.json({ patients: [listed('00000000-0000-4000-8000-00000000000a', 'Ana Fictícia', unread)] }),
+      ),
+      http.get('*/api/therapist/patients/:id', () => HttpResponse.json(summary)),
+    );
+    const first = renderRoute('/pacientes');
+
+    const total = await screen.findByRole('region', { name: '1 registro para ler' });
+    expect(within(total).getByText('de 1 paciente')).toBeInTheDocument();
+    first.unmount();
+
+    unread = 0;
+    renderRoute('/pacientes');
+    await screen.findByRole('link', { name: /Ana Fictícia/ });
+    expect(screen.queryByText(/para ler/)).not.toBeInTheDocument();
+  });
+
   it('a novidade do "Lido" aparece para a terapeuta e não para a paciente', async () => {
     server.use(
       http.get('*/api/auth/me', () => HttpResponse.json({ user: { ...therapist, pendingAnnouncement: '2026-10-lido' } })),
