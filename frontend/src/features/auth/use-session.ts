@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { acceptPrivacy, addProfile, deleteAccount, fetchSession, login, logout, markAnnouncementSeen } from './auth-api';
+import {
+  acceptPrivacy,
+  addProfile,
+  changePassword,
+  deleteAccount,
+  fetchSession,
+  getApiError,
+  login,
+  logout,
+  logoutAll,
+  markAnnouncementSeen,
+} from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
 
@@ -44,6 +55,31 @@ export function useDeleteAccount() {
       queryClient.setQueryData(SESSION_QUERY_KEY, null);
     },
   });
+}
+
+// Como no logout: este aparelho também sai, e nada da conta fica em memória (DEC-085).
+export function useLogoutAll() {
+  const queryClient = useQueryClient();
+  function forget() {
+    queryClient.clear();
+    queryClient.setQueryData(SESSION_QUERY_KEY, null);
+  }
+  return useMutation({
+    mutationFn: logoutAll,
+    onSuccess: forget,
+    // Sem resposta (a rede caiu), a API pode ter derrubado as sessões mesmo assim: confere de novo
+    // e, sem sessão, limpa o aparelho. Senha errada e outros erros com resposta não mexem em nada.
+    onError: async (error) => {
+      if (getApiError(error).status !== null) return;
+      const session = await fetchSession().catch(() => undefined);
+      if (session === null) forget();
+    },
+  });
+}
+
+// Este aparelho continua conectado (a API manda o cookie novo); a sessão em memória não muda.
+export function useChangePassword() {
+  return useMutation({ mutationFn: changePassword });
 }
 
 // A resposta já traz a conta com os perfis novos: atualiza a sessão sem outra ida à API.

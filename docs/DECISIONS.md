@@ -1718,6 +1718,25 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   emitidos antes do deploy seguem com um contador por renovação até vencerem (até 30 dias); o
   usuário preferiu não obrigar todos a entrar de novo.
 
+## DEC-086 — Seção "Segurança" em Conta (telas)
+- **Decisão:**
+  - em **Conta**, para todos os perfis, a seção **"Segurança"**, antes de "Excluir conta". É nela
+    que entram depois a verificação em duas etapas (#134) e a trava do app (#137);
+  - **"Trocar senha"**: "Senha atual" e "Senha nova" (pelo menos 8 caracteres), com o aviso "Ao
+    trocar, os outros aparelhos saem da conta. Este continua conectado." Senha atual errada e senha
+    nova igual à atual aparecem no campo certo; deu certo, os campos se limpam e aparece "Pronto,
+    senha trocada.";
+  - **"Sair de todos os aparelhos"**: um texto curto e o botão, que abre uma janela pedindo a
+    senha: "Todos os aparelhos, inclusive este, vão pedir o e-mail e a senha de novo. Seus
+    registros continuam guardados." Depois, a tela de entrar mostra "Pronto, você saiu de todos os
+    aparelhos. Entre de novo para continuar.", como o aviso de conta excluída;
+  - o **"Sair" do topo** continua só para este aparelho (escolha do usuário): perguntar a cada saída
+    atrapalharia o uso de todo dia.
+- **Motivo:** telas da DEC-085, com a API já no ar (DEC-056). Textos aprovados pelo usuário. A
+  janela de "Sair de todos" sugeria o "Esqueci a senha" para quem acha que alguém sabe a senha;
+  com a "Trocar senha" na mesma seção, ela aponta para a "Trocar senha".
+- **Limite conhecido:** sem lista dos aparelhos conectados (DEC-085).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

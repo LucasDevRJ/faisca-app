@@ -72,6 +72,8 @@ Para todos:
   decide quando vincular e desvincular.
 - Registros finalizados não podem ser alterados, para preservar o histórico.
 - Notificações nunca mostram o conteúdo dos registros.
+- Em Conta, a pessoa **troca a senha** e pode **sair de todos os aparelhos** de uma vez, se achar
+  que alguém está usando a conta dela.
 - A pessoa pode excluir a conta, e tudo é apagado.
 - O app não pede documentos pessoais e não tem anúncios.
 
