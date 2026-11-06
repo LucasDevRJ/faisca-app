@@ -1,6 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router';
 import { inviteState, readInviteToken } from '../links/invite-state';
-import { safeNextPath, useSession } from './use-session';
+import { SessionWatcher } from './session-watcher';
+import { sessionEndedState } from './session-ended';
+import { SESSION_ENDED_KEY, safeNextPath, useSession } from './use-session';
 
 // A interface não é barreira de segurança (frontend/CLAUDE.md): estes guardas só evitam
 // mostrar tela vazia. Quem protege os dados é o 401/403 do backend.
@@ -26,6 +29,7 @@ function SessionError() {
 export function RequireAuth() {
   const { data: user, isPending, isError } = useSession();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
   if (isPending) return <SessionLoading />;
   if (isError) return <SessionError />;
@@ -33,9 +37,16 @@ export function RequireAuth() {
     // Com o #, para um link como /novidades#<id> voltar para a novidade certa depois do login.
     const next = location.pathname + location.search + location.hash;
     const target = next === '/' ? '/entrar' : `/entrar?next=${encodeURIComponent(next)}`;
-    return <Navigate to={target} replace />;
+    // A sessão terminou em outro aparelho (SessionWatcher, DEC-088): a tela de entrar avisa.
+    const ended = queryClient.getQueryData(SESSION_ENDED_KEY) === true;
+    return <Navigate to={target} replace state={ended ? sessionEndedState : undefined} />;
   }
-  return <Outlet />;
+  return (
+    <>
+      <SessionWatcher />
+      <Outlet />
+    </>
+  );
 }
 
 // Entrar, cadastro e "esqueci a senha": quem já entrou não precisa ver essas telas.

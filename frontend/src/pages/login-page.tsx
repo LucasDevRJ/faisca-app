@@ -1,5 +1,5 @@
-import { useMutation } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -8,7 +8,8 @@ import { getApiError, resendConfirmation } from '../features/auth/auth-api';
 import { AuthLayout } from '../features/auth/auth-layout';
 import { readAccountDeleted } from '../features/auth/account-deleted';
 import { readLoggedOutEverywhere } from '../features/auth/logged-out-everywhere';
-import { safeNextPath, useLogin } from '../features/auth/use-session';
+import { readSessionEnded } from '../features/auth/session-ended';
+import { SESSION_ENDED_KEY, safeNextPath, useLogin } from '../features/auth/use-session';
 import { validateEmail } from '../features/auth/validation';
 import { inviteState, readInviteToken } from '../features/links/invite-state';
 
@@ -28,6 +29,19 @@ export function LoginPage() {
   const accountDeleted = readAccountDeleted(location.state) && login.isIdle;
   // Acabou de sair de todos os aparelhos (DEC-085): some do mesmo jeito.
   const loggedOutEverywhere = readLoggedOutEverywhere(location.state) && login.isIdle;
+  // A sessão terminou sem a pessoa pedir, por exemplo por "Sair de todos" em outro aparelho (DEC-088).
+  const sessionEnded = readSessionEnded(location.state) && login.isIdle;
+  const sessionEndedRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const arrivedFromEndedSession = readSessionEnded(location.state);
+
+  // A pessoa não pediu para sair: o foco vai para o aviso, para o leitor de tela dizer por quê. A
+  // marca é apagada aqui, para não reaparecer numa saída que ela mesma pedir depois.
+  useEffect(() => {
+    if (!arrivedFromEndedSession) return;
+    sessionEndedRef.current?.focus();
+    queryClient.removeQueries({ queryKey: SESSION_ENDED_KEY, exact: true });
+  }, [arrivedFromEndedSession, queryClient]);
   const resend = useMutation({ mutationFn: resendConfirmation });
 
   const apiError = login.error ? getApiError(login.error) : null;
@@ -54,6 +68,11 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
         {accountDeleted && <Alert>Sua conta foi excluída. Obrigado por ter usado o Faísca.</Alert>}
         {loggedOutEverywhere && <Alert>Pronto, você saiu de todos os aparelhos. Entre de novo para continuar.</Alert>}
+        {sessionEnded && (
+          <div ref={sessionEndedRef} tabIndex={-1} className="rounded-md focus:outline-none">
+            <Alert>Sua sessão terminou. Entre de novo para continuar.</Alert>
+          </div>
+        )}
         {apiError && !notConfirmed && <Alert tone="attention">{apiError.message}</Alert>}
 
         {notConfirmed && (
