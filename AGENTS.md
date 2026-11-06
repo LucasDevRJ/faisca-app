@@ -12,6 +12,7 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 ## Estrutura
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
 - `backup/`: serviço de cópia de segurança do banco (cron no Railway, DEC-075; roteiro no DEPLOY).
+- `scripts/`: `check-unique-ids.mjs` (DEC, versão do aviso e novidade sem repetição; roda no CI).
 - `docs/`: SPEC, DECISIONS, DEPLOY (passo a passo do deploy e da troca de segredos) e
   APRESENTACAO (o que o Faísca é, para divulgação; atualizar quando uma funcionalidade entra no ar).
 - `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-tela`, `nova-migration`,
@@ -60,6 +61,19 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
 7. **Logs sem dados sensíveis.** Não logar senhas, tokens, códigos de vínculo, nomes de atividade,
    notas ou observações.
 8. **Segredos de vínculo só como hash.** Tokens de convite e códigos de vínculo nunca são guardados em texto.
+
+## Mais de um agente
+Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta (worktree).
+- **Divisão pelas issues:** cada issue tem a etiqueta do agente que cuida dela (`agente:claude`,
+  `agente:antigravity`). Não pegue issue com a etiqueta de outro agente, e evite mexer nos mesmos
+  arquivos de um PR aberto dele.
+- **Números à mão** (DEC, versão do aviso de privacidade, novidade): reserve com um PR em
+  rascunho assim que escolher, e confira os PRs abertos, inclusive rascunhos, antes de escolher.
+  O CI `Números únicos` (`scripts/check-unique-ids.mjs`) barra repetição.
+- **Antes do PR:** `git fetch origin main` e `git merge origin/main` (nunca rebase nem force push),
+  mantendo as entradas dos dois lados no DECISIONS.md e na SPEC; depois, lint e testes de novo.
+- **Testes:** os dois usam o banco `faisca_test` e as portas 3334/5174; não rode a suíte do backend
+  nem o Playwright ao mesmo tempo que o outro agente.
 
 ## Convenções
 - Identificadores de código em inglês (`Activity`, `activityDate`); valores de estado do domínio

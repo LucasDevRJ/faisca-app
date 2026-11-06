@@ -24,8 +24,14 @@ grep -o "^## DEC-[0-9]*" docs/DECISIONS.md | tail -1
 gh pr list --state open --json number,title,headRefName
 ```
 Uma etapa grande reserva números na proposta (ex.: DEC-054 para a API e DEC-055 para as telas).
-Confira se algum PR aberto já usa o próximo número (`gh pr diff <n> -- docs/DECISIONS.md`) antes de
-pegá-lo.
+Confira se algum PR aberto, **inclusive rascunho**, já usa o próximo número (`gh pr diff <n> --
+docs/DECISIONS.md`) antes de pegá-lo.
+
+**Reserve cedo (mais de um agente):** assim que escolher o número, abra o PR como rascunho
+(`gh pr create --draft`), com o número no título ou na descrição, por exemplo "DEC-088 (reservada):
+sessão terminada". Assim o outro agente vê a reserva logo. O CI `Números únicos`
+(`scripts/check-unique-ids.mjs`) barra DEC, versão do aviso ou novidade repetida, e a skill
+`finalizar-mudanca` junta a main antes do PR.
 
 ## 3. Formato
 A entrada vai **antes de `## Adiado`**, em pt-BR:
