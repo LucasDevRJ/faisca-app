@@ -91,6 +91,19 @@ A mudança altera requisito ou decisão?
 
 Os dois vão no mesmo PR. Ferramenta de desenvolvimento (skill, hook, script) não precisa de DEC.
 
+## 7.1 Juntar a main antes do PR (mais de um agente)
+Outro agente pode ter mergeado algo enquanto você trabalhava. Antes de abrir o PR:
+```bash
+git fetch origin main
+git merge origin/main      # nunca rebase nem force push
+node scripts/check-unique-ids.mjs
+```
+- Conflito no DECISIONS.md ou na SPEC: mantenha **as duas** entradas. Se o número da sua DEC já foi
+  usado, a sua passa para o próximo livre; atualize as citações a ela no código, nos testes e na SPEC
+  (só as suas).
+- O script acusa DEC, versão do aviso de privacidade ou novidade repetida: o mesmo conserto.
+- Depois do merge, rode de novo lint, typecheck e os testes da área.
+
 ## 8. Relatório e commit
 Mostre uma tabela com cada verificação e o resultado real:
 

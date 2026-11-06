@@ -1,0 +1,28 @@
+name: Números únicos
+
+# Mais de um agente trabalha no projeto (AGENTS.md): dois PRs podem escolher o mesmo próximo
+# número de DEC, de versão do aviso de privacidade ou de novidade. Roda em todo PR, sem filtro de
+# pasta, porque é rápido e porque o número repetido só aparece depois de juntar a main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  numeros:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Testes do script
+        run: node --test scripts/check-unique-ids.test.mjs
+
+      - name: Nenhum número repetido (DEC, versão do aviso, novidade)
+        run: node scripts/check-unique-ids.mjs
