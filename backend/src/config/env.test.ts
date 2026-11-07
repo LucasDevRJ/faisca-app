@@ -40,4 +40,27 @@ describe('parseEnv', () => {
       /^((?!valor_que_nao_pode_vazar).)*$/,
     );
   });
+
+  it('ignora VAPID quando todas estão vazias ou com o placeholder do .env.example', () => {
+    const parsed = parseEnv({
+      ...valid,
+      VAPID_PUBLIC_KEY: 'CHANGE_ME',
+      VAPID_PRIVATE_KEY: 'CHANGE_ME',
+      VAPID_SUBJECT: 'mailto:contato@seu-dominio.com',
+    });
+    expect(parsed.VAPID_PUBLIC_KEY).toBeUndefined();
+    expect(parsed.VAPID_PRIVATE_KEY).toBeUndefined();
+    expect(parsed.VAPID_SUBJECT).toBeUndefined();
+  });
+
+  it('recusa VAPID configurado pela metade', () => {
+    expect(() =>
+      parseEnv({
+        ...valid,
+        VAPID_PUBLIC_KEY: 'B' + 'a'.repeat(86),
+        VAPID_PRIVATE_KEY: 'CHANGE_ME',
+        VAPID_SUBJECT: 'mailto:contato@minhafaisca.com.br',
+      }),
+    ).toThrow('VAPID_PRIVATE_KEY');
+  });
 });

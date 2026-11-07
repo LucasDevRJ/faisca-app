@@ -367,20 +367,23 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       await sendSafely('account-deleted', accountDeletedEmail(user.email, user.name));
     },
 
-    // "Sair de todos os aparelhos" (DEC-085): confere a senha e sobe o sessionVersion, o que
-    // derruba todas as sessões abertas, inclusive a de quem pediu (DEC-025).
+    // "Sair de todos os aparelhos" (DEC-085, DEC-089): confere a senha, sobe o sessionVersion (derruba
+    // todas as sessões abertas, inclusive a de quem pediu) e apaga todas as inscrições de push.
     async logoutAll(userId: string, password: string): Promise<void> {
       const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
       if (!(await verifyPassword(password, user.passwordHash))) {
         throw new AppError(400, 'INVALID_PASSWORD', 'A senha não confere.');
       }
-      await prisma.user.update({ where: { id: userId }, data: { sessionVersion: { increment: 1 } } });
+      await prisma.$transaction([
+        prisma.pushSubscription.deleteMany({ where: { userId } }),
+        prisma.user.update({ where: { id: userId }, data: { sessionVersion: { increment: 1 } } }),
+      ]);
       logger.info({ userId }, 'Saiu de todos os aparelhos');
     },
 
-    // "Trocar senha" (DEC-085): confere a atual, grava a nova e sobe o sessionVersion, o que derruba
-    // os outros aparelhos. Devolve o sessionVersion novo para o controller manter este aparelho.
-    async changePassword(userId: string, input: ChangePasswordInput): Promise<number> {
+    // "Trocar senha" (DEC-085, DEC-089): confere a atual, grava a nova, sobe o sessionVersion (derruba
+    // os outros aparelhos) e apaga as inscrições de push dos outros aparelhos, mantendo a deste.
+    async changePassword(userId: string, input: ChangePasswordInput, currentSessionId?: string): Promise<number> {
       const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
       if (!(await verifyPassword(input.currentPassword, user.passwordHash))) {
         throw new AppError(400, 'INVALID_PASSWORD', 'A senha atual não confere.');
@@ -391,8 +394,13 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       const passwordHash = await hashPassword(input.newPassword);
       // Links de "Esqueci a senha" ainda abertos deixam de valer: quem tinha um não troca a senha
       // de novo depois desta troca.
-      const [, { sessionVersion }] = await prisma.$transaction([
+      const [, , { sessionVersion }] = await prisma.$transaction([
         prisma.authToken.deleteMany({ where: { userId, type: 'PASSWORD_RESET', usedAt: null } }),
+        prisma.pushSubscription.deleteMany({
+          where: currentSessionId
+            ? { userId, OR: [{ sessionId: null }, { sessionId: { not: currentSessionId } }] }
+            : { userId },
+        }),
         prisma.user.update({
           where: { id: userId },
           data: { passwordHash, sessionVersion: { increment: 1 } },
@@ -404,6 +412,11 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       return sessionVersion;
     },
 
+    // Sair deste aparelho: remove a inscrição de push ligada a esta sessão, se houver (DEC-089).
+    async logoutSession(userId: string, sessionId: string): Promise<void> {
+      await prisma.pushSubscription.deleteMany({ where: { userId, sessionId } });
+    },
+
     async forgotPassword(email: string): Promise<void> {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) return;
@@ -411,7 +424,7 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
       await sendSafely('password-reset', passwordResetEmail(user.email, user.name, token));
     },
 
-    // Troca a senha e derruba todas as sessões abertas (sessionVersion + 1).
+    // Troca a senha e derruba todas as sessões abertas (sessionVersion + 1) e inscrições de push.
     // Quem abriu o link provou que é dono do e-mail, então o e-mail também fica confirmado.
     async resetPassword(input: ResetPasswordInput): Promise<void> {
       // O hash (lento) fica fora da transação para não segurar a conexão.
@@ -419,6 +432,7 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
 
       await prisma.$transaction(async (tx) => {
         const { userId, now } = await consumeToken(tx, input.token, 'PASSWORD_RESET');
+        await tx.pushSubscription.deleteMany({ where: { userId } });
         await tx.user.update({
           where: { id: userId },
           data: { passwordHash, sessionVersion: { increment: 1 } },

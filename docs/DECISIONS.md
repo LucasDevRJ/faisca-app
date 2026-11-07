@@ -1804,6 +1804,55 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   ida à API, na volta para o app ou na troca de tela; aviso instantâneo dependeria de push (#32) ou
   de uma conexão aberta.
 
+## DEC-089 — Lembretes do paciente: canal único, horário de silêncio, pausa e Web Push nativo (API)
+- **Decisão:**
+  - implementa a API e o agendador da etapa de lembretes do paciente (issue #32, com as decisões de
+    canal único, queda automática para e-mail e horário de silêncio da #82), substituindo o desenho
+    inicial de canal por tipo da DEC-004 e o pacote `node-cron` da DEC-006;
+  - **`ReminderSettings`** (uma por conta, `onDelete: Cascade`): `channel` (`EMAIL | PUSH`, padrão
+    `EMAIL`), `morningEnabled` (`false`, padrão `08:00`), `eveningEnabled` (`false`, padrão `20:00`),
+    `quietHoursEnabled` (`true`, padrão `22:00` às `07:00`), `pausedUntil` (`DATE` opcional, de hoje
+    até 365 dias à frente) e `lastFallbackAt` (`TIMESTAMP`). CHECK no banco garante todos os horários
+    em múltiplos de 15 minutos, sem segundos, e `quietStart <> quietEnd`;
+  - **o que dispara:** **Manhã** sai quando há **Atividade `PLANEJADA`** ou **Ação `PLANEJADA`** com
+    data hoje; **Noite** sai quando há **Atividade `PLANEJADA` ou `PENDENTE`** ou **Ação `PLANEJADA`**
+    com data até hoje. **Horário de silêncio:** nada sai dentro de `[quietStart, quietEnd)`; lembrete
+    da madrugada (`< quietEnd`) aguarda `quietEnd` do mesmo dia, e lembrete noturno (`>= quietStart`
+    em janela que atravessa a meia-noite) sai em `quietEnd` da manhã seguinte, com `referenceDate` de
+    ontem;
+  - **`PushSubscription`** (até 10 aparelhos por conta, `onDelete: Cascade`): guarda `endpoint`
+    (único), `p256dh`, `auth` e `sessionId` (o `sid` do JWT da DEC-085). Para impedir SSRF, a API só
+    aceita `https://` sem porta nem credenciais nos domínios oficiais de Web Push dos navegadores
+    (`fcm.googleapis.com`, `*.push.services.mozilla.com`, `*.push.apple.com`, `*.notify.windows.com`),
+    confere que `p256dh` é um ponto válido na curva P-256 e envia com `redirect: 'error'`. **Sem
+    dependências novas no `package.json`:** VAPID (RFC 8292, ES256) e `aes128gcm` (RFC 8291) usam
+    `node:crypto` + `fetch` do Node 24, e o agendador a cada 5 minutos usa `setInterval` com
+    `unref()` (como na DEC-077);
+  - **queda automática para e-mail:** quando `channel = PUSH`, envia para todas as inscrições da
+    conta; respostas `404`/`410` apagam a inscrição expirada. Se não houver inscrição ou nenhuma
+    entregar, o lembrete sai por **E-mail** (com aviso de que a notificação no aparelho falhou) e
+    grava `lastFallbackAt`;
+  - **idempotência (`NotificationLog`, DEC-006):** chave única `(userId, type, referenceDate)` criada
+    antes do envio e removida só se push e e-mail falharem juntos;
+  - **integração com sessão (fecha o limite da DEC-085):** `POST /auth/logout` apaga a inscrição de
+    push da sessão atual; `POST /auth/change-password` apaga as inscrições das outras sessões e
+    mantém a do aparelho atual; `POST /auth/logout-all` e `POST /auth/reset-password` apagam todas;
+  - **rotas do paciente (`/reminders`):** `GET /reminders`, `PUT /reminders`, `POST /reminders/pause`,
+    `DELETE /reminders/pause`, `POST /reminders/push-subscriptions` e
+    `DELETE /reminders/push-subscriptions`, atrás de `requireAuth` + `requirePatient`. Tentar alterar
+    ou remover o `endpoint` de outra pessoa retorna `403 FORBIDDEN`;
+  - **regras 3 e 7:** templates fixos e neutros (`reminders.emails.ts`), com par para **Linguagem
+    direta** (DEC-087), sem nunca interpolar nome de atividade, ação, nota ou observação; `endpoint`,
+    `p256dh` e `auth` entram no `SENSITIVE_KEYS` do logger. `VAPID_*` opcionais quando todas estão em
+    placeholder, e obrigatórias juntas quando configuradas.
+- **Motivo:** a Ação passou a fazer parte da rotina planejada (DEC-051), então o lembrete precisa
+  olhar Atividades e Ações. O canal único com queda para e-mail evita perder lembretes quando o
+  aparelho revoga a permissão ou desinstala o PWA, sem mandar mensagens duplicadas nos dois canais.
+  Usar `node:crypto` do Node 24 e `setInterval` evita trazer pacotes antigos (`web-push` e
+  `node-cron`) para a árvore de produção. Subir a API antes das telas segue a DEC-056.
+- **Limite conhecido:** as telas em Conta e o listener de `push` no Service Worker entram no PR das
+  telas. O resumo da terapeuta e o WhatsApp ficam na #82.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
