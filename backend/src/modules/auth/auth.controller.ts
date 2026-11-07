@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express';
 import type { RunAfterResponse } from '../../lib/background.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
-import { clearSessionCookie, setSessionCookie } from '../../lib/session.js';
+import { clearSessionCookie, readSessionToken, SESSION_COOKIE, setSessionCookie } from '../../lib/session.js';
 import {
   acceptPrivacySchema,
   addProfileSchema,
@@ -47,7 +47,12 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
     res.status(200).json({ user: toPublicUser(user) });
   };
 
-  const logout: RequestHandler = (_req, res) => {
+  const logout: RequestHandler = async (req, res) => {
+    const token: unknown = req.cookies?.[SESSION_COOKIE];
+    const session = typeof token === 'string' ? await readSessionToken(token) : null;
+    if (session) {
+      await service.logoutSession(session.userId, session.sessionId);
+    }
     clearSessionCookie(res);
     res.status(204).end();
   };
@@ -91,7 +96,7 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
   const changePassword: RequestHandler = async (req, res) => {
     const input = changePasswordSchema.parse(req.body);
     const user = getAuthUser(req);
-    const sessionVersion = await service.changePassword(user.id, input);
+    const sessionVersion = await service.changePassword(user.id, input, req.sessionId);
     await setSessionCookie(res, user.id, sessionVersion, req.sessionId);
     res.status(204).end();
   };

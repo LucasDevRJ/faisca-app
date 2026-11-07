@@ -340,6 +340,33 @@ await prisma.userAvatar.upsert({
   create: { userId: therapist.id, image: avatarImage },
   update: { image: avatarImage },
 });
+// Lembretes fictícios da paciente dev (DEC-089): manhã às 08:00 e noite às 20:00, por e-mail.
+await prisma.reminderSettings.upsert({
+  where: { userId: patient.id },
+  create: {
+    userId: patient.id,
+    channel: 'EMAIL',
+    morningEnabled: true,
+    morningTime: timeOnlyToDate('08:00'),
+    eveningEnabled: true,
+    eveningTime: timeOnlyToDate('20:00'),
+    quietHoursEnabled: true,
+    quietStart: timeOnlyToDate('22:00'),
+    quietEnd: timeOnlyToDate('07:00'),
+  },
+  update: {
+    channel: 'EMAIL',
+    morningEnabled: true,
+    morningTime: timeOnlyToDate('08:00'),
+    eveningEnabled: true,
+    eveningTime: timeOnlyToDate('20:00'),
+    quietHoursEnabled: true,
+    quietStart: timeOnlyToDate('22:00'),
+    quietEnd: timeOnlyToDate('07:00'),
+    pausedUntil: null,
+    lastFallbackAt: null,
+  },
+});
 await prisma.$disconnect();
 
 // Sem e-mail nem senha no log (regra 7): estão no backend/README.md.

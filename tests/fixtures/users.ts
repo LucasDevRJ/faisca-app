@@ -47,4 +47,6 @@ export const users = {
   noticesTherapist: { email: 'mural-terapeuta@faisca.test', password: SEED_PASSWORD },
   // Usada só no "Sair de todos os aparelhos" (api/sessions.spec.ts, DEC-085): as sessões dela caem.
   sessions: { email: 'sessoes@faisca.test', password: SEED_PASSWORD },
+  // Usada só nos lembretes (api/reminders.spec.ts, DEC-089).
+  reminders: { email: 'lembretes@faisca.test', password: SEED_PASSWORD },
 } as const;

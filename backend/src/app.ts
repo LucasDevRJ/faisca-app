@@ -6,6 +6,7 @@ import { env } from './config/env.js';
 import { runDetached, type RunAfterResponse } from './lib/background.js';
 import { logger } from './lib/logger.js';
 import { createResendMailer, type Mailer } from './lib/mailer.js';
+import { createWebPushSender, type PushSender } from './lib/web-push.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { notFound } from './middlewares/not-found.js';
 import { createActivitiesRoutes } from './modules/activities/activities.routes.js';
@@ -13,6 +14,7 @@ import { createAppointmentsRoutes } from './modules/appointments/appointments.ro
 import { createAuthRoutes } from './modules/auth/auth.routes.js';
 import { createLinksRoutes } from './modules/links/links.routes.js';
 import { createProfileRoutes } from './modules/profile/profile.routes.js';
+import { createRemindersRoutes } from './modules/reminders/reminders.routes.js';
 import { createTensionEpisodesRoutes } from './modules/tension-episodes/tension-episodes.routes.js';
 import { createAboutMeRoutes } from './modules/about-me/about-me.routes.js';
 import { createActionsRoutes } from './modules/actions/actions.routes.js';
@@ -25,12 +27,18 @@ import { healthRoutes } from './modules/health/health.routes.js';
 export type AppDependencies = {
   // Os testes passam um mailer em memória; em dev e produção é o Resend.
   mailer?: Mailer;
+  // Os testes passam um pushSender em memória; em dev e produção é o Web Push (VAPID).
+  pushSender?: PushSender;
   // Os testes que leem o e-mail logo depois da requisição rodam o trabalho antes de responder (DEC-073).
   runAfterResponse?: RunAfterResponse;
 };
 
 // O app fica separado do server.ts para os testes usarem o Supertest sem abrir porta.
-export function createApp({ mailer = createResendMailer(), runAfterResponse = runDetached }: AppDependencies = {}) {
+export function createApp({
+  mailer = createResendMailer(),
+  pushSender = createWebPushSender(),
+  runAfterResponse = runDetached,
+}: AppDependencies = {}) {
   const app = express();
 
   // Número de proxies na frente da API (DEC-023). Mantém req.ip, usado no rate limit,
@@ -70,6 +78,7 @@ export function createApp({ mailer = createResendMailer(), runAfterResponse = ru
   app.use(createAboutMeRoutes());
   app.use(createLinksRoutes(mailer));
   app.use(createProfileRoutes());
+  app.use(createRemindersRoutes(mailer, pushSender));
   app.use(createTherapistRoutes());
   // Marcas de leitura da terapeuta (DEC-057), num prefixo próprio, fora do só leitura.
   app.use(createReadMarksRoutes());

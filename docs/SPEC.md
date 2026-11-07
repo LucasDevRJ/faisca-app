@@ -272,13 +272,16 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Tudo isso é garantido no backend, nunca só na interface.
 
 ## Lembretes (somente perfil paciente)
-- Existem dois tipos, cada um com liga/desliga, horário e canal próprios:
-  - **Noite**: enviado se houver atividade PLANEJADA ou PENDENTE com data até hoje.
-  - **Manhã** (opcional): enviado se houver atividade PLANEJADA para hoje.
-- Canais: Web Push, e-mail ou os dois.
-- No máximo um envio por tipo por dia (2 no total).
+- O paciente escolhe **um canal único** na conta (DEC-089): **E-mail** (padrão) ou **Notificação no aparelho** (Web Push). Se o envio por notificação falhar ou não houver mais aparelho inscrito, o lembrete **cai automaticamente para o e-mail** e grava `lastFallbackAt` para avisar no app.
+- Existem dois tipos de lembrete, desligados por padrão, cada um com liga/desliga e horário próprio:
+  - **Manhã** (padrão `08:00`): enviado se houver **Atividade `PLANEJADA`** ou **Ação `PLANEJADA`** para hoje.
+  - **Noite** (padrão `20:00`): enviado se houver **Atividade `PLANEJADA` ou `PENDENTE`** ou **Ação `PLANEJADA`** com data até hoje.
+- **Horário de silêncio** (ligado por padrão, das `22:00` às `07:00`, ajustável): nenhum lembrete sai dentro desse intervalo; o que cairia nele aguarda e sai no fim do silêncio.
+- **Pausar lembretes:** o paciente pode pausar os lembretes até uma data escolhida (de hoje até 1 ano à frente) ou retomar a qualquer momento; passada a data, os lembretes voltam sozinhos.
+- No máximo um envio por tipo por dia de referência (2 no total), garantido por `NotificationLog`.
 - Horários em intervalos de 15 minutos, no fuso America/Sao_Paulo.
-- O texto é sempre neutro: nunca inclui nome de atividade, notas ou observações.
+- O texto é sempre neutro (regra 3): nunca inclui nome de atividade, nome de ação, notas ou observações, e respeita o ajuste **Linguagem direta** (DEC-087).
+- Sair de um aparelho remove a inscrição de push daquela sessão; trocar a senha remove as dos outros aparelhos e mantém a do aparelho atual; "Sair de todos os aparelhos" remove todas (DEC-085, DEC-089).
 
 ## Privacidade (LGPD)
 - O sistema coleta apenas nome, e-mail e senha (guardada só como hash), além dos registros.

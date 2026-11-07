@@ -75,6 +75,12 @@ model User {
   about                PatientAbout?
   noticesSeen          NoticeSeen[]
 
+  // Lembretes e notificações (DEC-004, DEC-006, DEC-089): configuração, inscrições de Web Push e
+  // registro de envio para idempotência.
+  reminderSettings  ReminderSettings?
+  pushSubscriptions PushSubscription[]
+  notificationLogs  NotificationLog[]
+
   // Foto de perfil (DEC-061), opcional.
   avatar UserAvatar?
 }
@@ -573,4 +579,72 @@ model PatientAbout {
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   readMarks ReadMark[]
+}
+
+// Canal único de lembrete escolhido na conta (DEC-089, issue #32/#82). Se o PUSH falhar ou expirar,
+// o envio cai para o EMAIL e grava lastFallbackAt.
+enum ReminderChannel {
+  EMAIL
+  PUSH
+}
+
+// Tipos de lembrete do paciente (SPEC, "Lembretes"; DEC-089).
+enum ReminderType {
+  MANHA
+  NOITE
+}
+
+// Configuração dos lembretes do paciente (DEC-089, issue #32): canal único, manhã e noite em
+// intervalos de 15 minutos (CHECK no banco), horário de silêncio ajustável e pausa temporária.
+model ReminderSettings {
+  userId            String          @id @db.Uuid
+  channel           ReminderChannel @default(EMAIL)
+  morningEnabled    Boolean         @default(false)
+  morningTime       DateTime        @db.Time(0)
+  eveningEnabled    Boolean         @default(false)
+  eveningTime       DateTime        @db.Time(0)
+  quietHoursEnabled Boolean         @default(true)
+  quietStart        DateTime        @db.Time(0)
+  quietEnd          DateTime        @db.Time(0)
+  // Até este dia (inclusive, no fuso America/Sao_Paulo), nenhum lembrete sai.
+  pausedUntil       DateTime?       @db.Date
+  // Quando um lembrete escolhido como PUSH precisou cair para o e-mail (para avisar no app).
+  lastFallbackAt    DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Inscrições de Web Push por aparelho (DEC-004, DEC-089). Ligadas ao sessionId do JWT (DEC-085)
+// para "Sair de todos" apagar todas e "Trocar senha" apagar as dos outros aparelhos.
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  sessionId String?
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Registro de envio de lembretes (DEC-006, DEC-089): chave única (userId, type, referenceDate)
+// garante idempotência mesmo que a API reinicie ou o agendador rode mais de uma vez.
+model NotificationLog {
+  id            String          @id @default(uuid()) @db.Uuid
+  userId        String          @db.Uuid
+  type          ReminderType
+  referenceDate DateTime        @db.Date
+  channelUsed   ReminderChannel
+  sentAt        DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, referenceDate])
+  @@index([referenceDate])
 }

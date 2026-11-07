@@ -25,6 +25,7 @@ const { logger } = await import('../src/lib/logger.js');
 const { prisma } = await import('../src/lib/prisma.js');
 const { hashPassword } = await import('../src/lib/password.js');
 const { FakeMailer } = await import('../src/test/fake-mailer.js');
+const { FakePushSender } = await import('../src/test/fake-push-sender.js');
 const { runInline } = await import('../src/lib/background.js');
 
 // Usuários fictícios (regra 5). As mesmas credenciais estão em tests/fixtures/users.ts.
@@ -73,6 +74,8 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   { name: 'Rosa Fictícia', email: 'mural-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.7' },
   // Só para o "Sair de todos os aparelhos" (api/sessions.spec.ts, DEC-085): as sessões dela caem.
   { name: 'Sara Fictícia', email: 'sessoes@faisca.test', patient: true, therapist: false },
+  // Só para os lembretes (api/reminders.spec.ts, DEC-089).
+  { name: 'Teca Fictícia', email: 'lembretes@faisca.test', patient: true, therapist: false },
 ];
 
 await prisma.activity.deleteMany();
@@ -87,6 +90,9 @@ await prisma.linkCodeAttempt.deleteMany();
 await prisma.linkCode.deleteMany();
 await prisma.linkInvite.deleteMany();
 await prisma.therapistLink.deleteMany();
+await prisma.notificationLog.deleteMany();
+await prisma.pushSubscription.deleteMany();
+await prisma.reminderSettings.deleteMany();
 await prisma.user.deleteMany();
 const passwordHash = await hashPassword(SEED_PASSWORD);
 await prisma.user.createMany({
@@ -103,6 +109,7 @@ await prisma.user.createMany({
 });
 
 const mailer = new FakeMailer();
+const pushSender = new FakePushSender();
 const server = express();
 
 // Caixa de entrada dos testes: devolve o último e-mail enviado para um endereço.
@@ -116,7 +123,7 @@ server.get('/__test__/emails/latest', (req, res) => {
   res.json(message);
 });
 // Os testes leem o e-mail logo depois do pedido: o envio acontece antes da resposta (DEC-073).
-server.use(createApp({ mailer, runAfterResponse: runInline }));
+server.use(createApp({ mailer, pushSender, runAfterResponse: runInline }));
 
 server.listen(env.PORT, () => {
   logger.warn({ port: env.PORT }, 'API de testes E2E no ar (banco faisca_test)');
