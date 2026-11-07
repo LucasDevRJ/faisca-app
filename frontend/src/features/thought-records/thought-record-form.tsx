@@ -4,6 +4,7 @@ import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { buttonClasses } from '../../components/ui/button-styles';
 import { ScoreField } from '../../components/ui/score-field';
+import { DictationHint } from '../../components/ui/dictation-hint';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
 import { isValidDateOnly, todayInAppZone } from '../activities/week';
 import { useAccessibility } from '../profile/use-profile';
@@ -196,6 +197,7 @@ export function ThoughtRecordForm({
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
       {apiError && <Alert tone="attention">{apiError.message}</Alert>}
+      <DictationHint />
 
       {oneThingAtATime && (
         <p role="status" className="text-sm font-medium text-muted">
