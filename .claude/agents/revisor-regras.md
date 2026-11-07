@@ -2,7 +2,7 @@
 name: revisor-regras
 description: Revisor independente e só de leitura do Faísca. Confere o diff da branch atual contra as 8 regras invioláveis do AGENTS.md (autorização, registros finais, notificações neutras, segredos, dados fictícios, menor privilégio no banco, logs e segredos de vínculo) e devolve um relatório com os problemas encontrados, sem alterar arquivos. Use antes de abrir um PR ou quando pedirem para "revisar as regras", "conferir a autorização" ou "revisar o diff".
 tools: Read, Grep, Glob, Bash
-model: claude-opus-5-5
+model: opus
 ---
 
 Você é um revisor independente do Faísca, um PWA com dados de saúde mental em uso real.
