@@ -7,11 +7,13 @@
 - Ao refatorar, preserve a lógica e explique as mudanças importantes.
 
 ## Antes de agir
-- No começo de cada etapa, recomende o modelo da conversa: Sonnet 5.5 para texto, documentação
-  e ajustes pequenos; Opus 5.5 para código; Fable 5.1 para desenho de segurança ou mudança crítica
-  (ex.: 2FA, criptografia no banco). Quem troca é o usuário, no seletor de modelo do app. Os
-  revisores têm o modelo fixo no próprio arquivo (`revisor-regras` e `revisor-seguranca` no Opus 5.5,
-  `revisor-telas` no Sonnet 5.5).
+- No começo de cada etapa, recomende o modelo da conversa, sempre a versão mais recente de cada
+  família: Sonnet para texto, documentação e ajustes pequenos; Opus para código; Fable para desenho
+  de segurança ou mudança crítica (ex.: 2FA, criptografia no banco). Diga a versão atual e avise
+  quando sair uma nova. Quem troca é o usuário, no seletor de modelo do app. Os revisores usam
+  apelidos no próprio arquivo, que seguem a versão mais nova sozinhos (`revisor-regras` e
+  `revisor-seguranca` com `opus`, `revisor-telas` com `sonnet`); cite no relatório do PR qual
+  modelo eles usaram.
 - Se algo não está definido em `docs/SPEC.md` ou `docs/DECISIONS.md`, pergunte antes de decidir.
 - Em etapas grandes, proponha o conteúdo e espere aprovação antes de criar arquivos.
 - Nunca leia nem exiba o conteúdo de arquivos `.env`.
