@@ -10,6 +10,7 @@ import { useAddProfile, useSession } from '../features/auth/use-session';
 import { TherapistLinkSection } from '../features/links/therapist-link-section';
 import { AccessibilitySection } from '../features/profile/accessibility-section';
 import { ProfileSection } from '../features/profile/profile-section';
+import { RemindersSection } from '../features/reminders/reminders-section';
 
 const profileInfo = {
   patient: {
@@ -48,6 +49,9 @@ export function AccountPage() {
       <ProfileSection />
 
       <AccessibilitySection />
+
+      {/* Lembretes de manhã e de noite (DEC-089, DEC-090): só para quem é paciente. */}
+      {user.profiles.patient && <RemindersSection />}
 
       {/* "Sobre mim" (DEC-082): só para quem é paciente; a psicóloga vinculada lê. */}
       {user.profiles.patient && <AboutMeSection />}

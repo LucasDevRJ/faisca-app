@@ -18,10 +18,10 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
 // (DEC-058): um dado de trabalho dela, que o paciente não vê. E também para o nome completo, a
-// paleta, os ajustes de acessibilidade e a foto do perfil (DEC-061, DEC-068, DEC-069, DEC-076):
-// dados pessoais e preferências de interface da própria conta, que não são de saúde. E para o
-// mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já vi" fica só com o
-// paciente.
+// paleta, os ajustes de acessibilidade, a foto do perfil e as preferências de lembretes (DEC-061,
+// DEC-068, DEC-069, DEC-076, DEC-090): dados pessoais e preferências da própria conta, que não são
+// de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já
+// vi" fica só com o paciente.
 const VERSION_LABEL = 'versão 8, de novembro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
@@ -101,6 +101,11 @@ export function PrivacyPage() {
             <li>Seus vínculos com terapeutas.</li>
             <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
             <li>
+              Nos lembretes: o canal escolhido (e-mail ou notificação no aparelho), os horários de manhã, de noite e
+              de silêncio, a data até quando os lembretes estão pausados e, se você ativar a notificação no aparelho,
+              o endereço técnico que o navegador gera para entregá-la.
+            </li>
+            <li>
               No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro, a paleta de cores e os
               ajustes de leitura confortável e de menos movimento.
             </li>
@@ -120,8 +125,9 @@ export function PrivacyPage() {
             Para você registrar suas atividades, o seu Registro de Pensamentos, os seus Episódios de tensão e as
             suas ações e,
             se quiser, compartilhá-los com a sua terapeuta. Também usamos
-            o seu e-mail para mensagens da conta: confirmação, nova senha e aviso de exclusão. Não vendemos
-            dados, não mostramos anúncios e não usamos ferramentas de rastreamento.
+            o seu e-mail para mensagens da conta (confirmação, nova senha e aviso de exclusão) e, quando você ligar os
+            lembretes, para avisar que há atividades ou ações para ver, sempre sem mostrar o que você escreveu. Não
+            vendemos dados, não mostramos anúncios e não usamos ferramentas de rastreamento.
           </p>
         </Section>
 

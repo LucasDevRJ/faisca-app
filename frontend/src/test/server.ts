@@ -6,6 +6,7 @@ import type { SessionUser } from '../features/auth/auth-api';
 import { DEFAULT_ACCESSIBILITY } from '../features/profile/accessibility';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
+import type { RemindersResponse } from '../features/reminders/reminders-api';
 
 // Pessoa fictícia usada nos testes (regra 5 do AGENTS.md).
 export const fakeUser: SessionUser = {
@@ -170,6 +171,29 @@ export const handlers = [
   // "Sobre mim" vazio, por padrão (DEC-081).
   http.get('*/api/about-me', () => HttpResponse.json({ aboutMe: null })),
   http.get('*/api/therapist/patients/:patientId/about-me', () => HttpResponse.json({ aboutMe: null })),
+  // Lembretes desligados, por padrão (DEC-089, DEC-090).
+  http.get('*/api/reminders', () =>
+    HttpResponse.json({
+      settings: {
+        channel: 'EMAIL',
+        morningEnabled: false,
+        morningTime: '08:00',
+        eveningEnabled: false,
+        eveningTime: '20:00',
+        quietHoursEnabled: true,
+        quietStart: '22:00',
+        quietEnd: '07:00',
+        pausedUntil: null,
+        lastFallbackAt: null,
+      },
+      push: {
+        configured: true,
+        vapidPublicKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+        hasSubscription: false,
+        subscriptionCount: 0,
+      },
+    } satisfies RemindersResponse),
+  ),
 ];
 
 export const server = setupServer(...handlers);

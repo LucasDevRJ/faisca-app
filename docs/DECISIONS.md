@@ -1850,8 +1850,40 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   aparelho revoga a permissão ou desinstala o PWA, sem mandar mensagens duplicadas nos dois canais.
   Usar `node:crypto` do Node 24 e `setInterval` evita trazer pacotes antigos (`web-push` e
   `node-cron`) para a árvore de produção. Subir a API antes das telas segue a DEC-056.
-- **Limite conhecido:** as telas em Conta e o listener de `push` no Service Worker entram no PR das
-  telas. O resumo da terapeuta e o WhatsApp ficam na #82.
+- **Limite conhecido:** o resumo da terapeuta e o WhatsApp ficam na #82.
+
+## DEC-090 — Telas de lembretes em Conta, Service Worker de Web Push e card de Novidades
+- **Decisão:**
+  - em **Conta**, só para quem é paciente, a seção **"Lembretes"** (com atalho `#lembretes` que rola e
+    leva o foco ao título):
+    - **Por onde receber:** escolha de canal único (**E-mail** ou **Notificação neste aparelho**). Ao
+      salvar com **Notificação neste aparelho**, o navegador pede permissão (`Notification.requestPermission`),
+      inscreve o aparelho no `PushManager` com a chave VAPID pública da API e grava em
+      `POST /reminders/push-subscriptions` antes do `PUT /reminders`. Se a permissão estiver negada ou o
+      navegador não suportar Web Push, mostra orientação clara sem falhar em silêncio;
+    - **Quando lembrar:** caixas de seleção **De manhã** (padrão `08:00`) e **À noite** (padrão
+      `20:00`), cada uma com seletor de horário em intervalos de 15 minutos;
+    - **Horário de silêncio:** caixa **Respeitar horário de silêncio** (padrão `22:00` às `07:00`) com
+      seletores de início e fim, validando que os dois horários são diferentes;
+    - **Pausar lembretes:** cartão no topo da seção com botão **"Pausar lembretes"** (abre janela para
+      escolher a data, de hoje até 1 ano à frente) e, durante a pausa, **"Retomar agora"**, mantendo o
+      foco no botão que substitui o anterior;
+    - **aviso de queda para e-mail:** quando `lastFallbackAt` vem preenchido, um alerta explica que a
+      última notificação no aparelho não pôde ser entregue e saiu por e-mail;
+    - respeita **Linguagem direta** e **Sem pressão de tempo** (esconde a contagem relativa de dias da
+      pausa, DEC-087);
+  - no **Service Worker** (`frontend/src/sw.ts`): listener de `push` que mostra a notificação neutra
+    com ícone do PWA e valida o destino interno (`safePushUrl`), e listener de `notificationclick` que
+    foca a janela aberta ou abre o caminho interno;
+  - no **aviso de privacidade** (`/privacidade`): cita as preferências de lembretes e o endereço
+    técnico da notificação em "O que guardamos" e "Para quê", sem versão nova nem bloqueio de área
+    (preferência da própria conta, sem dado de saúde, como nas DEC-061, DEC-076 e DEC-080);
+  - **card de Novidades** `2026-11-lembretes`, só para pacientes (`PACIENTE`), com atalho para
+    `/conta#lembretes`.
+- **Motivo:** fechar a etapa #32 com a API já publicada na `main` (DEC-089, DEC-056), mantendo os
+  lembretes neutros, opcionais e sem cobrança.
+- **Limite conhecido:** o resumo da terapeuta, o aviso de comunicado novo no mural e o canal de
+  WhatsApp ficam na #82.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

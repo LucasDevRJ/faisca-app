@@ -38,6 +38,9 @@ Para o paciente:
   10 fotos**, para lembrar dos bons momentos (a psicóloga também vê).
 - **Agenda de consultas e ciclo da consulta:** os registros se organizam pelo período entre uma
   sessão e outra; dá para levar a agenda para o calendário do celular.
+- **Lembretes de manhã e de noite:** por e-mail ou como notificação no aparelho (Web Push), quando há
+  atividades ou ações planejadas para o dia, sempre com texto neutro (sem mostrar o que a pessoa
+  escreveu), horário de silêncio e opção de pausar.
 - **Vínculo com a psicóloga:** por código ou convite por e-mail; o paciente desfaz quando quiser.
 
 Para a psicóloga:
@@ -63,8 +66,7 @@ Para todos:
   **Menos movimento** (desliga animações e transições).
 
 ## Em breve (divulgar como "em desenvolvimento", nunca como pronto)
-- Notificações e lembretes pelo canal que a pessoa preferir (e-mail, notificação no celular ou
-  WhatsApp), sempre com texto neutro e com horário de silêncio.
+- Resumo de leituras para a psicóloga e lembretes também por WhatsApp.
 - Perfil de saúde opcional (condições, remédios e contatos de emergência), com consentimento próprio.
 - Animação, som e vibração suaves ao salvar um registro (com opção de desligar).
 - Baixar uma cópia dos próprios dados (direito garantido pela LGPD).
