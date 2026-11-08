@@ -146,6 +146,25 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     ),
     link: { to: '/conta#sobre-mim', label: 'Abrir o Sobre mim' },
   },
+  // Lembretes de manhã e de noite (DEC-089, DEC-090): só para pacientes.
+  '2026-11-lembretes': {
+    title: 'Novidade: lembretes de manhã e de noite',
+    icon: '🔔',
+    date: '2026-11-07',
+    patient: (
+      <>
+        <p>
+          Agora você pode ligar <strong>lembretes</strong> para quando houver atividades ou ações planejadas para o dia,
+          por e-mail ou como notificação no aparelho.
+        </p>
+        <p>
+          O texto nunca mostra o que você escreveu, respeita o seu horário de silêncio e pode ser pausado quando você
+          quiser.
+        </p>
+      </>
+    ),
+    link: { to: '/conta#lembretes', label: 'Configurar lembretes' },
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?

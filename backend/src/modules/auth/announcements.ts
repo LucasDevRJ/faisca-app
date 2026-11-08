@@ -7,6 +7,7 @@
 // - 2026-10-copias-seguranca: cópias de segurança e aviso de privacidade versão 7 (DEC-078), para todos.
 // - 2026-10-mural: mural de avisos da terapeuta (DEC-080), para todos.
 // - 2026-11-sobre-mim: "Sobre mim" do paciente (DEC-082), só para quem é paciente.
+// - 2026-11-lembretes: lembretes de manhã e de noite por e-mail ou notificação (DEC-090), só para paciente.
 export const ANNOUNCEMENTS = [
   '2026-10-explicacao-alternativa',
   '2026-10-lido',
@@ -14,6 +15,7 @@ export const ANNOUNCEMENTS = [
   '2026-10-copias-seguranca',
   '2026-10-mural',
   '2026-11-sobre-mim',
+  '2026-11-lembretes',
 ] as const;
 
 export type Announcement = (typeof ANNOUNCEMENTS)[number];
@@ -28,6 +30,7 @@ const AUDIENCE: Record<Announcement, Audience> = {
   '2026-10-copias-seguranca': 'TODOS',
   '2026-10-mural': 'TODOS',
   '2026-11-sobre-mim': 'PACIENTE',
+  '2026-11-lembretes': 'PACIENTE',
 };
 
 export type Profiles = { patient: boolean; therapist: boolean };
