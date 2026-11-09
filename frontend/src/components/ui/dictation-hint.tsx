@@ -7,8 +7,8 @@ export function DictationHint() {
   return (
     <p className="hidden text-sm text-muted pointer-coarse:block">
       {directLanguage
-        ? 'Para ditar em vez de digitar, toque no microfone do teclado.'
-        : 'Prefere falar? Toque no microfone do teclado.'}
+        ? 'Para ditar em vez de digitar, use o microfone do teclado do celular.'
+        : 'Prefere falar? Use o microfone do teclado do celular.'}
     </p>
   );
 }

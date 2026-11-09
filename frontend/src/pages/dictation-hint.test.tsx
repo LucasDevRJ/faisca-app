@@ -7,7 +7,7 @@ import { fakeUser, loggedIn, server } from '../test/server';
 
 // "Prefere falar?" (#154): a frase do microfone do teclado nos formulários de texto longo.
 // Só aparece em tela de toque (classe pointer-coarse); aqui, sem CSS, confere o texto.
-const HINT = 'Prefere falar? Toque no microfone do teclado.';
+const HINT = 'Prefere falar? Use o microfone do teclado do celular.';
 
 beforeEach(() => {
   server.use(loggedIn);
@@ -28,7 +28,7 @@ describe('dica do microfone do teclado', () => {
     server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: { ...fakeUser, accessibility } })));
     renderRoute('/pensamentos/novo');
 
-    expect(await screen.findByText('Para ditar em vez de digitar, toque no microfone do teclado.')).toBeInTheDocument();
+    expect(await screen.findByText('Para ditar em vez de digitar, use o microfone do teclado do celular.')).toBeInTheDocument();
     expect(screen.queryByText(HINT)).not.toBeInTheDocument();
   });
 });
