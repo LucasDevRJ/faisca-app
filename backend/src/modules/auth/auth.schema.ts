@@ -88,3 +88,6 @@ export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type AddProfileInput = z.infer<typeof addProfileSchema>;
+
+// Ligar ou desligar o aviso de login novo (DEC-091).
+export const loginAlertSchema = z.strictObject({ enabled: z.boolean() });

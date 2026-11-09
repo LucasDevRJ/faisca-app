@@ -45,6 +45,10 @@ model User {
   comfortableReading  Boolean   @default(false)
   noTimePressure      Boolean   @default(false)
   reducedMotion       Boolean   @default(false)
+  // Aviso de login novo por e-mail e push (DEC-091, issue #135): ligado por padrão.
+  loginAlertEnabled   Boolean   @default(true)
+  // Já entrou alguma vez? O primeiro login de todos não gera aviso de acesso novo (DEC-091).
+  hasLoggedIn         Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

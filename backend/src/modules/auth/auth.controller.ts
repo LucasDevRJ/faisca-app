@@ -9,6 +9,7 @@ import {
   deleteAccountSchema,
   logoutAllSchema,
   changePasswordSchema,
+  loginAlertSchema,
   emailOnlySchema,
   loginSchema,
   resetPasswordSchema,
@@ -41,9 +42,25 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
     res.status(204).end();
   };
 
+  // Um aviso pendente por conta; um login que chega nesse meio-tempo é avisado em seguida (DEC-091).
+  async function queueLoginAlert(userId: string, userAgent: string | undefined, at = new Date()): Promise<void> {
+    if (!service.claimLoginAlert(userId, userAgent, at.getTime())) return;
+    await runAfterResponse('login-alert', async () => {
+      try {
+        await service.notifyLogin(userId, userAgent, at);
+      } finally {
+        const extra = service.releaseLoginAlert(userId);
+        if (extra) await queueLoginAlert(userId, extra.userAgent, extra.at);
+      }
+    });
+  }
+
   const login: RequestHandler = async (req, res) => {
     const user = await service.login(loginSchema.parse(req.body));
     await setSessionCookie(res, user.id, user.sessionVersion);
+    // Aviso de login novo (DEC-091) depois da resposta: não atrasa a entrada, e uma falha no envio
+    // não derruba o login.
+    await queueLoginAlert(user.id, req.get('user-agent'));
     res.status(200).json({ user: toPublicUser(user) });
   };
 
@@ -101,6 +118,12 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
     res.status(204).end();
   };
 
+  const loginAlert: RequestHandler = async (req, res) => {
+    const { enabled } = loginAlertSchema.parse(req.body);
+    const user = await service.setLoginAlert(getAuthUser(req).id, enabled);
+    res.status(200).json({ user: toPublicUser(user) });
+  };
+
   const forgotPassword: RequestHandler = async (req, res) => {
     const { email } = emailOnlySchema.parse(req.body);
     await runAfterResponse('forgot-password', () => service.forgotPassword(email));
@@ -125,6 +148,7 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
     deleteAccount,
     logoutAll,
     changePassword,
+    loginAlert,
     forgotPassword,
     resetPassword,
   };

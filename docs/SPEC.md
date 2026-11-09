@@ -23,6 +23,11 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   "Sua sessão terminou" (DEC-088).
 - **Trocar senha**, em Conta: pede a senha atual e a nova; os outros aparelhos saem da conta, este
   continua, e chega um e-mail neutro, sem link, avisando da troca (DEC-085).
+- **Aviso de login novo:** a cada login com a senha certa, um e-mail neutro e sem link com a data, a
+  hora e o navegador e o sistema ("Chrome no Android"), e um push nos aparelhos onde a pessoa ligou
+  as notificações. Não avisa o primeiro login de todos; no máximo 5 e-mails de aviso por dia, e o
+  push sai sempre. Ligado por padrão, com opção de desligar em Conta → Segurança; desligar manda
+  um e-mail avisando (DEC-091).
 - **Perfil básico** (paciente e terapeuta, tudo opcional; DEC-061): **nome completo**, além do
   "Como podemos te chamar?", e **foto**. A foto é guardada reduzida (256×256) e sem os metadados
   da câmera, como a localização. A terapeuta vê a foto dos pacientes com vínculo ativo; o paciente

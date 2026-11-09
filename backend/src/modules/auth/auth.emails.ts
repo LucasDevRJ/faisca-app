@@ -1,5 +1,7 @@
 import { env } from '../../config/env.js';
+import { APP_TIME_ZONE } from '../../lib/dates.js';
 import type { EmailMessage } from '../../lib/mailer.js';
+import type { PushMessage } from '../../lib/web-push.js';
 
 // Textos dos e-mails de conta. Tom acolhedor e sem pressão (SPEC, "Tom e interface").
 // Nenhum deles cita atividade, nota ou observação.
@@ -85,8 +87,55 @@ Obrigado por ter usado o Faísca. Se quiser voltar um dia, é só criar uma cont
   };
 }
 
+// "09/11/2026, às 21:40", no horário de Brasília.
+function formatWhen(when: Date): string {
+  const date = when.toLocaleDateString('pt-BR', { timeZone: APP_TIME_ZONE });
+  const time = when.toLocaleTimeString('pt-BR', { timeZone: APP_TIME_ZONE, hour: '2-digit', minute: '2-digit' });
+  return `${date}, às ${time}`;
+}
+
+// Aviso de login novo (DEC-091): sem link, como o de senha trocada, para não servir de isca. Só o
+// navegador e o sistema, sem IP nem localização.
+export function loginAlertEmail(to: string, name: string, when: Date, device: string | null): EmailMessage {
+  const access = `Alguém entrou na sua conta do Faísca em ${formatWhen(when)} (horário de Brasília)${device ? `, pelo ${device}` : ''}.`;
+  const paragraphs = [
+    'Se foi você, está tudo certo e não precisa fazer nada.',
+    'Se não foi você, crie uma senha nova agora: abra o Faísca e toque em "Esqueci minha senha" na tela de entrada. A senha nova tira da sua conta todos os aparelhos conectados.',
+    'Se não quiser mais receber este aviso, desligue em Conta → Segurança.',
+  ];
+  return {
+    to,
+    subject: 'Novo acesso à sua conta no Faísca',
+    html: layout([`Olá, ${escapeHtml(name)}.`, escapeHtml(access), ...paragraphs.map(escapeHtml)]),
+    text: [`Olá, ${name}.`, access, ...paragraphs].join('\n\n'),
+  };
+}
+
+// O mesmo aviso no push dos aparelhos onde a pessoa ligou as notificações (DEC-091). Neutro (regra 3).
+export function loginAlertPushMessage(): PushMessage {
+  return {
+    title: 'Faísca',
+    body: 'Alguém entrou na sua conta. Se não foi você, use "Esqueci minha senha" na tela de entrada.',
+    url: '/conta',
+  };
+}
+
+// O aviso de acesso foi desligado (DEC-091): sem link; quem roubou uma sessão não desliga em silêncio.
+export function loginAlertDisabledEmail(to: string, name: string): EmailMessage {
+  const paragraphs = [
+    'O aviso de novos acessos da sua conta no Faísca foi desligado.',
+    'Se não foi você, crie uma senha nova em "Esqueci minha senha", na tela de entrada.',
+  ];
+  return {
+    to,
+    subject: 'O aviso de novos acessos foi desligado',
+    html: layout([`Olá, ${escapeHtml(name)}.`, ...paragraphs.map(escapeHtml)]),
+    text: [`Olá, ${name}.`, ...paragraphs].join('\n\n'),
+  };
+}
+
 // Aviso de senha trocada (DEC-085): sem link, para não servir de isca; quem não trocou usa o
-// "Esqueci a senha" da tela de entrar.
+// "Esqueci minha senha" da tela de entrar.
 export function passwordChangedEmail(to: string, name: string): EmailMessage {
   return {
     to,
@@ -95,7 +144,7 @@ export function passwordChangedEmail(to: string, name: string): EmailMessage {
       `Olá, ${escapeHtml(name)}.`,
       'A senha da sua conta no Faísca foi trocada agora há pouco. Por segurança, saímos da sua conta nos outros aparelhos.',
       'Se foi você, está tudo certo e não precisa fazer nada.',
-      'Se não foi você, abra o Faísca, toque em "Esqueci a senha" na tela de entrada e crie uma senha nova.',
+      'Se não foi você, abra o Faísca, toque em "Esqueci minha senha" na tela de entrada e crie uma senha nova.',
     ]),
     text: `Olá, ${name}.
 
@@ -103,7 +152,7 @@ A senha da sua conta no Faísca foi trocada agora há pouco. Por segurança, sa�
 
 Se foi você, está tudo certo e não precisa fazer nada.
 
-Se não foi você, abra o Faísca, toque em "Esqueci a senha" na tela de entrada e crie uma senha nova.`,
+Se não foi você, abra o Faísca, toque em "Esqueci minha senha" na tela de entrada e crie uma senha nova.`,
   };
 }
 
