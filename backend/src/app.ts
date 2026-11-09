@@ -69,7 +69,7 @@ export function createApp({
   app.use(cookieParser());
 
   app.use(healthRoutes);
-  app.use(createAuthRoutes(mailer, runAfterResponse));
+  app.use(createAuthRoutes(mailer, runAfterResponse, pushSender));
   app.use(createActivitiesRoutes());
   app.use(createAppointmentsRoutes());
   app.use(createThoughtRecordsRoutes());

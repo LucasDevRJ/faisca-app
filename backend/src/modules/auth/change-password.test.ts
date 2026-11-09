@@ -12,6 +12,8 @@ import { FakeMailer } from '../../test/fake-mailer.js';
 const PASSWORD = 'senha-ficticia-123';
 const NEW_PASSWORD = 'senha-nova-ficticia-456';
 const WRONG = 'senha-errada-456';
+// Só o e-mail de senha trocada: os logins do teste também podem gerar o aviso de acesso (DEC-091).
+const CHANGED_SUBJECT = 'A senha da sua conta no Faísca foi trocada';
 const PATIENT = 'paciente@faisca.test';
 const OTHER = 'outra@faisca.test';
 
@@ -93,7 +95,7 @@ describe('POST /auth/change-password', () => {
     const email = mailer.lastTo(PATIENT)!;
     expect(email.to).toBe(PATIENT);
     expect(email.subject).toBe('A senha da sua conta no Faísca foi trocada');
-    expect(email.text).toContain('Esqueci a senha');
+    expect(email.text).toContain('Esqueci minha senha');
     expect(email.text).not.toMatch(/https?:\/\//);
     expect(email.html).not.toMatch(/<a\s/);
     expect(email.text).not.toContain(NEW_PASSWORD);
@@ -109,7 +111,7 @@ describe('POST /auth/change-password', () => {
     expect(res.body.error.code).toBe('INVALID_PASSWORD');
     expect((await laptop.get('/auth/me')).status).toBe(200);
     await loginAgent(PATIENT, PASSWORD);
-    expect(mailer.sent).toHaveLength(0);
+    expect(mailer.sent.filter((m) => m.subject === CHANGED_SUBJECT)).toHaveLength(0);
   });
 
   it('nova senha igual à atual: 400', async () => {
@@ -119,7 +121,7 @@ describe('POST /auth/change-password', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('SAME_PASSWORD');
-    expect(mailer.sent).toHaveLength(0);
+    expect(mailer.sent.filter((m) => m.subject === CHANGED_SUBJECT)).toHaveLength(0);
   });
 
   it('nova senha curta, campo faltando ou a mais: 400', async () => {

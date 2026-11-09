@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { RunAfterResponse } from '../../lib/background.js';
 import type { Mailer } from '../../lib/mailer.js';
+import type { PushSender } from '../../lib/web-push.js';
 import { createRateLimit } from '../../middlewares/rate-limit.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { createLinksService } from '../links/links.service.js';
@@ -8,8 +9,11 @@ import { createAuthController } from './auth.controller.js';
 import { createAuthService } from './auth.service.js';
 
 // O proxy remove o /api (DEC-023): o front chama /api/auth/login e aqui chega /auth/login.
-export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterResponse) {
-  const controller = createAuthController(createAuthService(mailer, createLinksService(mailer)), runAfterResponse);
+export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterResponse, pushSender?: PushSender) {
+  const controller = createAuthController(
+    createAuthService(mailer, createLinksService(mailer), pushSender),
+    runAfterResponse,
+  );
   const router = Router();
 
   // Limites da DEC-025. Os de e-mail valem por endereço e por IP ao mesmo tempo.
@@ -58,6 +62,7 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
   router.post('/auth/delete-account', requireAuth, ...passwordCheckLimits, controller.deleteAccount);
   router.post('/auth/logout-all', requireAuth, ...passwordCheckLimits, controller.logoutAll);
   router.post('/auth/change-password', requireAuth, ...passwordCheckLimits, controller.changePassword);
+  router.put('/auth/login-alert', requireAuth, controller.loginAlert);
   router.post('/auth/forgot-password', ...emailLimits(), controller.forgotPassword);
   router.post('/auth/reset-password', controller.resetPassword);
 

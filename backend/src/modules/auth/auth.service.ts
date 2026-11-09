@@ -1,16 +1,21 @@
 import { AppError } from '../../errors/app-error.js';
 import { Prisma, type AuthTokenType, type Palette, type User } from '../../generated/prisma/client.js';
 import { logger } from '../../lib/logger.js';
+import { describeDevice } from '../../lib/device.js';
 import type { EmailMessage, Mailer } from '../../lib/mailer.js';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
+import type { PushSender } from '../../lib/web-push.js';
 import type { LinksService } from '../links/links.service.js';
 import { toAccessibilitySettings, type AccessibilitySettings } from '../profile/profile.service.js';
 import {
   accountDeletedEmail,
   accountExistsEmail,
   confirmationEmail,
+  loginAlertDisabledEmail,
+  loginAlertEmail,
+  loginAlertPushMessage,
   passwordChangedEmail,
   passwordResetEmail,
 } from './auth.emails.js';
@@ -43,6 +48,8 @@ export type PublicUser = {
   palette: Palette;
   // Ajustes de acessibilidade da conta (DEC-076): vêm no /auth/me para o app aplicá-los ao abrir.
   accessibility: AccessibilitySettings;
+  // Aviso de login novo por e-mail e push (DEC-091).
+  loginAlert: boolean;
 };
 
 export function toPublicUser(
@@ -61,6 +68,7 @@ export function toPublicUser(
     | 'comfortableReading'
     | 'noTimePressure'
     | 'reducedMotion'
+    | 'loginAlertEnabled'
   >,
 ): PublicUser {
   return {
@@ -76,6 +84,7 @@ export function toPublicUser(
     }),
     palette: user.palette ?? 'SALVIA',
     accessibility: toAccessibilitySettings(user),
+    loginAlert: user.loginAlertEnabled,
   };
 }
 
@@ -89,7 +98,33 @@ type PreparedSignup = Omit<SignupInput, 'password'> & { passwordHash: string };
 // Os dados de um cadastro, guardados no link de confirmação que ele gerou (DEC-072).
 type PendingSignup = { passwordHash: string; name: string; patient: boolean; therapist: boolean };
 
-export function createAuthService(mailer: Mailer, links: LinksService) {
+// Aviso de login novo (DEC-091): no máximo 5 e-mails por conta a cada 24 h (o push não tem teto,
+// porque não gasta a cota do Resend), e um aviso pendente por conta na fila, que expira em 2 min
+// caso a fila tenha descartado a tarefa.
+const LOGIN_ALERT_EMAILS_PER_DAY = 5;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const LOGIN_ALERT_CLAIM_MS = 2 * 60 * 1000;
+
+export function createAuthService(mailer: Mailer, links: LinksService, pushSender?: PushSender) {
+  // Em memória, como os limites de tentativa (uma instância só no Railway, DEC-025).
+  // Reserva do aviso pendente; `extra` guarda o navegador de um login que chegou enquanto o aviso
+  // anterior ainda estava na fila, para ele também ser avisado depois.
+  const pendingLoginAlerts = new Map<
+    string,
+    { claimedAt: number; extra?: { userAgent: string | undefined; at: Date } }
+  >();
+  const loginAlertEmailsSent = new Map<string, number[]>();
+
+  // Teto de 5 e-mails por conta em 24 h, somando o aviso de acesso e o de "aviso desligado".
+  function takeLoginAlertEmailSlot(userId: string, now: number): boolean {
+    const recent = (loginAlertEmailsSent.get(userId) ?? []).filter((at) => now - at < DAY_MS);
+    const allowed = recent.length < LOGIN_ALERT_EMAILS_PER_DAY;
+    if (allowed) recent.push(now);
+    if (recent.length > 0) loginAlertEmailsSent.set(userId, recent);
+    else loginAlertEmailsSent.delete(userId);
+    return allowed;
+  }
+
   // Falha no envio não derruba a requisição: a pessoa pode pedir o e-mail de novo.
   // O log leva só o tipo do e-mail, nunca o destinatário nem o link.
   async function sendSafely(kind: string, message: EmailMessage) {
@@ -313,6 +348,69 @@ export function createAuthService(mailer: Mailer, links: LinksService) {
           'EMAIL_NOT_CONFIRMED',
           'Falta confirmar seu e-mail. Procure a mensagem do Faísca na sua caixa de entrada.',
         );
+      }
+      return user;
+    },
+
+    // Aviso de login novo (DEC-091): e-mail e push nos aparelhos com notificação, depois da resposta
+    // do login. Nada de IP, localização nem User-Agent guardado ou logado (regra 7).
+    async notifyLogin(userId: string, userAgent: string | undefined, now = new Date()): Promise<void> {
+      // O primeiro login de todos (logo depois de criar a conta) não gera aviso: só marca. Quem
+      // decide é o banco, para dois logins quase juntos não pularem o aviso os dois.
+      const firstLogin = await prisma.user.updateMany({
+        where: { id: userId, hasLoggedIn: false },
+        data: { hasLoggedIn: true },
+      });
+      if (firstLogin.count === 1) return;
+      // Lida agora, e não no login: a pessoa pode ter desligado o aviso ou excluído a conta.
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user?.loginAlertEnabled) return;
+
+      if (takeLoginAlertEmailSlot(user.id, now.getTime())) {
+        await sendSafely('login-alert', loginAlertEmail(user.email, user.name, now, describeDevice(userAgent)));
+      }
+
+      if (!pushSender?.configured) return;
+      // Todas as inscrições da conta são de outros aparelhos: a sessão nova ainda não tem a dela.
+      const subscriptions = await prisma.pushSubscription.findMany({ where: { userId: user.id } });
+      const message = loginAlertPushMessage();
+      const results = await Promise.all(
+        subscriptions.map(async (sub) => ({ id: sub.id, result: await pushSender.send(sub, message) })),
+      );
+      const expired = results.filter(({ result }) => result === 'expired').map(({ id }) => id);
+      if (expired.length > 0) {
+        await prisma.pushSubscription.deleteMany({ where: { id: { in: expired }, userId: user.id } });
+      }
+    },
+
+    // Um aviso pendente por conta: logins em série numa conta não enchem a fila e não tiram a vez
+    // do aviso de outra pessoa (achado do revisor-seguranca, DEC-091).
+    // Se já há um aviso pendente, este login fica marcado como "extra" e é avisado quando o
+    // pendente terminar: nenhum acesso passa sem aviso (achado do revisor-seguranca).
+    claimLoginAlert(userId: string, userAgent: string | undefined, now = Date.now()): boolean {
+      const pending = pendingLoginAlerts.get(userId);
+      if (pending && now - pending.claimedAt < LOGIN_ALERT_CLAIM_MS) {
+        pending.extra = { userAgent, at: new Date(now) };
+        return false;
+      }
+      pendingLoginAlerts.set(userId, { claimedAt: now });
+      return true;
+    },
+
+    // Libera a reserva e devolve o login extra que chegou nesse meio-tempo, se houver.
+    releaseLoginAlert(userId: string): { userAgent: string | undefined; at: Date } | null {
+      const pending = pendingLoginAlerts.get(userId);
+      pendingLoginAlerts.delete(userId);
+      return pending?.extra ?? null;
+    },
+
+    // Desligar o aviso manda um e-mail neutro: quem roubou a sessão não desliga em silêncio.
+    async setLoginAlert(userId: string, enabled: boolean): Promise<User> {
+      const before = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+      const user = await prisma.user.update({ where: { id: userId }, data: { loginAlertEnabled: enabled } });
+      // Entra no mesmo teto de e-mails do aviso: ligar e desligar em loop não gasta a cota do Resend.
+      if (before.loginAlertEnabled && !enabled && takeLoginAlertEmailSlot(user.id, Date.now())) {
+        await sendSafely('login-alert-disabled', loginAlertDisabledEmail(user.email, user.name));
       }
       return user;
     },

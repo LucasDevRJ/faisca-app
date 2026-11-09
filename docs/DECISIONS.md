@@ -1885,6 +1885,63 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o resumo da terapeuta, o aviso de comunicado novo no mural e o canal de
   WhatsApp ficam na #82.
 
+## DEC-091 — Aviso de login novo por e-mail e push (API)
+- **Decisão:**
+  - a cada **login com a senha certa**, depois da resposta (o login não espera o envio, e uma falha
+    no envio não derruba o login), o Faísca manda:
+    - um **e-mail neutro e sem link**: "Alguém entrou na sua conta do Faísca em 09/11/2026, às
+      21:40 (horário de Brasília), pelo Chrome no Android. Se foi você, está tudo certo... Se não
+      foi você, crie uma senha nova: abra o Faísca e toque em 'Esqueci minha senha'... A senha
+      nova tira da sua conta todos os aparelhos conectados." (o nome exato do botão da tela de
+      entrada; o e-mail de senha trocada, da DEC-085, passa a usar o mesmo nome);
+    - um **push neutro** ("Alguém entrou na sua conta...") para as inscrições de push da conta
+      (DEC-089). Como a sessão nova ainda não tem inscrição, todas são de outros aparelhos;
+      inscrição vencida (404/410) é apagada;
+  - **em todo login**, e não só em "aparelho novo": um cookie de aparelho conhecido guardaria mais
+    um dado e deixaria passar quem roubou a senha e entrou num aparelho já usado. Na prática, login
+    é raro, porque a sessão dura 30 dias e se renova sozinha (DEC-025);
+  - **exceção:** só o **primeiro login de todos** não gera aviso (`User.hasLoggedIn`, migration
+    `20261109130000_login_alert_first_login`), para a pessoa não receber "alguém entrou" logo
+    depois de criar a conta. Quem já tinha conta confirmada entra na migration como "já entrou".
+    A primeira versão ignorava todos os logins da primeira hora depois de confirmar, e um acesso
+    de outra pessoa nessa hora passaria sem aviso (achado do `revisor-regras` e do
+    `revisor-seguranca`);
+  - **limites contra abuso** (achados do `revisor-seguranca`), em memória, como os limites de
+    tentativa (DEC-025):
+    - **um aviso pendente por conta** na fila de tarefas depois da resposta: logins em série numa
+      conta não enchem a fila (50 por tipo) nem tiram a vez do aviso de outra pessoa. Um login que
+      chega enquanto o aviso anterior está pendente fica marcado e **é avisado logo depois**, com o
+      navegador e a hora dele: dois acessos quase juntos geram dois avisos, e o da pessoa não
+      esconde o de quem roubou a senha. A reserva vence em 2 minutos, caso a fila tenha descartado
+      a tarefa;
+    - **no máximo 5 e-mails por conta a cada 24 h**, somando o aviso de acesso e o de "aviso
+      desligado", para logins (ou liga/desliga) em série numa conta própria não gastarem a cota do
+      Resend nem atrasarem a confirmação e o "esqueci minha senha" de outras pessoas. O **push
+      sai em todo login**, porque não tem cota;
+    - o "primeiro login de todos" é decidido pelo banco (`updateMany` com `hasLoggedIn: false`), e
+      o aviso relê a conta na hora de enviar: dois logins juntos não pulam o aviso os dois, e quem
+      acabou de desligar o aviso ou excluir a conta não recebe;
+  - **"Chrome no Android"** vem de uma leitura simples do `User-Agent` na hora (`lib/device.ts`,
+    sem dependência nova): só o navegador e o sistema, **sem IP e sem localização**, sem guardar
+    nem logar nada (regra 7). Desconhecido, a frase é omitida;
+  - **sem link**, como o e-mail de senha trocada (DEC-085): um "Não fui eu" seria a isca ideal para
+    golpe;
+  - **ligado por padrão**, com opção de desligar: `User.loginAlertEnabled` (migration
+    `20261109120000_login_alert`, padrão `true`), `PUT /auth/login-alert` com `{ enabled }`
+    (`requireAuth`, só a própria conta; campo a mais é 400), e `loginAlert` no `/auth/me`.
+    Desligado, nem e-mail nem push. **Desligar manda um e-mail neutro e sem link** ("O aviso de
+    novos acessos da sua conta no Faísca foi desligado. Se não foi você, crie uma senha nova em
+    'Esqueci minha senha', na tela de entrada."), para quem roubou uma sessão não desligar o aviso
+    em silêncio (texto aprovado pelo usuário).
+- **Motivo:** se a senha vazar, a pessoa hoje só descobre se perceber algo estranho no app
+  (#135). Textos e escolhas aprovados pelo usuário, que pediu também o push. API antes da tela
+  (DEC-056).
+- **Limite conhecido:** quem tiver acesso à caixa de e-mail e à senha pode apagar o aviso. O push
+  ajuda nesse caso, se houver outro aparelho com notificação. Os limites em memória zeram a cada
+  deploy e valem para uma instância só. Dois logins da mesma conta ao mesmo tempo geram um aviso
+  só (o do primeiro). Entre o deploy da API e o da tela, o e-mail cita "Conta → Segurança" antes
+  de a caixa existir.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
