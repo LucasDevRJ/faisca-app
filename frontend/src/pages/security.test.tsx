@@ -238,3 +238,56 @@ describe('/conta: sair de todos os aparelhos', () => {
     expect(screen.queryByText(/você saiu de todos os aparelhos/)).not.toBeInTheDocument();
   });
 });
+
+describe('/conta: aviso de novos acessos', () => {
+  const LABEL = 'Me avisar por e-mail quando alguém entrar na minha conta';
+
+  it('vem ligado; desmarcar grava na hora e diz que deu certo', async () => {
+    const user = userEvent.setup();
+    const sent: unknown[] = [];
+    server.use(
+      http.put('*/api/auth/login-alert', async ({ request }) => {
+        const body = (await request.json()) as { enabled: boolean };
+        sent.push(body);
+        return HttpResponse.json({ user: { ...fakeUser, loginAlert: body.enabled } });
+      }),
+    );
+    renderRoute('/conta');
+
+    const group = within(await securitySection()).getByRole('group', { name: 'Aviso de novos acessos' });
+    const box = within(group).getByRole('checkbox', { name: LABEL });
+    expect(box).toBeChecked();
+    expect(box).toHaveAccessibleDescription('Também chega uma notificação nos aparelhos onde você ligou as notificações.');
+
+    await user.click(box);
+
+    expect(await within(group).findByRole('status')).toHaveTextContent('Pronto, o aviso foi desligado.');
+    expect(box).not.toBeChecked();
+    expect(sent).toEqual([{ enabled: false }]);
+
+    await user.click(box);
+    await waitFor(() => expect(within(group).getByRole('status')).toHaveTextContent('Pronto, o aviso está ligado.'));
+    expect(box).toBeChecked();
+  });
+
+  it('desligado na conta: a caixa vem desmarcada', async () => {
+    server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: { ...fakeUser, loginAlert: false } })));
+    renderRoute('/conta');
+
+    const group = within(await securitySection()).getByRole('group', { name: 'Aviso de novos acessos' });
+    expect(within(group).getByRole('checkbox', { name: LABEL })).not.toBeChecked();
+  });
+
+  it('se não gravar, avisa e a caixa continua como estava', async () => {
+    const user = userEvent.setup();
+    server.use(http.put('*/api/auth/login-alert', () => apiError(500, 'INTERNAL', 'Algo deu errado. Tente de novo.')));
+    renderRoute('/conta');
+
+    const group = within(await securitySection()).getByRole('group', { name: 'Aviso de novos acessos' });
+    const box = within(group).getByRole('checkbox', { name: LABEL });
+    await user.click(box);
+
+    expect(await within(group).findByText('Algo deu errado. Tente de novo.')).toBeInTheDocument();
+    expect(box).toBeChecked();
+  });
+});

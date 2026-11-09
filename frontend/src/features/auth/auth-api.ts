@@ -29,6 +29,8 @@ export type SessionUser = {
   palette: Palette;
   // Ajustes de acessibilidade da conta (DEC-076); desligados por padrão.
   accessibility?: AccessibilitySettings;
+  // Aviso de login novo por e-mail e push (DEC-091); ligado por padrão.
+  loginAlert?: boolean;
 };
 
 export type SignupInput = {
@@ -103,6 +105,12 @@ export async function logoutAll(password: string): Promise<void> {
 }
 
 export type ChangePasswordInput = { currentPassword: string; newPassword: string };
+
+// Ligar ou desligar o aviso de login novo (DEC-091). Devolve a conta atualizada.
+export async function setLoginAlert(enabled: boolean): Promise<SessionUser> {
+  const { data } = await api.put<{ user: SessionUser }>('/auth/login-alert', { enabled });
+  return data.user;
+}
 
 export async function changePassword(input: ChangePasswordInput): Promise<void> {
   await api.post('/auth/change-password', input);

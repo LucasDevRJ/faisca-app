@@ -10,6 +10,7 @@ import {
   logout,
   logoutAll,
   markAnnouncementSeen,
+  setLoginAlert,
 } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
@@ -79,6 +80,15 @@ export function useLogoutAll() {
       const session = await fetchSession().catch(() => undefined);
       if (session === null) forget();
     },
+  });
+}
+
+// A resposta já traz a conta atualizada: troca a sessão em memória sem outra ida à API.
+export function useSetLoginAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: setLoginAlert,
+    onSuccess: (user) => queryClient.setQueryData(SESSION_QUERY_KEY, user),
   });
 }
 
