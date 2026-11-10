@@ -1,7 +1,13 @@
 import type { RequestHandler } from 'express';
 import type { RunAfterResponse } from '../../lib/background.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
-import { clearSessionCookie, readSessionToken, SESSION_COOKIE, setSessionCookie } from '../../lib/session.js';
+import {
+  clearSessionCookie,
+  readSessionToken,
+  SESSION_COOKIE,
+  setMfaCookie,
+  setSessionCookie,
+} from '../../lib/session.js';
 import {
   acceptPrivacySchema,
   addProfileSchema,
@@ -17,10 +23,15 @@ import {
   confirmEmailSchema,
 } from './auth.schema.js';
 import { toPublicUser, type AuthService } from './auth.service.js';
+import { hasTwoFactor, type TwoFactorService } from '../two-factor/two-factor.service.js';
 
 // Cadastro, "esqueci a senha" e reenvio validam o pedido e respondem; buscar a conta e mandar o
 // e-mail fica para depois da resposta, para o tempo não dizer se a conta existe (DEC-073).
-export function createAuthController(service: AuthService, runAfterResponse: RunAfterResponse) {
+export function createAuthController(
+  service: AuthService,
+  runAfterResponse: RunAfterResponse,
+  twoFactor: TwoFactorService,
+) {
   const signup: RequestHandler = async (req, res) => {
     const input = await service.prepareSignup(signupSchema.parse(req.body));
     await runAfterResponse('signup', () => service.signup(input));
@@ -57,6 +68,16 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
 
   const login: RequestHandler = async (req, res) => {
     const user = await service.login(loginSchema.parse(req.body));
+    // Com 2FA (DEC-092), a senha certa ainda não abre a sessão: abre o passo do código, num cookie
+    // curto, e o aviso de login novo só sai depois do código.
+    if (hasTwoFactor(user)) {
+      const step = await twoFactor.beginLogin(user);
+      await setMfaCookie(res, user.id, step.challengeId);
+      res.status(200).json({
+        twoFactor: { methods: step.methods, preferred: step.preferred, emailHint: step.emailHint },
+      });
+      return;
+    }
     await setSessionCookie(res, user.id, user.sessionVersion);
     // Aviso de login novo (DEC-091) depois da resposta: não atrasa a entrada, e uma falha no envio
     // não derruba o login.
@@ -114,6 +135,7 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
     const input = changePasswordSchema.parse(req.body);
     const user = getAuthUser(req);
     const sessionVersion = await service.changePassword(user.id, input, req.sessionId);
+    twoFactor.clearFailures(user.id);
     await setSessionCookie(res, user.id, sessionVersion, req.sessionId);
     res.status(204).end();
   };
@@ -131,11 +153,12 @@ export function createAuthController(service: AuthService, runAfterResponse: Run
   };
 
   const resetPassword: RequestHandler = async (req, res) => {
-    await service.resetPassword(resetPasswordSchema.parse(req.body));
+    twoFactor.clearFailures(await service.resetPassword(resetPasswordSchema.parse(req.body)));
     res.status(204).end();
   };
 
   return {
+    queueLoginAlert,
     signup,
     confirmEmail,
     resendConfirmation,

@@ -28,6 +28,11 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   as notificações. Não avisa o primeiro login de todos; no máximo 5 e-mails de aviso por dia, e o
   push sai sempre. Ligado por padrão, com opção de desligar em Conta → Segurança; desligar manda
   um e-mail avisando (DEC-091).
+- **Verificação em duas etapas** (opcional, em Conta → Segurança; DEC-092): código por e-mail e/ou
+  app autenticador, com 10 códigos de recuperação de uso único. Ligar pede a senha e um código, e
+  os outros aparelhos saem da conta. No login, depois da senha, a tela pede o código (com "Usar
+  outro jeito"), e só então a sessão abre. "Esqueci minha senha" não desliga a verificação.
+  Desligar pede a senha e um código. Quem perdeu tudo fala com o responsável (DEPLOY).
 - **Perfil básico** (paciente e terapeuta, tudo opcional; DEC-061): **nome completo**, além do
   "Como podemos te chamar?", e **foto**. A foto é guardada reduzida (256×256) e sem os metadados
   da câmera, como a localização. A terapeuta vê a foto dos pacientes com vínculo ativo; o paciente

@@ -7,13 +7,18 @@ import { requireAuth } from '../../middlewares/require-auth.js';
 import { createLinksService } from '../links/links.service.js';
 import { createAuthController } from './auth.controller.js';
 import { createAuthService } from './auth.service.js';
+import { createTwoFactorController } from '../two-factor/two-factor.controller.js';
+import { createTwoFactorService } from '../two-factor/two-factor.service.js';
 
 // O proxy remove o /api (DEC-023): o front chama /api/auth/login e aqui chega /auth/login.
 export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterResponse, pushSender?: PushSender) {
+  const twoFactorService = createTwoFactorService(mailer);
   const controller = createAuthController(
     createAuthService(mailer, createLinksService(mailer), pushSender),
     runAfterResponse,
+    twoFactorService,
   );
+  const twoFactor = createTwoFactorController(twoFactorService, controller.queueLoginAlert);
   const router = Router();
 
   // Limites da DEC-025. Os de e-mail valem por endereço e por IP ao mesmo tempo.
@@ -45,6 +50,10 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
     createRateLimit({ windowMinutes: 15, limit: 10, key: 'session', onlyFailures: true }),
     createRateLimit({ windowMinutes: 15, limit: 30, key: 'user', onlyFailures: true }),
   ];
+  const twoFactorLoginLimit = createRateLimit({ windowMinutes: 15, limit: 20, key: 'ip', onlyFailures: true });
+  // Pedidos de código por e-mail (DEC-092), além do teto por conta no serviço.
+  const codeEmailLimit = createRateLimit({ windowMinutes: 60, limit: 10, key: 'user' });
+  const loginCodeEmailLimit = createRateLimit({ windowMinutes: 60, limit: 10, key: 'ip' });
   const emailLimits = () => [
     createRateLimit({ windowMinutes: 60, limit: 3, key: 'email' }),
     createRateLimit({ windowMinutes: 60, limit: 10, key: 'ip' }),
@@ -63,6 +72,19 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
   router.post('/auth/logout-all', requireAuth, ...passwordCheckLimits, controller.logoutAll);
   router.post('/auth/change-password', requireAuth, ...passwordCheckLimits, controller.changePassword);
   router.put('/auth/login-alert', requireAuth, controller.loginAlert);
+
+  // Verificação em duas etapas (DEC-092). Ativar, gerar códigos e desligar pedem a senha e entram
+  // nos mesmos limites de erro de senha; confirmar um código também.
+  router.get('/auth/2fa', requireAuth, twoFactor.status);
+  router.post('/auth/2fa/setup', requireAuth, ...passwordCheckLimits, codeEmailLimit, twoFactor.startSetup);
+  router.post('/auth/2fa/setup/confirm', requireAuth, ...passwordCheckLimits, twoFactor.confirmSetup);
+  router.post('/auth/2fa/recovery-codes', requireAuth, ...passwordCheckLimits, twoFactor.regenerateCodes);
+  router.post('/auth/2fa/email-code', requireAuth, codeEmailLimit, twoFactor.sendActionEmailCode);
+  router.post('/auth/2fa/disable', requireAuth, ...passwordCheckLimits, twoFactor.disable);
+  // O passo do login: o desafio já limita 5 tentativas e 3 envios; o limite por IP pega quem abre
+  // desafio atrás de desafio.
+  router.post('/auth/2fa/login/email', twoFactorLoginLimit, loginCodeEmailLimit, twoFactor.sendLoginEmailCode);
+  router.post('/auth/2fa/login/verify', twoFactorLoginLimit, twoFactor.verifyLogin);
   router.post('/auth/forgot-password', ...emailLimits(), controller.forgotPassword);
   router.post('/auth/reset-password', controller.resetPassword);
 

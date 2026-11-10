@@ -12,6 +12,7 @@ process.env.PORT = process.env.E2E_API_PORT ?? '3334';
 process.env.FRONTEND_URL ??= 'http://localhost:5173';
 process.env.JWT_SECRET ??= 'segredo-ficticio-so-para-testes-e2e-0123456789';
 process.env.LINK_CODE_SECRET ??= 'segredo-ficticio-dos-codigos-e2e-0123456789';
+process.env.TWO_FACTOR_SECRET ??= 'segredo-ficticio-da-verificacao-em-duas-etapas-e2e-0123';
 process.env.RESEND_API_KEY = 're_nao_usado_nos_testes';
 process.env.EMAIL_FROM ??= 'Faísca <testes@faisca.test>';
 process.env.LOG_LEVEL ??= 'warn';
@@ -74,6 +75,8 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   { name: 'Rosa Fictícia', email: 'mural-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-10.7' },
   // Só para o "Sair de todos os aparelhos" (api/sessions.spec.ts, DEC-085): as sessões dela caem.
   { name: 'Sara Fictícia', email: 'sessoes@faisca.test', patient: true, therapist: false },
+  // Só para a verificação em duas etapas (api/two-factor.spec.ts, DEC-092).
+  { name: 'Tereza Fictícia', email: 'duas-etapas@faisca.test', patient: true, therapist: false },
   // Só para os lembretes (api/reminders.spec.ts, DEC-089).
   { name: 'Teca Fictícia', email: 'lembretes@faisca.test', patient: true, therapist: false },
 ];

@@ -1942,6 +1942,73 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   só (o do primeiro). Entre o deploy da API e o da tela, o e-mail cita "Conta → Segurança" antes
   de a caixa existir.
 
+## DEC-092 — Verificação em duas etapas, etapa 1: código por e-mail e app autenticador (API)
+- **Decisão:**
+  - **opcional para todos** por enquanto, inclusive terapeutas (#134). Dois métodos nesta etapa,
+    que podem ser ligados juntos: **código por e-mail** e **app autenticador** (TOTP do RFC 6238,
+    HMAC-SHA1, 6 dígitos, passos de 30 s, um passo de tolerância de cada lado, feito com o
+    `node:crypto`, sem dependência nova). Face ID ou digital (passkey) é a etapa 2; a trava do
+    app, a #137;
+  - **ativar** (`POST /auth/2fa/setup` com a senha e o método; `POST /auth/2fa/setup/confirm` com um
+    código): o e-mail manda um código; o app recebe um segredo **pendente**, cifrado, até a pessoa
+    provar que funciona. No **primeiro** método ligado: **10 códigos de recuperação** (8
+    caracteres sem os ambíguos, uso único, mostrados uma vez), o `sessionVersion` sobe (os outros
+    aparelhos saem; este ganha um cookie novo da mesma sessão, decisão do usuário) e chega um
+    e-mail neutro, sem link, "foi ligada". Ligar o **segundo** método pede, além da senha, um
+    código do que já está ligado (ou de recuperação), e avisa por e-mail ("um novo jeito… foi
+    ligado"): só a senha não basta para alguém pôr o próprio app na conta. O segredo pendente do
+    app vence em 10 min e é apagado ao ligar o e-mail, ao trocar ou redefinir a senha e em "sair de
+    todos os aparelhos"; pedir de novo um jeito já ligado responde 409 antes de gastar um código;
+  - **login:** com 2FA, a senha certa **não abre a sessão**. A API responde `{ twoFactor: {
+    methods, preferred, emailHint } }` e grava um cookie curto (`faisca_mfa`, JWT de 10 min com a
+    conta e o desafio), que o `requireAuth` recusa, e vice-versa. O código vem por
+    `POST /auth/2fa/login/email` (envia) e `POST /auth/2fa/login/verify` (`via`: EMAIL, TOTP ou
+    RECOVERY). Só com o código certo a sessão abre, o cookie curto é apagado e sai o aviso de login
+    novo (DEC-091). `preferred` é o último método usado. A sessão sai com o `sessionVersion` lido
+    antes de consumir o desafio: se a senha mudar no meio, a sessão nova cai;
+  - **desafios no banco** (`TwoFactorChallenge`, `LOGIN` ou `ACTION`): um aberto por conta e tipo,
+    10 min, **5 tentativas**; o código por e-mail tem 6 dígitos, vale 10 min e uma vez, no máximo
+    3 envios por desafio, com 30 s entre eles, e **6 e-mails de código por conta por hora** (em
+    memória), além de limites por IP e por conta nas rotas. **10 códigos errados em 15 min**, somando
+    todos os logins e IPs, travam a entrada da conta por 15 min (429) e mandam um e-mail neutro
+    ("alguém acertou a senha, mas errou o código"): sem isso, abrir um login novo a cada 5
+    tentativas daria chutes sem fim. Cada tentativa ocupa a vaga antes de ir ao banco (pedidos
+    juntos não passam do teto), e logins juntos passam um de cada vez (trava na linha da conta), com
+    um desafio aberto só. A senha nova (troca ou "Esqueci minha senha") acaba com a trava. Erros: `INVALID_CODE` (400),
+    `CODE_EXPIRED` (400), `TOO_MANY_REQUESTS` (429), `TWO_FACTOR_EXPIRED` (401);
+  - **segredos:** `TWO_FACTOR_SECRET` (variável nova, opcional; sem ela, o 2FA responde 503
+    `TWO_FACTOR_UNAVAILABLE` e o resto funciona; quem já tem 2FA fica sem entrar até a chave voltar,
+    em vez de entrar sem o código) gera, por HKDF, a chave do **AES-256-GCM** do
+    segredo do app e a do **HMAC** dos códigos (por e-mail e de recuperação), que têm pouca
+    entropia. O AES-GCM usa o id da conta como dado associado (um segredo copiado para outra conta
+    não abre) e só aceita a tag de 16 bytes. **A chave nunca deve ser trocada** (os segredos dos
+    apps e os códigos deixariam de abrir) e precisa ser diferente do `JWT_SECRET` e do
+    `LINK_CODE_SECRET`. O mesmo código do app não vale duas vezes (`totpLastStep`, gravado de forma
+    atômica). O campo do código nas requisições é `otp`, escondido no logger junto do segredo, do
+    link do QR e dos hashes (regra 7);
+  - **desligar** (`POST /auth/2fa/disable`): a senha e um código de qualquer jeito ligado (o do
+    e-mail vem de `POST /auth/2fa/email-code`) ou de recuperação; apaga os dois métodos, os
+    códigos e os desafios, e manda um e-mail neutro "foi desligada". **Gerar códigos novos**
+    (`POST /auth/2fa/recovery-codes`) pede a senha e um código, invalida os antigos e avisa por
+    e-mail;
+  - **senha nova** (troca ou "Esqueci minha senha") e "sair de todos os aparelhos" fecham os
+    desafios de login abertos: quem estava no meio do passo do código precisa começar de novo;
+  - **"Esqueci minha senha" não desliga o 2FA**;
+  - **perdeu tudo:** códigos de recuperação → o outro método → recuperação com espera de 7 dias
+    (próximo PR) → processo manual com o responsável, que confere a identidade por fora do app e
+    roda `npm run 2fa:disable -- <e-mail>` (DEPLOY). **Perguntas de segurança foram descartadas:**
+    as respostas são fáceis de descobrir, sobretudo por quem é próximo, que num app de saúde mental
+    costuma ser o maior risco; viram porta dos fundos do 2FA, guardam mais dado pessoal e o NIST
+    desaconselha (decisão do usuário, depois do debate).
+- **Motivo:** se a senha vazar em outro site, só ela deixa de bastar para entrar (#134). Pedido do
+  usuário, que quer a aplicação "super segura" e vê a segurança também como sinal de confiança. O
+  código por e-mail entrou porque o app autenticador é o método em que mais gente trava. API antes
+  das telas (DEC-056).
+- **Limite conhecido:** o código por e-mail vale tanto quanto a segurança da caixa de e-mail. Os
+  limites em memória zeram a cada deploy. O aviso de privacidade ainda não cita os dados de
+  segurança guardados (o segredo cifrado e os hashes dos códigos), que não são dado de saúde: entra
+  na próxima versão do aviso. A recuperação com espera fica para o PR seguinte.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
