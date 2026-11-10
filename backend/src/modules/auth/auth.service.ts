@@ -472,9 +472,14 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
       if (!(await verifyPassword(password, user.passwordHash))) {
         throw new AppError(400, 'INVALID_PASSWORD', 'A senha não confere.');
       }
+      // Também fecha os passos de login abertos do 2FA (DEC-092): quem estava no passo do código sai.
       await prisma.$transaction([
         prisma.pushSubscription.deleteMany({ where: { userId } }),
-        prisma.user.update({ where: { id: userId }, data: { sessionVersion: { increment: 1 } } }),
+        prisma.twoFactorChallenge.deleteMany({ where: { userId, purpose: 'LOGIN' } }),
+        prisma.user.update({
+          where: { id: userId },
+          data: { sessionVersion: { increment: 1 }, totpPendingSecret: null },
+        }),
       ]);
       logger.info({ userId }, 'Saiu de todos os aparelhos');
     },
@@ -492,8 +497,10 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
       const passwordHash = await hashPassword(input.newPassword);
       // Links de "Esqueci a senha" ainda abertos deixam de valer: quem tinha um não troca a senha
       // de novo depois desta troca.
-      const [, , { sessionVersion }] = await prisma.$transaction([
+      const [, , , { sessionVersion }] = await prisma.$transaction([
         prisma.authToken.deleteMany({ where: { userId, type: 'PASSWORD_RESET', usedAt: null } }),
+        // Senha trocada: os passos de login abertos do 2FA (DEC-092) deixam de valer.
+        prisma.twoFactorChallenge.deleteMany({ where: { userId, purpose: 'LOGIN' } }),
         prisma.pushSubscription.deleteMany({
           where: currentSessionId
             ? { userId, OR: [{ sessionId: null }, { sessionId: { not: currentSessionId } }] }
@@ -501,7 +508,7 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
         }),
         prisma.user.update({
           where: { id: userId },
-          data: { passwordHash, sessionVersion: { increment: 1 } },
+          data: { passwordHash, sessionVersion: { increment: 1 }, totpPendingSecret: null },
           select: { sessionVersion: true },
         }),
       ]);
@@ -524,16 +531,18 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
 
     // Troca a senha e derruba todas as sessões abertas (sessionVersion + 1) e inscrições de push.
     // Quem abriu o link provou que é dono do e-mail, então o e-mail também fica confirmado.
-    async resetPassword(input: ResetPasswordInput): Promise<void> {
+    async resetPassword(input: ResetPasswordInput): Promise<string> {
       // O hash (lento) fica fora da transação para não segurar a conexão.
       const passwordHash = await hashPassword(input.password);
 
-      await prisma.$transaction(async (tx) => {
+      return prisma.$transaction(async (tx) => {
         const { userId, now } = await consumeToken(tx, input.token, 'PASSWORD_RESET');
         await tx.pushSubscription.deleteMany({ where: { userId } });
+        // A senha nova não desliga o 2FA, mas fecha os passos de login abertos (DEC-092).
+        await tx.twoFactorChallenge.deleteMany({ where: { userId, purpose: 'LOGIN' } });
         await tx.user.update({
           where: { id: userId },
-          data: { passwordHash, sessionVersion: { increment: 1 } },
+          data: { passwordHash, sessionVersion: { increment: 1 }, totpPendingSecret: null },
         });
         const { count } = await tx.user.updateMany({
           where: { id: userId, emailConfirmedAt: null },
@@ -544,6 +553,7 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
         if (count > 0) {
           await tx.authToken.deleteMany({ where: { userId, type: 'EMAIL_CONFIRMATION', usedAt: null } });
         }
+        return userId;
       });
     },
   };

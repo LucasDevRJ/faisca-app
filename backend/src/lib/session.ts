@@ -84,3 +84,35 @@ export async function readSessionToken(token: string): Promise<SessionPayload | 
 export function shouldRenewSession(issuedAt: Date, now = new Date()): boolean {
   return now.getTime() - issuedAt.getTime() > RENEW_AFTER_MS;
 }
+
+// Passo do login entre a senha e o código do 2FA (DEC-092): um cookie curto que ainda NÃO é a
+// sessão. Leva só o id da conta e o do desafio; o readSessionToken recusa este token (não tem
+// "sv"), e este leitor recusa o da sessão (não tem "mfa").
+export const MFA_COOKIE = 'faisca_mfa';
+const MFA_MINUTES = 10;
+
+export type MfaPayload = { userId: string; challengeId: string };
+
+export async function setMfaCookie(res: Response, userId: string, challengeId: string) {
+  const token = await new SignJWT({ mfa: challengeId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setSubject(userId)
+    .setIssuedAt()
+    .setExpirationTime(`${MFA_MINUTES}m`)
+    .sign(secret);
+  res.cookie(MFA_COOKIE, token, { ...cookieOptions(), maxAge: MFA_MINUTES * 60 * 1000 });
+}
+
+export function clearMfaCookie(res: Response) {
+  res.clearCookie(MFA_COOKIE, cookieOptions());
+}
+
+export async function readMfaToken(token: string): Promise<MfaPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+    if (typeof payload.sub !== 'string' || typeof payload.mfa !== 'string' || 'sv' in payload) return null;
+    return { userId: payload.sub, challengeId: payload.mfa };
+  } catch {
+    return null;
+  }
+}

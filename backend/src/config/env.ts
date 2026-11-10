@@ -42,6 +42,10 @@ const envSchema = z.object({
     .string()
     .regex(/^(mailto:.+@.+\..+|https:\/\/.+)$/)
     .optional(),
+  // Verificação em duas etapas (DEC-092): chave de onde saem a do segredo do app autenticador e
+  // a do HMAC dos códigos. Opcional para a API subir antes de ela ser cadastrada no Railway; sem
+  // ela (ou com o placeholder do .env.example), só o 2FA fica indisponível.
+  TWO_FACTOR_SECRET: z.string().min(32).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -73,6 +77,10 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
         VAPID_PRIVATE_KEY: privPlaceholder ? '' : source.VAPID_PRIVATE_KEY,
         VAPID_SUBJECT: subPlaceholder ? '' : source.VAPID_SUBJECT,
       };
+
+  if (!normalized.TWO_FACTOR_SECRET || normalized.TWO_FACTOR_SECRET.startsWith('CHANGE_ME')) {
+    normalized.TWO_FACTOR_SECRET = undefined;
+  }
 
   const result = envSchema.safeParse(normalized);
   if (!result.success) {

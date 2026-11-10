@@ -49,6 +49,17 @@ model User {
   loginAlertEnabled   Boolean   @default(true)
   // Já entrou alguma vez? O primeiro login de todos não gera aviso de acesso novo (DEC-091).
   hasLoggedIn         Boolean   @default(false)
+  // Verificação em duas etapas (DEC-092). Código por e-mail ligado?
+  twoFactorEmail      Boolean   @default(false)
+  // App autenticador: segredo cifrado (AES-256-GCM, chave fora do banco), quando ligou e o último
+  // passo de 30 s aceito, para o mesmo código não valer duas vezes. O "pendente" é o da configuração,
+  // até a pessoa provar que o app funciona.
+  totpSecret          String?
+  totpEnabledAt       DateTime?
+  totpLastStep        Int?
+  totpPendingSecret   String?
+  // Último método usado no login ("EMAIL" ou "TOTP"): a tela "Confirme que é você" abre nele.
+  twoFactorLastMethod String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -81,9 +92,11 @@ model User {
 
   // Lembretes e notificações (DEC-004, DEC-006, DEC-089): configuração, inscrições de Web Push e
   // registro de envio para idempotência.
-  reminderSettings  ReminderSettings?
-  pushSubscriptions PushSubscription[]
-  notificationLogs  NotificationLog[]
+  reminderSettings    ReminderSettings?
+  pushSubscriptions   PushSubscription[]
+  recoveryCodes       RecoveryCode[]
+  twoFactorChallenges TwoFactorChallenge[]
+  notificationLogs    NotificationLog[]
 
   // Foto de perfil (DEC-061), opcional.
   avatar UserAvatar?
@@ -651,4 +664,38 @@ model NotificationLog {
 
   @@unique([userId, type, referenceDate])
   @@index([referenceDate])
+}
+
+// Códigos de recuperação do 2FA (DEC-092): 10 por vez, cada um vale uma vez. Só o HMAC é guardado.
+model RecoveryCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  codeHash  String    @unique
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Um desafio do 2FA (DEC-092): o passo do login entre a senha e o código ("LOGIN"), ou a
+// confirmação do código por e-mail numa ação com a sessão aberta ("ACTION": ativar ou desligar).
+// O código por e-mail é guardado só como HMAC, vale 10 min e uma vez; no máximo 5 tentativas.
+model TwoFactorChallenge {
+  id                 String    @id @default(uuid()) @db.Uuid
+  userId             String    @db.Uuid
+  purpose            String
+  emailCodeHash      String?
+  emailCodeExpiresAt DateTime?
+  emailSends         Int       @default(0)
+  lastEmailSentAt    DateTime?
+  attempts           Int       @default(0)
+  expiresAt          DateTime
+  consumedAt         DateTime?
+  createdAt          DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

@@ -11,6 +11,14 @@ const SENSITIVE_KEYS = [
   'passwordHash',
   'currentPassword',
   'newPassword',
+  // Verificação em duas etapas (DEC-092): códigos, segredo do app autenticador e o link do QR.
+  'otp',
+  'secret',
+  'uri',
+  'recoveryCodes',
+  'totpSecret',
+  'totpPendingSecret',
+  'emailCodeHash',
   // Senha do cadastro guardada no link de confirmação (DEC-072).
   'pendingPasswordHash',
   'pendingName',

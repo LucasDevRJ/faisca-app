@@ -91,6 +91,7 @@ Gere quatro: a senha do `faisca_migrator`, a senha do `faisca_app`, o `JWT_SECRE
    | `RESEND_API_KEY` | chave de produção do passo 4 |
    | `EMAIL_FROM` | `Faísca <nao-responda@minhafaisca.com.br>` |
    | `TRUST_PROXY_HOPS` | `2` (Vercel + borda do Railway; confirmado no passo 7) |
+   | `TWO_FACTOR_SECRET` | outro segredo do passo 1, diferente dos demais (verificação em duas etapas, DEC-092; sem ela, o 2FA fica indisponível). **Nunca troque:** os apps autenticadores e os códigos de recuperação deixariam de funcionar. Guarde no cofre de senhas |
 
    - Sem o `PORT`, o Railway põe a API na 8080. O healthcheck passa, mas o domínio (3333) responde
      **502 "Application failed to respond"**. Foi o que aconteceu no primeiro deploy.
@@ -376,6 +377,9 @@ O Railway **acumula** as mudanças ("Apply N changes") e só aplica tudo junto a
 2. **Gerar os novos** no seu terminal (passo 1 deste documento): senhas do `postgres`, do
    `faisca_migrator` e do `faisca_app`, o `JWT_SECRET` e o `LINK_CODE_SECRET`. No Resend, crie uma
    chave nova (*Sending access*, domínio `minhafaisca.com.br`) **sem apagar a antiga**.
+   O `TWO_FACTOR_SECRET` **fica como está** (DEC-092): trocá-lo faz os apps autenticadores e os
+   códigos de recuperação de todo mundo pararem de funcionar. Ele só ajuda quem tem também uma cópia do banco; se os dois vazarem juntos, a saída é
+   desligar o 2FA das contas (`npm run 2fa:disable`) e pedir para cada pessoa ligar de novo.
 3. **Preencher as variáveis da API, sem aplicar:** no `faisca-app`, troque só a senha dentro do
    `DATABASE_URL` e do `MIGRATION_DATABASE_URL` (entre `usuario:` e `@`), o `JWT_SECRET`, o
    `LINK_CODE_SECRET` e o `RESEND_API_KEY`. **Não clique em Deploy ainda.**
@@ -411,6 +415,23 @@ O Railway **acumula** as mudanças ("Apply N changes") e só aplica tudo junto a
     `faisca-backup`. No R2, crie um token novo, troque no serviço e apague o antigo. A chave
     privada do `age` só precisa mudar se ela vazou. Nesse caso, gere um par novo (seção da cópia,
     passo 1), troque a pública por PR e lembre que as cópias antigas continuam abrindo com a chave velha.
+
+## Verificação em duas etapas: quem perdeu tudo (DEC-092)
+
+Último recurso, para quem perdeu o aparelho, o acesso ao e-mail do código **e** os códigos de
+recuperação. Antes disso, a pessoa tenta os códigos de recuperação, o outro método (se tiver
+ligado os dois) e, quando existir, a recuperação com espera de 7 dias.
+
+1. **Confira a identidade por fora do app**, sem pressa: por exemplo, uma conversa com a
+   psicóloga vinculada ou outro contato que você já conheça. Nunca só pelo e-mail da conta, que
+   pode estar nas mãos de outra pessoa.
+2. Rode, com a `DATABASE_URL` de produção (pelo `railway run` ou no shell do serviço da API):
+   ```bash
+   npm run 2fa:disable -- pessoa@exemplo.com
+   ```
+   O script desliga o 2FA, apaga os códigos de recuperação, **derruba as sessões abertas** e manda
+   o e-mail neutro "A verificação em duas etapas foi desligada". Ele escreve só o id da conta.
+3. Peça para a pessoa entrar, criar uma senha nova em "Esqueci minha senha" e ligar o 2FA de novo.
 
 ## Site fora do ar com a API funcionando
 
