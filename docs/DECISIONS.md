@@ -2039,6 +2039,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   domínio, sem mexer nos registros do Resend); o aviso de privacidade ainda não cita esse serviço
   e entra na próxima versão.
 
+## DEC-094 — Meus Planos, 1ª entrega: planos de ação do paciente (API)
+- **Decisão:** em construção (#179). Número reservado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
