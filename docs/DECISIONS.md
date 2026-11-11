@@ -2009,6 +2009,36 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   segurança guardados (o segredo cifrado e os hashes dos códigos), que não são dado de saúde: entra
   na próxima versão do aviso. A recuperação com espera fica para o PR seguinte.
 
+## DEC-093 — Telas da verificação em duas etapas (Conta e login)
+- **Decisão:**
+  - **um PR só para Conta e login:** as duas telas só funcionam juntas. Com a de Conta sozinha no
+    ar, quem ligasse o 2FA ficaria sem entrar, porque o login antigo não entende `{ twoFactor }`;
+  - **Conta → Segurança:** um cartão com o estado ("Desligada" ou "Ligada: código por e-mail · app
+    autenticador") e quantos códigos de recuperação restam, com aviso a partir de 3. Botões:
+    Ativar; com um jeito ligado, Adicionar outro jeito, Códigos de recuperação e Desligar. Sem a
+    chave no servidor, o cartão avisa que está indisponível e não oferece ativar;
+  - **configuração guiada** numa janela, um passo por vez: senha → escolher (e-mail recomendado
+    para começar, com "Precisa de ajuda?") → código → códigos de recuperação (copiar, baixar um
+    `.txt` gerado no próprio aparelho, "Já guardei") → pronto. Adicionar o segundo jeito, gerar
+    códigos novos e desligar pedem a senha e um código de um jeito ligado; o código por e-mail só
+    sai quando a pessoa pede;
+  - **QR code** desenhado no próprio aparelho pela biblioteca `qrcode` (1.5.4, versão fixa): o
+    segredo não passa por nenhum outro serviço. A chave aparece também em grupos de 4, com Copiar;
+  - **login:** depois da senha, "Confirme que é você" com o último jeito usado; pelo e-mail, o
+    código sai sozinho uma vez. "Usar outro jeito" mostra só os jeitos ligados e o código de
+    recuperação. "Não consigo entrar" explica os códigos de recuperação e dá o contato
+    `suporte@minhafaisca.com.br` (escolha do usuário) para quem perdeu tudo. Passo vencido volta
+    para o e-mail e a senha, com o aviso;
+  - campo do código com `autocomplete="one-time-code"` e teclado numérico (letras no código de
+    recuperação); com Linguagem direta, os textos do e-mail ficam literais.
+- **Motivo:** textos e desenho aprovados pelo usuário (#134). O e-mail em primeiro lugar e a
+  ajuda sobre o app autenticador servem para quem nunca usou 2FA, como a psicóloga.
+- **Limite conhecido:** a imagem do QR é um `data:` URL, e a CSP (#33) vai precisar permitir
+  `img-src data:`. Os códigos de recuperação ficam na memória da tela até a janela fechar. A caixa
+  do suporte fica no Zoho Mail (plano grátis, centro de dados nos EUA; MX, SPF e DKIM na raiz do
+  domínio, sem mexer nos registros do Resend); o aviso de privacidade ainda não cita esse serviço
+  e entra na próxima versão.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

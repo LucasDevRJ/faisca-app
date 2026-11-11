@@ -9,6 +9,8 @@ import { AuthLayout } from '../features/auth/auth-layout';
 import { readAccountDeleted } from '../features/auth/account-deleted';
 import { readLoggedOutEverywhere } from '../features/auth/logged-out-everywhere';
 import { readSessionEnded } from '../features/auth/session-ended';
+import type { TwoFactorLoginStep } from '../features/auth/two-factor-api';
+import { TwoFactorLogin } from '../features/auth/two-factor-login';
 import { SESSION_ENDED_KEY, safeNextPath, useLogin } from '../features/auth/use-session';
 import { validateEmail } from '../features/auth/validation';
 import { inviteState, readInviteToken } from '../features/links/invite-state';
@@ -25,6 +27,15 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const login = useLogin();
+  // Com 2FA, a senha certa abre o passo do código (DEC-092); a sessão só abre depois dele.
+  const [twoFactor, setTwoFactor] = useState<TwoFactorLoginStep | null>(null);
+  const [restartMessage, setRestartMessage] = useState('');
+  const restartRef = useRef<HTMLDivElement>(null);
+
+  // Voltou do passo do código porque ele venceu: o foco vai para o aviso, que diz por quê.
+  useEffect(() => {
+    if (restartMessage) restartRef.current?.focus();
+  }, [restartMessage]);
   // Acabou de excluir a conta (DEC-035): o aviso some quando a pessoa tenta entrar.
   const accountDeleted = readAccountDeleted(location.state) && login.isIdle;
   // Acabou de sair de todos os aparelhos (DEC-085): some do mesmo jeito.
@@ -57,9 +68,36 @@ export function LoginPage() {
     if (errors.email || errors.password) return;
 
     resend.reset();
+    setRestartMessage('');
     login.mutate(
       { email: email.trim(), password },
-      { onSuccess: () => navigate(safeNextPath(searchParams.get('next')), { replace: true, state: invite }) },
+      {
+        onSuccess: (result) => {
+          if ('twoFactor' in result) setTwoFactor(result.twoFactor);
+          else goToApp();
+        },
+      },
+    );
+  }
+
+  function goToApp() {
+    navigate(safeNextPath(searchParams.get('next')), { replace: true, state: invite });
+  }
+
+  if (twoFactor) {
+    return (
+      <AuthLayout title="Confirme que é você">
+        <TwoFactorLogin
+          step={twoFactor}
+          onDone={goToApp}
+          onRestart={(message) => {
+            setTwoFactor(null);
+            setPassword('');
+            login.reset();
+            setRestartMessage(message ?? '');
+          }}
+        />
+      </AuthLayout>
     );
   }
 
@@ -71,6 +109,11 @@ export function LoginPage() {
         {sessionEnded && (
           <div ref={sessionEndedRef} tabIndex={-1} className="rounded-md focus:outline-none">
             <Alert>Sua sessão terminou. Entre de novo para continuar.</Alert>
+          </div>
+        )}
+        {restartMessage && (
+          <div ref={restartRef} tabIndex={-1} className="rounded-md focus:outline-none">
+            <Alert tone="attention">{restartMessage}</Alert>
           </div>
         )}
         {apiError && !notConfirmed && <Alert tone="attention">{apiError.message}</Alert>}

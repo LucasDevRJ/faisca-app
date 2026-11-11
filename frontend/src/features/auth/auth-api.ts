@@ -2,6 +2,7 @@ import { isAxiosError } from 'axios';
 import { api } from '../../lib/api';
 import type { AccessibilitySettings } from '../profile/accessibility';
 import type { Palette } from '../profile/palettes';
+import type { TwoFactorLoginStep } from './two-factor-api';
 
 // Chamadas às rotas /auth da API (DEC-025). A sessão fica no cookie httpOnly:
 // o front nunca vê nem guarda o token.
@@ -85,9 +86,13 @@ export async function fetchSession(): Promise<SessionUser | null> {
   }
 }
 
-export async function login(input: { email: string; password: string }): Promise<SessionUser> {
-  const { data } = await api.post<{ user: SessionUser }>('/auth/login', input);
-  return data.user;
+// Com a verificação em duas etapas ligada, a senha certa não abre a sessão: a API devolve o passo
+// do código (DEC-092).
+export type LoginResult = { user: SessionUser } | { twoFactor: TwoFactorLoginStep };
+
+export async function login(input: { email: string; password: string }): Promise<LoginResult> {
+  const { data } = await api.post<LoginResult>('/auth/login', input);
+  return data;
 }
 
 export async function logout(): Promise<void> {

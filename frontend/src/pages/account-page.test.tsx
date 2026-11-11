@@ -251,6 +251,11 @@ describe('/conta: excluir conta', () => {
     server.use(
       http.post('*/api/auth/delete-account', async ({ request }) => {
         sent.push(await request.json());
+        // Como a API de verdade: depois disso, a sessão não vale mais. Sem isso, as telas ainda
+        // abertas recarregam /auth/me "logadas" e a ida para /entrar vira uma corrida.
+        server.use(
+          http.get('*/api/auth/me', () => apiError(401, 'UNAUTHENTICATED', 'Entre na sua conta para continuar.')),
+        );
         return new HttpResponse(null, { status: 204 });
       }),
     );

@@ -32,9 +32,13 @@ export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: login,
-    onSuccess: (user) => {
+    // A senha não fica guardada na memória do app depois do login.
+    gcTime: 0,
+    onSuccess: (result) => {
+      // Passo do código: a sessão ainda não abriu.
+      if (!('user' in result)) return;
       queryClient.removeQueries({ queryKey: SESSION_ENDED_KEY, exact: true });
-      queryClient.setQueryData(SESSION_QUERY_KEY, user);
+      queryClient.setQueryData(SESSION_QUERY_KEY, result.user);
     },
   });
 }

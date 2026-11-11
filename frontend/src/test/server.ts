@@ -168,6 +168,10 @@ export const handlers = [
       counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 0 },
     }),
   ),
+  // Verificação em duas etapas desligada, por padrão (DEC-092).
+  http.get('*/api/auth/2fa', () =>
+    HttpResponse.json({ available: true, emailEnabled: false, totpEnabled: false, recoveryCodesLeft: 0 }),
+  ),
   // "Sobre mim" vazio, por padrão (DEC-081).
   http.get('*/api/about-me', () => HttpResponse.json({ aboutMe: null })),
   http.get('*/api/therapist/patients/:patientId/about-me', () => HttpResponse.json({ aboutMe: null })),
