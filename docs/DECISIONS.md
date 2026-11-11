@@ -2087,6 +2087,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   `faisca_app`. A chave `title` no redact vale para o logger inteiro. A aba condicional e a grade de 3
   colunas no celular ficam para o PR das telas, com DEC própria revendo a DEC-052.
 
+## DEC-095 — Telas do Meus Planos e grade de abas de 3 colunas
+- **Decisão:** em construção (#179). Número reservado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
