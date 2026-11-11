@@ -767,6 +767,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       actions: false,
       actionPhotos: false,
       aboutMe: false,
+      plans: false,
     };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
@@ -784,7 +785,12 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       // "Sobre mim" (DEC-081).
       [
         '2026-11',
-        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true },
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true },
+      ],
+      // Meus Planos (DEC-094).
+      [
+        '2026-11.2',
+        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
       ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],

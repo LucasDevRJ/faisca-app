@@ -3,8 +3,8 @@ import { z } from 'zod';
 // Marcas de leitura da terapeuta (SPEC, "Visão da terapeuta"; DEC-057).
 
 // As áreas que a terapeuta marca como lidas. Atividades ficam de fora (DEC-057); o "Sobre mim"
-// entrou depois (DEC-081).
-export const READ_TYPES = ['THOUGHT_RECORD', 'TENSION_EPISODE', 'ACTION', 'ABOUT_ME'] as const;
+// entrou depois (DEC-081), e os registros do Meus Planos depois dele (DEC-094).
+export const READ_TYPES = ['THOUGHT_RECORD', 'TENSION_EPISODE', 'ACTION', 'ABOUT_ME', 'PLAN_ENTRY'] as const;
 export type ReadType = (typeof READ_TYPES)[number];
 
 // O "Marcar todos" manda a lista aberta de uma vez; o teto protege a API de um pedido enorme.

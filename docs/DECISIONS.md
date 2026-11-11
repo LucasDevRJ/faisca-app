@@ -2040,7 +2040,52 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   e entra na próxima versão.
 
 ## DEC-094 — Meus Planos, 1ª entrega: planos de ação do paciente (API)
-- **Decisão:** em construção (#179). Número reservado.
+- **Decisão (#179):**
+  - **o que é:** o plano de ação que a psicóloga combina com o paciente ("Quando surgir vontade de
+    ___, registrar: …"), com perguntas que mudam de plano para plano e um registro **toda vez** que a
+    situação acontece. Nenhuma área existente cobria isso: a Ação planeja atividades, a Tensão tem
+    campos fixos, as Tarefas (#150) têm uma resposta só;
+  - **entrega dividida:** nesta, só o paciente cria e registra, e a terapeuta com vínculo ativo só
+    lê. A psicóloga criar planos fica para a 2ª entrega, porque pede uma exceção nova na regra 1
+    (a mesma de que a #150 precisa). Assim o paciente já usa o plano que recebeu;
+  - **tabelas `Plan` e `PlanEntry`:** o plano tem nome (1 a 120) e de 1 a 10 perguntas (1 a 200
+    cada), numa lista de textos; `archivedAt` marca o plano **encerrado**, que sai da lista
+    principal, não recebe registro novo e pode ser reaberto. Até 30 planos por conta, contra abuso;
+  - **o registro guarda uma cópia das perguntas** e as respostas na mesma ordem (até 5000 cada,
+    vazia = não respondida, pelo menos uma com texto). Mudar o plano depois não muda o sentido de
+    um registro antigo. Dia (até hoje) e hora opcional, como na Tensão;
+  - **apagar plano só sem registros** (409 `PLAN_HAS_ENTRIES`, com a sugestão de encerrar);
+  - **travas contra pedidos simultâneos** (achados do `revisor-seguranca`): criar plano trava a conta
+    (`FOR NO KEY UPDATE`, como nas fotos da Ação) antes de contar o teto; registrar segura o plano
+    (`FOR SHARE`) até gravar; apagar trava o plano (`FOR UPDATE`) e só então conta os registros.
+    Assim, um registro que entra enquanto o plano é apagado fica, e a exclusão dá 409, em vez de o
+    registro sair em cascata; e um plano encerrado no meio do caminho não recebe o registro;
+  - **registro:** editar e excluir só no dia em que foi feito (409
+    `PLAN_ENTRY_LOCKED`), com escrita condicional, como na Tensão (DEC-028, DEC-042);
+  - **rotas do paciente** (`/plans`, `/plans/:id`, `/plans/:id/entries`, `/plan-entries/:id`) e
+    **da terapeuta** (`GET /therapist/patients/:patientId/plans` e
+    `.../plans/:planId/entries`), dentro do prefixo só leitura. Plano de outro paciente pelo
+    caminho do vinculado é 403, pelo mesmo `findOwnedPlan` do paciente;
+  - **"Para ler":** só os **registros** entram (tipo `PLAN_ENTRY` nas marcas de leitura, coluna
+    `planEntryId`), com o nome atual do plano para a visão que junta as áreas. Criar ou mudar um
+    plano não entra (escolha do usuário);
+  - **aviso de privacidade 2026-11.2**, com a área `plans`: conhecida na API, vira a atual no PR das
+    telas, junto com o texto (como na DEC-064/065);
+  - **logs:** `title`, `questions`, `answers` e `planTitle` entram no `redact` (regra 7). Nada do
+    plano vai para notificação (regra 3);
+  - **CHECKs** com uma função imutável (`texts_length_between`, com `search_path` vazio) para
+    conferir o tamanho de cada texto das listas, porque CHECK não aceita subconsulta.
+- **Motivo:** a psicóloga do usuário passou um plano de ação, e ele precisa registrar no Faísca o
+  quanto antes (prioridade dele em 11/11/2026). As perguntas próprias servem para qualquer tema, e
+  a cópia das perguntas protege o histórico que a psicóloga já leu.
+- **Limite conhecido:** os planos podem tratar de temas íntimos (a LGPD chama alguns de dados
+  sensíveis); o nome do plano aparece só dentro do app. Não há teto de registros por conta nem
+  página no "Para ler" (vale para todas as áreas; vira issue). O registro mostra o nome **atual**
+  do plano (só as perguntas são copiadas): renomear muda o título que aparece nos registros
+  antigos, sem marcá-los como atualizados. Os CHECKs dependem do EXECUTE padrão de `PUBLIC` na
+  função `texts_length_between`; um `REVOKE` futuro nas funções precisa de um `GRANT` explícito ao
+  `faisca_app`. A chave `title` no redact vale para o logger inteiro. A aba condicional e a grade de 3
+  colunas no celular ficam para o PR das telas, com DEC própria revendo a DEC-052.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

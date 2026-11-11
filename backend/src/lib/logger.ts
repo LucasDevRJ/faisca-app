@@ -26,6 +26,11 @@ const SENSITIVE_KEYS = [
   'aboutMe',
   'goals',
   'habits',
+  // Meus Planos (DEC-094): o nome do plano, as perguntas e as respostas são texto de saúde.
+  'title',
+  'questions',
+  'answers',
+  'planTitle',
   'email',
   'token',
   'tokenHash',

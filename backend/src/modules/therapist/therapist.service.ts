@@ -8,6 +8,8 @@ import type { ListActivitiesQuery } from '../activities/activities.schema.js';
 import type { CycleQuery, ListAppointmentsQuery } from '../appointments/appointments.schema.js';
 import type { AppointmentsService } from '../appointments/appointments.service.js';
 import type { Session } from '../appointments/sessions.js';
+import type { ListPlanEntriesQuery } from '../plans/plans.schema.js';
+import type { PlansService } from '../plans/plans.service.js';
 import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ReadMarksService } from '../read-marks/read-marks.service.js';
@@ -47,6 +49,7 @@ export function createTherapistService(
   actions: ActionsService,
   readMarks: ReadMarksService,
   aboutMe: AboutMeService,
+  plans: PlansService,
 ) {
   return {
     async summary(therapistId: string, patientId: string) {
@@ -109,6 +112,17 @@ export function createTherapistService(
       if (!current) return null;
       const [withStatus] = await readMarks.withReadStatus(therapistId, 'ABOUT_ME', [current]);
       return withStatus ?? null;
+    },
+
+    // Meus Planos (DEC-094): os planos do paciente, sem status de leitura (só os registros entram
+    // no "Para ler"), e os registros de um plano, com o status desta terapeuta. Plano de outra
+    // pessoa é 403, pelo mesmo findOwnedPlan do paciente.
+    listPlans(patientId: string) {
+      return plans.list(patientId);
+    },
+
+    async listPlanEntries(therapistId: string, patientId: string, planId: string, query: ListPlanEntriesQuery) {
+      return readMarks.withReadStatus(therapistId, 'PLAN_ENTRY', await plans.listEntries(patientId, planId, query));
     },
 
     // A visão "Não lidos" (DEC-057), fora do ciclo.

@@ -2,9 +2,11 @@ import type { RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import {
   patientParamsSchema,
+  patientPlanParamsSchema,
   therapistActionsQuerySchema,
   therapistAppointmentsQuerySchema,
   therapistCycleQuerySchema,
+  therapistPlanEntriesQuerySchema,
   therapistActivitiesQuerySchema,
   therapistTensionEpisodesQuerySchema,
   therapistThoughtRecordsQuerySchema,
@@ -66,5 +68,29 @@ export function createTherapistController(service: TherapistService) {
     res.status(200).json({ aboutMe: await service.getAboutMe(getAuthUser(req).id, patientId) });
   };
 
-  return { summary, activities, appointments, cycle, thoughtRecords, tensionEpisodes, actions, aboutMe, unread };
+  // Meus Planos (DEC-094): os planos, ativos e encerrados, e os registros de um plano no período.
+  const plans: RequestHandler = async (req, res) => {
+    const { patientId } = patientParamsSchema.parse(req.params);
+    res.status(200).json({ plans: await service.listPlans(patientId) });
+  };
+
+  const planEntries: RequestHandler = async (req, res) => {
+    const { patientId, planId } = patientPlanParamsSchema.parse(req.params);
+    const query = therapistPlanEntriesQuerySchema.parse(req.query);
+    res.status(200).json({ entries: await service.listPlanEntries(getAuthUser(req).id, patientId, planId, query) });
+  };
+
+  return {
+    summary,
+    activities,
+    appointments,
+    cycle,
+    thoughtRecords,
+    tensionEpisodes,
+    actions,
+    aboutMe,
+    plans,
+    planEntries,
+    unread,
+  };
 }

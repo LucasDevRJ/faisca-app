@@ -8,6 +8,8 @@ export async function resetDatabase() {
   // As emoções saem em cascata.
   await prisma.thoughtRecord.deleteMany();
   await prisma.tensionEpisode.deleteMany();
+  // Os registros saem em cascata com o plano.
+  await prisma.plan.deleteMany();
   await prisma.actionPhoto.deleteMany();
   await prisma.behavioralAction.deleteMany();
   await prisma.appointment.deleteMany();

@@ -9,6 +9,7 @@
 // - 2026-10.6: entram as fotos da Ação (DEC-064).
 // - 2026-10.7: entram as cópias de segurança (DEC-075, DEC-078). Sem área nova: nada é bloqueado.
 // - 2026-11: entra o "Sobre mim" (DEC-081).
+// - 2026-11.2: entra o Meus Planos (DEC-094).
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -18,6 +19,7 @@ export const PRIVACY_VERSIONS = [
   '2026-10.6',
   '2026-10.7',
   '2026-11',
+  '2026-11.2',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -26,7 +28,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // "a última da lista", porque a API conhece uma versão antes de o texto dela estar no ar (DEC-064):
 // a 2026-10.6 (fotos da Ação) só virou a atual no PR das telas, junto com o texto do aviso
 // (DEC-065). Sem isso, alguém aceitaria uma versão cujo texto ainda não viu. O mesmo vale para a
-// 2026-11 ("Sobre mim", DEC-081): conhecida antes, virou a atual no PR das telas (DEC-082).
+// 2026-11 ("Sobre mim", DEC-081): conhecida antes, virou a atual no PR das telas (DEC-082). E
+// para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, vira a atual no PR das telas.
 export const PRIVACY_VERSION: PrivacyVersion = '2026-11';
 
 // Cada área de dado novo exige a versão do aviso que passou a citá-la (DEC-042). Assim, uma versão
@@ -43,6 +46,8 @@ export const PRIVACY_AREAS = {
   actionPhotos: '2026-10.6',
   // "Sobre mim" (DEC-081): o que o paciente conta sobre si, o que quer trabalhar e os hábitos.
   aboutMe: '2026-11',
+  // Meus Planos (DEC-094): os planos de ação, as perguntas e cada registro com as respostas.
+  plans: '2026-11.2',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -62,5 +67,6 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     actions: coversArea(acceptedVersion, 'actions'),
     actionPhotos: coversArea(acceptedVersion, 'actionPhotos'),
     aboutMe: coversArea(acceptedVersion, 'aboutMe'),
+    plans: coversArea(acceptedVersion, 'plans'),
   };
 }

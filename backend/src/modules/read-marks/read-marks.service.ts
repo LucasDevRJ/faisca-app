@@ -4,6 +4,7 @@ import { prisma } from '../../lib/prisma.js';
 import type { AboutMeService, PublicAboutMe } from '../about-me/about-me.service.js';
 import type { ActionsService } from '../actions/actions.service.js';
 import { coversArea, type PrivacyArea } from '../auth/privacy.js';
+import type { PlansService } from '../plans/plans.service.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { READ_TYPES, type ReadMarkItem, type ReadType } from './read-marks.schema.js';
@@ -17,13 +18,14 @@ import { READ_TYPES, type ReadMarkItem, type ReadType } from './read-marks.schem
 export type ReadStatus = 'NAO_LIDO' | 'LIDO' | 'ATUALIZADO';
 export type ReadInfo = { readStatus: ReadStatus; readAt: string | null };
 
-type Column = 'thoughtRecordId' | 'tensionEpisodeId' | 'actionId' | 'aboutId';
+type Column = 'thoughtRecordId' | 'tensionEpisodeId' | 'actionId' | 'aboutId' | 'planEntryId';
 
 const AREA: Record<ReadType, { privacy: PrivacyArea; column: Column }> = {
   THOUGHT_RECORD: { privacy: 'thoughtRecords', column: 'thoughtRecordId' },
   TENSION_EPISODE: { privacy: 'tensionEpisodes', column: 'tensionEpisodeId' },
   ACTION: { privacy: 'actions', column: 'actionId' },
   ABOUT_ME: { privacy: 'aboutMe', column: 'aboutId' },
+  PLAN_ENTRY: { privacy: 'plans', column: 'planEntryId' },
 };
 
 // Função pura, para testar as bordas sem banco.
@@ -52,6 +54,7 @@ async function recordsOf(type: ReadType, patientId: string, ids?: string[]) {
   if (type === 'THOUGHT_RECORD') return prisma.thoughtRecord.findMany({ where, select });
   if (type === 'TENSION_EPISODE') return prisma.tensionEpisode.findMany({ where, select });
   if (type === 'ABOUT_ME') return prisma.patientAbout.findMany({ where, select });
+  if (type === 'PLAN_ENTRY') return prisma.planEntry.findMany({ where, select });
   return prisma.behavioralAction.findMany({ where, select });
 }
 
@@ -60,7 +63,14 @@ async function readAtByRecord(therapistId: string, type: ReadType, ids: string[]
   const column = AREA[type].column;
   const marks = await prisma.readMark.findMany({
     where: { therapistId, [column]: { in: ids } },
-    select: { thoughtRecordId: true, tensionEpisodeId: true, actionId: true, aboutId: true, readAt: true },
+    select: {
+      thoughtRecordId: true,
+      tensionEpisodeId: true,
+      actionId: true,
+      aboutId: true,
+      planEntryId: true,
+      readAt: true,
+    },
   });
   const pairs: [string, Date][] = [];
   for (const mark of marks) {
@@ -95,7 +105,9 @@ export async function countUnread(therapistId: string, patientIds: string[], pri
           ? await prisma.tensionEpisode.findMany({ where, select })
           : type === 'ABOUT_ME'
             ? await prisma.patientAbout.findMany({ where, select })
-            : await prisma.behavioralAction.findMany({ where, select });
+            : type === 'PLAN_ENTRY'
+              ? await prisma.planEntry.findMany({ where, select })
+              : await prisma.behavioralAction.findMany({ where, select });
     const readAt = await readAtByRecord(
       therapistId,
       type,
@@ -115,6 +127,7 @@ export function createReadMarksService(
   tensionEpisodes: TensionEpisodesService,
   actions: ActionsService,
   aboutMe: AboutMeService,
+  plans: PlansService,
 ) {
   // Acrescenta o status de leitura a registros já no formato público (updatedAt em ISO).
   async function withReadStatus<T extends { id: string; updatedAt: string }>(
@@ -161,7 +174,9 @@ export function createReadMarksService(
                 ? { therapistId_tensionEpisodeId: { therapistId, tensionEpisodeId: id } }
                 : column === 'aboutId'
                   ? { therapistId_aboutId: { therapistId, aboutId: id } }
-                  : { therapistId_actionId: { therapistId, actionId: id } },
+                  : column === 'planEntryId'
+                    ? { therapistId_planEntryId: { therapistId, planEntryId: id } }
+                    : { therapistId_actionId: { therapistId, actionId: id } },
           create: { therapistId, patientId, [column]: id, readAt },
           update: { readAt },
         });
@@ -225,6 +240,13 @@ export function createReadMarksService(
     const action = covered.has('ACTION')
       ? await withReadStatus(therapistId, 'ACTION', await actions.listByIds(patientId, await pendingIds('ACTION')))
       : null;
+    const planEntries = covered.has('PLAN_ENTRY')
+      ? await withReadStatus(
+          therapistId,
+          'PLAN_ENTRY',
+          await plans.listEntriesByIds(patientId, await pendingIds('PLAN_ENTRY')),
+        )
+      : null;
     // O "Sobre mim" é um só: entra se ainda não foi lido ou mudou depois de lido.
     let about: (PublicAboutMe & ReadInfo)[] | null = null;
     if (covered.has('ABOUT_ME') && (await pendingIds('ABOUT_ME')).length > 0) {
@@ -238,11 +260,14 @@ export function createReadMarksService(
       actions: action,
       // null sem o aceite do aviso que cita o "Sobre mim"; [] quando já foi lido.
       aboutMe: covered.has('ABOUT_ME') ? (about ?? []) : null,
+      // Meus Planos (DEC-094): null sem o aceite da versão que o cita.
+      planEntries,
       counts: {
         thoughtRecords: thought?.length ?? null,
         tensionEpisodes: tension?.length ?? null,
         actions: action?.length ?? null,
         aboutMe: covered.has('ABOUT_ME') ? (about?.length ?? 0) : null,
+        planEntries: planEntries?.length ?? null,
       },
     };
   }

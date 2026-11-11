@@ -71,6 +71,8 @@ model User {
   actions         BehavioralAction[]
   thoughtRecords  ThoughtRecord[]
   tensionEpisodes TensionEpisode[]
+  plans           Plan[]
+  planEntries     PlanEntry[]
 
   // Vínculo (DEC-015, DEC-031): o mesmo usuário pode estar dos dois lados, em vínculos diferentes.
   linksAsPatient       TherapistLink[]   @relation("LinkPatient")
@@ -373,6 +375,52 @@ model TensionEpisode {
   @@index([userId, episodeDate])
 }
 
+// Meus Planos (DEC-094): um plano de ação do paciente, com o gatilho no título ("Quando surgir
+// vontade de…") e perguntas próprias, de 1 a 10, com 1 a 200 caracteres cada (CHECK na migration).
+// Nesta 1ª entrega só o paciente escreve; a terapeuta com vínculo ativo só lê.
+model Plan {
+  id         String    @id @default(uuid()) @db.Uuid
+  // O paciente dono do plano.
+  userId     String    @db.Uuid
+  // De 1 a 120 caracteres. Texto de saúde: nunca em log nem em notificação.
+  title      String
+  questions  String[]
+  // Preenchido = encerrado: sai da lista principal e não recebe registro novo. Dá para reabrir.
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries PlanEntry[]
+
+  @@index([userId])
+}
+
+// Cada vez que a situação do plano acontece (DEC-094). Guarda uma cópia das perguntas como estavam
+// no registro: mudar o plano depois não muda o sentido de um registro antigo. As respostas seguem
+// a ordem das perguntas; texto vazio = não respondida, mas pelo menos uma tem texto (CHECK).
+model PlanEntry {
+  id        String    @id @default(uuid()) @db.Uuid
+  planId    String    @db.Uuid
+  // Repete o dono do plano, para conferir a autorização e listar sem passar pelo plano.
+  userId    String    @db.Uuid
+  // Dia do momento, no fuso America/Sao_Paulo (DEC-007). Só até hoje; separado do createdAt.
+  entryDate DateTime  @db.Date
+  // Hora do momento no relógio de São Paulo, sem segundos. Opcional, como na Tensão.
+  entryTime DateTime? @db.Time(0)
+  questions String[]
+  answers   String[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  plan      Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readMarks ReadMark[]
+
+  @@index([planId, entryDate])
+  @@index([userId])
+}
+
 enum LinkMethod {
   INVITE
   CODE
@@ -519,6 +567,8 @@ model ReadMark {
   actionId         String?  @db.Uuid
   // "Sobre mim" do paciente (DEC-081): também entra no "Para ler".
   aboutId          String?  @db.Uuid
+  // Registro de um plano de "Meus Planos" (DEC-094). O plano em si não entra no "Para ler".
+  planEntryId      String?  @db.Uuid
   // Quando foi lido. Se o registro mudar depois (updatedAt maior), volta a contar como não lido.
   readAt           DateTime @default(now())
 
@@ -528,12 +578,14 @@ model ReadMark {
   tensionEpisode TensionEpisode?   @relation(fields: [tensionEpisodeId], references: [id], onDelete: Cascade)
   action         BehavioralAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
   about          PatientAbout?     @relation(fields: [aboutId], references: [id], onDelete: Cascade)
+  planEntry      PlanEntry?        @relation(fields: [planEntryId], references: [id], onDelete: Cascade)
 
   // Uma marca por terapeuta e registro. NULL não colide no Postgres: vale para a coluna preenchida.
   @@unique([therapistId, thoughtRecordId])
   @@unique([therapistId, tensionEpisodeId])
   @@unique([therapistId, actionId])
   @@unique([therapistId, aboutId])
+  @@unique([therapistId, planEntryId])
   @@index([therapistId, patientId])
 }
 
