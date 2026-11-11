@@ -17,6 +17,7 @@ import { createProfileRoutes } from './modules/profile/profile.routes.js';
 import { createRemindersRoutes } from './modules/reminders/reminders.routes.js';
 import { createTensionEpisodesRoutes } from './modules/tension-episodes/tension-episodes.routes.js';
 import { createAboutMeRoutes } from './modules/about-me/about-me.routes.js';
+import { createPlansRoutes } from './modules/plans/plans.routes.js';
 import { createActionsRoutes } from './modules/actions/actions.routes.js';
 import { createTherapistRoutes } from './modules/therapist/therapist.routes.js';
 import { createNoticesRoutes } from './modules/notices/notices.routes.js';
@@ -76,6 +77,7 @@ export function createApp({
   app.use(createTensionEpisodesRoutes());
   app.use(createActionsRoutes());
   app.use(createAboutMeRoutes());
+  app.use(createPlansRoutes());
   app.use(createLinksRoutes(mailer));
   app.use(createProfileRoutes());
   app.use(createRemindersRoutes(mailer, pushSender));

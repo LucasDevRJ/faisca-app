@@ -8,6 +8,7 @@ import { createActionsController } from '../actions/actions.controller.js';
 import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesService } from '../activities/activities.service.js';
 import { createAppointmentsService } from '../appointments/appointments.service.js';
+import { createPlansService } from '../plans/plans.service.js';
 import { createProfileController } from '../profile/profile.controller.js';
 import { createProfileService } from '../profile/profile.service.js';
 import { createReadMarksService } from '../read-marks/read-marks.service.js';
@@ -25,6 +26,7 @@ export function createTherapistRoutes() {
   const tensionEpisodes = createTensionEpisodesService();
   const actions = createActionsService();
   const aboutMe = createAboutMeService();
+  const plans = createPlansService();
   const controller = createTherapistController(
     createTherapistService(
       createActivitiesService(),
@@ -32,8 +34,9 @@ export function createTherapistRoutes() {
       thoughtRecords,
       tensionEpisodes,
       actions,
-      createReadMarksService(thoughtRecords, tensionEpisodes, actions, aboutMe),
+      createReadMarksService(thoughtRecords, tensionEpisodes, actions, aboutMe, plans),
       aboutMe,
+      plans,
     ),
   );
   const profile = createProfileController(createProfileService());
@@ -63,6 +66,9 @@ export function createTherapistRoutes() {
   );
   // "Sobre mim" do paciente (DEC-081): também pede o aceite da versão do aviso que o cita.
   router.get(`${PREFIX}/about-me`, requirePrivacy('aboutMe'), controller.aboutMe);
+  // Meus Planos (DEC-094): os planos e os registros de cada um, com o aceite da versão que os cita.
+  router.get(`${PREFIX}/plans`, requirePrivacy('plans'), controller.plans);
+  router.get(`${PREFIX}/plans/:planId/entries`, requirePrivacy('plans'), controller.planEntries);
   // Foto de perfil do paciente (DEC-061): dado pessoal, não de saúde, sem aceite próprio.
   router.get(`${PREFIX}/avatar`, profile.patientAvatar);
   // Não lidos (DEC-057): o aceite é conferido por área dentro do service. Escrever as marcas fica

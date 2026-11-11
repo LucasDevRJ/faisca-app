@@ -6,6 +6,13 @@ export { listAppointmentsQuerySchema as therapistAppointmentsQuerySchema } from 
 export { therapistThoughtRecordsQuerySchema } from '../thought-records/thought-records.schema.js';
 export { therapistActionsQuerySchema } from '../actions/actions.schema.js';
 export { therapistTensionEpisodesQuerySchema } from '../tension-episodes/tension-episodes.schema.js';
+export { therapistPlanEntriesQuerySchema } from '../plans/plans.schema.js';
 
 // Já validado pelo requireActiveLink; aqui só dá o tipo certo para o controller.
 export const patientParamsSchema = z.object({ patientId: z.uuid() });
+
+// Um plano do paciente (DEC-094). O patientId já passou pelo requireActiveLink.
+export const patientPlanParamsSchema = z.object({
+  patientId: z.uuid(),
+  planId: z.uuid({ error: 'Plano inválido.' }),
+});

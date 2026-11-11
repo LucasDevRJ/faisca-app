@@ -196,6 +196,40 @@ await prisma.$transaction(async (tx) => {
       consequence,
     })),
   });
+  // Meus Planos (DEC-094): um plano com o modelo das 6 perguntas e dois registros, e um encerrado.
+  await tx.plan.deleteMany({ where: { userId: patient.id } });
+  const planQuestions = [
+    'O que aconteceu antes?',
+    'O que estava sentindo?',
+    'O que estava procurando naquele momento?',
+    'O que imaginei que receberia?',
+    'O que fiz?',
+    'Como me senti depois?',
+  ];
+  const plan = await tx.plan.create({
+    data: { userId: patient.id, title: 'Quando surgir vontade de rolar o celular sem parar', questions: planQuestions },
+  });
+  await tx.planEntry.createMany({
+    data: [
+      [-3, '23:10', ['Discussão boba no grupo da família', 'Irritado e cansado', 'Desligar a cabeça', 'Alívio', 'Rolei vídeos por uma hora', 'Mais cansado e com sono atrasado']],
+      [-1, null, ['Dia parado em casa', 'Tédio', 'Alguma novidade', '', 'Liguei para um amigo', 'Bem melhor']],
+    ].map(([offset, time, answers]) => ({
+      planId: plan.id,
+      userId: patient.id,
+      entryDate: dateOnlyToDate(addDays(today, offset as number)),
+      entryTime: time ? timeOnlyToDate(time as string) : null,
+      questions: planQuestions,
+      answers: answers as string[],
+    })),
+  });
+  await tx.plan.create({
+    data: {
+      userId: patient.id,
+      title: 'Quando surgir vontade de adiar a academia',
+      questions: ['O que aconteceu antes?', 'O que fiz?'],
+      archivedAt: new Date(),
+    },
+  });
   // Ação (DEC-051): uma de cada tipo no ciclo atual, em estados diferentes, e uma planejada à frente.
   await tx.behavioralAction.deleteMany({ where: { userId: patient.id } });
   await tx.behavioralAction.createMany({

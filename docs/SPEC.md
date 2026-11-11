@@ -196,6 +196,27 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
   expectativa × prazer × realização. O formulário fica numa página própria, com um exemplo de cada
   tipo, e dá para repetir uma ação do ciclo passado. A terapeuta vê a aba **Ação**, só leitura.
 
+## Meus Planos (DEC-094, #179)
+Planos de ação combinados com a psicóloga: "Quando surgir vontade de ___, registrar: …", com
+perguntas que mudam de plano para plano, respondidas **toda vez** que a situação acontece.
+1ª entrega: só o paciente cria e registra; a terapeuta com vínculo ativo só lê. A psicóloga criar
+planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
+- **Plano:** nome de 1 a 120 caracteres (o gatilho) e de 1 a 10 perguntas, de 1 a 200 caracteres
+  cada. O app oferece um modelo com 6 perguntas (antes, sentimento, o que procurava, o que imaginou
+  que receberia, o que fez, como se sentiu depois). Até 30 planos por conta.
+- O paciente muda o nome e as perguntas quando quiser, **encerra** (sai da lista principal e não
+  recebe registro novo) e **reabre**. Apagar só um plano **sem registros**; com registros, **409**,
+  e o caminho é encerrar.
+- **Registro:** dia (até hoje) e hora opcional do momento, separados de quando foi registrado, e uma
+  resposta por pergunta, até 5000 caracteres cada; as respostas são opcionais, mas pelo menos uma
+  tem texto. O registro guarda **uma cópia das perguntas** como estavam: mudar o plano depois não
+  muda o sentido de um registro antigo.
+- Editar e excluir o registro só no dia em que foi feito; depois, **409**, como na Tensão.
+- Na terapeuta: os planos (ativos e encerrados) e os registros, só leitura. Os **registros** entram
+  no "Para ler" e têm o "Lido" (DEC-057); o plano em si, não.
+- Nome, perguntas e respostas nunca aparecem em notificação nem em log.
+- Usar o Meus Planos exige ter aceitado uma versão do aviso de privacidade que o cite (2026-11.2).
+
 ## Tela de registros: ciclo ou semana (paciente e terapeuta)
 - A tela abre no **ciclo da consulta** atual, com o título "Consulta de dd/mm", o período, quantos
   dias faltam para a consulta e um resumo neutro (dias, atividades feitas, pensamentos e episódios
@@ -218,7 +239,7 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
     da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
 - **Período**: a tela abre no **ciclo da consulta** (seção "Ciclo da consulta"), o mesmo que o paciente vê, nas três abas; dá para alternar para a semana e navegar entre ciclos ou semanas. O ciclo substitui o antigo destaque e o filtro "desde a última consulta" (DEC-050).
-- **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão, Ação ou o "Sobre mim" (DEC-081) como **lido**
+- **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão, Ação, o "Sobre mim" (DEC-081) ou registro do Meus Planos (DEC-094) como **lido**
   (e desfaz), ou **todos da lista aberta** de uma vez. Nunca marca sozinho ao abrir. Um registro
   que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada) volta
   a contar, como **atualizado**. A visão **Para ler** junta as três áreas fora do ciclo, do mais

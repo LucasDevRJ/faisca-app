@@ -10,6 +10,7 @@ const AREA_NAMES: Record<PrivacyArea, string> = {
   actions: 'a Ação',
   actionPhotos: 'as fotos da Ação',
   aboutMe: 'o "Sobre mim"',
+  plans: 'o Meus Planos',
 };
 
 // Cada área de dado novo entrou no aviso de privacidade numa versão (DEC-039, DEC-042). Quem

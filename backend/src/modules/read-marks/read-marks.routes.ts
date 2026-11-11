@@ -4,6 +4,7 @@ import { requireActiveLink } from '../../middlewares/require-patient-access.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { createActionsService } from '../actions/actions.service.js';
+import { createPlansService } from '../plans/plans.service.js';
 import { createTensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import { createThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { createReadMarksController } from './read-marks.controller.js';
@@ -21,6 +22,7 @@ export function createReadMarksRoutes() {
       createTensionEpisodesService(),
       createActionsService(),
       createAboutMeService(),
+      createPlansService(),
     ),
   );
   const router = Router();
