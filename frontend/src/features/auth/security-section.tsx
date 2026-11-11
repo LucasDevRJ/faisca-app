@@ -8,11 +8,13 @@ import { choiceCardClasses } from '../../components/ui/field-styles';
 import { PasswordField } from '../../components/ui/text-field';
 import { getApiError } from './auth-api';
 import { loggedOutEverywhereState } from './logged-out-everywhere';
+import { TwoFactorCard } from './two-factor-section';
 import { SESSION_QUERY_KEY, useChangePassword, useLogoutAll, useSession, useSetLoginAlert } from './use-session';
 import { PASSWORD_MIN, validateNewPassword } from './validation';
 
-// "Segurança", em Conta (DEC-086): trocar a senha e sair de todos os aparelhos. Fica antes de
-// "Excluir conta"; a verificação em duas etapas (#134) e a trava do app (#137) entram aqui depois.
+// "Segurança", em Conta (DEC-086): trocar a senha, sair de todos os aparelhos, o aviso de novos
+// acessos e a verificação em duas etapas (DEC-092). Fica antes de "Excluir conta"; a trava do app
+// (#137) entra aqui depois.
 export function SecuritySection() {
   return (
     <section aria-labelledby="security-title" className="flex flex-col gap-5">
@@ -22,6 +24,7 @@ export function SecuritySection() {
       <ChangePasswordForm />
       <LogoutAll />
       <LoginAlert />
+      <TwoFactorCard />
     </section>
   );
 }

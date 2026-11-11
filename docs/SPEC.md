@@ -32,6 +32,7 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   app autenticador, com 10 códigos de recuperação de uso único. Ligar pede a senha e um código, e
   os outros aparelhos saem da conta. No login, depois da senha, a tela pede o código (com "Usar
   outro jeito"), e só então a sessão abre. "Esqueci minha senha" não desliga a verificação.
+  Configuração guiada em Conta e contato do suporte em "Não consigo entrar" (DEC-093).
   Desligar pede a senha e um código. Quem perdeu tudo fala com o responsável (DEPLOY).
 - **Perfil básico** (paciente e terapeuta, tudo opcional; DEC-061): **nome completo**, além do
   "Como podemos te chamar?", e **foto**. A foto é guardada reduzida (256×256) e sem os metadados

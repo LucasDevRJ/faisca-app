@@ -129,6 +129,10 @@ valores que cada painel mostrou:
 | `resend._domainkey` | TXT | o valor do Resend | DKIM (e-mails) |
 | `send` e `rsend` | CNAME | os destinos do Resend | SPF (e-mails) |
 | `_dmarc` | TXT | `v=DMARC1; p=none;` | recomendação para e-mail |
+| (vazio / `@`) | MX | `mx.zoho.com` (10), `mx2.zoho.com` (20), `mx3.zoho.com` (50) | caixa `suporte@` no Zoho Mail (DEC-093) |
+| (vazio / `@`) | TXT | `v=spf1 include:zoho.com ~all` | SPF do Zoho (o do Resend fica em `send`) |
+| (vazio / `@`) | TXT | `zoho-verification=…` (o valor do Zoho) | prova de que o domínio é nosso |
+| `zmail._domainkey` | TXT | a chave DKIM do Zoho | DKIM das respostas do suporte |
 
 A propagação leva de minutos a algumas horas. O Railway, a Vercel e o Resend mostram quando o domínio
 foi reconhecido.

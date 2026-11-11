@@ -80,6 +80,10 @@ Para todos:
 - Notificações nunca mostram o conteúdo dos registros.
 - Em Conta, a pessoa **troca a senha** e pode **sair de todos os aparelhos** de uma vez, se achar
   que alguém está usando a conta dela.
+- **Verificação em duas etapas** (opcional): além da senha, um código por e-mail ou por um app
+  autenticador, com códigos de recuperação. Mesmo que a senha vaze, ninguém entra sem o código.
+- **Aviso de novos acessos:** quando alguém entra na conta, chega um e-mail (e uma notificação,
+  se ligada).
 - A pessoa pode excluir a conta, e tudo é apagado.
 - O app não pede documentos pessoais e não tem anúncios.
 
