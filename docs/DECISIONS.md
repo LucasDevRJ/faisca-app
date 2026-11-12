@@ -2235,6 +2235,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** ampliar para 6 meses pede subir o limite de 92 dias das listas da
   profissional. Sono e humor ficam na #188; medicação, na #171.
 
+## DEC-100 — Resumo do período em números (API)
+- **Decisão (#172):** em construção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
