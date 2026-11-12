@@ -2235,6 +2235,33 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** ampliar para 6 meses pede subir o limite de 92 dias das listas da
   profissional. Sono e humor ficam na #188; medicação, na #171.
 
+## DEC-100 — Resumo do período em números (API)
+- **Decisão (#172, desenho e textos aprovados pelo usuário):**
+  - **duas rotas só de leitura:** `GET /period-summary?from&to` ("Meu resumo", do próprio paciente, pela
+    sessão) e `GET /therapist/patients/:patientId/period-summary?from&to` (a profissional, com vínculo
+    ativo). Até 92 dias, o mesmo limite das listas da profissional, que cobre os 3 meses da psiquiatra;
+  - **só números, calculados na hora** dos registros que já existem: nada novo é guardado, e nenhum texto
+    do paciente sai na resposta ("Outra" emoção entra sem o nome escrito por ele);
+  - **comparação com o período anterior do mesmo tamanho**, que termina na véspera do atual (pedido do
+    usuário). Por isso uma chamada de 92 dias olha até 184 dias para trás, de propósito: a profissional já
+    pode pedir qualquer intervalo de 92 dias nas listas. Médias com uma casa decimal, `null` sem valores;
+  - **o que entra:** dias com registro; Atividades (feitas, não realizadas, abertas e, nas feitas, as
+    médias de vontade antes, prazer e realização); Pensamentos (quantos, as 3 emoções mais presentes com a
+    intensidade média, a crença média, quantos têm explicação alternativa e, nas emoções reavaliadas, a
+    intensidade antes e depois); Tensão (quantos, média, a maior e a vontade de vocalizar média); Ação
+    (avaliadas por tipo, não realizadas, planejadas e, nas avaliadas, a expectativa ao lado do prazer e da
+    realização); Meus Planos (registros e em quantos planos);
+  - **cada área só com acesso:** na profissional, liberada pelo paciente (DEC-097) e coberta pelo aceite
+    dela; no paciente, coberta pelo aceite dele. Área sem acesso vem como `null`, em vez de 403, como os não
+    lidos (DEC-057), e os **dias com registro não a contam**, para não revelar uma área fechada;
+  - **sem versão nova do aviso de privacidade:** o resumo só reorganiza o que a pessoa (ou a profissional
+    com a área liberada) já vê, e nada novo é guardado nem sai do Faísca.
+- **Motivo:** a psiquiatra tem consultas espaçadas e pediu, pelo usuário, tudo resumido e com comparação.
+  Números do banco são exatos, de graça e não saem do app; o resumo em texto com IA (#108) vem depois e se
+  apoia neles.
+- **Limite conhecido:** sem pensamentos repetidos (#166) nem sono e humor (#188), que entram quando
+  existirem. As telas ficam para o PR seguinte.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

@@ -12,6 +12,8 @@ import { createPlansService } from '../plans/plans.service.js';
 import { createProfileController } from '../profile/profile.controller.js';
 import { createProfileService } from '../profile/profile.service.js';
 import { createReadMarksService } from '../read-marks/read-marks.service.js';
+import { createSummaryController } from '../summary/summary.controller.js';
+import { createSummaryService } from '../summary/summary.service.js';
 import { createTensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import { createThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { createTherapistController } from './therapist.controller.js';
@@ -93,6 +95,9 @@ export function createTherapistRoutes() {
     requirePrivacy('plans'),
     controller.planEntries,
   );
+  // Resumo do período (DEC-100): junta várias áreas, como os não lidos. Cada bloco só entra com a área
+  // liberada pelo paciente e o aceite dela, conferidos no controller; o fechado vem como null.
+  router.get(`${PREFIX}/period-summary`, createSummaryController(createSummaryService()).patient);
   // Foto de perfil do paciente (DEC-061): dado pessoal, não de saúde, sem aceite próprio.
   router.get(`${PREFIX}/avatar`, profile.patientAvatar);
   // Não lidos (DEC-057): o aceite é conferido por área dentro do service. Escrever as marcas fica
