@@ -1,7 +1,7 @@
 # Faísca — Especificação
 
 PWA para o Registro de Ativação (ativação comportamental da TCC).
-Uso privado no início, com arquitetura pronta para vários pacientes e terapeutas.
+Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatras).
 
 ## Contas e perfis
 - Cadastro com **nome, e-mail e senha**; o e-mail precisa ser confirmado antes do primeiro uso.
@@ -10,8 +10,9 @@ Uso privado no início, com arquitetura pronta para vários pacientes e terapeut
   aplica os dados dele (nome, senha e perfis); os outros links deixam de valer (DEC-072).
 - O cadastro exige concordar com o **aviso de privacidade** (caixa de marcar, não marcada por padrão).
 - No cadastro, a pessoa escolhe como vai usar o Faísca (um ou os dois perfis):
-  - **Paciente**: registra atividades, consultas e lembretes; vincula e revoga sua terapeuta.
-  - **Terapeuta**: apenas leitura dos dados dos pacientes com vínculo ativo.
+  - **Paciente**: registra atividades, consultas e lembretes; vincula e revoga suas profissionais.
+  - **Terapeuta** (psicóloga ou psiquiatra): apenas leitura do que os pacientes com vínculo ativo
+    liberaram para ela (DEC-097).
 - O perfil não escolhido pode ser ativado depois, na tela Conta.
 - Quem tem os dois perfis alterna entre "Meus registros" e "Meus pacientes".
   Quem tem um perfil só nunca vê telas do outro.
@@ -226,27 +227,28 @@ planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
   dias faltam para a consulta e um resumo neutro (dias, atividades feitas, pensamentos e episódios
   registrados). Sem nenhuma sessão na agenda, abre na semana (DEC-050).
 - Dá para alternar entre **Ciclo** e **Semana** e navegar entre ciclos ou semanas; o período fica na
-  URL e vale para as três abas.
+  URL e vale para todas as abas.
 - A semana vai de segunda a domingo.
 - Mostra a lista de atividades e um gráfico comparando vontade × prazer × realização.
 - As notas usam uma única cor que varia de intensidade (sem vermelho/verde).
 
 ## Visão da terapeuta
 - Lista de pacientes com vínculo ativo. Os dados do paciente (nome etc.) vêm da conta dele, nada é digitado pela terapeuta.
-- Por paciente:
-  - linha do tempo com notas e observações (nada é privado);
-  - abas **Atividades | Pensamentos | Tensão**;
+- Por paciente, **só as áreas que ele liberou para ela** (DEC-097, DEC-099); sem nenhuma, a página
+  explica que ele ainda não liberou nada:
+  - linha do tempo com notas e observações;
+  - abas **Atividades | Pensamentos | Tensão | Ação | Meus Planos**, só as liberadas;
   - **Pensamentos**: o Registro de Pensamentos, só leitura, com todos os campos e as duas datas;
   - **Consultas**: a agenda, só leitura, com as sessões desmarcadas e remarcadas e os motivos, e a
     pausa; na lista de pacientes, um selo quando a agenda está em pausa ou foi encerrada;
   - **Tensão**: os Episódios de tensão, só leitura, com todos os campos, as duas datas e um gráfico
     da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
-- **Período**: a tela abre no **ciclo da consulta** (seção "Ciclo da consulta"), o mesmo que o paciente vê, nas três abas; dá para alternar para a semana e navegar entre ciclos ou semanas. O ciclo substitui o antigo destaque e o filtro "desde a última consulta" (DEC-050).
+- **Período**: a psicóloga abre no **ciclo da consulta** (seção "Ciclo da consulta"), o mesmo que o paciente vê, em todas as abas; dá para alternar para a semana e navegar entre ciclos ou semanas. O ciclo substitui o antigo destaque e o filtro "desde a última consulta" (DEC-050). Sem a agenda liberada, a semana. A **psiquiatra** vê por **meses** (1, 2 ou 3 até hoje, começando em 3), com setas para voltar no tempo (DEC-099).
 - **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão, Ação, o "Sobre mim" (DEC-081) ou registro do Meus Planos (DEC-094) como **lido**
   (e desfaz), ou **todos da lista aberta** de uma vez. Nunca marca sozinho ao abrir. Um registro
   que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada) volta
-  a contar, como **atualizado**. A visão **Para ler** junta as três áreas fora do ciclo, do mais
+  a contar, como **atualizado**. A visão **Para ler** junta as áreas liberadas fora do ciclo, do mais
   antigo ao mais novo, e a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
   algo para ler no topo, e o total de todos ("12 registros para ler, de 2 pacientes"). As marcas são da
   terapeuta: o paciente não as vê, e uma terapeuta nova começa sem nenhuma. Nas telas, o texto
@@ -256,7 +258,8 @@ planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
 ## Vínculo paciente ↔ terapeuta
 Um paciente tem no máximo **uma profissional ativa de cada tipo**: uma psicóloga e uma psiquiatra
 (DEC-097); uma profissional pode ter N pacientes. Todo perfil de terapeuta tem um **tipo**
-(psicologia ou psiquiatria), escolhido no cadastro ou ao aceitar o convite (sem escolha, psicóloga),
+(psicologia ou psiquiatria), escolhido no cadastro ou ao aceitar o convite (nas telas, a escolha é obrigatória e nada vem marcado,
+DEC-099; a API, sem o campo, usa psicóloga),
 e pode informar o número do conselho (CRP ou CRM), só para mostrar. O tipo só muda sem vínculo ativo.
 Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 
@@ -306,7 +309,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   sabem quem mais recebe.
 - Só texto, de 1 a 2000 caracteres, sem fotos. A terapeuta cria, edita e apaga os próprios avisos,
   com um limite de publicações por hora.
-- O paciente vê **todos** os avisos da terapeuta com vínculo ativo, inclusive os de antes do
+- O paciente vê **todos** os avisos de cada profissional com vínculo ativo, inclusive os de antes do
   vínculo, do mais novo para o mais antigo. O selo **"Novo"** fica até ele abrir; esse "já vi" é só
   dele. Um aviso editado não volta a ser novo. Ao desfazer o vínculo, deixa de ver na hora.
 - A terapeuta **não vê quem leu**.
@@ -344,7 +347,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O sistema coleta nome, e-mail e senha (guardada só como hash), os registros e o que o aviso de privacidade descreve (preferências da conta, dados de segurança como os da verificação em duas etapas, vínculos e lembretes); nada além disso.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
-- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`; as fotos da Ação, a partir da `2026-10.6`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas. O "Sobre mim" exige a `2026-11`, e o Meus Planos, a `2026-11.2`. Uma versão sem área nova (a `2026-10.7`, das cópias de segurança, e a `2026-11.3`, com os dados do 2FA, as mensagens ao suporte e o contato) pede o aceite numa faixa no topo de Meus registros e de Meus pacientes, sem bloquear nada (DEC-078, DEC-096).
+- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`; as fotos da Ação, a partir da `2026-10.6`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas. O "Sobre mim" exige a `2026-11`, e o Meus Planos, a `2026-11.2`. Uma versão sem área nova (a `2026-10.7`, das cópias de segurança; a `2026-11.3`, com os dados do 2FA, as mensagens ao suporte e o contato; e a `2026-11.4`, com as várias profissionais e as áreas liberadas) pede o aceite numa faixa no topo de Meus registros e de Meus pacientes, sem bloquear nada (DEC-078, DEC-096, DEC-098).
 - O contato do aviso é `suporte@minhafaisca.com.br` (DEC-096).
 - Nenhum documento pessoal é solicitado.
 - **Cópia de segurança** diária do banco, criptografada antes de sair do Railway e guardada no Cloudflare R2: 7 cópias diárias e 4 semanais, que expiram em até 5 semanas. Só é aberta para recuperar dados depois de um problema grave (DEC-075, DEC-078).
@@ -365,5 +368,5 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Exportação CSV/PDF
 - Modo demo
 - Uso offline com sincronização
-- Mais de uma terapeuta por paciente
-- Verificação de CRP
+- Mais de uma profissional do mesmo tipo por paciente (hoje, uma psicóloga e uma psiquiatra)
+- Verificação de CRP ou CRM (o número do conselho é só informado pela profissional)

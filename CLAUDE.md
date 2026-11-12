@@ -25,7 +25,8 @@
 ## Ao terminar uma mudança
 - Siga a skill `finalizar-mudanca` (passo a passo e armadilhas conhecidas).
 - Rode lint, typecheck e os testes relevantes e relate o resultado como ele foi, inclusive falhas.
-- Se a mudança afetar requisito ou decisão, atualize SPEC/DECISIONS no mesmo PR.
+- Mantenha os documentos do projeto em dia no mesmo PR: SPEC, DECISIONS, APRESENTACAO, BRIEFING-IA
+  (só local), IDEIAS-TCC, DEPLOY e os CLAUDE.md/AGENTS.md (tabela na skill `finalizar-mudanca`).
 - Antes de abrir PR que toque em `backend/`, rode o subagente `revisor-regras` e relate o veredito.
 - Antes de abrir PR que toque em `frontend/src` ou nos textos de e-mail, rode o subagente
   `revisor-telas` e relate o veredito.

@@ -84,12 +84,22 @@ Eles podem rodar ao mesmo tempo, porque só leem. Corrija o que apontarem ou lev
 usuário, e rode de novo o revisor sobre a correção.
 
 ## 7. Documentação
-A mudança altera requisito ou decisão?
-- requisito → `docs/SPEC.md`;
-- decisão → nova entrada no `docs/DECISIONS.md`, antes de "## Adiado", com **Decisão** e
-  **Motivo**.
+Os documentos acompanham o projeto: a cada mudança, confira **todos** os da tabela e atualize os
+que ficaram desatualizados, no mesmo PR. Procure também o texto antigo que a mudança deixou errado
+(ex.: "uma terapeuta", "três abas"), e não só o lugar novo.
 
-Os dois vão no mesmo PR. Ferramenta de desenvolvimento (skill, hook, script) não precisa de DEC.
+| Documento | Atualize quando |
+|---|---|
+| `docs/SPEC.md` | um requisito ou comportamento muda |
+| `docs/DECISIONS.md` | há decisão nova: entrada antes de "## Adiado", com **Decisão**, **Motivo** e **Limite conhecido**; nunca edite uma DEC antiga. Tire do "Adiado"/"Em aberto" o que ficou resolvido |
+| `docs/APRESENTACAO.md` | uma funcionalidade entra no ar (sai de "Em breve" e vai para "O que já existe") ou muda o que o público vê |
+| `docs/BRIEFING-IA.md` | junto com a APRESENTACAO. Só existe na pasta do usuário (`.git/info/exclude`, tem o e-mail dele): atualize e avise no relatório, sem colocar no Git |
+| `docs/IDEIAS-TCC.md` | uma ideia começa ou entra no ar, ou a estrutura de abas e telas que ela cita muda |
+| `docs/DEPLOY.md` | variável de ambiente, serviço, DNS, segredo ou passo de produção novo |
+| `AGENTS.md`, `CLAUDE.md` e os das pastas | muda a estrutura, um comando, uma regra ou uma skill |
+
+Ferramenta de desenvolvimento (skill, hook, script) não precisa de DEC. No relatório, diga quais
+documentos mudaram e quais foram conferidos sem precisar de mudança.
 
 ## 7.1 Juntar a main antes do PR (mais de um agente)
 Outro agente pode ter mergeado algo enquanto você trabalhava. Antes de abrir o PR:
