@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
 import { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import { readStatusOf } from './read-marks.service.js';
 
@@ -38,10 +38,10 @@ beforeEach(async () => {
       privacyVersion: '2026-10.2',
     })
   ).id;
-  await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
+  await createTestLink({ patientId, therapistId, method: 'CODE' });
   // Um vínculo ativo por paciente (DEC-031): a terapeuta do aviso antigo atende outra paciente.
   oldPrivacyPatientId = (await createConfirmedUser({ email: OLD_PRIVACY_PATIENT })).id;
-  await prisma.therapistLink.create({ data: { patientId: oldPrivacyPatientId, therapistId: oldPrivacyId, method: 'CODE' } });
+  await createTestLink({ patientId: oldPrivacyPatientId, therapistId: oldPrivacyId, method: 'CODE' });
 });
 
 async function loginAgent(email: string) {
@@ -285,7 +285,7 @@ describe('status de leitura nas listas da terapeuta (DEC-057)', () => {
     // A paciente troca de terapeuta: as marcas são da terapeuta antiga, não do registro.
     await prisma.therapistLink.updateMany({ where: { patientId }, data: { revokedAt: new Date() } });
     const otherId = (await prisma.user.findUniqueOrThrow({ where: { email: OTHER_THERAPIST } })).id;
-    await prisma.therapistLink.create({ data: { patientId, therapistId: otherId, method: 'CODE' } });
+    await createTestLink({ patientId, therapistId: otherId, method: 'CODE' });
     const other = (await (await loginAgent(OTHER_THERAPIST)).get(`${base()}/thought-records`).query(range()))
       .body.thoughtRecords[0];
     expect(other.readStatus).toBe('NAO_LIDO');

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { professionalKindSchema } from '../links/links.schema.js';
 import { ANNOUNCEMENTS } from './announcements.js';
 
 // Normaliza antes de validar: "  Ana@Exemplo.com " e "ana@exemplo.com" são a mesma conta.
@@ -30,6 +31,8 @@ export const signupSchema = z.object({
   profiles: z
     .object({ patient: z.boolean(), therapist: z.boolean() })
     .refine((p) => p.patient || p.therapist, { error: 'Escolha pelo menos um perfil.' }),
+  // Tipo de profissional, para quem marca o perfil de terapeuta (DEC-097). Sem ele, psicóloga.
+  professionalKind: professionalKindSchema.optional(),
   // Consentimento específico com o aviso de privacidade (LGPD, dado de saúde; DEC-036).
   acceptPrivacy: z.literal(true, { error: 'Para criar a conta, é preciso concordar com o aviso de privacidade.' }),
   // Cadastro aberto pelo link de convite (SPEC, "Convite por e-mail"): o vínculo é criado quando
@@ -53,7 +56,11 @@ export const confirmEmailSchema = z.object({
 });
 
 // Ativa o perfil que não foi escolhido no cadastro (SPEC, "Contas e perfis").
-export const addProfileSchema = z.strictObject({ profile: z.enum(['patient', 'therapist']) });
+export const addProfileSchema = z.strictObject({
+  profile: z.enum(['patient', 'therapist']),
+  // Ao ativar o perfil de terapeuta (DEC-097); sem ele, psicóloga.
+  professionalKind: professionalKindSchema.optional(),
+});
 
 // Excluir a conta pede a senha de novo (DEC-035). Como no login, sem a política de senha nova.
 export const deleteAccountSchema = z.strictObject({ password: z.string().min(1).max(200) });

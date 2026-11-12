@@ -44,8 +44,9 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
 - Na primeira vez: `npx playwright install chromium`
 
 ## Regras invioláveis
-1. **Autorização no backend.** No contexto de terapeuta, só GET e só de pacientes com vínculo
-   ativo; qualquer outro caso retorna 403. Exceções, que não alteram dado de paciente: os POSTs que
+1. **Autorização no backend.** No contexto de terapeuta (a profissional: psicóloga ou psiquiatra),
+   só GET, só de pacientes com vínculo ativo e só das **áreas que o paciente liberou para ela**
+   (DEC-097); qualquer outro caso retorna 403. Exceções, que não alteram dado de paciente: os POSTs que
    criam o vínculo (`/links/redeem-code`, `/links/accept-invite`, DEC-031), as marcas de leitura
    da própria terapeuta (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057)
    e os avisos do mural dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079).

@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { API_URL } from '../fixtures/urls.js';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Registro de Pensamentos ponta a ponta (regra 1, DEC-039): o novo aceite do aviso libera a área,
 // a paciente registra, a terapeuta vinculada lê e nunca escreve, e perde o acesso ao desvincular.
@@ -46,6 +47,7 @@ test('aceite do aviso, registro da paciente e leitura só pela terapeuta vincula
 
   const { code } = await (await patient.post('/link/code')).json();
   const patientId = (await (await therapist.post('/links/redeem-code', { data: { code } })).json()).patient.id as string;
+  await shareAllAreas(patient);
   const path = `/therapist/patients/${patientId}/thought-records`;
 
   // A terapeuta também precisa do aceite da versão atual.

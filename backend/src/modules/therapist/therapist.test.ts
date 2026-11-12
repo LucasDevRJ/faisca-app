@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
 import { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import { highlightWindow } from './therapist.service.js';
 
@@ -26,7 +26,7 @@ beforeEach(async () => {
   otherPatientId = (await createConfirmedUser({ email: OTHER_PATIENT })).id;
   therapistId = (await createConfirmedUser({ email: THERAPIST, patient: false, therapist: true })).id;
   await createConfirmedUser({ email: OTHER_THERAPIST, patient: false, therapist: true });
-  await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
+  await createTestLink({ patientId, therapistId, method: 'CODE' });
 });
 
 async function loginAgent(email: string) {
@@ -283,7 +283,7 @@ describe('agenda da terapeuta (DEC-045)', () => {
         privacyVersion: '2026-10.3',
       })
     ).id;
-    await prisma.therapistLink.create({ data: { patientId: otherPatientId, therapistId: oldTherapistId, method: 'CODE' } });
+    await createTestLink({ patientId: otherPatientId, therapistId: oldTherapistId, method: 'CODE' });
 
     const allowed = await (await loginAgent(THERAPIST)).get(`${base()}/appointments`);
     const oldConsent = await (await loginAgent('terapeuta-aviso-antigo@faisca.test')).get(`${base(otherPatientId)}/appointments`);
@@ -622,7 +622,7 @@ describe('Ação da terapeuta (DEC-051)', () => {
       patient: false,
       therapist: true,
       privacyVersion: '2026-10.4',
-    }).then((t) => prisma.therapistLink.create({ data: { patientId: otherPatientId, therapistId: t.id, method: 'CODE' } }));
+    }).then((t) => createTestLink({ patientId: otherPatientId, therapistId: t.id, method: 'CODE' }));
     const oldConsent = await (await loginAgent('terapeuta-acao@faisca.test')).get(`${base(otherPatientId)}/actions`).query(week());
 
     expect(other.status).toBe(403);

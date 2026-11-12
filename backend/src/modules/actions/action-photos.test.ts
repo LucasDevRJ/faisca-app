@@ -5,7 +5,7 @@ import { createApp } from '../../app.js';
 import type { BehavioralAction } from '../../generated/prisma/client.js';
 import { addDays, dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import type { Session } from '../appointments/sessions.js';
 import { arePhotosOpen, MAX_PHOTOS, MAX_PHOTOS_PER_ACCOUNT, photosDeadlineFor } from './actions.service.js';
@@ -32,7 +32,7 @@ beforeEach(async () => {
   otherPatientId = (await createConfirmedUser({ email: OTHER_PATIENT, privacyVersion })).id;
   therapistId = (await createConfirmedUser({ email: THERAPIST, patient: false, therapist: true, privacyVersion })).id;
   await createConfirmedUser({ email: OTHER_THERAPIST, patient: false, therapist: true, privacyVersion });
-  await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
+  await createTestLink({ patientId, therapistId, method: 'CODE' });
 });
 
 async function loginAgent(email: string) {

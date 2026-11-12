@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Registro de Pensamentos no navegador (DEC-039, DEC-040): a paciente aceita o aviso novo, registra
 // pela página própria e vê o cartão; a terapeuta vinculada aceita o aviso e lê na aba, só leitura.
@@ -55,6 +56,7 @@ test('paciente aceita o aviso e registra; terapeuta vinculada aceita e lê na ab
   const therapist = await signIn(browser, users.rpdScreenTherapist);
   const { code } = await (await patient.request.post('/api/link/code')).json();
   expect((await therapist.request.post('/api/links/redeem-code', { data: { code } })).status()).toBe(201);
+  await shareAllAreas(patient.request, '/api');
 
   // Terapeuta: abre a paciente, vai para a aba e aceita o aviso.
   await therapist.goto('/pacientes');

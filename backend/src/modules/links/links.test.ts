@@ -5,7 +5,7 @@ import { runInline } from '../../lib/background.js';
 import { hashLinkCode } from '../../lib/link-code.js';
 import { prisma } from '../../lib/prisma.js';
 import { hashToken } from '../../lib/secure-token.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 
 // Dados fictícios (regra 5 do AGENTS.md).
@@ -121,7 +121,7 @@ describe('autorização (regra 1)', () => {
     const res = await (await loginAgent(BOTH)).get('/link');
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ link: null, invite: null, code: null });
+    expect(res.body).toEqual({ links: [], link: null, invite: null, code: null });
   });
 });
 
@@ -148,7 +148,15 @@ describe('código de vínculo', () => {
       expect.objectContaining({ id: patientId, name: 'Paula Fictícia', email: PATIENT }),
     );
     const [link] = await activeLinks();
-    expect(link).toMatchObject({ patientId, therapistId, method: 'CODE', seenByPatientAt: null });
+    // Vínculo novo: o tipo da profissional e nenhuma área liberada (DEC-097).
+    expect(link).toMatchObject({
+      patientId,
+      therapistId,
+      method: 'CODE',
+      seenByPatientAt: null,
+      kind: 'PSICOLOGIA',
+      sharedAreas: [],
+    });
 
     const email = mailer.lastTo(PATIENT);
     expect(email?.text).toContain('Tereza Fictícia');
@@ -156,8 +164,15 @@ describe('código de vínculo', () => {
 
     const status = await (await loginAgent(PATIENT)).get('/link');
     expect(status.body.link).toEqual(
-      expect.objectContaining({ method: 'CODE', seen: false, therapist: { name: 'Tereza Fictícia', email: THERAPIST, avatarVersion: null } }),
+      expect.objectContaining({
+        method: 'CODE',
+        seen: false,
+        kind: 'PSICOLOGIA',
+        sharedAreas: [],
+        therapist: { name: 'Tereza Fictícia', email: THERAPIST, avatarVersion: null, councilNumber: null },
+      }),
     );
+    expect(status.body.links).toEqual([status.body.link]);
     expect(status.body.code).toBeNull();
   });
 
@@ -256,22 +271,31 @@ describe('código de vínculo', () => {
     expect((await (await loginAgent(THERAPIST)).post('/links/redeem-code').send({ code })).status).toBe(201);
   });
 
-  it('com vínculo ativo, o paciente não gera código nem convite (409)', async () => {
+  it('com a psicóloga e a psiquiatra vinculadas, o paciente não gera código nem convite (409)', async () => {
     await (await loginAgent(THERAPIST)).post('/links/redeem-code').send({ code: await generateCode() });
+    const psychiatrist = await prisma.user.update({
+      where: { email: OTHER_THERAPIST },
+      data: { professionalKind: 'PSIQUIATRIA' },
+    });
+    // Com só a psicóloga, ainda dá para chamar a psiquiatra (DEC-097).
+    const code = await generateCode();
+    expect((await (await loginAgent(OTHER_THERAPIST)).post('/links/redeem-code').send({ code })).status).toBe(201);
+    expect(await activeLinks()).toHaveLength(2);
+    expect((await activeLinks()).find((link) => link.therapistId === psychiatrist.id)?.kind).toBe('PSIQUIATRIA');
     const agent = await loginAgent(PATIENT);
 
-    const code = await agent.post('/link/code');
-    const invite = await agent.post('/link/invite').send({ email: OTHER_THERAPIST });
+    const again = await agent.post('/link/code');
+    const invite = await agent.post('/link/invite').send({ email: 'mais-uma@faisca.test' });
 
-    expect(code.status).toBe(409);
-    expect(code.body.error.code).toBe('LINK_ALREADY_ACTIVE');
+    expect(again.status).toBe(409);
+    expect(again.body.error.code).toBe('LINK_ALREADY_ACTIVE');
     expect(invite.status).toBe(409);
     expect(invite.body.error.code).toBe('LINK_ALREADY_ACTIVE');
   });
 
   it('se o paciente já se vinculou por outro caminho, o código sobrando dá 409 e nada muda', async () => {
     // Situação de corrida simulada: vínculo ativo e, ao mesmo tempo, um código válido.
-    await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'INVITE' } });
+    await createTestLink({ patientId, therapistId, method: 'INVITE' });
     await prisma.linkCode.create({
       data: { patientId, codeHash: hashLinkCode('K7M4P9QX'), expiresAt: new Date(Date.now() + 60_000) },
     });
@@ -283,15 +307,18 @@ describe('código de vínculo', () => {
     expect(await activeLinks()).toEqual([expect.objectContaining({ therapistId })]);
   });
 
-  it('o banco recusa dois vínculos ativos para o mesmo paciente e o vínculo consigo mesmo', async () => {
+  it('o banco recusa duas profissionais ativas do mesmo tipo, a mesma duas vezes e o vínculo consigo mesmo', async () => {
     const other = await prisma.user.findUniqueOrThrow({ where: { email: OTHER_THERAPIST } });
-    await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
+    await createTestLink({ patientId, therapistId, method: 'CODE' });
 
     await expect(
-      prisma.therapistLink.create({ data: { patientId, therapistId: other.id, method: 'CODE' } }),
+      createTestLink({ patientId, therapistId: other.id, method: 'CODE' }),
     ).rejects.toThrow();
+    // Um tipo diferente passa (DEC-097); a mesma profissional de novo, não.
+    await expect(createTestLink({ patientId, therapistId: other.id, kind: 'PSIQUIATRIA' })).resolves.toBeTruthy();
+    await expect(createTestLink({ patientId, therapistId, kind: 'PSIQUIATRIA' })).rejects.toThrow();
     await expect(
-      prisma.therapistLink.create({ data: { patientId: therapistId, therapistId, method: 'CODE' } }),
+      createTestLink({ patientId: therapistId, therapistId, method: 'CODE' }),
     ).rejects.toThrow();
   });
 });

@@ -10,7 +10,8 @@
 ## Autorização
 - Rotas de terapeuta ficam sob `/therapist/patients/:patientId/...` e passam por um middleware
   que responde 403 a qualquer método diferente de GET **antes** de tudo, e também quando não há
-  vínculo ativo com `:patientId`.
+  vínculo ativo com `:patientId`. Cada rota com dado de uma área pede também
+  `requireSharedArea(...)`: a área precisa estar liberada pelo paciente no vínculo (DEC-097).
 - As escritas do lado da terapeuta são só três. Duas são os POSTs que criam o vínculo (`/links/redeem-code`
   e `/links/accept-invite`, DEC-031) e as marcas de leitura dela (`PUT`/`DELETE
   /therapist/read-marks/:patientId`, DEC-057), num prefixo próprio, com sessão, perfil e vínculo

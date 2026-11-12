@@ -13,6 +13,9 @@ import type { PlansService } from '../plans/plans.service.js';
 import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ReadMarksService } from '../read-marks/read-marks.service.js';
+import type { SharedArea } from '../../generated/prisma/client.js';
+import type { PatientLinkAccess } from '../../middlewares/require-patient-access.js';
+import { actionForProfessional, thoughtForProfessional } from '../../lib/shared-areas.js';
 import type { ListThoughtRecordsQuery } from '../thought-records/thought-records.schema.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { avatarVersion } from '../profile/profile.service.js';
@@ -52,7 +55,10 @@ export function createTherapistService(
   plans: PlansService,
 ) {
   return {
-    async summary(therapistId: string, patientId: string) {
+    // A agenda do resumo (última e próxima consulta, situação e pausa) só vai com a área da agenda
+    // liberada pelo paciente para esta profissional (DEC-097); sem ela, vem vazia. O tipo e as áreas
+    // vão junto, para a tela mostrar só as abas liberadas.
+    async summary(therapistId: string, patientId: string, access: PatientLinkAccess) {
       const link = await prisma.therapistLink.findFirstOrThrow({
         where: { therapistId, patientId, revokedAt: null },
         include: {
@@ -60,7 +66,10 @@ export function createTherapistService(
         },
       });
       const today = todayInAppZone();
-      const { last, next, status, pause } = await appointments.list(patientId);
+      const agenda = access.sharedAreas.includes('APPOINTMENTS');
+      const { last, next, status, pause } = agenda
+        ? await appointments.list(patientId)
+        : { last: null, next: null, status: null, pause: null };
       return {
         patient: {
           id: link.patient.id,
@@ -78,6 +87,8 @@ export function createTherapistService(
         agendaStatus: status,
         pause,
         highlight: highlightWindow(next?.date ?? null, today),
+        // O tipo do vínculo e o que o paciente liberou para esta profissional (DEC-097).
+        access: { kind: access.kind, sharedAreas: access.sharedAreas },
       };
     },
 
@@ -94,16 +105,25 @@ export function createTherapistService(
     },
 
     // Pensamentos, Tensão e Ação saem com o status de leitura desta terapeuta (DEC-057).
-    async listThoughtRecords(therapistId: string, patientId: string, query: ListThoughtRecordsQuery) {
-      return readMarks.withReadStatus(therapistId, 'THOUGHT_RECORD', await thoughtRecords.list(patientId, query));
+    // Sem a agenda liberada, sai o prazo da explicação alternativa, que mostraria a próxima consulta.
+    async listThoughtRecords(
+      therapistId: string,
+      patientId: string,
+      query: ListThoughtRecordsQuery,
+      sharedAreas: SharedArea[],
+    ) {
+      const records = (await thoughtRecords.list(patientId, query)).map((r) => thoughtForProfessional(r, sharedAreas));
+      return readMarks.withReadStatus(therapistId, 'THOUGHT_RECORD', records);
     },
 
     async listTensionEpisodes(therapistId: string, patientId: string, query: ListTensionEpisodesQuery) {
       return readMarks.withReadStatus(therapistId, 'TENSION_EPISODE', await tensionEpisodes.list(patientId, query));
     },
 
-    async listActions(therapistId: string, patientId: string, query: ListActionsQuery) {
-      return readMarks.withReadStatus(therapistId, 'ACTION', await actions.list(patientId, query));
+    // Sem as fotos liberadas, a lista não diz quantas há; sem a agenda, sai o prazo delas.
+    async listActions(therapistId: string, patientId: string, query: ListActionsQuery, sharedAreas: SharedArea[]) {
+      const list = (await actions.list(patientId, query)).map((a) => actionForProfessional(a, sharedAreas));
+      return readMarks.withReadStatus(therapistId, 'ACTION', list);
     },
 
     // "Sobre mim" (DEC-081), com o status de leitura da terapeuta; null quando o paciente não contou nada.
@@ -125,9 +145,9 @@ export function createTherapistService(
       return readMarks.withReadStatus(therapistId, 'PLAN_ENTRY', await plans.listEntries(patientId, planId, query));
     },
 
-    // A visão "Não lidos" (DEC-057), fora do ciclo.
-    unread(therapistId: string, patientId: string, privacyVersion: string | null) {
-      return readMarks.unread(therapistId, patientId, privacyVersion);
+    // A visão "Não lidos" (DEC-057), fora do ciclo, só nas áreas liberadas (DEC-097).
+    unread(therapistId: string, patientId: string, privacyVersion: string | null, sharedAreas: SharedArea[]) {
+      return readMarks.unread(therapistId, patientId, privacyVersion, sharedAreas);
     },
   };
 }

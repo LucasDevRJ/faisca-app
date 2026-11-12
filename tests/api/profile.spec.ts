@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { API_URL } from '../fixtures/urls.js';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Foto de perfil ponta a ponta (DEC-061, regra 1): a terapeuta vê a foto do paciente só com
 // vínculo ativo e nunca a altera. Usa as contas próprias do perfil e termina sem vínculo.
@@ -29,6 +30,7 @@ test('a terapeuta vê a foto do paciente vinculado, não a altera e perde o aces
   expect(uploaded.status()).toBe(200);
   const { code } = await (await patient.post('/link/code')).json();
   const patientId = (await (await therapist.post('/links/redeem-code', { data: { code } })).json()).patient.id as string;
+  await shareAllAreas(patient);
   const path = `/therapist/patients/${patientId}/avatar`;
 
   const photo = await therapist.get(path);

@@ -1,7 +1,10 @@
 import { z } from 'zod';
+import { professionalKindSchema } from '../links/links.schema.js';
 
 // Perfil básico (DEC-061). Os números do CHECK da migration e do front precisam ser iguais.
 export const FULL_NAME_MAX = 120;
+// CRP ou CRM (DEC-097): o mesmo número do CHECK da migration.
+export const COUNCIL_NUMBER_MAX = 30;
 
 // As paletas de cores (DEC-063), na mesma ordem do enum Palette do schema.prisma.
 export const PALETTES = ['SALVIA', 'LAVANDA', 'OCEANO', 'AREIA', 'ALTO_CONTRASTE'] as const;
@@ -30,9 +33,23 @@ export const updateProfileSchema = z.strictObject({
     .optional(),
   palette: z.enum(PALETTES, { error: 'Escolha uma das paletas do Faísca.' }).optional(),
   accessibility: accessibilitySchema.optional(),
+  // Só para quem tem o perfil de terapeuta (DEC-097). Conselho vazio (ou só espaços) apaga.
+  professional: z
+    .strictObject({
+      kind: professionalKindSchema.optional(),
+      councilNumber: z
+        .string()
+        .trim()
+        .max(COUNCIL_NUMBER_MAX, `O número do conselho pode ter até ${COUNCIL_NUMBER_MAX} caracteres.`)
+        .transform((value) => (value === '' ? null : value))
+        .nullable()
+        .optional(),
+    })
+    .refine((input) => Object.keys(input).length > 0, { error: 'Envie o tipo ou o número do conselho.' })
+    .optional(),
 })
   // Corpo vazio não muda nada: provavelmente é um engano de quem chamou.
-  .refine((input) => Object.keys(input).length > 0, { error: 'Envie o nome completo, a paleta ou os ajustes de acessibilidade.' });
+  .refine((input) => Object.keys(input).length > 0, { error: 'Envie o nome completo, a paleta, os ajustes de acessibilidade ou os dados de profissional.' });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 

@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { API_URL } from '../fixtures/urls.js';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Episódios de tensão ponta a ponta (regra 1, DEC-042): o novo aceite do aviso libera a área sem
 // tirar o RPD de quem já o tinha, a paciente registra, a terapeuta vinculada lê e nunca escreve, e
@@ -56,6 +57,7 @@ test('aceite por área, registro da paciente e leitura só pela terapeuta vincul
 
   const { code } = await (await patient.post('/link/code')).json();
   const patientId = (await (await therapist.post('/links/redeem-code', { data: { code } })).json()).patient.id as string;
+  await shareAllAreas(patient);
   const path = `/therapist/patients/${patientId}/tension-episodes`;
 
   // A terapeuta também precisa do aceite da versão que cita os episódios; o RPD dela segue aberto.

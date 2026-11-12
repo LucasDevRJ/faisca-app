@@ -24,6 +24,7 @@ export function createProfileRoutes() {
 
   // O paciente vê a foto da terapeuta vinculada, como já vê o nome e o e-mail dela (/link).
   router.get('/link/therapist/avatar', requireAuth, requirePatient, controller.therapistAvatar);
+  router.get('/link/:linkId/avatar', requireAuth, requirePatient, controller.therapistAvatar);
 
   return router;
 }

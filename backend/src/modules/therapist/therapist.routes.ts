@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { onlyReads, requireActiveLink } from '../../middlewares/require-patient-access.js';
+import { onlyReads, requireActiveLink, requireSharedArea } from '../../middlewares/require-patient-access.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
@@ -46,29 +46,53 @@ export function createTherapistRoutes() {
   // lugar embaixo dele é 403, e não 404.
   router.use(PREFIX, onlyReads, requireAuth, requireTherapist, requireActiveLink);
 
+  // Cada área pede, além do vínculo, que o paciente a tenha liberado para esta profissional (DEC-097).
+  // O resumo e a foto não: são o nome, o e-mail e a foto, e a agenda do resumo some sem a área.
   router.get(PREFIX, controller.summary);
-  router.get(`${PREFIX}/activities`, controller.activities);
-  // Ciclo da consulta (DEC-049): só dias, como o resumo, sem pedir o aceite da agenda.
-  router.get(`${PREFIX}/cycle`, controller.cycle);
+  router.get(`${PREFIX}/activities`, requireSharedArea('ACTIVITIES'), controller.activities);
+  // Ciclo da consulta (DEC-049): só dias, como o resumo, sem pedir o aceite da agenda, mas com a
+  // agenda liberada pelo paciente.
+  router.get(`${PREFIX}/cycle`, requireSharedArea('APPOINTMENTS'), controller.cycle);
   // RPD (DEC-039), episódios de tensão (DEC-042) e agenda com motivos e pausas (DEC-045): a
   // terapeuta também precisa ter aceitado uma versão do aviso de privacidade que fale deles.
-  router.get(`${PREFIX}/appointments`, requirePrivacy('appointmentSchedule'), controller.appointments);
-  router.get(`${PREFIX}/thought-records`, requirePrivacy('thoughtRecords'), controller.thoughtRecords);
-  router.get(`${PREFIX}/tension-episodes`, requirePrivacy('tensionEpisodes'), controller.tensionEpisodes);
+  router.get(
+    `${PREFIX}/appointments`,
+    requireSharedArea('APPOINTMENTS'),
+    requirePrivacy('appointmentSchedule'),
+    controller.appointments,
+  );
+  router.get(
+    `${PREFIX}/thought-records`,
+    requireSharedArea('THOUGHT_RECORDS'),
+    requirePrivacy('thoughtRecords'),
+    controller.thoughtRecords,
+  );
+  router.get(
+    `${PREFIX}/tension-episodes`,
+    requireSharedArea('TENSION_EPISODES'),
+    requirePrivacy('tensionEpisodes'),
+    controller.tensionEpisodes,
+  );
   // Ação (DEC-051): também pede o aceite da versão do aviso que a cita.
-  router.get(`${PREFIX}/actions`, requirePrivacy('actions'), controller.actions);
+  router.get(`${PREFIX}/actions`, requireSharedArea('ACTIONS'), requirePrivacy('actions'), controller.actions);
   // Fotos da Ação (DEC-064): o aceite da Ação e o das fotos.
   router.get(
     `${PREFIX}/actions/:actionId/photos/:photoId`,
+    requireSharedArea('ACTIONS', 'ACTION_PHOTOS'),
     requirePrivacy('actions'),
     requirePrivacy('actionPhotos'),
     createActionsController(actions).therapistPhoto,
   );
   // "Sobre mim" do paciente (DEC-081): também pede o aceite da versão do aviso que o cita.
-  router.get(`${PREFIX}/about-me`, requirePrivacy('aboutMe'), controller.aboutMe);
+  router.get(`${PREFIX}/about-me`, requireSharedArea('ABOUT_ME'), requirePrivacy('aboutMe'), controller.aboutMe);
   // Meus Planos (DEC-094): os planos e os registros de cada um, com o aceite da versão que os cita.
-  router.get(`${PREFIX}/plans`, requirePrivacy('plans'), controller.plans);
-  router.get(`${PREFIX}/plans/:planId/entries`, requirePrivacy('plans'), controller.planEntries);
+  router.get(`${PREFIX}/plans`, requireSharedArea('PLANS'), requirePrivacy('plans'), controller.plans);
+  router.get(
+    `${PREFIX}/plans/:planId/entries`,
+    requireSharedArea('PLANS'),
+    requirePrivacy('plans'),
+    controller.planEntries,
+  );
   // Foto de perfil do paciente (DEC-061): dado pessoal, não de saúde, sem aceite próprio.
   router.get(`${PREFIX}/avatar`, profile.patientAvatar);
   // Não lidos (DEC-057): o aceite é conferido por área dentro do service. Escrever as marcas fica

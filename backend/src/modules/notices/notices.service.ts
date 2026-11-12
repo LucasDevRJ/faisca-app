@@ -35,24 +35,23 @@ async function findOwned(therapistId: string, id: string): Promise<TherapistNoti
   return notice;
 }
 
-// A terapeuta com vínculo ativo com o paciente; null sem vínculo. Um vínculo ativo por paciente
-// (SPEC, "Vínculo paciente ↔ terapeuta").
-async function activeTherapistOf(patientId: string): Promise<string | null> {
-  const link = await prisma.therapistLink.findFirst({
+// As profissionais com vínculo ativo com o paciente: a psicóloga e a psiquiatra (DEC-097).
+async function activeTherapistsOf(patientId: string): Promise<string[]> {
+  const links = await prisma.therapistLink.findMany({
     where: { patientId, revokedAt: null },
     select: { therapistId: true },
   });
-  return link?.therapistId ?? null;
+  return links.map((link) => link.therapistId);
 }
 
-// Todos os avisos da terapeuta com vínculo ativo, inclusive os de antes do vínculo (DEC-079), do mais
-// novo para o mais antigo, com o "já vi" do próprio paciente. Sem vínculo, nada.
+// Todos os avisos das profissionais com vínculo ativo, inclusive os de antes do vínculo (DEC-079),
+// do mais novo para o mais antigo, com o "já vi" do próprio paciente. Sem vínculo, nada.
 async function listForPatient(patientId: string) {
-  const therapistId = await activeTherapistOf(patientId);
-  if (!therapistId) return { notices: [], unseenCount: 0 };
+  const therapistIds = await activeTherapistsOf(patientId);
+  if (therapistIds.length === 0) return { notices: [], unseenCount: 0 };
 
   const notices = await prisma.therapistNotice.findMany({
-    where: { therapistId },
+    where: { therapistId: { in: therapistIds } },
     orderBy: { createdAt: 'desc' },
     include: { seenBy: { where: { patientId }, select: { seenAt: true } } },
   });
@@ -99,8 +98,8 @@ export function createNoticesService() {
     // Marca como vistos. Um aviso que não é da terapeuta com vínculo ativo recusa o pedido inteiro
     // (403) e nada é gravado, como nas marcas de leitura (DEC-057). Marcar de novo não muda nada.
     async markSeen(patientId: string, ids: string[]) {
-      const therapistId = await activeTherapistOf(patientId);
-      const found = therapistId ? await prisma.therapistNotice.count({ where: { therapistId, id: { in: ids } } }) : 0;
+      const therapistIds = await activeTherapistsOf(patientId);
+      const found = await prisma.therapistNotice.count({ where: { therapistId: { in: therapistIds }, id: { in: ids } } });
       if (found !== ids.length) throw forbidden();
 
       try {

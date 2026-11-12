@@ -2132,6 +2132,51 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   numa versão sem área nova antiga vê o texto desta, o que basta, porque o aviso completo fica no
   link "Ver o que mudou".
 
+## DEC-097 — Várias profissionais e áreas liberadas por vínculo (API)
+- **Decisão (#170):**
+  - **tipo de profissional:** `User.professionalKind` (`PSICOLOGIA` ou `PSIQUIATRIA`), obrigatório com o
+    perfil de terapeuta (CHECK). Quem já era terapeuta virou psicóloga. Vem no cadastro, ao ativar o
+    perfil ou no aceite do convite (`professionalKind`, sem ele psicóloga) e muda em
+    `PATCH /profile` (`professional.kind`), só **sem vínculo ativo** (409 `PROFESSIONAL_KIND_LOCKED`).
+    O conselho (CRP ou CRM, 1 a 30 caracteres) é opcional, só para mostrar;
+  - **uma de cada tipo por paciente:** o índice "uma terapeuta ativa por paciente" virou "uma ativa
+    por paciente e tipo" e "uma vez cada profissional" (índices únicos parciais, valem com dois
+    aceites ao mesmo tempo). O vínculo guarda o tipo (`kind`) do momento do vínculo. A segunda do
+    mesmo tipo recebe 409 `PATIENT_ALREADY_LINKED` ("Esta pessoa já tem uma psicóloga vinculada");
+  - **áreas liberadas por vínculo:** `TherapistLink.sharedAreas` (enum `SharedArea`: Atividades,
+    Pensamentos, Tensão, Ação, fotos da Ação, "Sobre mim", agenda e Meus Planos). **Vínculo novo começa
+    sem área nenhuma** (escolha do usuário: mais seguro para dado de saúde). Os que já existiam
+    ganharam todas na migration, para nada mudar para quem já usava;
+  - **autorização:** o `requireActiveLink` guarda o vínculo com as áreas, e cada rota de área pede
+    `requireSharedArea(...)` (403, o mesmo de sem vínculo). As fotos da Ação pedem a Ação e as fotos.
+    O "Para ler", as marcas de leitura e o número de não lidos de `/links/patients` só contam as
+    áreas liberadas; marcar registro de área fechada é 403. O resumo devolve `access` (tipo e áreas)
+    e só traz a agenda com ela liberada;
+  - **paciente:** `GET /link` devolve `links` (todos, a psicóloga primeiro) e mantém `link` (o
+    primeiro) para as telas de antes. `PUT /link/:linkId/areas` muda o que cada uma vê (vale na hora).
+    `POST /link/revoke` aceita `linkId`; sem ele e com um só vínculo, desfaz esse (telas de antes); com
+    dois, 400 `LINK_ID_REQUIRED`. Com uma de cada tipo vinculadas, gerar código ou convite dá 409. A
+    foto de cada uma em `/link/:linkId/avatar`;
+  - **mural:** o paciente vê os avisos de todas as profissionais com vínculo ativo;
+  - **campos que vêm de outra área** (achados do `revisor-regras` e do `revisor-seguranca`): na visão
+    da profissional, sem a agenda liberada saem o prazo da explicação alternativa e o das fotos
+    (`alternativeDeadline`, `photosDeadline`), que mostrariam o dia e a hora das consultas; sem as
+    fotos liberadas, a lista de fotos da Ação vem vazia. Vale nas listas e no "Para ler";
+  - **corridas:** criar o vínculo trava a conta da profissional antes de ler o tipo, e trocar o tipo
+    trava a mesma linha antes de conferir "sem vínculo ativo". Quem liga o perfil de terapeuta (ou
+    refaz o cadastro ainda não confirmado) fica com o tipo que pediu agora;
+  - **regra nº 1 reescrita** no AGENTS.md, na SPEC, no backend/CLAUDE.md e na skill `nova-rota-api`.
+- **Motivo:** o usuário também se trata com uma psiquiatra e quer que ela acompanhe os registros,
+  escolhendo o que cada profissional vê. Consentimento por área é o mínimo para dado de saúde.
+- **Limite conhecido:** até as telas do paciente (PR seguinte), um vínculo novo fica sem área e não
+  há tela para liberar: vincular a psiquiatra (ou refazer o vínculo da psicóloga) só depois delas. O
+  período "semana ou 30 dias" da psiquiatra e as telas dela ficam para o PR das telas da
+  profissional, depois da conversa do usuário com ela. O aviso de privacidade ganha versão nova no PR
+  das telas do paciente. O tipo é declarado pela própria profissional (o conselho não é conferido):
+  quem libera o acesso é o código ou o convite do paciente, e a tela dele precisa mostrar quem é cada
+  uma. A migration deu todas as áreas também aos vínculos já desfeitos, o que não tem efeito, porque
+  um vínculo desfeito nunca é reativado (o novo nasce sem área).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

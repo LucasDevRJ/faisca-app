@@ -4,7 +4,7 @@ import { createApp } from '../../app.js';
 import { dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import { SESSION_COOKIE } from '../../lib/session.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 
 // Excluir a própria conta (SPEC, "Privacidade"; DEC-035). Dados fictícios (regra 5).
@@ -40,7 +40,7 @@ async function seedPatientData() {
     data: { userId: patientId, name: 'Caminhada fictícia', activityDate: date, status: 'PLANEJADA' },
   });
   await prisma.appointment.create({ data: { userId: patientId, appointmentDate: date } });
-  await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
+  await createTestLink({ patientId, therapistId, method: 'CODE' });
   await prisma.linkInvite.create({
     data: { patientId, therapistEmail: 'outra@faisca.test', tokenHash: 'hash-ficticio-convite', canceledAt: new Date() },
   });

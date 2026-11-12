@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { API_URL } from '../fixtures/urls.js';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Agenda ponta a ponta (regra 1, DEC-045): o aceite da versão que cita a agenda libera a escrita,
 // a paciente agenda, desmarca e pausa, a terapeuta vinculada lê com os motivos e nunca escreve.
@@ -45,6 +46,7 @@ test('aceite, agenda da paciente e leitura só pela terapeuta vinculada', async 
 
   const { code } = await (await patient.post('/link/code')).json();
   const patientId = (await (await therapist.post('/links/redeem-code', { data: { code } })).json()).patient.id as string;
+  await shareAllAreas(patient);
   const base = `/therapist/patients/${patientId}`;
 
   // A terapeuta também precisa do aceite para ler a agenda com os motivos; o resumo segue aberto.
