@@ -7,6 +7,7 @@ import type { ReadInfo, UnreadResponse } from '../features/therapist/read-marks-
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { renderRoute } from '../test/render';
 import { fakeAgenda, fakeTensionEpisode, fakeThoughtRecord, fakeUser, outdatedPrivacy, server } from '../test/server';
+import { SHARED_AREAS } from '../features/links/links-api';
 
 // Telas do "Lido" da terapeuta (DEC-058). Dados fictícios (regra 5). "Hoje": quinta, 24/09/2026.
 const PATIENT_ID = '00000000-0000-4000-8000-00000000000a';
@@ -34,6 +35,7 @@ const summary: PatientSummary = {
   agendaStatus: 'SEM_AGENDA',
   pause: null,
   highlight: { from: '2026-09-18', to: TODAY, reason: 'LAST_7_DAYS' },
+  access: { kind: 'PSICOLOGIA', sharedAreas: [...SHARED_AREAS] },
 };
 
 function withRead<T>(record: T, readStatus: ReadInfo['readStatus'], readAt: string | null = null) {

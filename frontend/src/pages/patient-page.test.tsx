@@ -9,6 +9,7 @@ import type { PatientSummary, SessionWhen } from '../features/therapist/therapis
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { renderRoute } from '../test/render';
 import { apiError, fakeActivity, fakeAgenda, fakeSession, fakeTensionEpisode, fakeThoughtRecord, fakeUser, outdatedPrivacy, server } from '../test/server';
+import { SHARED_AREAS } from '../features/links/links-api';
 
 // Terapeuta e paciente fictícios (regra 5). "Hoje" fixo: quinta, 24/09/2026.
 const PATIENT_ID = '00000000-0000-4000-8000-00000000000a';
@@ -28,6 +29,7 @@ function summary(overrides: Partial<PatientSummary> = {}): PatientSummary {
     agendaStatus: 'ATIVA',
     pause: null,
     highlight: { from: '2026-09-21', to: '2026-09-27', reason: 'NEXT_APPOINTMENT' },
+    access: { kind: 'PSICOLOGIA', sharedAreas: [...SHARED_AREAS] },
     ...overrides,
   };
 }
@@ -52,7 +54,7 @@ function patientApi({ data = summary(), activities = [] as Activity[], cycle = n
     http.get(`${BASE}/appointments`, () =>
       HttpResponse.json(
         fakeAgenda({
-          status: data.agendaStatus,
+          status: data.agendaStatus ?? undefined,
           sessions: [data.lastAppointment, data.nextAppointment].flatMap((s) => (s ? [fakeSession(s.date)] : [])),
         }),
       ),

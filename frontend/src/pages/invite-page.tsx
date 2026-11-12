@@ -8,19 +8,24 @@ import { AuthLayout } from '../features/auth/auth-layout';
 import { useSession } from '../features/auth/use-session';
 import { inviteState, readInviteToken } from '../features/links/invite-state';
 import { useAcceptInvite } from '../features/links/use-links';
+import { KindChoice } from '../features/links/kind-choice';
+import type { ProfessionalKind } from '../features/links/links-api';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
 // Aberta pelo link do convite (SPEC, "Convite por e-mail"). Com sessão, aceita com um toque.
 // Sem sessão, leva a entrar ou criar conta e volta para cá com o token no state.
+const KIND_WORD: Record<ProfessionalKind, string> = { PSICOLOGIA: 'psicóloga', PSIQUIATRIA: 'psiquiatra' };
+
 export function InvitePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: user, isPending } = useSession();
   const accept = useAcceptInvite();
-  const [token] = useState(
-    () => new URLSearchParams(location.search).get('token') ?? readInviteToken(location.state),
-  );
+  // Sem nada marcado: escolher errado ocuparia a vaga da outra profissional (DEC-099).
+  const [kind, setKind] = useState<ProfessionalKind | null>(null);
+  const [kindError, setKindError] = useState<string>();
+  const [token] = useState(() => new URLSearchParams(location.search).get('token') ?? readInviteToken(location.state));
 
   // Tira o token da barra de endereço (histórico, favoritos, capturas de tela) e o guarda no state.
   useEffect(() => {
@@ -81,9 +86,38 @@ export function InvitePage() {
         Você está como {user.name} (<span className="break-all">{user.email}</span>).
         {!user.profiles.therapist && ' Ao aceitar, o perfil de terapeuta é ativado na sua conta.'}
       </p>
+      {/* Quem ainda não é profissional escolhe o tipo: o paciente pode ter uma de cada (DEC-097). */}
+      {!user.profiles.therapist && (
+        <KindChoice
+          name="invite-kind"
+          value={kind}
+          onChange={(value) => {
+            setKind(value);
+            setKindError(undefined);
+          }}
+          error={kindError}
+        />
+      )}
       {accept.isError && <Alert tone="attention">{getApiError(accept.error).message}</Alert>}
-      <Button disabled={accept.isPending} onClick={() => accept.mutate(token)}>
-        {accept.isPending ? 'Aceitando…' : 'Aceitar convite'}
+      <Button
+        disabled={accept.isPending}
+        onClick={() => {
+          if (user.profiles.therapist) {
+            accept.mutate({ token });
+            return;
+          }
+          if (!kind) {
+            setKindError('Escolha a sua profissão para aceitar.');
+            return;
+          }
+          accept.mutate({ token, professionalKind: kind });
+        }}
+      >
+        {accept.isPending
+          ? 'Aceitando…'
+          : !user.profiles.therapist && kind
+            ? `Aceitar como ${KIND_WORD[kind]}`
+            : 'Aceitar convite'}
       </Button>
       <Link to="/" className={linkClass}>
         Agora não

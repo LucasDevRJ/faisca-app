@@ -19,6 +19,9 @@ import { statusBadge } from '../features/appointments/agenda-format';
 import { sessionDays } from '../features/appointments/appointments-api';
 import { AppointmentLine } from '../features/appointments/appointments-card';
 import { PatientAgenda } from '../features/therapist/patient-agenda';
+import { MonthsNav } from '../features/therapist/months-nav';
+import { inPeriod, onPeriod, useMonthsPeriod, type PeriodScope } from '../features/therapist/months-period';
+import type { SharedArea } from '../features/links/links-api';
 import { useSession } from '../features/auth/use-session';
 import { formatDate } from '../features/links/link-format';
 import { PATIENTS_KEY } from '../features/links/use-links';
@@ -121,8 +124,8 @@ function NoAccess() {
     <>
       <h1 className="text-3xl font-bold sm:text-4xl">Registros indisponíveis</h1>
       <Alert tone="attention">
-        Você não tem mais acesso a estes registros. Isso acontece quando o paciente encerra o
-        compartilhamento, e está tudo bem: se ele quiser, pode gerar um novo código.
+        Você não tem mais acesso a estes registros. Isso acontece quando o paciente encerra o compartilhamento, e está
+        tudo bem: se ele quiser, pode gerar um novo código.
       </Alert>
       <Link to="/pacientes" className={buttonClasses('secondary', 'self-start')}>
         Voltar para Meus pacientes
@@ -134,7 +137,11 @@ function NoAccess() {
 function PatientRecords({ patientId, summary }: { patientId: string; summary: PatientSummary }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: user } = useSession();
-  const { patient, today, lastAppointment, nextAppointment, agendaStatus, pause } = summary;
+  const { patient, today, lastAppointment, nextAppointment, agendaStatus, pause, access } = summary;
+  // O que o paciente liberou para esta profissional (DEC-097): só essas abas aparecem (DEC-099).
+  const shared = new Set<SharedArea>(access.sharedAreas);
+  // A psiquiatra vê por meses (1, 2 ou 3); a psicóloga, pelo ciclo da consulta ou pela semana.
+  const byMonths = access.kind === 'PSIQUIATRIA';
   const [agendaOpen, setAgendaOpen] = useState(false);
   const consented = Boolean(user?.privacyAreas.thoughtRecords);
   const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
@@ -143,36 +150,54 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const plansConsented = Boolean(user?.privacyAreas.plans);
   const anyReadConsented = consented || tensionConsented || actionsConsented || aboutConsented || plansConsented;
   const requestedTab = parseTab(searchParams.get('aba'));
+  // As abas que o paciente liberou. Uma aba fechada pedida na URL abre a primeira liberada.
+  const allowedTabs = TAB_LABELS.map((item) => item.tab).filter((item) => shared.has(TAB_AREA[item ?? 'atividades']));
+  const noAreas = allowedTabs.length === 0;
   // Sem aceite em nenhuma das três áreas, não há o que ler: um link salvo para "Para ler" abre o ciclo.
-  const tab = requestedTab === 'para-ler' && !anyReadConsented ? null : requestedTab;
+  const tab: RecordTab =
+    requestedTab === 'para-ler'
+      ? anyReadConsented
+        ? 'para-ler'
+        : (allowedTabs[0] ?? null)
+      : allowedTabs.includes(requestedTab)
+        ? requestedTab
+        : (allowedTabs[0] ?? null);
 
-  // Ciclo da consulta por padrão, ou a semana (DEC-050). O mesmo período vale para as três abas.
-  const { period, currentMonday, showCycle, showWeek } = usePeriod(patientCycleQuery(patientId), today);
-  const range: DateRange = period ?? { from: today, to: today };
-  const inCycle = period?.mode === 'cycle';
-  const ready = period !== null;
+  // Ciclo da consulta por padrão, ou a semana (DEC-050); sem a agenda liberada, a semana. A
+  // psiquiatra vê por meses (DEC-099). O mesmo período vale para todas as abas.
+  const { period, currentMonday, showCycle, showWeek } = usePeriod(
+    patientCycleQuery(patientId, shared.has('APPOINTMENTS') && !byMonths),
+    today,
+  );
+  const months = useMonthsPeriod(today);
+  const range: DateRange = byMonths ? months.range : (period ?? { from: today, to: today });
+  const scope: PeriodScope = byMonths ? 'months' : period?.mode === 'cycle' ? 'cycle' : 'week';
+  const ready = byMonths || period !== null;
 
   // Só a aba aberta pergunta à API. O RPD e os episódios também esperam o aceite da versão do
   // aviso que os cita (DEC-039, DEC-042).
-  const activities = usePatientActivities(patientId, tab || !ready ? null : range);
+  const activities = usePatientActivities(patientId, tab || !ready || !shared.has('ACTIVITIES') ? null : range);
   const thoughts = usePatientThoughtRecords(patientId, ready && tab === 'pensamentos' && consented ? range : null);
   const tension = usePatientTensionEpisodes(patientId, ready && tab === 'tensao' && tensionConsented ? range : null);
   const actions = usePatientActions(patientId, ready && tab === 'acao' && actionsConsented ? range : null);
   // Os planos decidem se a aba Meus Planos aparece: só quando o paciente tem algum (DEC-095). Sem o
   // aceite da versão que a cita, não dá para saber; a aba aparece com o pedido de aceite.
-  const plans = usePatientPlans(patientId, plansConsented);
-  const showPlans = tab === 'planos' || !plansConsented || (plans.data?.length ?? 0) > 0;
+  const plans = usePatientPlans(patientId, plansConsented && shared.has('PLANS'));
+  const showPlans = shared.has('PLANS') && (tab === 'planos' || !plansConsented || (plans.data?.length ?? 0) > 0);
   // Selo "consulta" nos dias com sessão. A agenda pede o aceite da versão que a cita (DEC-045);
   // sem ele, só a última e a próxima, que vêm no resumo.
+  const agendaShared = shared.has('APPOINTMENTS');
   const agendaConsented = Boolean(user?.privacyAreas.appointmentSchedule);
-  const agenda = usePatientAppointments(patientId, agendaConsented, range);
+  const agenda = usePatientAppointments(patientId, agendaConsented && agendaShared, range);
   // Os registros para ler (DEC-058), fora do ciclo: sempre que alguma das três áreas tem aceite.
   const unread = usePatientUnread(patientId, anyReadConsented);
-  const appointmentList = agendaConsented
-    ? sessionDays(agenda.data)
-    : [lastAppointment?.date, nextAppointment?.date].filter((d): d is string => Boolean(d));
+  const appointmentList = !agendaShared
+    ? []
+    : agendaConsented
+      ? sessionDays(agenda.data)
+      : [lastAppointment?.date, nextAppointment?.date].filter((d): d is string => Boolean(d));
   const appointmentDays = new Set(appointmentList);
-  const badge = statusBadge(agendaStatus, pause, today);
+  const badge = agendaStatus ? statusBadge(agendaStatus, pause, today) : null;
 
   // Vínculo desfeito enquanto a tela estava aberta.
   if (activities.isError && isForbidden(activities.error)) return <NoAccess />;
@@ -217,36 +242,46 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
         </div>
       </section>
 
-      <PatientAboutMe patientId={patientId} firstName={firstName ?? patient.name} consented={aboutConsented} />
+      {shared.has('ABOUT_ME') && (
+        <PatientAboutMe patientId={patientId} firstName={firstName ?? patient.name} consented={aboutConsented} />
+      )}
 
-      <section
-        aria-labelledby="appointments-title"
-        className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="appointments-title" className="text-lg font-semibold">
-            Consultas
-          </h2>
-          {badge && <span className="rounded-full border border-border px-2 py-0.5 text-sm text-muted">{badge}</span>}
-        </div>
-        {lastAppointment || nextAppointment ? (
-          <dl className="grid gap-3 sm:grid-cols-2">
-            {nextAppointment && <AppointmentLine label="Próxima" session={nextAppointment} today={today} />}
-            {lastAppointment && <AppointmentLine label="Última" session={lastAppointment} today={today} />}
-          </dl>
-        ) : (
-          <p className="text-muted">{firstName} ainda não cadastrou consultas.</p>
-        )}
-        <Button
-          variant="ghost"
-          className="self-start px-0 underline"
-          aria-expanded={agendaOpen}
-          onClick={() => setAgendaOpen((open) => !open)}
+      {agendaShared && (
+        <section
+          aria-labelledby="appointments-title"
+          className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft"
         >
-          {agendaOpen ? 'Esconder a agenda' : 'Ver a agenda'}
-        </Button>
-        {agendaOpen && <PatientAgenda patientId={patientId} consented={agendaConsented} today={today} />}
-      </section>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="appointments-title" className="text-lg font-semibold">
+              Consultas
+            </h2>
+            {badge && <span className="rounded-full border border-border px-2 py-0.5 text-sm text-muted">{badge}</span>}
+          </div>
+          {lastAppointment || nextAppointment ? (
+            <dl className="grid gap-3 sm:grid-cols-2">
+              {nextAppointment && <AppointmentLine label="Próxima" session={nextAppointment} today={today} />}
+              {lastAppointment && <AppointmentLine label="Última" session={lastAppointment} today={today} />}
+            </dl>
+          ) : (
+            <p className="text-muted">{firstName} ainda não cadastrou consultas.</p>
+          )}
+          <Button
+            variant="ghost"
+            className="self-start px-0 underline"
+            aria-expanded={agendaOpen}
+            onClick={() => setAgendaOpen((open) => !open)}
+          >
+            {agendaOpen ? 'Esconder a agenda' : 'Ver a agenda'}
+          </Button>
+          {agendaOpen && <PatientAgenda patientId={patientId} consented={agendaConsented} today={today} />}
+        </section>
+      )}
+
+      {noAreas && tab !== 'para-ler' && (
+        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+          {firstName} ainda não liberou nenhuma área para você. Quando liberar, os registros aparecem aqui.
+        </p>
+      )}
 
       {tab === 'para-ler' ? (
         <ToReadView
@@ -261,108 +296,131 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
             <ToReadCard counts={unread.data.counts} onOpen={() => selectTab('para-ler')} />
           )}
 
-          <RecordTabs tab={tab} onSelect={selectTab} counts={unread.data?.counts} showPlans={showPlans} />
+          {!noAreas && (
+            <RecordTabs
+              tab={tab}
+              onSelect={selectTab}
+              counts={unread.data?.counts}
+              showPlans={showPlans}
+              allowed={allowedTabs}
+            />
+          )}
 
-          <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
-            {period ? (
-              <PeriodNav
-                period={period}
-                today={today}
-                audience="therapist"
-                currentMonday={currentMonday}
-                onCycle={showCycle}
-                onWeek={showWeek}
-                summary={<TherapistCycleSummary patientId={patientId} range={period} />}
-              />
-            ) : (
-              <p className="text-muted" aria-busy="true">
-                Carregando…
-              </p>
-            )}
+          {!noAreas && (
+            <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
+              {byMonths ? (
+                <MonthsNav
+                  months={months.months}
+                  range={months.range}
+                  isCurrent={months.isCurrent}
+                  onMonths={months.setMonths}
+                  onPrevious={months.previous}
+                  onNext={months.next}
+                />
+              ) : period ? (
+                <PeriodNav
+                  period={period}
+                  today={today}
+                  audience="therapist"
+                  currentMonday={currentMonday}
+                  onCycle={showCycle}
+                  onWeek={showWeek}
+                  summary={<TherapistCycleSummary patientId={patientId} range={period} />}
+                />
+              ) : (
+                <p className="text-muted" aria-busy="true">
+                  Carregando…
+                </p>
+              )}
 
-            {tab === 'planos' ? (
-              <PatientPlansTab
-                patientId={patientId}
-                firstName={firstName ?? patient.name}
-                consented={plansConsented && !(plans.isError && needsPrivacyConsent(plans.error))}
-                plans={plans}
-                selectedId={searchParams.get('plano')}
-                onSelect={selectPlan}
-                range={range}
-                ready={ready}
-                inCycle={inCycle}
-                today={today}
-              />
-            ) : tab === 'acao' ? (
-              <ActionsTab
-                patientId={patientId}
-                consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
-                query={actions}
-                range={range}
-                inCycle={inCycle}
-                today={today}
-              />
-            ) : tab === 'tensao' ? (
-              <TensionTab
-                patientId={patientId}
-                consented={tensionConsented && !(tension.isError && needsPrivacyConsent(tension.error))}
-                query={tension}
-                range={range}
-                inCycle={inCycle}
-                today={today}
-                appointmentDays={appointmentList}
-              />
-            ) : tab === 'pensamentos' ? (
-              <ThoughtsTab
-                patientId={patientId}
-                consented={consented && !(thoughts.isError && needsPrivacyConsent(thoughts.error))}
-                query={thoughts}
-                range={range}
-                inCycle={inCycle}
-                today={today}
-              />
-            ) : (
-              <>
-                {activities.isPending && (
-                  <p className="text-muted" aria-busy="true">
-                    Carregando os registros…
-                  </p>
-                )}
+              {tab === 'planos' ? (
+                <PatientPlansTab
+                  patientId={patientId}
+                  firstName={firstName ?? patient.name}
+                  consented={plansConsented && !(plans.isError && needsPrivacyConsent(plans.error))}
+                  plans={plans}
+                  selectedId={searchParams.get('plano')}
+                  onSelect={selectPlan}
+                  range={range}
+                  ready={ready}
+                  scope={scope}
+                  today={today}
+                />
+              ) : tab === 'acao' ? (
+                <ActionsTab
+                  patientId={patientId}
+                  consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
+                  query={actions}
+                  range={range}
+                  scope={scope}
+                  today={today}
+                />
+              ) : tab === 'tensao' ? (
+                <TensionTab
+                  patientId={patientId}
+                  consented={tensionConsented && !(tension.isError && needsPrivacyConsent(tension.error))}
+                  query={tension}
+                  range={range}
+                  scope={scope}
+                  today={today}
+                  appointmentDays={appointmentList}
+                />
+              ) : tab === 'pensamentos' ? (
+                <ThoughtsTab
+                  patientId={patientId}
+                  consented={consented && !(thoughts.isError && needsPrivacyConsent(thoughts.error))}
+                  query={thoughts}
+                  range={range}
+                  scope={scope}
+                  today={today}
+                />
+              ) : (
+                <>
+                  {activities.isPending && (
+                    <p className="text-muted" aria-busy="true">
+                      Carregando os registros…
+                    </p>
+                  )}
 
-                {activities.isError && (
-                  <Alert tone="attention">
-                    <div className="flex flex-col gap-3">
-                      <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
-                      <div>
-                        <Button variant="secondary" onClick={() => activities.refetch()}>
-                          Tentar de novo
-                        </Button>
+                  {activities.isError && (
+                    <Alert tone="attention">
+                      <div className="flex flex-col gap-3">
+                        <p>Não conseguimos carregar este período. Confira sua conexão e tente de novo.</p>
+                        <div>
+                          <Button variant="secondary" onClick={() => activities.refetch()}>
+                            Tentar de novo
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </Alert>
-                )}
+                    </Alert>
+                  )}
 
-                {activities.isSuccess && (
-                  <>
-                    {activities.data.length === 0 && (
-                      <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-                        Nada registrado {inCycle ? 'neste ciclo' : 'nesta semana'}.
-                      </p>
-                    )}
+                  {activities.isSuccess && (
+                    <>
+                      {activities.data.length === 0 && (
+                        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+                          Nada registrado {inPeriod(scope)}.
+                        </p>
+                      )}
 
-                    <WeekChart activities={activities.data} period={inCycle ? 'no ciclo' : 'na semana'} />
+                      <WeekChart activities={activities.data} period={onPeriod(scope)} />
 
-                    <DayList
-                      days={daysInRange(range)}
-                      activities={activities.data}
-                      today={today}
-                      appointmentDays={appointmentDays}
-                    />
-                  </>
-                )}
-              </>
-            )}
-          </section>
+                      <DayList
+                        days={
+                          byMonths
+                            ? daysInRange(range).filter((day) => activities.data.some((a) => a.activityDate === day))
+                            : daysInRange(range)
+                        }
+                        activities={activities.data}
+                        today={today}
+                        appointmentDays={appointmentDays}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            </section>
+          )}
         </>
       )}
     </>
@@ -386,9 +444,7 @@ function DayList({ days, activities, today, appointmentDays }: DayListProps) {
             <h3 className={`font-semibold first-letter:uppercase sm:text-lg ${ofDay.length ? '' : 'text-muted'}`}>
               {formatDayHeading(day)}
               {day === today && (
-                <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">
-                  hoje
-                </span>
+                <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">hoje</span>
               )}
               {appointmentDays.has(day) && (
                 <span className="ml-2 rounded-sm border border-primary px-2 py-0.5 text-sm font-medium text-primary-text">
@@ -420,6 +476,16 @@ const TAB_LABELS: { tab: RecordTab; label: string }[] = [
   { tab: 'planos', label: 'Meus Planos' },
 ];
 
+// A área de cada aba, para mostrar só as liberadas (DEC-097, DEC-099).
+const TAB_AREA: Record<NonNullable<RecordTab> | 'atividades', SharedArea> = {
+  atividades: 'ACTIVITIES',
+  pensamentos: 'THOUGHT_RECORDS',
+  tensao: 'TENSION_EPISODES',
+  acao: 'ACTIONS',
+  planos: 'PLANS',
+  'para-ler': 'ACTIVITIES',
+};
+
 // Quantos registros para ler em cada aba (DEC-058): um número discreto, sem cor de alerta.
 const TAB_COUNT: Partial<Record<NonNullable<RecordTab>, keyof UnreadResponse['counts']>> = {
   pensamentos: 'thoughtRecords',
@@ -433,15 +499,17 @@ type RecordTabsProps = {
   onSelect: (tab: RecordTab) => void;
   counts: UnreadResponse['counts'] | undefined;
   showPlans: boolean;
+  // As abas que o paciente liberou para esta profissional (DEC-099).
+  allowed: RecordTab[];
 };
 
-function RecordTabs({ tab, onSelect, counts, showPlans }: RecordTabsProps) {
-  const labels = showPlans ? TAB_LABELS : TAB_LABELS.filter((item) => item.tab !== 'planos');
+function RecordTabs({ tab, onSelect, counts, showPlans, allowed }: RecordTabsProps) {
+  const labels = TAB_LABELS.filter((item) => allowed.includes(item.tab) && (item.tab !== 'planos' || showPlans));
   return (
     <div
       role="group"
       aria-label="Tipo de registro"
-      className={`grid ${showPlans ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}
+      className={`grid ${labels.length > 4 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}
     >
       {labels.map((item) => {
         const key = item.tab ? TAB_COUNT[item.tab] : undefined;
@@ -688,12 +756,12 @@ type ThoughtsTabProps = {
   consented: boolean;
   query: ReturnType<typeof usePatientThoughtRecords>;
   range: DateRange;
-  inCycle: boolean;
+  scope: PeriodScope;
   today: string;
 };
 
 // Registro de Pensamentos do paciente, só leitura (DEC-040). Só os dias com registro aparecem.
-function ThoughtsTab({ patientId, consented, query, range, inCycle, today }: ThoughtsTabProps) {
+function ThoughtsTab({ patientId, consented, query, range, scope, today }: ThoughtsTabProps) {
   if (!consented) return <PrivacyConsentGate area="thoughtRecords" audience="therapist" />;
 
   if (query.isPending) {
@@ -723,7 +791,7 @@ function ThoughtsTab({ patientId, consented, query, range, inCycle, today }: Tho
   if (records.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-        Nenhum registro de pensamentos {inCycle ? 'neste ciclo' : 'nesta semana'}.
+        Nenhum registro de pensamentos {inPeriod(scope)}.
       </p>
     );
   }
@@ -785,14 +853,14 @@ type TensionTabProps = {
   consented: boolean;
   query: ReturnType<typeof usePatientTensionEpisodes>;
   range: DateRange;
-  inCycle: boolean;
+  scope: PeriodScope;
   today: string;
   appointmentDays: string[];
 };
 
 // Episódios de tensão do paciente, só leitura (DEC-043): o gráfico do período e, embaixo, os dias
 // com episódio.
-function TensionTab({ patientId, consented, query, range, inCycle, today, appointmentDays }: TensionTabProps) {
+function TensionTab({ patientId, consented, query, range, scope, today, appointmentDays }: TensionTabProps) {
   if (!consented) return <PrivacyConsentGate area="tensionEpisodes" audience="therapist" />;
 
   if (query.isPending) {
@@ -822,7 +890,7 @@ function TensionTab({ patientId, consented, query, range, inCycle, today, appoin
   if (episodes.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-        Nenhum episódio de tensão {inCycle ? 'neste ciclo' : 'nesta semana'}.
+        Nenhum episódio de tensão {inPeriod(scope)}.
       </p>
     );
   }
@@ -831,12 +899,7 @@ function TensionTab({ patientId, consented, query, range, inCycle, today, appoin
   const days = daysInRange(range).filter((day) => recorded.has(day));
   return (
     <>
-      <TensionChart
-        episodes={episodes}
-        range={range}
-        appointmentDays={appointmentDays}
-        period={inCycle ? 'no ciclo' : 'na semana'}
-      />
+      <TensionChart episodes={episodes} range={range} appointmentDays={appointmentDays} period={onPeriod(scope)} />
       <MarkAllRead patientId={patientId} items={pendingItems('TENSION_EPISODE', episodes)} />
       <ol className="flex flex-col gap-4 sm:gap-6">
         {days.map((day) => (
@@ -890,12 +953,12 @@ type ActionsTabProps = {
   consented: boolean;
   query: ReturnType<typeof usePatientActions>;
   range: DateRange;
-  inCycle: boolean;
+  scope: PeriodScope;
   today: string;
 };
 
 // Ação do paciente, só leitura (DEC-052): a meta do ciclo, os dias com ação e o gráfico.
-function ActionsTab({ patientId, consented, query, range, inCycle, today }: ActionsTabProps) {
+function ActionsTab({ patientId, consented, query, range, scope, today }: ActionsTabProps) {
   if (!consented) return <PrivacyConsentGate area="actions" audience="therapist" />;
 
   if (query.isPending) {
@@ -926,11 +989,11 @@ function ActionsTab({ patientId, consented, query, range, inCycle, today }: Acti
   const days = daysInRange(range).filter((day) => recorded.has(day));
   return (
     <>
-      {inCycle && <CycleGoal actions={actions} range={range} />}
+      {scope === 'cycle' && <CycleGoal actions={actions} range={range} />}
       <MarkAllRead patientId={patientId} items={pendingItems('ACTION', actions)} />
       {actions.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-          Nenhuma ação {inCycle ? 'neste ciclo' : 'nesta semana'}.
+          Nenhuma ação {inPeriod(scope)}.
         </p>
       ) : (
         <ol className="flex flex-col gap-4 sm:gap-6">
@@ -939,7 +1002,9 @@ function ActionsTab({ patientId, consented, query, range, inCycle, today }: Acti
               <h3 className="font-semibold first-letter:uppercase sm:text-lg">
                 {formatDayHeading(day)}
                 {day === today && (
-                  <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">hoje</span>
+                  <span className="ml-2 rounded-sm bg-primary px-2 py-0.5 text-sm font-medium text-on-primary">
+                    hoje
+                  </span>
                 )}
               </h3>
               <div className="flex flex-col gap-3">
@@ -959,14 +1024,22 @@ function ActionsTab({ patientId, consented, query, range, inCycle, today }: Acti
           ))}
         </ol>
       )}
-      <ActionChart actions={actions} period={inCycle ? 'no ciclo' : 'na semana'} />
+      <ActionChart actions={actions} period={onPeriod(scope)} />
     </>
   );
 }
 
 // "Sobre a Paula" (DEC-082): o que o paciente contou no "Sobre mim", só leitura, com o "Lido" dela.
 // Sem o aceite da versão do aviso que o cita, o pedido de aceite no lugar.
-function PatientAboutMe({ patientId, firstName, consented }: { patientId: string; firstName: string; consented: boolean }) {
+function PatientAboutMe({
+  patientId,
+  firstName,
+  consented,
+}: {
+  patientId: string;
+  firstName: string;
+  consented: boolean;
+}) {
   const query = usePatientAboutMe(patientId, consented);
   const about = query.data;
   // O aceite numa janela: a página pode já ter o pedido grande numa aba, e dois iguais confundem.

@@ -85,8 +85,15 @@ export async function redeemLinkCode(code: string): Promise<LinkedPatient> {
   return data.patient;
 }
 
-export async function acceptInvite(token: string): Promise<LinkedPatient> {
-  const { data } = await api.post<{ patient: LinkedPatient }>('/links/accept-invite', { token });
+// professionalKind: o tipo de quem ainda não é profissional e vira ao aceitar (DEC-097).
+export async function acceptInvite({
+  token,
+  professionalKind,
+}: {
+  token: string;
+  professionalKind?: ProfessionalKind;
+}): Promise<LinkedPatient> {
+  const { data } = await api.post<{ patient: LinkedPatient }>('/links/accept-invite', { token, professionalKind });
   return data.patient;
 }
 

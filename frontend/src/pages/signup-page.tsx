@@ -10,8 +10,17 @@ import { PASSWORD_MIN, validateEmail, validateNewPassword } from '../features/au
 import { readInviteToken } from '../features/links/invite-state';
 import { choiceCardClasses } from '../components/ui/field-styles';
 import { FieldError } from '../components/ui/field-error';
+import { KindChoice } from '../features/links/kind-choice';
+import type { ProfessionalKind } from '../features/links/links-api';
 
-type Errors = { name?: string; email?: string; password?: string; profiles?: string; acceptPrivacy?: string };
+type Errors = {
+  name?: string;
+  email?: string;
+  password?: string;
+  profiles?: string;
+  kind?: string;
+  acceptPrivacy?: string;
+};
 
 const profileOptions = [
   {
@@ -34,6 +43,8 @@ export function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [profiles, setProfiles] = useState({ patient: false, therapist: inviteToken !== null });
+  // Sem nada marcado: escolher errado ocuparia a vaga da outra profissional (DEC-099).
+  const [kind, setKind] = useState<ProfessionalKind | null>(null);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const mutation = useMutation({ mutationFn: signup });
@@ -55,6 +66,7 @@ export function SignupPage() {
       email: validateEmail(email),
       password: validateNewPassword(password),
       profiles: profiles.patient || profiles.therapist ? undefined : 'Escolha pelo menos uma opção.',
+      kind: profiles.therapist && !kind ? 'Escolha a sua profissão.' : undefined,
       acceptPrivacy: acceptPrivacy ? undefined : 'Para criar a conta, é preciso concordar com o aviso de privacidade.',
     };
     setErrors(next);
@@ -67,6 +79,7 @@ export function SignupPage() {
         email: cleanEmail,
         password,
         profiles,
+        ...(profiles.therapist && kind && { professionalKind: kind }),
         acceptPrivacy: true,
         ...(inviteToken && { inviteToken }),
       },
@@ -79,11 +92,11 @@ export function SignupPage() {
     <AuthLayout title="Criar conta" description="Leva só um minutinho.">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
         {inviteToken && (
-          <Alert>Você está criando a conta pelo convite. Depois de confirmar o e-mail, o vínculo é feito sozinho.</Alert>
+          <Alert>
+            Você está criando a conta pelo convite. Depois de confirmar o e-mail, o vínculo é feito sozinho.
+          </Alert>
         )}
-        {apiError && apiError.code !== 'VALIDATION_ERROR' && (
-          <Alert tone="attention">{apiError.message}</Alert>
-        )}
+        {apiError && apiError.code !== 'VALIDATION_ERROR' && <Alert tone="attention">{apiError.message}</Alert>}
 
         <TextField
           label="Como podemos te chamar?"
@@ -132,6 +145,9 @@ export function SignupPage() {
           ))}
           {shownErrors.profiles && <FieldError id="profiles-error">{shownErrors.profiles}</FieldError>}
         </fieldset>
+
+        {/* Cada paciente pode ter uma psicóloga e uma psiquiatra (DEC-097). */}
+        {profiles.therapist && <KindChoice name="signup-kind" value={kind} onChange={setKind} error={errors.kind} />}
 
         {/* Consentimento específico e destacado para dado de saúde (LGPD, art. 11; DEC-036).
             O link abre em outra aba para não perder o que já foi digitado. */}

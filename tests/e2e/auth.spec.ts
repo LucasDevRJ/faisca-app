@@ -45,6 +45,8 @@ test('cadastro, confirmação pelo link do e-mail e primeiro login', async ({ pa
   // Sem o aceite do aviso de privacidade (DEC-036), o cadastro não sai.
   await page.getByRole('button', { name: 'Criar conta' }).click();
   await expect(page.getByText('Para criar a conta, é preciso concordar com o aviso de privacidade.')).toBeVisible();
+  // Com "Acompanhar pacientes", a profissão é obrigatória (DEC-099).
+  await page.getByRole('radio', { name: 'Sou psicóloga' }).check();
   await page.getByRole('checkbox', { name: /aviso de privacidade/ }).check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
 

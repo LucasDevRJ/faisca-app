@@ -28,6 +28,8 @@ describe('SignupPage', () => {
     const { router } = renderRoute('/cadastro');
 
     const user = await fillForm({ patient: true, therapist: true });
+    // Com "Acompanhar pacientes", pergunta a profissão (DEC-099).
+    await user.click(screen.getByRole('radio', { name: 'Sou psiquiatra' }));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     expect(await screen.findByRole('heading', { name: 'Confira seu e-mail' })).toBeInTheDocument();
@@ -39,6 +41,7 @@ describe('SignupPage', () => {
       email: 'ana@faisca.test',
       password: 'senha-ficticia-123',
       profiles: { patient: true, therapist: true },
+      professionalKind: 'PSIQUIATRIA',
       acceptPrivacy: true,
     });
   });

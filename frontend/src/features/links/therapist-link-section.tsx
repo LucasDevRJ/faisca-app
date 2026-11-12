@@ -173,6 +173,14 @@ function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormP
     });
   }
 
+  const allChecked = SHARED_AREAS.every((area) => areas.includes(area));
+
+  function checkAll() {
+    onEdit();
+    save.reset();
+    setAreas([...SHARED_AREAS]);
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const ordered = SHARED_AREAS.filter((area) => areas.includes(area));
@@ -193,6 +201,10 @@ function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormP
             {name} ainda não vê nenhum registro seu. Marque o que quiser compartilhar.
           </p>
         )}
+        {/* Atalho para quem quer compartilhar tudo (DEC-099); ainda é preciso salvar. */}
+        <Button variant="ghost" className="self-start px-0 underline" disabled={allChecked} onClick={checkAll}>
+          Marcar tudo<span className="sr-only"> para {who}</span>
+        </Button>
         <ul className="grid gap-1 sm:grid-cols-2">
           {visible.map((area) => (
             <li key={area}>

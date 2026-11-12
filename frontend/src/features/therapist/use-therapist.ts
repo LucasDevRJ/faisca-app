@@ -60,11 +60,14 @@ export function usePatientAboutMe(patientId: string, enabled: boolean) {
   });
 }
 
+// O resumo traz as áreas que o paciente liberou (DEC-097), que mudam a qualquer momento: sem os 30 s
+// de folga do padrão, abrir a página pergunta de novo (um resumo da lista não serve de base).
 export function usePatientSummary(patientId: string) {
   return useQuery({
     queryKey: [...THERAPIST_KEY, patientId, 'summary'],
     queryFn: () => fetchPatientSummary(patientId),
     retry: retryUnlessForbidden,
+    staleTime: 0,
   });
 }
 
@@ -105,10 +108,14 @@ export function usePatientAppointments(patientId: string, enabled: boolean, rang
 }
 
 // Ciclo da consulta do paciente (DEC-049), no formato que o usePeriod pede.
-export function patientCycleQuery(patientId: string) {
+// enabled = false sem a agenda liberada pelo paciente (DEC-097): sem pedir à API, responde "sem
+// ciclo" na hora, e a tela usa a semana.
+export function patientCycleQuery(patientId: string, enabled = true) {
   return (date: string | null): UseQueryOptions<CycleResponse> => ({
-    queryKey: [...THERAPIST_KEY, patientId, 'cycle', date],
-    queryFn: () => fetchPatientCycle(patientId, date ?? undefined),
+    queryKey: [...THERAPIST_KEY, patientId, 'cycle', enabled, date],
+    queryFn: enabled
+      ? () => fetchPatientCycle(patientId, date ?? undefined)
+      : async () => ({ today: '', cycle: null }) as unknown as CycleResponse,
     retry: retryUnlessForbidden,
   });
 }

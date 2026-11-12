@@ -7,6 +7,7 @@ import type { UnreadResponse } from '../features/therapist/read-marks-api';
 import type { PatientSummary } from '../features/therapist/therapist-api';
 import { renderRoute } from '../test/render';
 import { fakeAgenda, fakeUser, loggedIn, server } from '../test/server';
+import { SHARED_AREAS } from '../features/links/links-api';
 
 // "Sobre mim" (DEC-081, DEC-082). Dados fictícios (regra 5).
 const PATIENT_ID = '00000000-0000-4000-8000-00000000000a';
@@ -188,6 +189,7 @@ describe('página do paciente → Sobre a Paula (terapeuta)', () => {
     agendaStatus: 'SEM_AGENDA',
     pause: null,
     highlight: { from: '2026-09-18', to: '2026-09-24', reason: 'LAST_7_DAYS' },
+    access: { kind: 'PSICOLOGIA', sharedAreas: [...SHARED_AREAS] },
   };
 
   function therapistApi(aboutMe: (AboutMe & { readStatus: 'NAO_LIDO' | 'LIDO' | 'ATUALIZADO'; readAt: string | null }) | null, unread?: Partial<UnreadResponse>) {

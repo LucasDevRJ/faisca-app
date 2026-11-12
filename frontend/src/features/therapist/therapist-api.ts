@@ -3,6 +3,7 @@ import type { Action } from '../actions/actions-api';
 import type { Activity } from '../activities/activities-api';
 import type { AgendaResponse, AgendaStatus, DateRange, Pause } from '../appointments/appointments-api';
 import type { CycleResponse } from '../cycle/cycle-api';
+import type { ProfessionalKind, SharedArea } from '../links/links-api';
 import type { Plan, PlanEntry } from '../plans/plans-api';
 import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
@@ -27,10 +28,12 @@ export type PatientSummary = {
   // Só quando e de que tipo: os motivos ficam na agenda, que pede o aceite (DEC-045).
   lastAppointment: SessionWhen | null;
   nextAppointment: SessionWhen | null;
-  // Situação da agenda, para o selo "em pausa" ou "encerrada".
-  agendaStatus: AgendaStatus;
+  // Situação da agenda, para o selo "em pausa" ou "encerrada"; null sem a agenda liberada (DEC-097).
+  agendaStatus: AgendaStatus | null;
   pause: Pause | null;
   highlight: Highlight;
+  // O tipo do vínculo e as áreas que o paciente liberou para esta profissional (DEC-097).
+  access: { kind: ProfessionalKind; sharedAreas: SharedArea[] };
 };
 
 // A terapeuta pede até 92 dias de atividades por vez (o paciente, 42).

@@ -6,6 +6,7 @@ import { daysInRange, type DateRange } from '../therapist/period';
 import { MarkAllRead, ReadControl } from '../therapist/read-control';
 import { isPending } from '../therapist/read-marks-api';
 import { usePatientPlanEntries, usePatientPlans } from '../therapist/use-therapist';
+import { inPeriod, type PeriodScope } from '../therapist/months-period';
 import { PlanEntryCard } from './plan-entry-card';
 
 type PatientPlansTabProps = {
@@ -18,7 +19,7 @@ type PatientPlansTabProps = {
   onSelect: (planId: string) => void;
   range: DateRange;
   ready: boolean;
-  inCycle: boolean;
+  scope: PeriodScope;
   today: string;
 };
 
@@ -33,7 +34,7 @@ export function PatientPlansTab({
   onSelect,
   range,
   ready,
-  inCycle,
+  scope,
   today,
 }: PatientPlansTabProps) {
   const list = plans.data ?? [];
@@ -145,7 +146,7 @@ export function PatientPlansTab({
 
       {entries.isSuccess && records.length === 0 && (
         <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-          Nenhum registro neste plano {inCycle ? 'neste ciclo' : 'nesta semana'}.
+          Nenhum registro neste plano {inPeriod(scope)}.
         </p>
       )}
 

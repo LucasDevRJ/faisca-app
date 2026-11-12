@@ -171,4 +171,19 @@ describe('aviso de novo vínculo com duas profissionais', () => {
     // A psicóloga já vê tudo: sem o convite para escolher.
     expect(notice).not.toHaveTextContent('Tereza ainda não vê nada');
   });
+
+  it('"Marcar tudo" marca todas as áreas, inclusive as fotos; ainda é preciso salvar', async () => {
+    const writes = linkApi([psychologist, psychiatrist]);
+    const user = userEvent.setup();
+    renderRoute('/conta');
+
+    const ana = await screen.findByRole('article', { name: 'Ana Fictícia' });
+    await user.click(within(ana).getByRole('button', { name: /Marcar tudo/ }));
+    expect(within(ana).getByText('Ainda não salvo.')).toBeInTheDocument();
+    expect(within(ana).getByRole('checkbox', { name: 'Fotos da Ação' })).toBeChecked();
+    expect(within(ana).getByRole('button', { name: /Marcar tudo/ })).toBeDisabled();
+    await user.click(within(ana).getByRole('button', { name: /Salvar o que Ana vê/ }));
+
+    await waitFor(() => expect(writes[0]?.body).toEqual({ areas: [...SHARED_AREAS] }));
+  });
 });

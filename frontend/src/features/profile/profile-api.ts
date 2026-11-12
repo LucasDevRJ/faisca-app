@@ -5,6 +5,8 @@ import type { Palette } from './palettes';
 // Perfil básico e acessibilidade (DEC-061, DEC-063, DEC-076): sempre da própria conta, pela sessão.
 
 export const FULL_NAME_MAX = 120;
+// CRP ou CRM (DEC-097), o mesmo limite da API.
+export const COUNCIL_NUMBER_MAX = 30;
 
 export type Profile = {
   fullName: string | null;
@@ -12,12 +14,15 @@ export type Profile = {
   // Quando a foto mudou pela última vez, ou null sem foto.
   avatarVersion: string | null;
   accessibility?: AccessibilitySettings;
+  // Tipo de profissional e conselho (DEC-097); null para quem não acompanha pacientes.
+  professional?: { kind: 'PSICOLOGIA' | 'PSIQUIATRIA'; councilNumber: string | null } | null;
 };
 
 export type UpdateProfileInput = {
   fullName?: string | null;
   palette?: Palette;
   accessibility?: Partial<AccessibilitySettings>;
+  professional?: { kind?: 'PSICOLOGIA' | 'PSIQUIATRIA'; councilNumber?: string | null };
 };
 
 export async function fetchProfile(): Promise<Profile> {

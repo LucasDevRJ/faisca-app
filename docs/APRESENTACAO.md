@@ -41,7 +41,9 @@ Para o paciente:
 - **Lembretes de manhã e de noite:** por e-mail ou como notificação no aparelho (Web Push), quando há
   atividades ou ações planejadas para o dia, sempre com texto neutro (sem mostrar o que a pessoa
   escreveu), horário de silêncio e opção de pausar.
-- **Vínculo com a psicóloga:** por código ou convite por e-mail; o paciente desfaz quando quiser.
+- **Vínculo com a psicóloga e a psiquiatra:** por código ou convite por e-mail, até uma de cada. O
+  paciente escolhe, para cada uma, o que ela vê (atividades, pensamentos, tensão, Ação e fotos,
+  "Sobre mim", agenda, Meus Planos) e desfaz quando quiser. A psiquiatra acompanha por 1, 2 ou 3 meses.
 
 Para a psicóloga:
 - Vê os registros dos pacientes vinculados, por ciclo da consulta ou por semana, com gráficos.
