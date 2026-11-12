@@ -2206,6 +2206,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   psiquiatra) ficam para o PR seguinte, depois da conversa do usuário com a psiquiatra. Até lá, a
   psiquiatra com área fechada recebe 403 nas abas que a tela atual ainda mostra.
 
+## DEC-099 — Telas da profissional para várias profissionais
+- **Decisão:** em construção (#170). Número reservado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
