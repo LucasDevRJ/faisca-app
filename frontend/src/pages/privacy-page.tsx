@@ -14,6 +14,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-10.7 (DEC-075, DEC-078): entram as cópias de segurança. Pede o aceite de novo, mas não
 // bloqueia nenhuma área: não há dado novo, muda onde e por quanto tempo os dados ficam.
 // Versão 2026-11 (DEC-081, DEC-082): entra o "Sobre mim", com novo aceite para usá-lo.
+// Versão 2026-11.2 (DEC-094, DEC-095): entra o Meus Planos, com novo aceite para usá-lo.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -22,7 +23,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // DEC-068, DEC-069, DEC-076, DEC-090): dados pessoais e preferências da própria conta, que não são
 // de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já
 // vi" fica só com o paciente.
-const VERSION_LABEL = 'versão 8, de novembro de 2026';
+const VERSION_LABEL = 'versão 9, de novembro de 2026';
 const CONTACT = 'lucaspereiradelima2020@gmail.com';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -98,6 +99,11 @@ export function PrivacyPage() {
               No “Sobre mim”, se você quiser contar: um pouco sobre você, o que gostaria de trabalhar na terapia e
               hábitos que quer deixar ou já deixou. É tudo opcional, e apagar os três campos apaga o “Sobre mim”.
             </li>
+            <li>
+              No Meus Planos: o nome de cada plano, as perguntas e cada registro, com o dia, a hora (se você informar)
+              e as respostas. Como os planos podem tratar de assuntos íntimos, nada deles aparece em notificações nem
+              nos registros técnicos do sistema.
+            </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
             <li>
@@ -122,8 +128,8 @@ export function PrivacyPage() {
 
         <Section title="Para quê">
           <p>
-            Para você registrar suas atividades, o seu Registro de Pensamentos, os seus Episódios de tensão e as
-            suas ações e,
+            Para você registrar suas atividades, o seu Registro de Pensamentos, os seus Episódios de tensão, as
+            suas ações e os seus planos de ação e,
             se quiser, compartilhá-los com a sua terapeuta. Também usamos
             o seu e-mail para mensagens da conta (confirmação, nova senha e aviso de exclusão) e, quando você ligar os
             lembretes, para avisar que há atividades ou ações para ver, sempre sem mostrar o que você escreveu. Não
@@ -136,7 +142,7 @@ export function PrivacyPage() {
             <li>Você vê tudo o que registrou.</li>
             <li>
               A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos, os
-              Episódios de tensão, a agenda com os motivos, a Ação, as fotos das ações e o “Sobre mim”, enquanto o vínculo existir. Você
+              Episódios de tensão, a agenda com os motivos, a Ação, as fotos das ações, o “Sobre mim” e o Meus Planos (só para leitura), enquanto o vínculo existir. Você
               pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
               hora. A terapeuta pode marcar os seus registros como lidos, para se organizar. Essa marca é
               só dela: você não a vê.

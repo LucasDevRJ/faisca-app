@@ -165,6 +165,26 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     ),
     link: { to: '/conta#lembretes', label: 'Configurar lembretes' },
   },
+  // Meus Planos (DEC-095): para paciente e terapeuta.
+  '2026-11-meus-planos': {
+    title: 'Novidade: Meus Planos',
+    icon: '🧭',
+    date: '2026-11-12',
+    patient: (
+      <p>
+        Combinou um plano de ação com sua psicóloga? Agora dá para criar o plano com as perguntas de vocês e registrar
+        cada vez que a situação acontecer. Sua psicóloga acompanha os registros.
+      </p>
+    ),
+    therapist: (
+      <p>
+        Agora os seus pacientes podem criar <strong>planos de ação</strong> com as perguntas que vocês combinarem e
+        registrar cada vez que a situação acontecer. Você lê os registros em Meus Planos, na página de cada paciente,
+        e eles entram no “Para ler”.
+      </p>
+    ),
+    link: { to: '/planos', label: 'Abrir o Meus Planos' },
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?

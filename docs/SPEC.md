@@ -216,6 +216,10 @@ planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
   no "Para ler" e têm o "Lido" (DEC-057); o plano em si, não.
 - Nome, perguntas e respostas nunca aparecem em notificação nem em log.
 - Usar o Meus Planos exige ter aceitado uma versão do aviso de privacidade que o cite (2026-11.2).
+- **Telas (DEC-095):** a aba **Meus Planos** só aparece quando existe algum plano (e na terapeuta,
+  também enquanto falta o aceite, para ela poder aceitar); sem plano, um link discreto "Criar um
+  plano" abaixo das abas. No celular, com 5 ou 6 abas, a grade passa a ter 3 colunas. O modelo das
+  6 perguntas entra por um botão, e não já preenchido.
 
 ## Tela de registros: ciclo ou semana (paciente e terapeuta)
 - A tela abre no **ciclo da consulta** atual, com o título "Consulta de dd/mm", o período, quantos

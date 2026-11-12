@@ -29,8 +29,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // a 2026-10.6 (fotos da Ação) só virou a atual no PR das telas, junto com o texto do aviso
 // (DEC-065). Sem isso, alguém aceitaria uma versão cujo texto ainda não viu. O mesmo vale para a
 // 2026-11 ("Sobre mim", DEC-081): conhecida antes, virou a atual no PR das telas (DEC-082). E
-// para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, vira a atual no PR das telas.
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11';
+// para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, virou a atual no PR das telas (DEC-095).
+export const PRIVACY_VERSION: PrivacyVersion = '2026-11.2';
 
 // Cada área de dado novo exige a versão do aviso que passou a citá-la (DEC-042). Assim, uma versão
 // nova não bloqueia de novo o que a pessoa já tinha liberado: quem aceitou a 2026-10.2 segue no RPD

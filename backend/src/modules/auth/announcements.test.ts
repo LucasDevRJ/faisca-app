@@ -35,14 +35,15 @@ const BACKUPS = '2026-10-copias-seguranca';
 const MURAL = '2026-10-mural';
 const ABOUT_ME = '2026-11-sobre-mim';
 const REMINDERS = '2026-11-lembretes';
+const PLANS = '2026-11-meus-planos';
 
 describe('card de Novidades (DEC-054, DEC-058)', () => {
   it('a paciente vê a novidade que é para ela até tocar em "Entendi"; fica no banco', async () => {
     const agent = await loginAgent();
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(REMINDERS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(PLANS);
 
-    const seen = await agent.post('/auth/announcement-seen').send({ announcement: REMINDERS });
+    const seen = await agent.post('/auth/announcement-seen').send({ announcement: PLANS });
     expect(seen.status).toBe(200);
     expect(seen.body.user.pendingAnnouncement).toBeNull();
     expect((await request.agent(app).post('/auth/login').send({ email: PATIENT, password: PASSWORD })).body.user
@@ -53,10 +54,10 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     await createConfirmedUser({ email: 'terapeuta@faisca.test', patient: false, therapist: true });
     const agent = await loginAgent('terapeuta@faisca.test');
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(MURAL);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(PLANS);
     // A anterior não pode ser marcada no lugar da que está aparecendo.
-    expect((await agent.post('/auth/announcement-seen').send({ announcement: READ_MARKS })).status).toBe(400);
-    expect((await agent.post('/auth/announcement-seen').send({ announcement: MURAL })).status).toBe(200);
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: MURAL })).status).toBe(400);
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: PLANS })).status).toBe(200);
   });
 
   it('conta nova não recebe como novidade o que já existia no cadastro', async () => {
@@ -88,18 +89,20 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     const therapist = { patient: false, therapist: true };
     const both = { patient: true, therapist: true };
 
-    expect(pendingAnnouncement(null, patient)).toBe(REMINDERS);
-    // O "Sobre mim" e os lembretes são só de quem é paciente (DEC-082, DEC-090): a terapeuta segue com a do mural.
-    expect(pendingAnnouncement(null, therapist)).toBe(MURAL);
-    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(REMINDERS);
-    expect(pendingAnnouncement(ALTERNATIVE, therapist)).toBe(MURAL);
-    expect(pendingAnnouncement(READ_MARKS, both)).toBe(REMINDERS);
-    expect(pendingAnnouncement(PHOTOS, both)).toBe(REMINDERS);
-    expect(pendingAnnouncement(BACKUPS, both)).toBe(REMINDERS);
-    expect(pendingAnnouncement(MURAL, both)).toBe(REMINDERS);
-    expect(pendingAnnouncement(MURAL, therapist)).toBeNull();
-    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(REMINDERS);
-    expect(pendingAnnouncement(REMINDERS, both)).toBeNull();
-    expect(pendingAnnouncement('desconhecida', patient)).toBe(REMINDERS);
+    expect(pendingAnnouncement(null, patient)).toBe(PLANS);
+    // O Meus Planos é para os dois perfis (DEC-095): a terapeuta também o recebe.
+    expect(pendingAnnouncement(null, therapist)).toBe(PLANS);
+    // O "Sobre mim" e os lembretes são só de quem é paciente (DEC-082, DEC-090): a terapeuta que já viu
+    // o mural não tem nada entre ele e o Meus Planos.
+    expect(pendingAnnouncement(MURAL, therapist)).toBe(PLANS);
+    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(PLANS);
+    expect(pendingAnnouncement(READ_MARKS, both)).toBe(PLANS);
+    expect(pendingAnnouncement(PHOTOS, both)).toBe(PLANS);
+    expect(pendingAnnouncement(BACKUPS, both)).toBe(PLANS);
+    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(PLANS);
+    expect(pendingAnnouncement(REMINDERS, both)).toBe(PLANS);
+    expect(pendingAnnouncement(REMINDERS, therapist)).toBe(PLANS);
+    expect(pendingAnnouncement(PLANS, both)).toBeNull();
+    expect(pendingAnnouncement('desconhecida', patient)).toBe(PLANS);
   });
 });

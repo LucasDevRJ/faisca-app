@@ -30,6 +30,8 @@ export type PublicPlan = {
   archivedAt: string | null;
   // Com registros, o plano não pode ser apagado, só encerrado. Não é contador para a tela.
   hasEntries: boolean;
+  // Dia do registro mais recente ('AAAA-MM-DD'), para o cartão; null sem registros (DEC-095).
+  lastEntryDate: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -51,7 +53,7 @@ export type PublicPlanEntry = {
   updatedAt: string;
 };
 
-type PlanWithCount = Plan & { _count: { entries: number } };
+type PlanWithCount = Plan & { _count: { entries: number }; entries: { entryDate: Date }[] };
 type EntryWithPlan = PlanEntry & { plan: { title: string } };
 
 // Sem o userId: quem pede já é o dono, ou a terapeuta, que sabe de quem pediu.
@@ -63,6 +65,7 @@ function toPublicPlan(plan: PlanWithCount): PublicPlan {
     archived: plan.archivedAt !== null,
     archivedAt: plan.archivedAt?.toISOString() ?? null,
     hasEntries: plan._count.entries > 0,
+    lastEntryDate: plan.entries[0] ? dateToDateOnly(plan.entries[0].entryDate) : null,
     createdAt: plan.createdAt.toISOString(),
     updatedAt: plan.updatedAt.toISOString(),
   };
@@ -83,7 +86,11 @@ export function toPublicPlanEntry(entry: EntryWithPlan, now: Date = new Date()):
   };
 }
 
-const withCount = { _count: { select: { entries: true } } } as const;
+// A contagem e o registro mais recente, para o cartão do plano.
+const withCount = {
+  _count: { select: { entries: true } },
+  entries: { select: { entryDate: true }, orderBy: { entryDate: 'desc' }, take: 1 },
+} as const;
 const withPlanTitle = { plan: { select: { title: true } } } as const;
 // No dia, pela hora; os sem hora vão para o fim, na ordem em que foram registrados.
 const entryOrder: Prisma.PlanEntryOrderByWithRelationInput[] = [

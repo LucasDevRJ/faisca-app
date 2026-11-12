@@ -40,6 +40,7 @@ import {
   usePatientActions,
   usePatientActivities,
   usePatientAppointments,
+  usePatientPlans,
   usePatientSummary,
   usePatientTensionEpisodes,
   usePatientThoughtRecords,
@@ -53,12 +54,15 @@ import { ThoughtRecordCard } from '../features/thought-records/thought-record-ca
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 import { AboutMeCard } from '../features/about-me/about-me-card';
+import { PatientPlansTab } from '../features/plans/patient-plans-tab';
+import { PlanEntryCard } from '../features/plans/plan-entry-card';
 import { Avatar } from '../features/profile/avatar';
 import { avatarUrls } from '../features/profile/profile-api';
 
 // Aba na URL (?aba=pensamentos ou ?aba=tensao), junto com o período (DEC-040, DEC-043).
 // Sem ?aba, Atividades. ?aba=para-ler é a visão dos registros para ler, fora do ciclo (DEC-058).
-const TABS = ['pensamentos', 'tensao', 'acao', 'para-ler'] as const;
+// ?aba=planos é o Meus Planos (DEC-095), com o plano escolhido em ?plano=.
+const TABS = ['pensamentos', 'tensao', 'acao', 'planos', 'para-ler'] as const;
 type RecordTab = (typeof TABS)[number] | null;
 
 function parseTab(value: string | null): RecordTab {
@@ -136,7 +140,8 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const tensionConsented = Boolean(user?.privacyAreas.tensionEpisodes);
   const actionsConsented = Boolean(user?.privacyAreas.actions);
   const aboutConsented = Boolean(user?.privacyAreas.aboutMe);
-  const anyReadConsented = consented || tensionConsented || actionsConsented || aboutConsented;
+  const plansConsented = Boolean(user?.privacyAreas.plans);
+  const anyReadConsented = consented || tensionConsented || actionsConsented || aboutConsented || plansConsented;
   const requestedTab = parseTab(searchParams.get('aba'));
   // Sem aceite em nenhuma das três áreas, não há o que ler: um link salvo para "Para ler" abre o ciclo.
   const tab = requestedTab === 'para-ler' && !anyReadConsented ? null : requestedTab;
@@ -153,6 +158,10 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const thoughts = usePatientThoughtRecords(patientId, ready && tab === 'pensamentos' && consented ? range : null);
   const tension = usePatientTensionEpisodes(patientId, ready && tab === 'tensao' && tensionConsented ? range : null);
   const actions = usePatientActions(patientId, ready && tab === 'acao' && actionsConsented ? range : null);
+  // Os planos decidem se a aba Meus Planos aparece: só quando o paciente tem algum (DEC-095). Sem o
+  // aceite da versão que a cita, não dá para saber; a aba aparece com o pedido de aceite.
+  const plans = usePatientPlans(patientId, plansConsented);
+  const showPlans = tab === 'planos' || !plansConsented || (plans.data?.length ?? 0) > 0;
   // Selo "consulta" nos dias com sessão. A agenda pede o aceite da versão que a cita (DEC-045);
   // sem ele, só a última e a próxima, que vêm no resumo.
   const agendaConsented = Boolean(user?.privacyAreas.appointmentSchedule);
@@ -170,6 +179,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   if (thoughts.isError && isForbidden(thoughts.error) && !needsPrivacyConsent(thoughts.error)) return <NoAccess />;
   if (tension.isError && isForbidden(tension.error) && !needsPrivacyConsent(tension.error)) return <NoAccess />;
   if (actions.isError && isForbidden(actions.error) && !needsPrivacyConsent(actions.error)) return <NoAccess />;
+  if (plans.isError && isForbidden(plans.error) && !needsPrivacyConsent(plans.error)) return <NoAccess />;
   if (unread.isError && isForbidden(unread.error) && !needsPrivacyConsent(unread.error)) return <NoAccess />;
 
   const firstName = patient.name.split(' ')[0];
@@ -178,6 +188,13 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
     const next = new URLSearchParams(searchParams);
     if (target) next.set('aba', target);
     else next.delete('aba');
+    if (target !== 'planos') next.delete('plano');
+    setSearchParams(next);
+  }
+
+  function selectPlan(planId: string) {
+    const next = new URLSearchParams(searchParams);
+    next.set('plano', planId);
     setSearchParams(next);
   }
 
@@ -244,7 +261,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
             <ToReadCard counts={unread.data.counts} onOpen={() => selectTab('para-ler')} />
           )}
 
-          <RecordTabs tab={tab} onSelect={selectTab} counts={unread.data?.counts} />
+          <RecordTabs tab={tab} onSelect={selectTab} counts={unread.data?.counts} showPlans={showPlans} />
 
           <section aria-labelledby="period-title" className="flex flex-col gap-5 sm:gap-6">
             {period ? (
@@ -263,7 +280,20 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
               </p>
             )}
 
-            {tab === 'acao' ? (
+            {tab === 'planos' ? (
+              <PatientPlansTab
+                patientId={patientId}
+                firstName={firstName ?? patient.name}
+                consented={plansConsented && !(plans.isError && needsPrivacyConsent(plans.error))}
+                plans={plans}
+                selectedId={searchParams.get('plano')}
+                onSelect={selectPlan}
+                range={range}
+                ready={ready}
+                inCycle={inCycle}
+                today={today}
+              />
+            ) : tab === 'acao' ? (
               <ActionsTab
                 patientId={patientId}
                 consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
@@ -381,12 +411,13 @@ function DayList({ days, activities, today, appointmentDays }: DayListProps) {
 }
 
 // Nomes curtos, iguais às abas do paciente: "Registro de Pensamentos" não cabe num celular (DEC-043).
-// Com quatro, grade 2×2 no celular (DEC-052).
+// Com quatro, grade 2×2 no celular (DEC-052); com o Meus Planos, 3 colunas (DEC-095).
 const TAB_LABELS: { tab: RecordTab; label: string }[] = [
   { tab: null, label: 'Atividades' },
   { tab: 'pensamentos', label: 'Pensamentos' },
   { tab: 'tensao', label: 'Tensão' },
   { tab: 'acao', label: 'Ação' },
+  { tab: 'planos', label: 'Meus Planos' },
 ];
 
 // Quantos registros para ler em cada aba (DEC-058): um número discreto, sem cor de alerta.
@@ -394,18 +425,25 @@ const TAB_COUNT: Partial<Record<NonNullable<RecordTab>, keyof UnreadResponse['co
   pensamentos: 'thoughtRecords',
   tensao: 'tensionEpisodes',
   acao: 'actions',
+  planos: 'planEntries',
 };
 
 type RecordTabsProps = {
   tab: RecordTab;
   onSelect: (tab: RecordTab) => void;
   counts: UnreadResponse['counts'] | undefined;
+  showPlans: boolean;
 };
 
-function RecordTabs({ tab, onSelect, counts }: RecordTabsProps) {
+function RecordTabs({ tab, onSelect, counts, showPlans }: RecordTabsProps) {
+  const labels = showPlans ? TAB_LABELS : TAB_LABELS.filter((item) => item.tab !== 'planos');
   return (
-    <div role="group" aria-label="Tipo de registro" className="grid grid-cols-2 gap-2 sm:flex">
-      {TAB_LABELS.map((item) => {
+    <div
+      role="group"
+      aria-label="Tipo de registro"
+      className={`grid ${showPlans ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}
+    >
+      {labels.map((item) => {
         const key = item.tab ? TAB_COUNT[item.tab] : undefined;
         const count = key && counts ? counts[key] : null;
         return (
@@ -483,7 +521,8 @@ function ToReadView({
     ? (data.thoughtRecords ?? []).length +
       (data.tensionEpisodes ?? []).length +
       (data.actions ?? []).length +
-      (data.aboutMe ?? []).length
+      (data.aboutMe ?? []).length +
+      (data.planEntries ?? []).length
     : 0;
   const previousCount = useRef(pendingCount);
   // Marcar tira o registro da lista e, com ele, o botão que tinha o foco. Sem isso o foco cairia no
@@ -530,7 +569,7 @@ function ToReadView({
     );
   }
 
-  const { thoughtRecords, tensionEpisodes, actions, aboutMe } = query.data;
+  const { thoughtRecords, tensionEpisodes, actions, aboutMe, planEntries } = query.data;
   const entries: ToReadEntry[] = [
     ...(thoughtRecords ?? []).map((record) => ({
       key: `t-${record.id}`,
@@ -588,6 +627,22 @@ function ToReadView({
         <AboutMeCard
           aboutMe={about}
           footer={<ReadControl patientId={patientId} type="ABOUT_ME" record={about} label="Sobre mim" />}
+        />
+      ),
+    })),
+    // Meus Planos (DEC-095): o nome do plano no topo do cartão, porque a visão junta vários planos.
+    ...(planEntries ?? []).map((entry) => ({
+      key: `p-${entry.id}`,
+      area: 'Meus Planos',
+      date: entry.entryDate,
+      createdAt: entry.createdAt,
+      item: { type: 'PLAN_ENTRY' as const, id: entry.id },
+      card: (
+        <PlanEntryCard
+          entry={entry}
+          readOnly
+          showPlan
+          footer={<ReadControl patientId={patientId} type="PLAN_ENTRY" record={entry} label={entry.planTitle} />}
         />
       ),
     })),

@@ -15,7 +15,7 @@ export const fakeUser: SessionUser = {
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
-  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true },
+  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
   pendingAnnouncement: null,
   palette: 'SALVIA',
   accessibility: DEFAULT_ACCESSIBILITY,
@@ -24,7 +24,7 @@ export const fakeUser: SessionUser = {
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
 export const outdatedPrivacy = {
   privacyUpToDate: false,
-  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false },
+  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false },
 } satisfies Partial<SessionUser>;
 
 // Sessão fictícia da agenda (DEC-045): recorrente e agendada, às 14:00, por padrão.
@@ -165,9 +165,13 @@ export const handlers = [
       tensionEpisodes: [],
       actions: [],
       aboutMe: [],
-      counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 0 },
+      planEntries: [],
+      counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 0, planEntries: 0 },
     }),
   ),
+  // Nenhum plano, por padrão (DEC-094, DEC-095): a aba Meus Planos fica escondida.
+  http.get('*/api/plans', () => HttpResponse.json({ plans: [] })),
+  http.get('*/api/therapist/patients/:patientId/plans', () => HttpResponse.json({ plans: [] })),
   // Verificação em duas etapas desligada, por padrão (DEC-092).
   http.get('*/api/auth/2fa', () =>
     HttpResponse.json({ available: true, emailEnabled: false, totpEnabled: false, recoveryCodesLeft: 0 }),

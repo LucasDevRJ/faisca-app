@@ -3,6 +3,7 @@ import type { Action } from '../actions/actions-api';
 import type { Activity } from '../activities/activities-api';
 import type { AgendaResponse, AgendaStatus, DateRange, Pause } from '../appointments/appointments-api';
 import type { CycleResponse } from '../cycle/cycle-api';
+import type { Plan, PlanEntry } from '../plans/plans-api';
 import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
 import type { WithRead } from './read-marks-api';
@@ -84,6 +85,25 @@ export async function fetchPatientTensionEpisodes(
 export async function fetchPatientCycle(patientId: string, date?: string): Promise<CycleResponse> {
   const { data } = await api.get<CycleResponse>(`${base(patientId)}/cycle`, { params: date ? { date } : undefined });
   return data;
+}
+
+// Meus Planos (DEC-094): os planos do paciente, ativos e encerrados, e os registros de um plano,
+// com o status de leitura desta terapeuta. Pedem a versão do aviso que os cita.
+export async function fetchPatientPlans(patientId: string): Promise<Plan[]> {
+  const { data } = await api.get<{ plans: Plan[] }>(`${base(patientId)}/plans`);
+  return data.plans;
+}
+
+export async function fetchPatientPlanEntries(
+  patientId: string,
+  planId: string,
+  from: string,
+  to: string,
+): Promise<WithRead<PlanEntry>[]> {
+  const { data } = await api.get<{ entries: WithRead<PlanEntry>[] }>(`${base(patientId)}/plans/${planId}/entries`, {
+    params: { from, to },
+  });
+  return data.entries;
 }
 
 // Ação (DEC-051): pede a versão do aviso que a cita, aceita pela terapeuta.

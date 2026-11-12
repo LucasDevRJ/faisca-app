@@ -17,6 +17,10 @@ import { NoticesPage } from '../pages/notices-page';
 import { PatientPage } from '../pages/patient-page';
 import { PrivacyPage } from '../pages/privacy-page';
 import { PatientsPage } from '../pages/patients-page';
+import { EditPlanEntryPage, NewPlanEntryPage } from '../pages/plan-entry-form-page';
+import { EditPlanPage, NewPlanPage } from '../pages/plan-form-page';
+import { PlanPage } from '../pages/plan-page';
+import { PlansPage } from '../pages/plans-page';
 import { RecordsPage } from '../pages/records-page';
 import { AddAlternativePage, EditThoughtRecordPage, NewThoughtRecordPage } from '../pages/thought-record-form-page';
 import { ThoughtsPage } from '../pages/thoughts-page';
@@ -45,7 +49,8 @@ export const routes = [
               {
                 element: <RequireProfile profile="patient" />,
                 children: [
-                  // Atividades, Pensamentos, Tensão e Ação em abas (DEC-040, DEC-043, DEC-052).
+                  // Atividades, Pensamentos, Tensão, Ação e Meus Planos em abas (DEC-040, DEC-043, DEC-052,
+                  // DEC-095).
                   {
                     element: <PatientTabsLayout />,
                     children: [
@@ -53,6 +58,8 @@ export const routes = [
                       { path: 'pensamentos', element: <ThoughtsPage /> },
                       { path: 'tensao', element: <TensionPage /> },
                       { path: 'acao', element: <ActionsPage /> },
+                      { path: 'planos', element: <PlansPage /> },
+                      { path: 'planos/:id', element: <PlanPage /> },
                     ],
                   },
                   { path: 'pensamentos/novo', element: <NewThoughtRecordPage /> },
@@ -62,6 +69,10 @@ export const routes = [
                   { path: 'tensao/:id/editar', element: <EditTensionEpisodePage /> },
                   { path: 'acao/nova', element: <NewActionPage /> },
                   { path: 'acao/:id/editar', element: <EditActionPage /> },
+                  { path: 'planos/novo', element: <NewPlanPage /> },
+                  { path: 'planos/:id/editar', element: <EditPlanPage /> },
+                  { path: 'planos/:id/registrar', element: <NewPlanEntryPage /> },
+                  { path: 'planos/registros/:entryId/editar', element: <EditPlanEntryPage /> },
                   { path: 'consultas', element: <AppointmentsPage /> },
                   // Avisos de quem acompanha (DEC-080).
                   { path: 'avisos', element: <NoticesPage /> },
