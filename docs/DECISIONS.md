@@ -2177,6 +2177,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   uma. A migration deu todas as áreas também aos vínculos já desfeitos, o que não tem efeito, porque
   um vínculo desfeito nunca é reativado (o novo nasce sem área).
 
+## DEC-098 — Telas do paciente para várias profissionais
+- **Decisão:** em construção (#170). Número reservado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
