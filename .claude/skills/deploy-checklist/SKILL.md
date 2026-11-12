@@ -68,6 +68,15 @@ Diga ao usuário o que muda para ele e para a psicóloga:
 - se houver card de Novidades novo (DEC-054), ele aparece depois de atualizar;
 - se o aviso de privacidade mudou de versão, a área nova pede um novo aceite (DEC-042).
 
+## 5.1 Documentos de divulgação
+Só agora a funcionalidade está **no ar**. Se o PR trouxe algo que o público vê:
+- `docs/BRIEFING-IA.md`: mova da seção 5 ("Em breve") para a 4 ("O que já está no ar") e corrija o
+  texto antigo que ficou errado;
+- `docs/IDEIAS-TCC.md`: marque a ideia que entrou no ar.
+
+O BRIEFING-IA vai num PR de `docs/` (sem deploy do app); se ela já foi atualizada no próprio PR da
+funcionalidade, só confira. Diga no relatório o que mudou.
+
 ## 6. Se der errado
 - **Healthcheck ou migration falhou:** o Railway mantém a versão anterior no ar. Leia os logs do
   deploy no painel; corrija num PR novo (migration errada se corrige com outra migration).
@@ -91,3 +100,4 @@ Diga ao usuário o que muda para ele e para a psicóloga:
 | Railway | `success` às HH:MM · `/health` com `version` = `abc1234` |
 | Conferências | site 200, rota nova 401, … |
 | Para quem usa | "Atualizar", novidades, aceite |
+| Documentos de divulgação | atualizados, conferidos sem mudança ou "não se aplica" |

@@ -10,6 +10,8 @@ em caso de dúvida, eles prevalecem sobre esta skill.
 
 ## 1. Antes de codar
 - Leia a seção da `docs/SPEC.md` e as DECs ligadas ao assunto. Comportamento não definido → pergunte.
+- Se a tarefa vem de uma técnica do `docs/IDEIAS-TCC.md`, leia a parte dela: o que já foi pensado
+  (onde entra, campos, cuidados) é o ponto de partida.
 - Classifique a rota em um dos contextos:
   - **A. Paciente**: só os próprios dados.
   - **B. Terapeuta sobre um paciente**: só GET, só com vínculo ativo e só da área liberada pelo

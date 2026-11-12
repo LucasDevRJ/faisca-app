@@ -2,7 +2,7 @@
 
 Este documento reúne técnicas clássicas da **Terapia Cognitivo-Comportamental (TCC)** planejadas para entrar no Faísca em etapas futuras, conectando cada uma com a estrutura atual do aplicativo (**Ciclo da consulta**, grade de abas no celular (2×2 com 4 abas, 3 colunas com 5 ou 6, DEC-095), visão somente leitura da psicóloga com **"Para ler"**, acessibilidade e as 8 regras invioláveis do `AGENTS.md`).
 
-> **Importante:** nada neste documento está em produção ainda. Quando uma funcionalidade começar a ser implementada, suas regras definitivas devem ir para `docs/SPEC.md` e `docs/DECISIONS.md` (e, quando entrar no ar, para `docs/APRESENTACAO.md` e `docs/BRIEFING-IA.md`).
+> **Importante:** nada neste documento está em produção ainda. Quando uma funcionalidade começar a ser implementada, suas regras definitivas devem ir para `docs/SPEC.md` e `docs/DECISIONS.md` (e, quando entrar no ar, para `docs/BRIEFING-IA.md`).
 
 ---
 
