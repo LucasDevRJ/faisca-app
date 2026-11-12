@@ -2262,6 +2262,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** sem pensamentos repetidos (#166) nem sono e humor (#188), que entram quando
   existirem. As telas ficam para o PR seguinte.
 
+## DEC-101 — Telas do resumo do período
+- **Decisão (#172):** em construção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
