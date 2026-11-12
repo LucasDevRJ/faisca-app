@@ -182,7 +182,13 @@ describe('planos', () => {
     const created = await patient.post('/plans').send({ ...planBody, title: `  ${planBody.title}  ` });
     expect(created.status).toBe(201);
     expect(created.body.plan).toEqual(
-      expect.objectContaining({ title: planBody.title, questions: QUESTIONS, archived: false, hasEntries: false }),
+      expect.objectContaining({
+        title: planBody.title,
+        questions: QUESTIONS,
+        archived: false,
+        hasEntries: false,
+        lastEntryDate: null,
+      }),
     );
     const id = created.body.plan.id;
 
@@ -278,7 +284,9 @@ describe('planos', () => {
 
     const used = await seedPlan(patientId);
     await seedEntry(used.id, patientId);
-    expect((await patient.get(`/plans/${used.id}`)).body.plan.hasEntries).toBe(true);
+    expect((await patient.get(`/plans/${used.id}`)).body.plan).toEqual(
+      expect.objectContaining({ hasEntries: true, lastEntryDate: addDays(today(), -1) }),
+    );
     const res = await patient.delete(`/plans/${used.id}`);
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('PLAN_HAS_ENTRIES');

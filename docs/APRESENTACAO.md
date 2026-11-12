@@ -59,6 +59,9 @@ Para todos:
   Lavanda, Oceano, Areia e Alto contraste), que valem em qualquer aparelho.
 - **"Sobre mim":** o paciente conta, se quiser, um pouco sobre si, o que gostaria de trabalhar na
   terapia e hábitos que quer deixar. A psicóloga lê e marca como lido.
+- **Meus Planos:** planos de ação combinados com a psicóloga ("Quando surgir vontade de…"), com
+  perguntas próprias (há um modelo de 6 perguntas para começar). A cada vez que a situação
+  acontece, o paciente registra as respostas; a psicóloga acompanha e marca como lido.
 - **Acessibilidade:** cinco ajustes independentes em Conta, abertos a todos (paciente e psicóloga) e
   salvos na conta: **Linguagem direta** (textos literais, sem expressões figuradas), **Uma coisa por
   vez** (formulários longos divididos em passos curtos), **Leitura confortável** (fonte maior e mais

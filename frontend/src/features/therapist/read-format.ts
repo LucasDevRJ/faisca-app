@@ -19,11 +19,18 @@ export function unreadBreakdown(counts: UnreadResponse['counts']): string {
   if (counts.tensionEpisodes) parts.push(plural(counts.tensionEpisodes, 'episódio de tensão', 'episódios de tensão'));
   if (counts.actions) parts.push(plural(counts.actions, 'ação', 'ações'));
   if (counts.aboutMe) parts.push('o “Sobre mim”');
+  if (counts.planEntries) parts.push(plural(counts.planEntries, 'registro de plano', 'registros de plano'));
   return parts.join(' · ');
 }
 
 export function unreadTotal(counts: UnreadResponse['counts']): number {
-  return (counts.thoughtRecords ?? 0) + (counts.tensionEpisodes ?? 0) + (counts.actions ?? 0) + (counts.aboutMe ?? 0);
+  return (
+    (counts.thoughtRecords ?? 0) +
+    (counts.tensionEpisodes ?? 0) +
+    (counts.actions ?? 0) +
+    (counts.aboutMe ?? 0) +
+    (counts.planEntries ?? 0)
+  );
 }
 
 // "5 registros para ler" / "1 registro para ler".

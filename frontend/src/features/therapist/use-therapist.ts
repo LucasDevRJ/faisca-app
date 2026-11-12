@@ -9,6 +9,8 @@ import {
   fetchPatientActivities,
   fetchPatientAppointments,
   fetchPatientCycle,
+  fetchPatientPlanEntries,
+  fetchPatientPlans,
   fetchPatientSummary,
   fetchPatientTensionEpisodes,
   fetchPatientThoughtRecords,
@@ -116,6 +118,23 @@ export function usePatientActions(patientId: string, range: { from: string; to: 
   return useQuery({
     queryKey: [...THERAPIST_KEY, patientId, 'actions', range?.from, range?.to],
     queryFn: range ? () => fetchPatientActions(patientId, range.from, range.to) : skipToken,
+    retry: retryUnlessForbidden,
+  });
+}
+
+// Meus Planos (DEC-094): os planos do paciente, para decidir se a aba aparece e para escolher um.
+export function usePatientPlans(patientId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'plans'],
+    queryFn: enabled ? () => fetchPatientPlans(patientId) : skipToken,
+    retry: retryUnlessForbidden,
+  });
+}
+
+export function usePatientPlanEntries(patientId: string, planId: string | null, range: { from: string; to: string } | null) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'plan-entries', planId, range?.from, range?.to],
+    queryFn: planId && range ? () => fetchPatientPlanEntries(patientId, planId, range.from, range.to) : skipToken,
     retry: retryUnlessForbidden,
   });
 }

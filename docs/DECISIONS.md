@@ -2088,7 +2088,32 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   colunas no celular ficam para o PR das telas, com DEC própria revendo a DEC-052.
 
 ## DEC-095 — Telas do Meus Planos e grade de abas de 3 colunas
-- **Decisão:** em construção (#179). Número reservado.
+- **Decisão (#179, sobre a API da DEC-094):**
+  - **aba condicional:** "Meus Planos" (o mesmo nome na psicóloga) só aparece quando existe algum
+    plano, ou enquanto a pessoa está nela. Sem plano, um link discreto abaixo das abas: "Combinou um
+    plano de ação com sua psicóloga? Criar um plano" ("Criar um plano de ação" com Linguagem
+    direta). Na terapeuta, a aba também aparece enquanto ela não aceitou a versão 2026-11.2: sem o
+    aceite, não dá para saber se o paciente tem planos, e é na aba que ela aceita;
+  - **grade de abas (revê a DEC-052):** no celular, 2×2 com quatro abas e **3 colunas** com cinco ou
+    seis (o sexto espaço fica para as Tarefas, #150); no computador, uma linha só. Conferido em 375
+    px: as cinco cabem sem cortar nem rolar para o lado;
+  - **telas do paciente:** `/planos` (lista com o último registro, Registrar, Ver registros, Editar,
+    Encerrar e Apagar só sem registros; os encerrados recolhidos, com Reabrir), `/planos/novo` e
+    `/planos/:id/editar` (nome e perguntas; o **modelo de 6 perguntas por botão**, com confirmação
+    se já houver perguntas escritas; aviso de que as perguntas novas valem para os próximos
+    registros), `/planos/:id` (registros por ciclo ou semana, com "Sem resposta" nas vazias) e o
+    registro em página própria, com "Uma coisa por vez" dividindo o dia e cada pergunta em passos;
+  - **psicóloga:** a aba só de leitura, com a escolha do plano (`?plano=`), as perguntas, os
+    registros com o "Lido" e o número para ler; no "Para ler", o cartão traz "Plano: {nome}";
+  - **o plano devolve `lastEntryDate`** para o cartão mostrar "Último registro: dd/mm";
+  - **aviso de privacidade versão 9 (2026-11.2) passa a ser a atual**, só com o Meus Planos (os dados
+    do 2FA e o e-mail do suporte entram numa versão própria, escolha do usuário), e a novidade
+    `2026-11-meus-planos` para os dois perfis.
+- **Motivo:** textos aprovados pelo usuário, que pediu a funcionalidade o quanto antes para usar o
+  plano de ação que a psicóloga passou. A aba condicional deixa a tela simples para quem não usa, e a
+  grade de 3 colunas comporta as próximas áreas sem esconder nenhuma.
+- **Limite conhecido:** os textos ainda não passaram pela psicóloga; o que ela mudar entra depois.
+  Com cinco abas, a segunda linha da grade fica com um espaço vazio até as Tarefas.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
