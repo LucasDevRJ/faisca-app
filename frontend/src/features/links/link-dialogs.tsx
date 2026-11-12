@@ -52,13 +52,28 @@ export function InviteDialog({ onClose, onSent }: { onClose: () => void; onSent:
 
 // Desfazer é imediato (SPEC): a confirmação diz isso antes, sem tom de alarme, e conta que os
 // registros ficam com o paciente e o que acontece se ele se vincular de novo. Usa o nome da
-// terapeuta em vez de pronome: o perfil é aberto a qualquer profissional.
-export function RevokeLinkDialog({ therapistName, onClose }: { therapistName: string; onClose: () => void }) {
+// profissional em vez de pronome. Desfaz só este vínculo (DEC-097).
+export function RevokeLinkDialog({
+  linkId,
+  therapistName,
+  onClose,
+  onRevoked,
+}: {
+  linkId: string;
+  therapistName: string;
+  onClose: () => void;
+  onRevoked?: () => void;
+}) {
   const revoke = useRevokeLink();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    revoke.mutate(undefined, { onSuccess: onClose });
+    revoke.mutate(linkId, {
+      onSuccess: () => {
+        onClose();
+        onRevoked?.();
+      },
+    });
   }
 
   return (
@@ -71,8 +86,8 @@ export function RevokeLinkDialog({ therapistName, onClose }: { therapistName: st
             <strong className="font-semibold text-text">Seus registros continuam com você</strong>: nada é apagado.
           </p>
           <p>
-            Se mudar de ideia, é só criar um vínculo novo, com código ou convite. {therapistName} volta a ver tudo,
-            inclusive o que você registrar até lá.
+            Se mudar de ideia, é só criar um vínculo novo, com código ou convite. {therapistName} começa sem ver
+            nada, e você escolhe de novo o que compartilhar.
           </p>
         </div>
       }

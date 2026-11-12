@@ -27,7 +27,7 @@ const VERSION = '2026-10-25T21:00:00.000Z';
 beforeEach(() => {
   server.use(
     loggedIn,
-    http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
+    http.get('*/api/link', () => HttpResponse.json({ links: [], link: null, invite: null, code: null })),
     http.get('*/api/profile', () => HttpResponse.json({ profile: { fullName: null, palette: 'SALVIA', avatarVersion: null } })),
   );
   vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:foto-ficticia');

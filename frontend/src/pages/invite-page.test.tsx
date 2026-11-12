@@ -146,14 +146,19 @@ describe('/convite', () => {
 });
 
 describe('aviso de novo vínculo em /registros', () => {
-  const linked: LinkStatus = {
-    link: {
-      id: 'l1',
-      method: 'CODE',
-      createdAt: '2026-09-28T15:00:00Z',
-      seen: false,
-      therapist: { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null },
-    },
+  const newLink = {
+    id: 'l1',
+    method: 'CODE' as const,
+    createdAt: '2026-09-28T15:00:00Z',
+    seen: false,
+    kind: 'PSIQUIATRIA' as const,
+    sharedAreas: [],
+    therapist: { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null, councilNumber: null },
+  };
+  const linked: LinkStatus = { links: [newLink], link: newLink, invite: null, code: null };
+  const seenLinked: LinkStatus = {
+    links: [{ ...newLink, seen: true }],
+    link: { ...newLink, seen: true },
     invite: null,
     code: null,
   };
@@ -163,7 +168,7 @@ describe('aviso de novo vínculo em /registros', () => {
     let seen = false;
     server.use(
       loggedIn,
-      http.get('*/api/link', () => HttpResponse.json(seen ? { ...linked, link: { ...linked.link, seen: true } } : linked)),
+      http.get('*/api/link', () => HttpResponse.json(seen ? seenLinked : linked)),
       http.post('*/api/link/seen', () => {
         seen = true;
         return new HttpResponse(null, { status: 204 });
@@ -174,6 +179,9 @@ describe('aviso de novo vínculo em /registros', () => {
     const notice = await screen.findByRole('region', { name: 'Novo vínculo' });
     expect(notice).toHaveTextContent('Tereza Fictícia');
     expect(notice).toHaveTextContent('tereza@faisca.test');
+    // O tipo e o caminho para escolher o que ela vê (DEC-097, DEC-098).
+    expect(notice).toHaveTextContent('psiquiatra');
+    expect(notice).toHaveTextContent('Tereza ainda não vê nada: escolha em Conta o que pode ver.');
 
     await user.click(screen.getByRole('button', { name: 'Entendi' }));
 
@@ -181,7 +189,7 @@ describe('aviso de novo vínculo em /registros', () => {
   });
 
   it('vínculo já visto não mostra aviso', async () => {
-    server.use(loggedIn, http.get('*/api/link', () => HttpResponse.json({ ...linked, link: { ...linked.link, seen: true } })));
+    server.use(loggedIn, http.get('*/api/link', () => HttpResponse.json(seenLinked)));
     renderRoute('/registros');
 
     await screen.findByRole('heading', { name: /Olá/ });

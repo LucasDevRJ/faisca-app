@@ -291,6 +291,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Com uma psicóloga e uma psiquiatra vinculadas, ou com um convite pendente, o paciente não gera
   outro convite nem outro código. Com só uma delas, dá para chamar a outra.
 - Desfazer é por vínculo: desfazer um não mexe no outro.
+- Na tela (DEC-098): em Conta, "Quem me acompanha", com um cartão por profissional e as caixas de
+  "O que [nome] pode ver" (as fotos da Ação só com a Ação marcada).
 - Quando um vínculo é criado, o paciente é avisado no app e por e-mail e vê o **nome e o e-mail** de quem se vinculou.
 - O paciente revoga a qualquer momento e o acesso cai na hora. O registro do vínculo é mantido (`revokedAt`).
   Os registros do paciente não são apagados: continuam na conta dele. Num vínculo novo, a terapeuta volta

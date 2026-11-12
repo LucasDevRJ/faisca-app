@@ -10,6 +10,8 @@ import {
   markLinkSeen,
   redeemLinkCode,
   revokeLink,
+  setSharedAreas,
+  type SharedArea,
 } from './links-api';
 
 const LINK_KEY = ['link'] as const;
@@ -44,7 +46,13 @@ export function useCancelInvite() {
 }
 
 export function useRevokeLink() {
-  return usePatientLinkMutation(() => revokeLink());
+  return usePatientLinkMutation((linkId: string) => revokeLink(linkId));
+}
+
+export function useSetSharedAreas() {
+  return usePatientLinkMutation(({ linkId, areas }: { linkId: string; areas: SharedArea[] }) =>
+    setSharedAreas(linkId, areas),
+  );
 }
 
 export function useMarkLinkSeen() {

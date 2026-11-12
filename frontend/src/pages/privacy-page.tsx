@@ -17,6 +17,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-11.2 (DEC-094, DEC-095): entra o Meus Planos, com novo aceite para usá-lo.
 // Versão 2026-11.3 (DEC-096): os dados da verificação em duas etapas, as mensagens ao suporte (Zoho
 // Mail, nos EUA) e o contato suporte@. Pede o aceite de novo, sem bloquear nenhuma área.
+// Versão 2026-11.4 (DEC-097, DEC-098): até duas profissionais, cada uma vendo só as áreas que o
+// paciente escolhe. Pede o aceite de novo, sem bloquear nenhuma área.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -25,7 +27,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // DEC-068, DEC-069, DEC-076, DEC-090): dados pessoais e preferências da própria conta, que não são
 // de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já
 // vi" fica só com o paciente.
-const VERSION_LABEL = 'versão 10, de novembro de 2026';
+const VERSION_LABEL = 'versão 11, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -152,11 +154,13 @@ export function PrivacyPage() {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li>Você vê tudo o que registrou.</li>
             <li>
-              A terapeuta vinculada vê tudo, inclusive notas, observações, o Registro de Pensamentos, os
-              Episódios de tensão, a agenda com os motivos, a Ação, as fotos das ações, o “Sobre mim” e o Meus Planos (só para leitura), enquanto o vínculo existir. Você
-              pode desfazer o vínculo a qualquer momento em <strong>Conta</strong>, e o acesso dela acaba na
-              hora. A terapeuta pode marcar os seus registros como lidos, para se organizar. Essa marca é
-              só dela: você não a vê.
+              Você pode compartilhar com até duas profissionais (uma psicóloga e uma psiquiatra) e escolher, para
+              cada uma, quais áreas ela vê: atividades, Registro de Pensamentos, Episódios de tensão, Ação, fotos
+              das ações, “Sobre mim”, agenda com os motivos e Meus Planos. Uma profissional nova começa sem ver
+              nada. Ela só lê, sem alterar nada, enquanto o vínculo existir. Você muda o que cada uma vê, ou
+              desfaz o vínculo, a qualquer momento em <strong>Conta</strong>, e vale na hora. Cada profissional
+              pode marcar os seus registros como lidos, para se organizar. Essa marca é só dela: você e a outra
+              profissional não a veem.
             </li>
             <li>
               Se você é terapeuta, o seu nome, o seu e-mail e a sua foto de perfil, se tiver, aparecem para os

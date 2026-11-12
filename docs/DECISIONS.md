@@ -2178,7 +2178,33 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   um vínculo desfeito nunca é reativado (o novo nasce sem área).
 
 ## DEC-098 — Telas do paciente para várias profissionais
-- **Decisão:** em construção (#170). Número reservado.
+- **Decisão (#170, sobre a API da DEC-097):**
+  - **Conta → "Quem me acompanha"** (no lugar de "Minha terapeuta"): um cartão por profissional, com
+    foto, nome, "Psicóloga" ou "Psiquiatra", o conselho se ela informou, e-mail e desde quando;
+  - **"O que [nome] pode ver":** uma caixa por área. As **fotos da Ação** só aparecem com a Ação
+    marcada, e desmarcar a Ação leva as fotos junto (escolha do usuário). Sem nenhuma marcada: "[nome]
+    ainda não vê nenhum registro seu. Marque o que quiser compartilhar." O botão "Salvar o que [nome]
+    vê" grava na ordem das telas. Antes de salvar, "Vale assim que você salvar." e, com caixas
+    mudadas, "Ainda não salvo."; depois, "Salvo. Já vale."; se falhar, as caixas voltam ao que está
+    gravado. O formulário acompanha o que está gravado (outra aba ou aparelho não reabre uma área
+    fechada). Os botões repetidos por cartão levam o tipo no nome lido pelo leitor de tela, e o cartão
+    diz que "o tipo e o conselho são informados pela própria profissional" (achados dos revisores);
+  - **desfazer por profissional** ("Desfazer o vínculo com [nome]"), com a confirmação dizendo que,
+    num vínculo novo, ela começa sem ver nada;
+  - **"Vincular outra profissional"** (código ou convite) enquanto houver vaga: uma psicóloga e uma
+    psiquiatra. O código gerado fica na tela até virar vínculo;
+  - **aviso de novo vínculo** com o tipo e, quando ela ainda não vê nada, "[nome] ainda não vê nada:
+    escolha em Conta o que pode ver". Usa o nome, e não pronome, e lista **todas** as não vistas, porque
+    "Entendi" marca todas;
+  - depois de desfazer um vínculo, o foco vai para o título "Quem me acompanha";
+  - **aviso de privacidade 2026-11.4 (versão 11)**, sem área nova: até duas profissionais, cada uma vendo
+    só o que o paciente escolhe; quem já acompanha continua vendo o que via, e a nova começa sem ver
+    nada. O aceite fica na faixa.
+- **Motivo:** textos aprovados pelo usuário. Liberar por área, com a nova começando vazia, deixa o
+  paciente no controle do que cada profissional vê.
+- **Limite conhecido:** as telas da profissional (tipo em Conta, só as abas liberadas, o período da
+  psiquiatra) ficam para o PR seguinte, depois da conversa do usuário com a psiquiatra. Até lá, a
+  psiquiatra com área fechada recebe 403 nas abas que a tela atual ainda mostra.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

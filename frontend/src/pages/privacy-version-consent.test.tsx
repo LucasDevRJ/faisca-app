@@ -29,7 +29,7 @@ describe('faixa do aviso de privacidade sem área nova', () => {
     renderRoute('/registros');
 
     const banner = await screen.findByRole('region', { name: 'O aviso de privacidade mudou' });
-    expect(banner).toHaveTextContent('verificação em duas etapas e das mensagens para o suporte');
+    expect(banner).toHaveTextContent('até duas profissionais (uma psicóloga e uma psiquiatra)');
     expect(within(banner).getByRole('link', { name: 'Ver o que mudou' })).toHaveAttribute('href', '/privacidade');
     // Nada bloqueado: a tela de registros continua lá.
     expect(screen.getByRole('link', { name: 'Pensamentos' })).toBeInTheDocument();

@@ -7,9 +7,11 @@ import { renderRoute } from '../test/render';
 import { loggedIn, server } from '../test/server';
 
 // Avisos de quem acompanha, do lado do paciente (DEC-079, DEC-080). Dados fictícios (regra 5).
-const therapist = { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null };
+const therapist = { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null, councilNumber: null };
+const theLink = { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, kind: 'PSICOLOGIA', sharedAreas: [], therapist };
 const linked = {
-  link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, therapist },
+  links: [theLink],
+  link: theLink,
   invite: null,
   code: null,
 };
@@ -33,7 +35,7 @@ function noticesApi(notices: PatientNotice[], { withLink = true } = {}) {
   const seenCalls: unknown[] = [];
   let current = notices;
   server.use(
-    http.get('*/api/link', () => HttpResponse.json(withLink ? linked : { link: null, invite: null, code: null })),
+    http.get('*/api/link', () => HttpResponse.json(withLink ? linked : { links: [], link: null, invite: null, code: null })),
     http.get('*/api/notices', () =>
       HttpResponse.json({ notices: current, unseenCount: current.filter((n) => !n.seen).length }),
     ),

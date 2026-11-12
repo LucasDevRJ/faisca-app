@@ -153,7 +153,7 @@ export const handlers = [
   // Sem agenda, sem ciclo: as telas usam a semana (DEC-050).
   http.get('*/api/appointments/cycle', () => HttpResponse.json({ today: '2026-09-24', cycle: null })),
   // Sem vínculo e sem pacientes, por padrão.
-  http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
+  http.get('*/api/link', () => HttpResponse.json({ links: [], link: null, invite: null, code: null })),
   http.get('*/api/links/patients', () => HttpResponse.json({ patients: [] })),
   // Mural de avisos (DEC-080): nenhum aviso, por padrão.
   http.get('*/api/notices', () => HttpResponse.json({ notices: [], unseenCount: 0 })),

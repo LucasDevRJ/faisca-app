@@ -48,6 +48,8 @@ export async function deleteAvatar(): Promise<void> {
 export const avatarUrls = {
   own: (version: string) => `/api/profile/avatar?v=${encodeURIComponent(version)}`,
   myTherapist: (version: string) => `/api/link/therapist/avatar?v=${encodeURIComponent(version)}`,
+  // A foto de cada profissional, pelo vínculo (DEC-097).
+  linked: (linkId: string, version: string) => `/api/link/${linkId}/avatar?v=${encodeURIComponent(version)}`,
   patient: (patientId: string, version: string) =>
     `/api/therapist/patients/${patientId}/avatar?v=${encodeURIComponent(version)}`,
 };
