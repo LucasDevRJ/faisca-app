@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { renderRoute } from '../test/render';
 import { fakeUser, server } from '../test/server';
 
-// Versão do aviso sem área nova (2026-10.7, DEC-078): o aceite fica numa faixa, sem bloquear nada.
+// Versão do aviso sem área nova (2026-10.7, DEC-078; agora a 2026-11.3, DEC-096): o aceite fica numa
+// faixa, sem bloquear nada.
 // Dados fictícios (regra 5).
 const outdatedVersion = { ...fakeUser, privacyUpToDate: false };
 
@@ -21,14 +22,14 @@ function sessionWithAccept() {
   return { wasAccepted: () => accepted };
 }
 
-describe('faixa do aviso de privacidade versão 7', () => {
+describe('faixa do aviso de privacidade sem área nova', () => {
   it('aparece para o paciente, sem bloquear, e some depois do aceite', async () => {
     const { wasAccepted } = sessionWithAccept();
     const user = userEvent.setup();
     renderRoute('/registros');
 
     const banner = await screen.findByRole('region', { name: 'O aviso de privacidade mudou' });
-    expect(banner).toHaveTextContent('cópia de segurança por dia');
+    expect(banner).toHaveTextContent('verificação em duas etapas e das mensagens para o suporte');
     expect(within(banner).getByRole('link', { name: 'Ver o que mudou' })).toHaveAttribute('href', '/privacidade');
     // Nada bloqueado: a tela de registros continua lá.
     expect(screen.getByRole('link', { name: 'Pensamentos' })).toBeInTheDocument();
