@@ -10,8 +10,9 @@ celular, sem loja de apps) que apoia pessoas em terapia a registrar o dia a dia 
 e outra. Ele foi pensado a partir da Terapia Cognitivo-Comportamental (TCC), principalmente da
 técnica de Ativação Comportamental (o "Registro de Ativação"). Endereço: https://minhafaisca.com.br.
 
-O app foi criado por [nome do autor] como Trabalho de Conclusão de Curso (TCC) em
-[curso/instituição], já está em uso real por paciente e psicóloga, e o **cadastro é aberto**.
+O app é um produto independente criado por [nome do autor], já está em uso real por paciente e
+psicóloga, e o **cadastro é aberto**. Aqui, **TCC é sempre Terapia Cognitivo-Comportamental**: o
+Faísca não é um trabalho acadêmico.
 
 ## O problema que resolve
 Entre uma sessão e outra passa uma semana inteira, e muita coisa se perde: o que a pessoa fez, como
@@ -23,6 +24,7 @@ consentimento do paciente.
 ## Para quem
 - Pacientes em terapia (principalmente TCC) que querem registrar o dia a dia de forma simples.
 - Psicólogas e psicólogos que querem acompanhar os registros dos pacientes entre as sessões.
+- Psiquiatras que querem ver como o paciente passou os meses entre uma consulta e outra.
 - Uma mesma pessoa pode usar os dois perfis.
 
 ## O que já existe
@@ -45,8 +47,11 @@ Para o paciente:
   paciente escolhe, para cada uma, o que ela vê (atividades, pensamentos, tensão, Ação e fotos,
   "Sobre mim", agenda, Meus Planos) e desfaz quando quiser. A psiquiatra acompanha por 1, 2 ou 3 meses.
 
-Para a psicóloga:
-- Vê os registros dos pacientes vinculados, por ciclo da consulta ou por semana, com gráficos.
+Para a psicóloga e a psiquiatra:
+- Vê só o que cada paciente liberou para ela. A psicóloga acompanha por ciclo da consulta ou por
+  semana, e a psiquiatra, por 1, 2 ou 3 meses, sempre com gráficos.
+- No cadastro, diz se é psicóloga ou psiquiatra e, se quiser, informa o número do conselho (CRP ou
+  CRM), que aparece para os pacientes.
 - Tem acesso **só de leitura**: nunca altera o que o paciente escreveu.
 - Marca os registros como **lidos** e vê, fora do ciclo, tudo o que ainda está para ler. Em Meus
   pacientes, vê o total para ler de todos, e quem tem algo pendente aparece primeiro.
@@ -79,8 +84,9 @@ Para todos:
 ## Privacidade e segurança (diferencial)
 - Os registros são dados de saúde e são tratados como dados sensíveis, seguindo a LGPD:
   consentimento específico no cadastro e aviso de privacidade público e claro.
-- A psicóloga só vê os dados enquanto o vínculo estiver ativo, e só para leitura. O paciente
-  decide quando vincular e desvincular.
+- A psicóloga e a psiquiatra só veem os dados enquanto o vínculo estiver ativo, só para leitura e
+  só as áreas que o paciente liberou para cada uma (uma nova começa sem ver nada). O paciente
+  decide quando vincular, o que cada uma vê e quando desvincular.
 - Registros finalizados não podem ser alterados, para preservar o histórico.
 - Notificações nunca mostram o conteúdo dos registros.
 - Em Conta, a pessoa **troca a senha** e pode **sair de todos os aparelhos** de uma vez, se achar
