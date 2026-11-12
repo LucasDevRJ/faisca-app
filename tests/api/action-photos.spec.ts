@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { API_URL } from '../fixtures/urls.js';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Fotos da Ação ponta a ponta (DEC-064, regra 1): a terapeuta vinculada vê, não escreve e perde o
 // acesso ao desvincular. Usa as contas próprias das fotos e termina sem vínculo.
@@ -39,6 +40,7 @@ test('a terapeuta vê as fotos da Ação do paciente vinculado, não escreve e p
 
   const { code } = await (await patient.post('/link/code')).json();
   const patientId = (await (await therapist.post('/links/redeem-code', { data: { code } })).json()).patient.id as string;
+  await shareAllAreas(patient);
   const path = `/therapist/patients/${patientId}/actions/${actionId}/photos/${photoId}`;
 
   const photo = await therapist.get(path);

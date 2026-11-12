@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { API_URL } from '../fixtures/urls.js';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Ação ponta a ponta (regra 1, DEC-051): o aceite da versão que cita a Ação libera a área, a
 // paciente planeja e avalia, a terapeuta vinculada lê e nunca escreve. Usa as contas próprias, que
@@ -37,6 +38,7 @@ test('aceite, ação da paciente e leitura só pela terapeuta vinculada', async 
 
   const { code } = await (await patient.post('/link/code')).json();
   const patientId = (await (await therapist.post('/links/redeem-code', { data: { code } })).json()).patient.id as string;
+  await shareAllAreas(patient);
   const path = `/therapist/patients/${patientId}/actions`;
 
   // A terapeuta também precisa do aceite da versão que cita a Ação.

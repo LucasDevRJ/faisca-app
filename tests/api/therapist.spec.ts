@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { API_URL } from '../fixtures/urls.js';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Visão da terapeuta ponta a ponta (regra 1): lê com vínculo ativo; nunca escreve; perde o
 // acesso quando o paciente desfaz o vínculo. Usa as contas próprias do vínculo e termina sem vínculo.
@@ -28,6 +29,7 @@ test('terapeuta lê os registros do paciente vinculado, não escreve e perde o a
   const { code } = await (await patient.post('/link/code')).json();
   const redeemed = await therapist.post('/links/redeem-code', { data: { code } });
   const patientId = (await redeemed.json()).patient.id as string;
+  await shareAllAreas(patient);
   const base = `/therapist/patients/${patientId}`;
 
   const summary = await therapist.get(base);

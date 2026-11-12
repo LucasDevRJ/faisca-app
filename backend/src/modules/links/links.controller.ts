@@ -1,7 +1,14 @@
 import type { RequestHandler } from 'express';
 import { AppError } from '../../errors/app-error.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
-import { acceptInviteSchema, createInviteSchema, redeemCodeSchema } from './links.schema.js';
+import {
+  acceptInviteSchema,
+  createInviteSchema,
+  linkIdSchema,
+  redeemCodeSchema,
+  revokeSchema,
+  sharedAreasSchema,
+} from './links.schema.js';
 import type { LinksService } from './links.service.js';
 
 // Contexto de paciente: o id sai sempre da sessão, nunca do corpo ou da URL.
@@ -27,10 +34,17 @@ export function createLinksController(service: LinksService) {
   };
 
   const revoke: RequestHandler = async (req, res) => {
-    if (!(await service.revoke(getAuthUser(req).id))) {
+    const { linkId } = revokeSchema.parse(req.body ?? {});
+    if (!(await service.revoke(getAuthUser(req).id, linkId))) {
       throw new AppError(404, 'NO_ACTIVE_LINK', 'Você não tem terapeuta vinculada.');
     }
     res.status(204).end();
+  };
+
+  const setSharedAreas: RequestHandler = async (req, res) => {
+    const { linkId } = linkIdSchema.parse(req.params);
+    const { areas } = sharedAreasSchema.parse(req.body);
+    res.status(200).json({ link: await service.setSharedAreas(getAuthUser(req).id, linkId, areas) });
   };
 
   const markSeen: RequestHandler = async (req, res) => {
@@ -45,8 +59,8 @@ export function createLinksController(service: LinksService) {
   };
 
   const acceptInvite: RequestHandler = async (req, res) => {
-    const { token } = acceptInviteSchema.parse(req.body);
-    const patient = await service.acceptInvite(getAuthUser(req).id, token);
+    const { token, professionalKind } = acceptInviteSchema.parse(req.body);
+    const patient = await service.acceptInvite(getAuthUser(req).id, token, professionalKind);
     res.status(201).json({ patient });
   };
 
@@ -55,5 +69,16 @@ export function createLinksController(service: LinksService) {
     res.status(200).json({ patients: await service.listPatients(user.id, user.privacyVersion) });
   };
 
-  return { status, createInvite, cancelInvite, generateCode, revoke, markSeen, redeemCode, acceptInvite, listPatients };
+  return {
+    status,
+    createInvite,
+    cancelInvite,
+    generateCode,
+    revoke,
+    setSharedAreas,
+    markSeen,
+    redeemCode,
+    acceptInvite,
+    listPatients,
+  };
 }

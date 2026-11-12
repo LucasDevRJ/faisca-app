@@ -13,18 +13,23 @@ datasource db {
 }
 
 model User {
-  id                  String    @id @default(uuid()) @db.Uuid
+  id                  String            @id @default(uuid()) @db.Uuid
   name                String
   // Sempre em minúsculas e sem espaços nas pontas (normalizado no schema Zod).
-  email               String    @unique
+  email               String            @unique
   passwordHash        String
   // Pelo menos um dos dois é true: garantido por CHECK na migration (DEC-013).
-  hasPatientProfile   Boolean   @default(false)
-  hasTherapistProfile Boolean   @default(false)
+  hasPatientProfile   Boolean           @default(false)
+  hasTherapistProfile Boolean           @default(false)
+  // Tipo de profissional (DEC-097): obrigatório com o perfil de terapeuta (CHECK na migration).
+  // Quem já era terapeuta virou psicóloga. Muda só sem vínculo ativo.
+  professionalKind    ProfessionalKind?
+  // CRP ou CRM, opcional, só para mostrar ao paciente (1 a 30 caracteres, CHECK na migration).
+  councilNumber       String?
   // null = e-mail ainda não confirmado; o login é recusado até confirmar.
   emailConfirmedAt    DateTime?
   // Vai dentro do JWT. Ao redefinir a senha, sobe e derruba as sessões abertas (DEC-025).
-  sessionVersion      Int       @default(0)
+  sessionVersion      Int               @default(0)
   // Consentimento com o aviso de privacidade (LGPD, dado de saúde; DEC-036): quando e qual versão.
   // null só em contas criadas antes do aviso existir.
   privacyAcceptedAt   DateTime?
@@ -40,17 +45,17 @@ model User {
   palette             Palette?
   // Ajustes de acessibilidade (DEC-076, issue #87): abertos a todos, desligados por padrão. Ficam
   // na conta para valer em qualquer aparelho.
-  directLanguage      Boolean   @default(false)
-  oneThingAtATime     Boolean   @default(false)
-  comfortableReading  Boolean   @default(false)
-  noTimePressure      Boolean   @default(false)
-  reducedMotion       Boolean   @default(false)
+  directLanguage      Boolean           @default(false)
+  oneThingAtATime     Boolean           @default(false)
+  comfortableReading  Boolean           @default(false)
+  noTimePressure      Boolean           @default(false)
+  reducedMotion       Boolean           @default(false)
   // Aviso de login novo por e-mail e push (DEC-091, issue #135): ligado por padrão.
-  loginAlertEnabled   Boolean   @default(true)
+  loginAlertEnabled   Boolean           @default(true)
   // Já entrou alguma vez? O primeiro login de todos não gera aviso de acesso novo (DEC-091).
-  hasLoggedIn         Boolean   @default(false)
+  hasLoggedIn         Boolean           @default(false)
   // Verificação em duas etapas (DEC-092). Código por e-mail ligado?
-  twoFactorEmail      Boolean   @default(false)
+  twoFactorEmail      Boolean           @default(false)
   // App autenticador: segredo cifrado (AES-256-GCM, chave fora do banco), quando ligou e o último
   // passo de 30 s aceito, para o mesmo código não valer duas vezes. O "pendente" é o da configuração,
   // até a pessoa provar que o app funciona.
@@ -60,8 +65,8 @@ model User {
   totpPendingSecret   String?
   // Último método usado no login ("EMAIL" ou "TOTP"): a tela "Confirme que é você" abre nele.
   twoFactorLastMethod String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   authTokens      AuthToken[]
   activities      Activity[]
@@ -426,16 +431,39 @@ enum LinkMethod {
   CODE
 }
 
+// O tipo de quem acompanha o paciente (DEC-097). No máximo uma profissional de cada tipo por paciente.
+enum ProfessionalKind {
+  PSICOLOGIA
+  PSIQUIATRIA
+}
+
+// As áreas que o paciente libera para cada profissional (DEC-097). As fotos da Ação têm caixa própria.
+enum SharedArea {
+  ACTIVITIES
+  THOUGHT_RECORDS
+  TENSION_EPISODES
+  ACTIONS
+  ACTION_PHOTOS
+  ABOUT_ME
+  APPOINTMENTS
+  PLANS
+}
+
 // Vínculo paciente ↔ terapeuta (SPEC, "Vínculo"). Revogar preenche revokedAt e o registro fica.
-// Escritos à mão na migration: no máximo um vínculo ativo por paciente (índice único parcial)
+// Escritos à mão na migration: no máximo um vínculo ativo por paciente e tipo (índice único parcial, DEC-097)
 // e ninguém se vincula a si mesmo (CHECK).
 model TherapistLink {
-  id              String     @id @default(uuid()) @db.Uuid
-  patientId       String     @db.Uuid
-  therapistId     String     @db.Uuid
+  id              String           @id @default(uuid()) @db.Uuid
+  patientId       String           @db.Uuid
+  therapistId     String           @db.Uuid
   method          LinkMethod
-  createdAt       DateTime   @default(now())
+  createdAt       DateTime         @default(now())
   revokedAt       DateTime?
+  // O tipo da profissional no momento do vínculo (DEC-097): o índice único parcial usa ele.
+  kind            ProfessionalKind
+  // O que o paciente liberou para esta profissional. Vínculo novo começa sem nada; os que já
+  // existiam ganharam todas as áreas na migration, para nada mudar para quem já usava.
+  sharedAreas     SharedArea[]     @default([])
   // null = o paciente ainda não viu o aviso de novo vínculo no app.
   seenByPatientAt DateTime?
 

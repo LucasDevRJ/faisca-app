@@ -254,7 +254,10 @@ planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta
-Um paciente tem no máximo **uma** terapeuta ativa; uma terapeuta pode ter N pacientes.
+Um paciente tem no máximo **uma profissional ativa de cada tipo**: uma psicóloga e uma psiquiatra
+(DEC-097); uma profissional pode ter N pacientes. Todo perfil de terapeuta tem um **tipo**
+(psicologia ou psiquiatria), escolhido no cadastro ou ao aceitar o convite (sem escolha, psicóloga),
+e pode informar o número do conselho (CRP ou CRM), só para mostrar. O tipo só muda sem vínculo ativo.
 Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 
 ### 1. Convite por e-mail (iniciado pelo paciente)
@@ -273,8 +276,21 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - A terapeuta digita o código em um campo da área "Meus pacientes" e o vínculo é criado.
 - Limite de tentativas: 5 erros em 15 minutos bloqueiam temporariamente a terapeuta.
 
+### O que cada profissional vê (DEC-097)
+- Cada vínculo tem as **áreas liberadas** pelo paciente: Atividades, Pensamentos, Tensão, Ação, fotos
+  da Ação, "Sobre mim", agenda (com os motivos) e Meus Planos.
+- **Vínculo novo começa sem área nenhuma**: o paciente escolhe o que cada uma vê. Os vínculos que já
+  existiam antes da DEC-097 ficaram com todas as áreas.
+- Mudar vale na hora. Área não liberada some para aquela profissional: as rotas respondem 403, e o
+  "Para ler" e o número de não lidos não a contam. O resumo do paciente (nome, e-mail, foto) aparece
+  sempre; a última e a próxima consulta, só com a agenda liberada.
+- Cada profissional tem as próprias marcas de leitura e o próprio mural; o paciente vê os avisos das
+  duas.
+
 ### Regras comuns
-- Com um vínculo ativo ou convite pendente, o paciente não gera outro convite nem outro código.
+- Com uma psicóloga e uma psiquiatra vinculadas, ou com um convite pendente, o paciente não gera
+  outro convite nem outro código. Com só uma delas, dá para chamar a outra.
+- Desfazer é por vínculo: desfazer um não mexe no outro.
 - Quando um vínculo é criado, o paciente é avisado no app e por e-mail e vê o **nome e o e-mail** de quem se vinculou.
 - O paciente revoga a qualquer momento e o acesso cai na hora. O registro do vínculo é mantido (`revokedAt`).
   Os registros do paciente não são apagados: continuam na conta dele. Num vínculo novo, a terapeuta volta
@@ -299,12 +315,13 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   liga/desliga.
 
 ## Autorização (regra inviolável)
-- No papel de terapeuta: somente requisições GET, e apenas de pacientes com vínculo ativo.
+- No papel de terapeuta (psicóloga ou psiquiatra): somente requisições GET, apenas de pacientes com
+  vínculo ativo e só das áreas que o paciente liberou para ela (DEC-097).
   As exceções não alteram dado de paciente: os dois pedidos que criam o vínculo (digitar o código e
   aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057) e os avisos do
   mural dela, que são conteúdo dela (DEC-079).
 - No papel de paciente: acesso somente aos próprios dados.
-- Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado ou dado de outra pessoa.
+- Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado, área não liberada ou dado de outra pessoa.
 - Tudo isso é garantido no backend, nunca só na interface.
 
 ## Lembretes (somente perfil paciente)

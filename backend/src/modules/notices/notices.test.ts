@@ -2,7 +2,7 @@ import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
 import { prisma } from '../../lib/prisma.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import { NOTICE_MAX_LENGTH } from './notices.schema.js';
 
@@ -29,8 +29,8 @@ beforeEach(async () => {
   therapistId = (await createConfirmedUser({ email: THERAPIST, patient: false, therapist: true })).id;
   otherTherapistId = (await createConfirmedUser({ email: OTHER_THERAPIST, patient: false, therapist: true })).id;
   // As duas pacientes são da mesma terapeuta; a outra terapeuta não tem ninguém.
-  await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
-  await prisma.therapistLink.create({ data: { patientId: otherPatientId, therapistId, method: 'CODE' } });
+  await createTestLink({ patientId, therapistId, method: 'CODE' });
+  await createTestLink({ patientId: otherPatientId, therapistId, method: 'CODE' });
 });
 
 async function loginAgent(email: string) {

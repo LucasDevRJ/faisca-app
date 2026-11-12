@@ -1,6 +1,7 @@
 import type { RequestHandler, Response } from 'express';
 import { AppError } from '../../errors/app-error.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
+import { linkIdSchema } from '../links/links.schema.js';
 import { updateProfileSchema } from './profile.schema.js';
 import type { Avatar, ProfileService } from './profile.service.js';
 
@@ -47,8 +48,10 @@ export function createProfileController(service: ProfileService) {
 
   // ——— Contexto de paciente: a foto da terapeuta com vínculo ativo ———
 
+  // Sem :linkId (telas de antes da DEC-097), a da psicóloga; com ele, a do vínculo, se for do paciente.
   const therapistAvatar: RequestHandler = async (req, res) => {
-    const therapistId = await service.linkedTherapistId(getAuthUser(req).id);
+    const linkId = req.params.linkId === undefined ? undefined : linkIdSchema.parse(req.params).linkId;
+    const therapistId = await service.linkedTherapistId(getAuthUser(req).id, linkId);
     if (!therapistId) throw new AppError(404, 'NO_ACTIVE_LINK', 'Você não tem terapeuta vinculada.');
     sendAvatar(res, await service.avatarOf(therapistId));
   };

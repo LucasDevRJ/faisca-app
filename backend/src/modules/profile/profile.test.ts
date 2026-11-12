@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
 import { Palette } from '../../generated/prisma/client.js';
 import { prisma } from '../../lib/prisma.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import { PALETTES } from './profile.schema.js';
 
@@ -26,7 +26,7 @@ beforeEach(async () => {
   await createConfirmedUser({ email: OTHER_PATIENT });
   therapistId = (await createConfirmedUser({ email: THERAPIST, patient: false, therapist: true })).id;
   await createConfirmedUser({ email: OTHER_THERAPIST, patient: false, therapist: true });
-  await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
+  await createTestLink({ patientId, therapistId, method: 'CODE' });
 });
 
 async function loginAgent(email: string) {
@@ -68,6 +68,8 @@ describe('nome completo', () => {
           reducedMotion: false,
         },
         avatarVersion: null,
+        // Só quem tem o perfil de terapeuta tem os dados de profissional (DEC-097).
+        professional: null,
       },
     });
 

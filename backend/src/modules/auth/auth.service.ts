@@ -244,9 +244,16 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
         // Conta confirmada que veio por convite: entra e aceita pela tela do convite.
         if (!existing.emailConfirmedAt) {
           // Quem refaz o cadastro aceitou o aviso de novo: guarda o aceite mais recente.
+          // O tipo de profissional escolhido agora vale na confirmação (DEC-097): o link não o guarda.
           await prisma.user.update({
             where: { id: existing.id },
-            data: { privacyAcceptedAt: new Date(), privacyVersion: PRIVACY_VERSION },
+            data: {
+              privacyAcceptedAt: new Date(),
+              privacyVersion: PRIVACY_VERSION,
+              ...(input.profiles.therapist && {
+                professionalKind: input.professionalKind ?? existing.professionalKind ?? 'PSICOLOGIA',
+              }),
+            },
           });
           await attachInvite(existing.id, input.inviteToken);
           await sendConfirmation(existing, pending);
@@ -265,6 +272,8 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
             passwordHash,
             hasPatientProfile: input.profiles.patient,
             hasTherapistProfile: input.profiles.therapist,
+            // Todo perfil de terapeuta tem um tipo (DEC-097); sem escolha, psicóloga.
+            professionalKind: input.profiles.therapist ? (input.professionalKind ?? 'PSICOLOGIA') : null,
             privacyAcceptedAt: new Date(),
             privacyVersion: PRIVACY_VERSION,
             // Conta nova já conhece o app como ele está: a novidade atual não é novidade para ela.
@@ -307,6 +316,9 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
         const pending = await tx.authToken.findUnique({ where: { tokenHash: hashToken(token) }, select: { userId: true } });
         if (pending) await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${pending.userId}::uuid FOR UPDATE`;
         const { userId, now, row } = await consumeToken(tx, token, 'EMAIL_CONFIRMATION');
+        // O perfil de terapeuta precisa de um tipo (CHECK do banco, DEC-097): conta antiga sem ele
+        // ganha o de psicóloga.
+        const kind = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { professionalKind: true } });
         const { count } = await tx.user.updateMany({
           where: { id: userId, emailConfirmedAt: null },
           data: {
@@ -317,6 +329,7 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
               name: row.pendingName!,
               hasPatientProfile: row.pendingPatient!,
               hasTherapistProfile: row.pendingTherapist!,
+              ...(row.pendingTherapist && !kind.professionalKind && { professionalKind: 'PSICOLOGIA' as const }),
             }),
           },
         });
@@ -415,11 +428,20 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
       return user;
     },
 
+    // Ao ligar o perfil de terapeuta, o tipo escolhido, ou o que já havia, ou psicóloga (DEC-097).
     async addProfile(userId: string, input: AddProfileInput): Promise<User> {
-      return prisma.user.update({
+      if (input.profile === 'patient') {
+        return prisma.user.update({ where: { id: userId }, data: { hasPatientProfile: true } });
+      }
+      const user = await prisma.user.findUniqueOrThrow({
         where: { id: userId },
-        data: input.profile === 'patient' ? { hasPatientProfile: true } : { hasTherapistProfile: true },
+        select: { hasTherapistProfile: true, professionalKind: true },
       });
+      // Quem liga o perfil agora fica com o tipo que pediu agora; quem já tinha, com o que tem.
+      const professionalKind = user.hasTherapistProfile
+        ? user.professionalKind
+        : (input.professionalKind ?? user.professionalKind ?? 'PSICOLOGIA');
+      return prisma.user.update({ where: { id: userId }, data: { hasTherapistProfile: true, professionalKind } });
     },
 
     // Novo aceite do aviso, para quem aceitou uma versão anterior (DEC-039). Grava a data e a

@@ -105,6 +105,8 @@ await prisma.user.createMany({
     passwordHash,
     hasPatientProfile: u.patient,
     hasTherapistProfile: u.therapist,
+    // Tipo de profissional (DEC-097): as terapeutas do seed são psicólogas.
+    professionalKind: u.therapist ? ('PSICOLOGIA' as const) : null,
     emailConfirmedAt: new Date(),
     privacyAcceptedAt: u.privacyVersion ? new Date() : null,
     privacyVersion: u.privacyVersion ?? null,

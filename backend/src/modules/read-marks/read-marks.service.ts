@@ -1,9 +1,10 @@
 import { AppError } from '../../errors/app-error.js';
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma, type SharedArea } from '../../generated/prisma/client.js';
 import { prisma } from '../../lib/prisma.js';
 import type { AboutMeService, PublicAboutMe } from '../about-me/about-me.service.js';
 import type { ActionsService } from '../actions/actions.service.js';
 import { coversArea, type PrivacyArea } from '../auth/privacy.js';
+import { actionForProfessional, thoughtForProfessional } from '../../lib/shared-areas.js';
 import type { PlansService } from '../plans/plans.service.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
@@ -20,12 +21,14 @@ export type ReadInfo = { readStatus: ReadStatus; readAt: string | null };
 
 type Column = 'thoughtRecordId' | 'tensionEpisodeId' | 'actionId' | 'aboutId' | 'planEntryId';
 
-const AREA: Record<ReadType, { privacy: PrivacyArea; column: Column }> = {
-  THOUGHT_RECORD: { privacy: 'thoughtRecords', column: 'thoughtRecordId' },
-  TENSION_EPISODE: { privacy: 'tensionEpisodes', column: 'tensionEpisodeId' },
-  ACTION: { privacy: 'actions', column: 'actionId' },
-  ABOUT_ME: { privacy: 'aboutMe', column: 'aboutId' },
-  PLAN_ENTRY: { privacy: 'plans', column: 'planEntryId' },
+// Para cada tipo: a área do aviso de privacidade (DEC-042), a coluna da marca e a área que o
+// paciente libera para a profissional (DEC-097).
+const AREA: Record<ReadType, { privacy: PrivacyArea; column: Column; shared: SharedArea }> = {
+  THOUGHT_RECORD: { privacy: 'thoughtRecords', column: 'thoughtRecordId', shared: 'THOUGHT_RECORDS' },
+  TENSION_EPISODE: { privacy: 'tensionEpisodes', column: 'tensionEpisodeId', shared: 'TENSION_EPISODES' },
+  ACTION: { privacy: 'actions', column: 'actionId', shared: 'ACTIONS' },
+  ABOUT_ME: { privacy: 'aboutMe', column: 'aboutId', shared: 'ABOUT_ME' },
+  PLAN_ENTRY: { privacy: 'plans', column: 'planEntryId', shared: 'PLANS' },
 };
 
 // Função pura, para testar as bordas sem banco.
@@ -80,8 +83,11 @@ async function readAtByRecord(therapistId: string, type: ReadType, ids: string[]
   return new Map(pairs);
 }
 
-function coveredTypes(privacyVersion: string | null): ReadType[] {
-  return READ_TYPES.filter((type) => coversArea(privacyVersion, AREA[type].privacy));
+// As áreas que a profissional pode ler: aceitou o aviso que as cita e o paciente as liberou.
+function coveredTypes(privacyVersion: string | null, sharedAreas: SharedArea[]): ReadType[] {
+  return READ_TYPES.filter(
+    (type) => coversArea(privacyVersion, AREA[type].privacy) && sharedAreas.includes(AREA[type].shared),
+  );
 }
 
 function groupByType(items: ReadMarkItem[]) {
@@ -91,11 +97,19 @@ function groupByType(items: ReadMarkItem[]) {
 }
 
 // Os não lidos de cada paciente nas áreas que a terapeuta pode ver, para a lista de pacientes.
-// Poucos registros por paciente: lê os ids e datas e conta na memória.
-export async function countUnread(therapistId: string, patientIds: string[], privacyVersion: string | null) {
-  const counts = new Map(patientIds.map((id) => [id, 0]));
-  if (patientIds.length === 0) return counts;
-  for (const type of coveredTypes(privacyVersion)) {
+// Cada paciente traz as áreas que liberou para ela (DEC-097). Poucos registros por paciente: lê os
+// ids e datas e conta na memória.
+export async function countUnread(
+  therapistId: string,
+  patients: { id: string; sharedAreas: SharedArea[] }[],
+  privacyVersion: string | null,
+) {
+  const counts = new Map(patients.map(({ id }) => [id, 0]));
+  if (patients.length === 0) return counts;
+  for (const type of READ_TYPES) {
+    if (!coversArea(privacyVersion, AREA[type].privacy)) continue;
+    const patientIds = patients.filter(({ sharedAreas }) => sharedAreas.includes(AREA[type].shared)).map(({ id }) => id);
+    if (patientIds.length === 0) continue;
     const where = { userId: { in: patientIds } };
     const select = { id: true, userId: true, updatedAt: true } as const;
     const records =
@@ -152,10 +166,18 @@ export function createReadMarksService(
   }
 
   // Marca como lido agora. Toda a lista é conferida antes de gravar: um registro de outro
-  // paciente, ou de área sem o aceite do aviso, recusa o pedido inteiro.
-  async function mark(therapistId: string, patientId: string, privacyVersion: string | null, items: ReadMarkItem[]) {
+  // paciente, de área sem o aceite do aviso ou de área que o paciente não liberou para esta
+  // profissional (DEC-097) recusa o pedido inteiro.
+  async function mark(
+    therapistId: string,
+    patientId: string,
+    privacyVersion: string | null,
+    sharedAreas: SharedArea[],
+    items: ReadMarkItem[],
+  ) {
     const groups = groupByType(items);
     for (const [type, ids] of groups) {
+      if (!sharedAreas.includes(AREA[type].shared)) throw forbidden();
       if (!coversArea(privacyVersion, AREA[type].privacy)) throw privacyRequired();
       const owned = await recordsOf(type, patientId, ids);
       if (owned.length !== ids.length) throw forbidden();
@@ -194,9 +216,16 @@ export function createReadMarksService(
   }
 
   // "Marcar como não lido": apaga as marcas desta terapeuta nesses registros do paciente.
-  async function unmark(therapistId: string, patientId: string, privacyVersion: string | null, items: ReadMarkItem[]) {
+  async function unmark(
+    therapistId: string,
+    patientId: string,
+    privacyVersion: string | null,
+    sharedAreas: SharedArea[],
+    items: ReadMarkItem[],
+  ) {
     let unmarked = 0;
     for (const [type, ids] of groupByType(items)) {
+      if (!sharedAreas.includes(AREA[type].shared)) throw forbidden();
       if (!coversArea(privacyVersion, AREA[type].privacy)) throw privacyRequired();
       const { count } = await prisma.readMark.deleteMany({
         where: { therapistId, patientId, [AREA[type].column]: { in: ids } },
@@ -207,9 +236,10 @@ export function createReadMarksService(
   }
 
   // A visão "Não lidos": tudo o que ainda não foi lido ou mudou depois de lido, de qualquer data,
-  // nas áreas que a terapeuta pode ver. Área sem o aceite do aviso vem como null.
-  async function unread(therapistId: string, patientId: string, privacyVersion: string | null) {
-    const covered = new Set(coveredTypes(privacyVersion));
+  // nas áreas que a terapeuta pode ver. Área sem o aceite do aviso, ou que o paciente não liberou
+  // para ela (DEC-097), vem como null.
+  async function unread(therapistId: string, patientId: string, privacyVersion: string | null, sharedAreas: SharedArea[]) {
+    const covered = new Set(coveredTypes(privacyVersion, sharedAreas));
 
     async function pendingIds(type: ReadType) {
       const records = await recordsOf(type, patientId);
@@ -227,7 +257,9 @@ export function createReadMarksService(
       ? await withReadStatus(
           therapistId,
           'THOUGHT_RECORD',
-          await thoughtRecords.listByIds(patientId, await pendingIds('THOUGHT_RECORD')),
+          (await thoughtRecords.listByIds(patientId, await pendingIds('THOUGHT_RECORD'))).map((record) =>
+            thoughtForProfessional(record, sharedAreas),
+          ),
         )
       : null;
     const tension = covered.has('TENSION_EPISODE')
@@ -238,7 +270,13 @@ export function createReadMarksService(
         )
       : null;
     const action = covered.has('ACTION')
-      ? await withReadStatus(therapistId, 'ACTION', await actions.listByIds(patientId, await pendingIds('ACTION')))
+      ? await withReadStatus(
+          therapistId,
+          'ACTION',
+          (await actions.listByIds(patientId, await pendingIds('ACTION'))).map((action) =>
+            actionForProfessional(action, sharedAreas),
+          ),
+        )
       : null;
     const planEntries = covered.has('PLAN_ENTRY')
       ? await withReadStatus(

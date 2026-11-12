@@ -24,6 +24,8 @@ export function createLinksRoutes(mailer: Mailer) {
   router.delete('/link/invite', ...patient, controller.cancelInvite);
   router.post('/link/code', ...patient, controller.generateCode);
   router.post('/link/revoke', ...patient, controller.revoke);
+  // O que cada profissional vê (DEC-097): só o paciente muda, no vínculo dele.
+  router.put('/link/:linkId/areas', ...patient, controller.setSharedAreas);
   router.post('/link/seen', ...patient, controller.markSeen);
 
   // POSTs do lado da terapeuta: criam o vínculo e não tocam em dado de paciente. A regra

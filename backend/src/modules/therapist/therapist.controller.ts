@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
+import { getPatientLink } from '../../middlewares/require-patient-access.js';
 import {
   patientParamsSchema,
   patientPlanParamsSchema,
@@ -17,7 +18,7 @@ import type { TherapistService } from './therapist.service.js';
 export function createTherapistController(service: TherapistService) {
   const summary: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
-    res.status(200).json(await service.summary(getAuthUser(req).id, patientId));
+    res.status(200).json(await service.summary(getAuthUser(req).id, patientId, getPatientLink(res)));
   };
 
   const activities: RequestHandler = async (req, res) => {
@@ -40,7 +41,10 @@ export function createTherapistController(service: TherapistService) {
   const thoughtRecords: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
     const query = therapistThoughtRecordsQuerySchema.parse(req.query);
-    res.status(200).json({ thoughtRecords: await service.listThoughtRecords(getAuthUser(req).id, patientId, query) });
+    const { sharedAreas } = getPatientLink(res);
+    res
+      .status(200)
+      .json({ thoughtRecords: await service.listThoughtRecords(getAuthUser(req).id, patientId, query, sharedAreas) });
   };
 
   const tensionEpisodes: RequestHandler = async (req, res) => {
@@ -52,7 +56,8 @@ export function createTherapistController(service: TherapistService) {
   const actions: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
     const query = therapistActionsQuerySchema.parse(req.query);
-    res.status(200).json({ actions: await service.listActions(getAuthUser(req).id, patientId, query) });
+    const { sharedAreas } = getPatientLink(res);
+    res.status(200).json({ actions: await service.listActions(getAuthUser(req).id, patientId, query, sharedAreas) });
   };
 
   // Não lidos e atualizados das três áreas (DEC-057). Área sem o aceite do aviso vem como null,
@@ -60,7 +65,7 @@ export function createTherapistController(service: TherapistService) {
   const unread: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
     const user = getAuthUser(req);
-    res.status(200).json(await service.unread(user.id, patientId, user.privacyVersion));
+    res.status(200).json(await service.unread(user.id, patientId, user.privacyVersion, getPatientLink(res).sharedAreas));
   };
 
   const aboutMe: RequestHandler = async (req, res) => {

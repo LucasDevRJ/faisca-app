@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
+import { shareAllAreas } from '../fixtures/links.js';
 import { users } from '../fixtures/users.js';
 
 // Vínculo por código no navegador, com duas pessoas em janelas separadas (DEC-032):
@@ -48,6 +49,8 @@ test('paciente gera o código, terapeuta vincula e lê os registros, paciente de
   await therapist.getByRole('button', { name: 'Vincular' }).click();
   await expect(therapist.getByText(/Agora você acompanha os registros de Vera Fictícia/)).toBeVisible();
   await expect(therapist.getByRole('listitem').filter({ hasText: 'Vera Fictícia' })).toBeVisible();
+  // Vínculo novo começa sem área (DEC-097): a paciente libera tudo pela API, até a tela dela existir.
+  await shareAllAreas(patient.request, '/api');
 
   // Terapeuta: abre os registros da paciente. Só leitura: o card não tem nenhum botão.
   await therapist.getByRole('link', { name: /Vera Fictícia/ }).click();

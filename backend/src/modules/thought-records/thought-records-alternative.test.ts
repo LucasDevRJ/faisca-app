@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
 import { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
-import { createConfirmedUser, resetDatabase } from '../../test/db.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import { scheduledSessionsFrom, type AgendaData } from '../appointments/sessions.js';
 import { deadlineFor, deadlineInstant, effectiveDeadline, isBeforeDeadline } from './thought-records.service.js';
@@ -26,7 +26,7 @@ beforeEach(async () => {
   patientId = (await createConfirmedUser({ email: PATIENT })).id;
   otherPatientId = (await createConfirmedUser({ email: OTHER_PATIENT })).id;
   const therapistId = (await createConfirmedUser({ email: THERAPIST, patient: false, therapist: true })).id;
-  await prisma.therapistLink.create({ data: { patientId, therapistId, method: 'CODE' } });
+  await createTestLink({ patientId, therapistId, method: 'CODE' });
   await createConfirmedUser({ email: OLD_PRIVACY, privacyVersion: '2026-10' });
 });
 

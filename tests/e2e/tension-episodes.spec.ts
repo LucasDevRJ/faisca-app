@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { users } from '../fixtures/users.js';
+import { shareAllAreas } from '../fixtures/links.js';
 
 // Episódios de tensão no navegador (DEC-042, DEC-043): a paciente, que já usava o RPD, aceita o
 // aviso novo só para a Tensão, registra pela página própria e vê o cartão e o gráfico; a terapeuta
@@ -63,6 +64,7 @@ test('paciente aceita o aviso e registra; terapeuta vinculada aceita e lê na ab
   const therapist = await signIn(browser, users.tensionScreenTherapist);
   const { code } = await (await patient.request.post('/api/link/code')).json();
   expect((await therapist.request.post('/api/links/redeem-code', { data: { code } })).status()).toBe(201);
+  await shareAllAreas(patient.request, '/api');
 
   // Terapeuta: abre a paciente, vai para a aba e aceita o aviso.
   await therapist.goto('/pacientes');

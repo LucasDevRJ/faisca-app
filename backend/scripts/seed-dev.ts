@@ -89,6 +89,7 @@ const { addDays, dateOnlyToDate, startOfDayInAppZone, timeOnlyToDate, todayInApp
   '../src/lib/dates.js'
 );
 const { PRIVACY_VERSION } = await import('../src/modules/auth/auth.service.js');
+const { SHARED_AREAS } = await import('../src/lib/shared-areas.js');
 
 const passwordHash = await hashPassword(PASSWORD);
 
@@ -102,6 +103,8 @@ async function upsertUser(
     passwordHash,
     hasPatientProfile: profiles.patient,
     hasTherapistProfile: profiles.therapist,
+    // Tipo de profissional (DEC-097): a terapeuta dev é psicóloga.
+    professionalKind: profiles.therapist ? ('PSICOLOGIA' as const) : null,
     emailConfirmedAt: new Date(),
     privacyAcceptedAt: new Date(),
     privacyVersion,
@@ -278,11 +281,21 @@ await prisma.$transaction(async (tx) => {
     ],
   });
   await tx.appointment.create({ data: { userId: patient.id, appointmentDate: dateOnlyToDate(addDays(today, -35)) } });
-  // Um vínculo ativo por paciente (DEC-031): se a paciente dev estiver com outra pessoa, fica como está.
-  const active = await tx.therapistLink.findFirst({ where: { patientId: patient.id, revokedAt: null } });
+  // Uma psicóloga ativa por paciente (DEC-031, DEC-097): se a paciente dev estiver com outra, fica
+  // como está. A terapeuta dev vê todas as áreas.
+  const active = await tx.therapistLink.findFirst({
+    where: { patientId: patient.id, kind: 'PSICOLOGIA', revokedAt: null },
+  });
   if (!active) {
     await tx.therapistLink.create({
-      data: { patientId: patient.id, therapistId: therapist.id, method: 'CODE', seenByPatientAt: new Date() },
+      data: {
+        patientId: patient.id,
+        therapistId: therapist.id,
+        method: 'CODE',
+        kind: 'PSICOLOGIA',
+        sharedAreas: [...SHARED_AREAS],
+        seenByPatientAt: new Date(),
+      },
     });
   }
 

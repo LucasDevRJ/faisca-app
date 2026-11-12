@@ -12,7 +12,8 @@ em caso de dúvida, eles prevalecem sobre esta skill.
 - Leia a seção da `docs/SPEC.md` e as DECs ligadas ao assunto. Comportamento não definido → pergunte.
 - Classifique a rota em um dos contextos:
   - **A. Paciente**: só os próprios dados.
-  - **B. Terapeuta sobre um paciente**: só GET e só com vínculo ativo.
+  - **B. Terapeuta sobre um paciente**: só GET, só com vínculo ativo e só da área liberada pelo
+    paciente para aquela profissional (DEC-097).
   - **C. Sem dado de paciente**: conta, vínculo, health. Justifique por que não há dado de paciente.
 - Terapeuta escrevendo dado de paciente **não existe**. As únicas escritas da terapeuta são os
   POSTs que criam o vínculo (DEC-031), as marcas de leitura dela em `/therapist/read-marks`
@@ -37,6 +38,9 @@ Registre o router em `src/app.ts`, antes do `notFound`. Modelos a seguir:
 - A rota fica sob `/therapist/patients/:patientId/...`, **dentro** do `therapist.routes.ts`,
   que já aplica `onlyReads → requireAuth → requireTherapist → requireActiveLink` no prefixo.
   Adicione só o `router.get`. Não crie outro router com esse prefixo nem outra cadeia.
+- Toda rota com dado de uma área leva `requireSharedArea('AREA')` antes do handler. Área nova
+  entra no enum `SharedArea` (schema e `src/lib/shared-areas.ts`), nas caixas da tela do paciente
+  e no "Para ler", se tiver "Lido" (DEC-097).
 - O 403 é sempre o mesmo, para não revelar se o paciente existe ou se já teve vínculo.
 - O `patientId` da URL só é usado depois do `requireActiveLink`.
 
@@ -78,6 +82,7 @@ só com dados fictícios (`@faisca.test`). Model novo → inclua no `resetDataba
 - [ ] POST, PATCH ou DELETE no caminho → 403, mesmo com vínculo ativo
 - [ ] sem sessão: GET → 401 e escrita → 403
 - [ ] `patientId` que não é UUID → 403
+- [ ] área não liberada pelo paciente para a profissional → 403; liberar abre e desmarcar fecha na hora
 
 Fluxos que atravessam vários módulos também ganham um teste em `tests/api/` (Playwright),
 com os usuários de `tests/fixtures/users.ts`, como em `tests/api/therapist.spec.ts`.

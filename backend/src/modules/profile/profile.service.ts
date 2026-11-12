@@ -1,4 +1,5 @@
-import type { Palette, User } from '../../generated/prisma/client.js';
+import type { Palette, ProfessionalKind, User } from '../../generated/prisma/client.js';
+import { AppError } from '../../errors/app-error.js';
 import { processImage } from '../../lib/images.js';
 import { prisma } from '../../lib/prisma.js';
 import type { UpdateProfileInput } from './profile.schema.js';
@@ -34,7 +35,22 @@ export type PublicProfile = {
   // Quando a foto mudou pela última vez (ISO), ou null sem foto. O front usa no endereço da
   // imagem para não mostrar uma antiga do cache.
   avatarVersion: string | null;
+  // Tipo de profissional e conselho (DEC-097); null para quem não tem o perfil de terapeuta.
+  professional: { kind: ProfessionalKind; councilNumber: string | null } | null;
 };
+
+// Trocar o tipo com vínculo ativo mudaria o que o paciente combinou: só sem vínculo (DEC-097).
+function kindLocked() {
+  return new AppError(
+    409,
+    'PROFESSIONAL_KIND_LOCKED',
+    'Para trocar o tipo de profissional, os pacientes precisam desfazer o vínculo com você antes.',
+  );
+}
+
+function notProfessional() {
+  return new AppError(403, 'THERAPIST_PROFILE_REQUIRED', 'Esta opção é só para quem acompanha pacientes.');
+}
 
 export type Avatar = { image: Uint8Array; updatedAt: Date };
 
@@ -67,6 +83,9 @@ export function createProfileService() {
           comfortableReading: true,
           noTimePressure: true,
           reducedMotion: true,
+          hasTherapistProfile: true,
+          professionalKind: true,
+          councilNumber: true,
           avatar: { select: { updatedAt: true } },
         },
       });
@@ -75,24 +94,47 @@ export function createProfileService() {
         palette: user.palette ?? 'SALVIA',
         accessibility: toAccessibilitySettings(user),
         avatarVersion: avatarVersion(user.avatar),
+        professional:
+          user.hasTherapistProfile && user.professionalKind
+            ? { kind: user.professionalKind, councilNumber: user.councilNumber }
+            : null,
       };
     },
 
     async update(userId: string, input: UpdateProfileInput): Promise<PublicProfile> {
-      // undefined = campo não enviado: o Prisma deixa como está.
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          fullName: input.fullName,
-          palette: input.palette,
-          ...(input.accessibility && {
-            directLanguage: input.accessibility.directLanguage,
-            oneThingAtATime: input.accessibility.oneThingAtATime,
-            comfortableReading: input.accessibility.comfortableReading,
-            noTimePressure: input.accessibility.noTimePressure,
-            reducedMotion: input.accessibility.reducedMotion,
-          }),
-        },
+      const { professional } = input;
+      // Com a conta travada: um vínculo sendo criado ao mesmo tempo espera, e a conferência "sem
+      // vínculo ativo" vale até gravar (achado do revisor-seguranca).
+      await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT 1 FROM "User" WHERE "id" = ${userId}::uuid FOR UPDATE`;
+        if (professional) {
+          const user = await tx.user.findUniqueOrThrow({
+            where: { id: userId },
+            select: { hasTherapistProfile: true, professionalKind: true },
+          });
+          if (!user.hasTherapistProfile) throw notProfessional();
+          if (professional.kind && professional.kind !== user.professionalKind) {
+            const active = await tx.therapistLink.count({ where: { therapistId: userId, revokedAt: null } });
+            if (active > 0) throw kindLocked();
+          }
+        }
+        // undefined = campo não enviado: o Prisma deixa como está.
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            fullName: input.fullName,
+            palette: input.palette,
+            professionalKind: professional?.kind,
+            councilNumber: professional?.councilNumber,
+            ...(input.accessibility && {
+              directLanguage: input.accessibility.directLanguage,
+              oneThingAtATime: input.accessibility.oneThingAtATime,
+              comfortableReading: input.accessibility.comfortableReading,
+              noTimePressure: input.accessibility.noTimePressure,
+              reducedMotion: input.accessibility.reducedMotion,
+            }),
+          },
+        });
       });
       return this.get(userId);
     },
@@ -118,10 +160,11 @@ export function createProfileService() {
       return prisma.userAvatar.findUnique({ where: { userId }, select: { image: true, updatedAt: true } });
     },
 
-    // A terapeuta com vínculo ativo com o paciente, ou null.
-    async linkedTherapistId(patientId: string): Promise<string | null> {
+    // A profissional de um vínculo ativo do paciente, ou null. Sem linkId, a psicóloga (DEC-097).
+    async linkedTherapistId(patientId: string, linkId?: string): Promise<string | null> {
       const link = await prisma.therapistLink.findFirst({
-        where: { patientId, revokedAt: null },
+        where: { patientId, revokedAt: null, ...(linkId && { id: linkId }) },
+        orderBy: [{ kind: 'asc' }, { createdAt: 'asc' }],
         select: { therapistId: true },
       });
       return link?.therapistId ?? null;

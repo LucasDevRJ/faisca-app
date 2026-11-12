@@ -1,5 +1,7 @@
 import { hashPassword } from '../lib/password.js';
 import { prisma } from '../lib/prisma.js';
+import type { LinkMethod, ProfessionalKind, SharedArea } from '../generated/prisma/client.js';
+import { SHARED_AREAS } from '../lib/shared-areas.js';
 import { PRIVACY_VERSION } from '../modules/auth/auth.service.js';
 
 // Apaga os dados entre testes. deleteMany em vez de TRUNCATE: o faisca_app só tem DML.
@@ -41,6 +43,8 @@ export async function createConfirmedUser(
     therapist: boolean;
     // Versão do aviso aceita; null = conta de antes do aviso. Por padrão, a atual.
     privacyVersion: string | null;
+    // Tipo de profissional (DEC-097); por padrão, psicóloga quando tem o perfil de terapeuta.
+    professionalKind: ProfessionalKind;
   }> = {},
 ) {
   const {
@@ -50,6 +54,7 @@ export async function createConfirmedUser(
     patient = true,
     therapist = false,
     privacyVersion = PRIVACY_VERSION,
+    professionalKind = 'PSICOLOGIA',
   } = overrides;
   return prisma.user.create({
     data: {
@@ -58,9 +63,25 @@ export async function createConfirmedUser(
       passwordHash: await hashPassword(password),
       hasPatientProfile: patient,
       hasTherapistProfile: therapist,
+      professionalKind: therapist ? professionalKind : null,
       emailConfirmedAt: new Date(),
       privacyAcceptedAt: privacyVersion ? new Date() : null,
       privacyVersion,
     },
+  });
+}
+
+// Vínculo direto no banco, para testes que não são sobre criar o vínculo. Por padrão, psicóloga com
+// todas as áreas liberadas, como os vínculos que já existiam antes da DEC-097.
+export function createTestLink(data: {
+  patientId: string;
+  therapistId: string;
+  method?: LinkMethod;
+  kind?: ProfessionalKind;
+  sharedAreas?: SharedArea[];
+  seenByPatientAt?: Date;
+}) {
+  return prisma.therapistLink.create({
+    data: { method: 'CODE', kind: 'PSICOLOGIA', sharedAreas: [...SHARED_AREAS], ...data },
   });
 }
