@@ -26,7 +26,10 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // paleta, os ajustes de acessibilidade, a foto do perfil e as preferências de lembretes (DEC-061,
 // DEC-068, DEC-069, DEC-076, DEC-090): dados pessoais e preferências da própria conta, que não são
 // de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já
-// vi" fica só com o paciente.
+// vi" fica só com o paciente. E para a correção de "projeto acadêmico" para "produto independente"
+// em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
+// e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
+// "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
 const VERSION_LABEL = 'versão 11, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
@@ -143,7 +146,7 @@ export function PrivacyPage() {
           <p>
             Para você registrar suas atividades, o seu Registro de Pensamentos, os seus Episódios de tensão, as
             suas ações e os seus planos de ação e,
-            se quiser, compartilhá-los com a sua terapeuta. Também usamos
+            se quiser, compartilhá-los com quem cuida de você (psicóloga ou psiquiatra). Também usamos
             o seu e-mail para mensagens da conta (confirmação, nova senha e aviso de exclusão) e, quando você ligar os
             lembretes, para avisar que há atividades ou ações para ver, sempre sem mostrar o que você escreveu. Não
             vendemos dados, não mostramos anúncios e não usamos ferramentas de rastreamento.
@@ -212,8 +215,8 @@ export function PrivacyPage() {
 
         <Section title="Importante">
           <p>
-            O Faísca é um projeto acadêmico em desenvolvimento. Ele apoia o acompanhamento com a sua terapeuta,
-            mas não substitui o atendimento e não é prontuário. Se você estiver em sofrimento intenso, ligue
+            O Faísca é um produto independente, em desenvolvimento. Ele apoia o acompanhamento com quem cuida
+            de você (psicóloga ou psiquiatra), mas não substitui o atendimento e não é prontuário. Se você estiver em sofrimento intenso, ligue
             para o <strong>CVV, no 188</strong>, gratuito e disponível 24 horas.
           </p>
         </Section>
