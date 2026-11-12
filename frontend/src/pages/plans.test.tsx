@@ -8,6 +8,7 @@ import type { PatientSummary } from '../features/therapist/therapist-api';
 import { renderRoute } from '../test/render';
 import { DEFAULT_ACCESSIBILITY } from '../features/profile/accessibility';
 import { apiError, fakeAgenda, fakeUser, loggedIn, server } from '../test/server';
+import { SHARED_AREAS } from '../features/links/links-api';
 
 // Meus Planos (DEC-094, DEC-095). Dados fictícios (regra 5). "Hoje": quinta, 24/09/2026, 15h.
 const PLAN_ID = '00000000-0000-4000-8000-0000000000a1';
@@ -339,6 +340,7 @@ describe('visão da terapeuta', () => {
     agendaStatus: 'SEM_AGENDA',
     pause: null,
     highlight: { from: '2026-09-18', to: '2026-09-24', reason: 'LAST_7_DAYS' },
+    access: { kind: 'PSICOLOGIA', sharedAreas: [...SHARED_AREAS] },
   };
   const unreadEntry = { ...fakeEntry(), readStatus: 'NAO_LIDO' as const, readAt: null };
 

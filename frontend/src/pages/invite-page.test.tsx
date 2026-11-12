@@ -43,9 +43,15 @@ describe('/convite', () => {
     renderRoute(`/convite?token=${TOKEN}`);
 
     expect(await screen.findByText(/Ao aceitar, o perfil de terapeuta é ativado/)).toBeInTheDocument();
+    // Quem ainda não é profissional escolhe a profissão; nada vem marcado (DEC-099).
+    expect(screen.getByRole('radio', { name: 'Sou psicóloga' })).not.toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Aceitar convite' }));
+    expect(await screen.findByText('Escolha a sua profissão para aceitar.')).toBeInTheDocument();
+    expect(sent).toEqual([]);
+    await user.click(screen.getByRole('radio', { name: 'Sou psiquiatra' }));
+    await user.click(screen.getByRole('button', { name: 'Aceitar como psiquiatra' }));
 
-    expect(sent).toEqual([{ token: TOKEN }]);
+    expect(sent).toEqual([{ token: TOKEN, professionalKind: 'PSIQUIATRIA' }]);
     expect(await screen.findByRole('heading', { name: 'Vínculo feito' })).toBeInTheDocument();
     expect(screen.getByText(/Agora você acompanha os registros de Paula Fictícia/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver meus pacientes' })).toHaveAttribute('href', '/pacientes');
@@ -61,7 +67,8 @@ describe('/convite', () => {
     );
     renderRoute(`/convite?token=${TOKEN}`);
 
-    await user.click(await screen.findByRole('button', { name: 'Aceitar convite' }));
+    await user.click(await screen.findByRole('radio', { name: 'Sou psicóloga' }));
+    await user.click(screen.getByRole('button', { name: 'Aceitar como psicóloga' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Este convite é inválido');
   });
@@ -115,6 +122,7 @@ describe('/convite', () => {
     await user.type(screen.getByLabelText('Como podemos te chamar?'), 'Nina Fictícia');
     await user.type(screen.getByLabelText('E-mail'), 'nina@faisca.test');
     await user.type(screen.getByLabelText('Senha'), 'senha-ficticia-123');
+    await user.click(screen.getByRole('radio', { name: 'Sou psicóloga' }));
     await user.click(screen.getByRole('checkbox', { name: /aviso de privacidade/ }));
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 

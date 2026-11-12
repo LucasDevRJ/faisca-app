@@ -17,7 +17,8 @@ import { avatarUrls } from '../features/profile/profile-api';
 // paciente, que já passa pela checagem de vínculo; se não carregar, o item só fica sem selo.
 function AgendaBadge({ patientId }: { patientId: string }) {
   const { data } = usePatientSummary(patientId);
-  const badge = data ? statusBadge(data.agendaStatus, data.pause, data.today) : null;
+  // Sem a agenda liberada pelo paciente (DEC-097), não há selo.
+  const badge = data?.agendaStatus ? statusBadge(data.agendaStatus, data.pause, data.today) : null;
   if (!badge) return null;
   return <span className="self-start rounded-full border border-border px-2 py-0.5 text-sm text-muted">{badge}</span>;
 }

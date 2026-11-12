@@ -11,6 +11,7 @@ import { TherapistLinkSection } from '../features/links/therapist-link-section';
 import { AccessibilitySection } from '../features/profile/accessibility-section';
 import { ProfileSection } from '../features/profile/profile-section';
 import { RemindersSection } from '../features/reminders/reminders-section';
+import { ProfessionalSection } from '../features/profile/professional-section';
 
 const profileInfo = {
   patient: {
@@ -57,6 +58,9 @@ export function AccountPage() {
       {user.profiles.patient && <AboutMeSection />}
 
       {user.profiles.patient && <TherapistLinkSection />}
+
+      {/* Tipo de profissional e conselho (DEC-099): só para quem acompanha pacientes. */}
+      {user.profiles.therapist && <ProfessionalSection />}
 
       <ProfilesSection profiles={user.profiles} />
 

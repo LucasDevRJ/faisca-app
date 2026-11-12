@@ -2206,6 +2206,35 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   psiquiatra) ficam para o PR seguinte, depois da conversa do usuário com a psiquiatra. Até lá, a
   psiquiatra com área fechada recebe 403 nas abas que a tela atual ainda mostra.
 
+## DEC-099 — Telas da profissional para várias profissionais
+- **Decisão (#170, com as respostas da psiquiatra do usuário):**
+  - **profissão no cadastro e no convite:** com "Acompanhar pacientes" marcado, o cadastro pergunta
+    "Sou psicóloga" ou "Sou psiquiatra"; quem abre o convite sem ser profissional também escolhe.
+    **Nada vem marcado** e a escolha é obrigatória, e o botão diz "Aceitar como psiquiatra": escolher
+    errado ocuparia a vaga da outra profissional até o paciente desfazer o vínculo (achado do
+    `revisor-seguranca`);
+  - **Conta → "Meu perfil profissional":** a profissão e o número do conselho (opcional), que os
+    pacientes veem. A profissão só muda sem vínculo ativo, e a tela explica o motivo do 409;
+  - **página do paciente:** só as **abas liberadas** pelo paciente; uma aba fechada pedida na URL abre
+    a primeira liberada. Sem nenhuma: "[nome] ainda não liberou nenhuma área para você. Quando liberar,
+    os registros aparecem aqui." O cartão de consultas e o "Sobre mim" só com a área deles;
+  - **período da psiquiatra em meses:** 1, 2 ou 3 meses até hoje, com setas para voltar no tempo,
+    começando em 3 (consultas de 1 em 1 a 3 em 3 meses) e lembrando a última escolha no aparelho (só
+    preferência de tela). Na psiquiatra, a lista de atividades mostra só os dias com registro. A
+    psicóloga segue com o ciclo e a semana; sem a agenda liberada, a semana;
+  - **"Marcar tudo"** nas caixas do paciente (ainda é preciso salvar);
+  - **acessibilidade** (achados do `revisor-telas`): "Marcar tudo" e "Próximo período" ficam desligados
+    em vez de sumir (o foco não se perde), as setas têm 44 px, o intervalo do período é anunciado e a
+    explicação da troca de profissão fica ligada ao grupo;
+  - **o resumo do paciente é buscado de novo ao abrir a página** (sem os 30 s de folga do cache): ele
+    traz as áreas liberadas, que o paciente muda a qualquer momento, e o da lista "Meus pacientes" não
+    serve de base (achado pelo teste de ponta a ponta do vínculo);
+  - o mural já funciona para qualquer profissional.
+- **Motivo:** respostas do usuário depois da consulta com a psiquiatra: ela vê tudo o que ele liberar,
+  as consultas psiquiátricas são espaçadas e os dois jeitos de vincular (código e convite) servem.
+- **Limite conhecido:** ampliar para 6 meses pede subir o limite de 92 dias das listas da
+  profissional. Sono e humor ficam na #188; medicação, na #171.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
