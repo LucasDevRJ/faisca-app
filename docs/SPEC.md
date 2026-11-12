@@ -222,6 +222,14 @@ planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
   plano" abaixo das abas. No celular, com 5 ou 6 abas, a grade passa a ter 3 colunas. O modelo das
   6 perguntas entra por um botão, e não já preenchido.
 
+## Resumo do período (DEC-100, #172)
+- Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados
+  com o **período anterior do mesmo tamanho**: dias com registro, atividades, pensamentos (as emoções mais
+  presentes, a crença e o efeito da explicação alternativa), tensão, Ação e Meus Planos.
+- Só números calculados na hora, sem interpretação, sem texto do paciente e sem guardar nada novo.
+- Cada área só aparece com acesso: na profissional, liberada pelo paciente e com o aceite dela; no
+  paciente, com o aceite dele. Uma área fechada não entra nem na contagem de dias. Período de até 92 dias.
+
 ## Tela de registros: ciclo ou semana (paciente e terapeuta)
 - A tela abre no **ciclo da consulta** atual, com o título "Consulta de dd/mm", o período, quantos
   dias faltam para a consulta e um resumo neutro (dias, atividades feitas, pensamentos e episódios
