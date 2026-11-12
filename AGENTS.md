@@ -15,9 +15,9 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 - `backup/`: serviço de cópia de segurança do banco (cron no Railway, DEC-075; roteiro no DEPLOY).
 - `scripts/`: `check-unique-ids.mjs` (DEC, versão do aviso e novidade sem repetição; roda no CI).
 - `docs/`: SPEC, DECISIONS, DEPLOY (passo a passo do deploy e da troca de segredos),
-  APRESENTACAO (o que o Faísca é, para divulgação; atualizar quando uma funcionalidade entra no ar)
-  e IDEIAS-TCC (técnicas da TCC planejadas). O BRIEFING-IA (briefing de divulgação para outras IAs)
-  fica só na pasta do usuário, fora do Git.
+  BRIEFING-IA (documento único de divulgação, também para outras IAs; atualizar quando uma
+  funcionalidade entra no ar) e IDEIAS-TCC (técnicas da TCC planejadas). A APRESENTACAO só aponta
+  para o BRIEFING-IA.
 - `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-tela`, `nova-migration`,
   `nova-decisao`, `finalizar-mudanca` e `deploy-checklist`).
 - `.claude/agents/`: subagentes do projeto (`revisor-regras` para as regras invioláveis,
@@ -87,5 +87,5 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
 - Uma branch por etapa (`feat/...`, `fix/...`, `docs/...`) e PR para a `main`.
 - Fuso America/Sao_Paulo; timestamps em UTC; `activityDate` como DATE.
 - Requisito mudou → atualize `docs/SPEC.md`. Decisão mudou → nova entrada em `docs/DECISIONS.md`.
-  Os outros documentos (APRESENTACAO, IDEIAS-TCC, DEPLOY) também acompanham cada mudança: veja a
+  Os outros documentos (BRIEFING-IA, IDEIAS-TCC, DEPLOY) também acompanham cada mudança: veja a
   tabela na skill `finalizar-mudanca`.

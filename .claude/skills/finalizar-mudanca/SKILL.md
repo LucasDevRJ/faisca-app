@@ -92,8 +92,7 @@ que ficaram desatualizados, no mesmo PR. Procure também o texto antigo que a mu
 |---|---|
 | `docs/SPEC.md` | um requisito ou comportamento muda |
 | `docs/DECISIONS.md` | há decisão nova: entrada antes de "## Adiado", com **Decisão**, **Motivo** e **Limite conhecido**; nunca edite uma DEC antiga. Tire do "Adiado"/"Em aberto" o que ficou resolvido |
-| `docs/APRESENTACAO.md` | uma funcionalidade entra no ar (sai de "Em breve" e vai para "O que já existe") ou muda o que o público vê |
-| `docs/BRIEFING-IA.md` | junto com a APRESENTACAO. Só existe na pasta do usuário (`.git/info/exclude`, tem o e-mail dele): atualize e avise no relatório, sem colocar no Git |
+| `docs/BRIEFING-IA.md` | muda o que o público vê; o que entra no ar sai de "Em breve" no deploy (`deploy-checklist`, 5.1). É o documento único de divulgação (a APRESENTACAO só aponta para ele) e o repositório é público: sem e-mail pessoal nem dado real |
 | `docs/IDEIAS-TCC.md` | uma ideia começa ou entra no ar, ou a estrutura de abas e telas que ela cita muda |
 | `docs/DEPLOY.md` | variável de ambiente, serviço, DNS, segredo ou passo de produção novo |
 | `AGENTS.md`, `CLAUDE.md` e os das pastas | muda a estrutura, um comando, uma regra ou uma skill |
@@ -123,6 +122,9 @@ Mostre uma tabela com cada verificação e o resultado real:
 | Front / Backend / Playwright | quantos passaram, quantos falharam e por quê |
 | Tela | o que foi conferido |
 | `revisor-regras` / `revisor-telas` / `revisor-seguranca` | veredito de cada um, ou "não exigido" |
+| Documentos | os que mudaram e os conferidos sem mudança (tabela do passo 7) |
+
+A descrição do PR leva a mesma linha: "**Documentos:** mudaram X; conferidos sem mudança Y".
 
 Depois, proponha a mensagem de commit (Conventional Commits, em pt-BR, `Closes #N` ou `Refs #N`)
 e **peça confirmação antes de commit, push, PR ou merge**. Mande a mensagem por heredoc, porque o

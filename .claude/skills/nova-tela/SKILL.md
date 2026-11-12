@@ -10,6 +10,8 @@ eles prevalecem sobre esta skill.
 
 ## 1. Antes de codar
 - Leia a seção da `docs/SPEC.md` e as DECs do assunto. Comportamento não definido → pergunte.
+- Se a tarefa vem de uma técnica do `docs/IDEIAS-TCC.md`, leia a parte dela: o que já foi pensado
+  (onde entra, campos, cuidados) é o ponto de partida.
 - Decida **quem vê**: paciente, terapeuta ou os dois. A visão da terapeuta é **só leitura**: sem
   botão que mude dado do paciente; a única ação dela é o "Lido" (DEC-057). A interface não é
   barreira de segurança: o 403 é da API.
@@ -74,7 +76,8 @@ eles prevalecem sobre esta skill.
 
 ## 10. Fechamento
 - `revisor-telas` (e `revisor-regras` se mexeu no backend); aplique ou discuta as ressalvas.
-- Siga a skill `finalizar-mudanca`. Funcionalidade nova no ar → atualize `docs/APRESENTACAO.md`.
+- Siga a skill `finalizar-mudanca` (inclusive a tabela de documentos). Funcionalidade nova no ar →
+  `deploy-checklist`, passo 5.1.
 
 ## Armadilhas conhecidas
 - O MSW não lê `File`/`Blob` do jsdom: no envio de arquivo, espie a chamada do `api`
