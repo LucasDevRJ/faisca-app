@@ -9,7 +9,7 @@ import { fakeUser, loggedIn, server } from '../test/server';
 beforeEach(() => {
   server.use(
     loggedIn,
-    http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })),
+    http.get('*/api/link', () => HttpResponse.json({ links: [], link: null, invite: null, code: null })),
   );
 });
 

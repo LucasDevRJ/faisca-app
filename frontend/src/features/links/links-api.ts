@@ -3,16 +3,40 @@ import { api } from '../../lib/api';
 // Chamadas às rotas de vínculo (DEC-031). /link é o lado do paciente; /links, o da terapeuta.
 // Quem é quem vem sempre da sessão, nunca do front.
 
+// O tipo de quem acompanha o paciente (DEC-097).
+export type ProfessionalKind = 'PSICOLOGIA' | 'PSIQUIATRIA';
+
+// As áreas que o paciente libera para cada profissional (DEC-097), na ordem das telas.
+export const SHARED_AREAS = [
+  'ACTIVITIES',
+  'THOUGHT_RECORDS',
+  'TENSION_EPISODES',
+  'ACTIONS',
+  'ACTION_PHOTOS',
+  'ABOUT_ME',
+  'APPOINTMENTS',
+  'PLANS',
+] as const;
+export type SharedArea = (typeof SHARED_AREAS)[number];
+
+export type PatientLink = {
+  id: string;
+  method: 'INVITE' | 'CODE';
+  createdAt: string;
+  // false = o paciente ainda não viu o aviso de novo vínculo.
+  seen: boolean;
+  kind: ProfessionalKind;
+  // O que o paciente liberou para esta profissional; vínculo novo começa vazio (DEC-097).
+  sharedAreas: SharedArea[];
+  // avatarVersion: quando a foto dela mudou, ou null sem foto (DEC-061). Conselho opcional.
+  therapist: { name: string; email: string; avatarVersion: string | null; councilNumber: string | null };
+};
+
 export type LinkStatus = {
-  link: {
-    id: string;
-    method: 'INVITE' | 'CODE';
-    createdAt: string;
-    // false = o paciente ainda não viu o aviso de novo vínculo.
-    seen: boolean;
-    // avatarVersion: quando a foto dela mudou, ou null sem foto (DEC-061).
-    therapist: { name: string; email: string; avatarVersion: string | null };
-  } | null;
+  // Todos os vínculos ativos, a psicóloga primeiro (DEC-097).
+  links: PatientLink[];
+  // O primeiro da lista (telas de antes da DEC-097).
+  link: PatientLink | null;
   invite: { id: string; therapistEmail: string; createdAt: string } | null;
   // O código em si não volta: o banco só guarda o hash. Aparece só na resposta de quando é gerado.
   code: { expiresAt: string } | null;
@@ -42,8 +66,14 @@ export async function cancelInvite(): Promise<void> {
   await api.delete('/link/invite');
 }
 
-export async function revokeLink(): Promise<void> {
-  await api.post('/link/revoke');
+export async function revokeLink(linkId: string): Promise<void> {
+  await api.post('/link/revoke', { linkId });
+}
+
+// O que esta profissional pode ver (DEC-097). Vale na hora.
+export async function setSharedAreas(linkId: string, areas: SharedArea[]): Promise<PatientLink> {
+  const { data } = await api.put<{ link: PatientLink }>(`/link/${linkId}/areas`, { areas });
+  return data.link;
 }
 
 export async function markLinkSeen(): Promise<void> {

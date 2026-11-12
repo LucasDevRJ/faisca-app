@@ -38,7 +38,7 @@ test('paciente gera o código, terapeuta vincula e lê os registros, paciente de
 
   // Paciente: Conta → Gerar código.
   await patient.getByRole('link', { name: 'Conta' }).click();
-  const section = patient.getByRole('region', { name: 'Minha terapeuta' });
+  const section = patient.getByRole('region', { name: 'Quem me acompanha' });
   await section.getByRole('button', { name: 'Gerar código' }).click();
   const code = (await section.getByText(/^[2-9A-Z]{4}-[2-9A-Z]{4}$/).textContent()) ?? '';
   expect(code).toMatch(/^[2-9A-Z]{4}-[2-9A-Z]{4}$/);
@@ -73,7 +73,8 @@ test('paciente gera o código, terapeuta vincula e lê os registros, paciente de
 
   // Paciente: desfaz em Conta, com confirmação.
   await patient.getByRole('link', { name: 'Conta' }).click();
-  await patient.getByRole('button', { name: 'Desfazer vínculo' }).click();
+  // Um botão por profissional (DEC-098).
+  await patient.getByRole('button', { name: /^Desfazer o vínculo com Tina/ }).click();
   await patient
     .getByRole('dialog', { name: /^Desfazer o vínculo com / })
     .getByRole('button', { name: 'Desfazer vínculo' })

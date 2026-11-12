@@ -251,8 +251,9 @@ function PrivacyVersionConsent() {
         O aviso de privacidade mudou
       </p>
       <p>
-        Agora o aviso explica os dados da verificação em duas etapas e das mensagens para o suporte. As mensagens
-        ficam no Zoho Mail, nos Estados Unidos. O contato agora é suporte@minhafaisca.com.br.{' '}
+        Agora você pode compartilhar com até duas profissionais (uma psicóloga e uma psiquiatra) e escolher o
+        que cada uma vê. Quem já acompanha você continua vendo o que via, e uma profissional nova começa sem ver
+        nada.{' '}
         {/* Outra aba: a pessoa lê o aviso sem perder a caixa marcada. */}
         <Link to="/privacidade" target="_blank" rel="noopener" className={linkClass}>
           Ver o que mudou

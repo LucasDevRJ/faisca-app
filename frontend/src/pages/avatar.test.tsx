@@ -10,7 +10,7 @@ const VERSION = '2026-10-25T20:00:00.000Z';
 const PATIENT_ID = '00000000-0000-4000-8000-00000000000a';
 
 beforeEach(() => {
-  server.use(loggedIn, http.get('*/api/link', () => HttpResponse.json({ link: null, invite: null, code: null })));
+  server.use(loggedIn, http.get('*/api/link', () => HttpResponse.json({ links: [], link: null, invite: null, code: null })));
 });
 
 afterEach(() => {
@@ -88,13 +88,18 @@ describe('fotos de quem tem vínculo', () => {
     server.use(
       http.get('*/api/link', () =>
         HttpResponse.json({
-          link: {
-            id: '00000000-0000-4000-8000-0000000000b1',
-            method: 'CODE',
-            createdAt: '2026-09-28T15:00:00.000Z',
-            seen: true,
-            therapist: { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: VERSION },
-          },
+          links: [
+            {
+              id: '00000000-0000-4000-8000-0000000000b1',
+              method: 'CODE',
+              createdAt: '2026-09-28T15:00:00.000Z',
+              seen: true,
+              kind: 'PSICOLOGIA',
+              sharedAreas: [],
+              therapist: { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: VERSION, councilNumber: null },
+            },
+          ],
+          link: null,
           invite: null,
           code: null,
         }),
@@ -103,9 +108,9 @@ describe('fotos de quem tem vínculo', () => {
     const { container } = renderRoute('/conta');
 
     await screen.findByText('Tereza Fictícia');
-    expect(container.querySelector('img[src^="/api/link/therapist/avatar"]')).toHaveAttribute(
+    expect(container.querySelector('img[src^="/api/link/"]')).toHaveAttribute(
       'src',
-      `/api/link/therapist/avatar?v=${encodeURIComponent(VERSION)}`,
+      `/api/link/00000000-0000-4000-8000-0000000000b1/avatar?v=${encodeURIComponent(VERSION)}`,
     );
   });
 

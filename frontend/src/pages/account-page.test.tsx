@@ -7,18 +7,20 @@ import { renderRoute } from '../test/render';
 import { apiError, fakeUser, loggedIn, server } from '../test/server';
 
 // Terapeuta fictícia (regra 5).
-const therapist = { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null };
-const noLink: LinkStatus = { link: null, invite: null, code: null };
+const therapist = { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null, councilNumber: null };
+const noLink: LinkStatus = { links: [], link: null, invite: null, code: null };
 
+// A lista de profissionais acompanha o `link` dos testes (DEC-097).
 function linkStatus(status: LinkStatus) {
-  server.use(http.get('*/api/link', () => HttpResponse.json(status)));
+  const full = { ...status, links: status.link ? [status.link] : status.links };
+  server.use(http.get('*/api/link', () => HttpResponse.json(full)));
 }
 
 beforeEach(() => {
   server.use(loggedIn);
 });
 
-describe('/conta: minha terapeuta', () => {
+describe('/conta: quem me acompanha', () => {
   it('o link "Conta" no topo leva para a tela', async () => {
     const user = userEvent.setup();
     renderRoute('/registros');
@@ -31,7 +33,7 @@ describe('/conta: minha terapeuta', () => {
   it('sem vínculo, oferece gerar código e convidar por e-mail', async () => {
     renderRoute('/conta');
 
-    const section = await screen.findByRole('region', { name: 'Minha terapeuta' });
+    const section = await screen.findByRole('region', { name: 'Quem me acompanha' });
     expect(await within(section).findByRole('button', { name: 'Gerar código' })).toBeInTheDocument();
     expect(within(section).getByRole('button', { name: 'Convidar por e-mail' })).toBeInTheDocument();
   });
@@ -144,7 +146,7 @@ describe('/conta: minha terapeuta', () => {
     const user = userEvent.setup();
     linkStatus({
       ...noLink,
-      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, therapist },
+      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, kind: 'PSICOLOGIA', sharedAreas: [], therapist },
     });
     const revoke = vi.fn();
     server.use(
@@ -159,14 +161,15 @@ describe('/conta: minha terapeuta', () => {
     expect(await screen.findByText(therapist.name)).toBeInTheDocument();
     expect(screen.getByText(therapist.email)).toBeInTheDocument();
     expect(screen.getByText(/desde 28\/09\/2026/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Gerar código' })).not.toBeInTheDocument();
+    // Com só a psicóloga, ainda há vaga para a psiquiatra (DEC-097).
+    expect(screen.getByRole('heading', { name: 'Vincular outra profissional' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Desfazer vínculo' }));
+    await user.click(screen.getByRole('button', { name: /Desfazer o vínculo com Tereza/ }));
     const dialog = await screen.findByRole('dialog', { name: `Desfazer o vínculo com ${therapist.name}?` });
     // A confirmação conta que nada é apagado e o que acontece num vínculo novo.
     expect(dialog).toHaveTextContent('Seus registros continuam com você: nada é apagado.');
     expect(dialog).toHaveTextContent(`${therapist.name} deixa de ver seus registros na hora.`);
-    expect(dialog).toHaveTextContent(`${therapist.name} volta a ver tudo, inclusive o que você registrar até lá.`);
+    expect(dialog).toHaveTextContent(`${therapist.name} começa sem ver nada, e você escolhe de novo o que compartilhar.`);
     expect(revoke).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole('button', { name: 'Desfazer vínculo' }));
 
@@ -174,7 +177,7 @@ describe('/conta: minha terapeuta', () => {
     expect(await screen.findByRole('button', { name: 'Gerar código' })).toBeInTheDocument();
   });
 
-  it('quem é só terapeuta não vê "Minha terapeuta" nem chama a API de vínculo do paciente', async () => {
+  it('quem é só terapeuta não vê "Quem me acompanha" nem chama a API de vínculo do paciente', async () => {
     const getLink = vi.fn();
     server.use(
       http.get('*/api/auth/me', () =>
@@ -188,7 +191,7 @@ describe('/conta: minha terapeuta', () => {
     renderRoute('/conta');
 
     expect(await screen.findByRole('region', { name: 'Perfis' })).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'Minha terapeuta' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Quem me acompanha' })).not.toBeInTheDocument();
     expect(getLink).not.toHaveBeenCalled();
   });
 });
@@ -334,7 +337,7 @@ describe('/conta: excluir conta, pausa em vez de excluir (DEC-078)', () => {
     const user = userEvent.setup();
     linkStatus({
       ...noLink,
-      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, therapist },
+      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, kind: 'PSICOLOGIA', sharedAreas: [], therapist },
     });
     renderRoute('/conta');
 

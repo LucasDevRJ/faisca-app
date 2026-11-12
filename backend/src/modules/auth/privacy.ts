@@ -12,6 +12,8 @@
 // - 2026-11.2: entra o Meus Planos (DEC-094).
 // - 2026-11.3: dados da verificação em duas etapas, mensagens ao suporte (Zoho Mail) e o contato
 //   suporte@ (DEC-096). Sem área nova: nada é bloqueado.
+// - 2026-11.4: até duas profissionais (psicóloga e psiquiatra), cada uma vendo só as áreas que o
+//   paciente escolhe (DEC-097, DEC-098). Sem área nova: nada é bloqueado.
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -23,6 +25,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11',
   '2026-11.2',
   '2026-11.3',
+  '2026-11.4',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -33,8 +36,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // (DEC-065). Sem isso, alguém aceitaria uma versão cujo texto ainda não viu. O mesmo vale para a
 // 2026-11 ("Sobre mim", DEC-081): conhecida antes, virou a atual no PR das telas (DEC-082). E
 // para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, virou a atual no PR das telas (DEC-095).
-// A 2026-11.3 (DEC-096) entrou de uma vez, API e texto no mesmo PR.
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.3';
+// A 2026-11.3 (DEC-096) e a 2026-11.4 (DEC-098) entraram de uma vez, API e texto no mesmo PR.
+export const PRIVACY_VERSION: PrivacyVersion = '2026-11.4';
 
 // Cada área de dado novo exige a versão do aviso que passou a citá-la (DEC-042). Assim, uma versão
 // nova não bloqueia de novo o que a pessoa já tinha liberado: quem aceitou a 2026-10.2 segue no RPD

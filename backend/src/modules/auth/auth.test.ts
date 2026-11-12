@@ -797,6 +797,11 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
         '2026-11.3',
         { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
       ],
+      // Várias profissionais (DEC-098): também sem área nova.
+      [
+        '2026-11.4',
+        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
+      ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {
