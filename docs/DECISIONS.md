@@ -2132,6 +2132,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   numa versão sem área nova antiga vê o texto desta, o que basta, porque o aviso completo fica no
   link "Ver o que mudou".
 
+## DEC-097 — Várias profissionais e áreas liberadas por vínculo (API)
+- **Decisão:** em construção (#170). Número reservado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
