@@ -2115,6 +2115,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** os textos ainda não passaram pela psicóloga; o que ela mudar entra depois.
   Com cinco abas, a segunda linha da grade fica com um espaço vazio até as Tarefas.
 
+## DEC-096 — Aviso de privacidade versão 10: 2FA, suporte no Zoho e contato
+- **Decisão:** em construção. Número reservado.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
