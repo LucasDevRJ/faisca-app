@@ -15,6 +15,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // bloqueia nenhuma área: não há dado novo, muda onde e por quanto tempo os dados ficam.
 // Versão 2026-11 (DEC-081, DEC-082): entra o "Sobre mim", com novo aceite para usá-lo.
 // Versão 2026-11.2 (DEC-094, DEC-095): entra o Meus Planos, com novo aceite para usá-lo.
+// Versão 2026-11.3 (DEC-096): os dados da verificação em duas etapas, as mensagens ao suporte (Zoho
+// Mail, nos EUA) e o contato suporte@. Pede o aceite de novo, sem bloquear nenhuma área.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -23,8 +25,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // DEC-068, DEC-069, DEC-076, DEC-090): dados pessoais e preferências da própria conta, que não são
 // de saúde. E para o mural de avisos (DEC-079, DEC-080): o aviso é conteúdo da terapeuta, e o "já
 // vi" fica só com o paciente.
-const VERSION_LABEL = 'versão 9, de novembro de 2026';
-const CONTACT = 'lucaspereiradelima2020@gmail.com';
+const VERSION_LABEL = 'versão 10, de novembro de 2026';
+const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
@@ -104,6 +106,15 @@ export function PrivacyPage() {
               e as respostas. Como os planos podem tratar de assuntos íntimos, nada deles aparece em notificações nem
               nos registros técnicos do sistema.
             </li>
+            <li>
+              Segurança da conta, se você ligar a verificação em duas etapas: os jeitos escolhidos (código por e-mail
+              ou app autenticador), a chave do app autenticador, guardada criptografada, e os códigos de recuperação,
+              guardados de um jeito que nem nós conseguimos ler.
+            </li>
+            <li>
+              Mensagens para o suporte, se você escrever para nós: a mensagem e o seu e-mail, para podermos responder.
+              Não é preciso contar dados de saúde para pedir ajuda.
+            </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
             <li>
@@ -164,7 +175,8 @@ export function PrivacyPage() {
           <p>
             Nos servidores do Railway (banco de dados e API) e da Vercel (site), nos{' '}
             <strong>Estados Unidos</strong>. Os e-mails saem pelo Resend, a partir de servidores em São Paulo. As
-            cópias de segurança ficam no Cloudflare R2, também <strong>fora do Brasil</strong>.
+            cópias de segurança ficam no Cloudflare R2, também <strong>fora do Brasil</strong>. As mensagens enviadas
+            ao suporte ficam no Zoho Mail, nos <strong>Estados Unidos</strong>.
           </p>
         </Section>
 

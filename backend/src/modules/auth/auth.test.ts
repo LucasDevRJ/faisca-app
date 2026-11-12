@@ -792,6 +792,11 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
         '2026-11.2',
         { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
       ],
+      // 2FA, suporte e contato (DEC-096): versão nova sem área nova, libera o mesmo que a anterior.
+      [
+        '2026-11.3',
+        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
+      ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {

@@ -251,7 +251,8 @@ function PrivacyVersionConsent() {
         O aviso de privacidade mudou
       </p>
       <p>
-        Agora o Faísca faz uma cópia de segurança por dia, criptografada, que expira em até 5 semanas.{' '}
+        Agora o aviso explica os dados da verificação em duas etapas e das mensagens para o suporte. As mensagens
+        ficam no Zoho Mail, nos Estados Unidos. O contato agora é suporte@minhafaisca.com.br.{' '}
         {/* Outra aba: a pessoa lê o aviso sem perder a caixa marcada. */}
         <Link to="/privacidade" target="_blank" rel="noopener" className={linkClass}>
           Ver o que mudou

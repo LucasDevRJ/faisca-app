@@ -10,15 +10,18 @@ describe('/privacidade', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Aviso de privacidade' })).toBeInTheDocument();
     expect(screen.getByText(/projeto de TCC de Lucas Pereira de Lima/)).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'lucaspereiradelima2020@gmail.com' })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'suporte@minhafaisca.com.br' })[0]).toHaveAttribute(
       'href',
-      'mailto:lucaspereiradelima2020@gmail.com',
+      'mailto:suporte@minhafaisca.com.br',
     );
-    expect(screen.getByText(/Estados Unidos/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Estados Unidos/).length).toBeGreaterThan(0);
+    // Versão 10 (DEC-096): os dados do 2FA e as mensagens ao suporte, que ficam no Zoho Mail.
+    expect(screen.getByText(/a chave do app autenticador, guardada criptografada/)).toBeInTheDocument();
+    expect(screen.getByText(/As mensagens enviadas\s+ao suporte ficam no Zoho Mail/)).toBeInTheDocument();
     // Fatos do deploy (DEC-038): e-mails saem de São Paulo. Cópias de segurança no R2, que expiram
     // em até 5 semanas (DEC-075, DEC-078).
     expect(screen.getByText(/servidores em São Paulo/)).toBeInTheDocument();
-    expect(screen.getByText('versão 9, de novembro de 2026')).toBeInTheDocument();
+    expect(screen.getByText('versão 10, de novembro de 2026')).toBeInTheDocument();
     expect(screen.getByText(/cópias de segurança ficam no Cloudflare R2/)).toBeInTheDocument();
     expect(screen.getByText(/As cópias\s+de segurança expiram em até/)).toBeInTheDocument();
     expect(screen.queryByText(/Não guardamos/)).not.toBeInTheDocument();

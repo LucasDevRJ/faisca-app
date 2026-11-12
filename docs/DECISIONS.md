@@ -2116,7 +2116,21 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   Com cinco abas, a segunda linha da grade fica com um espaço vazio até as Tarefas.
 
 ## DEC-096 — Aviso de privacidade versão 10: 2FA, suporte no Zoho e contato
-- **Decisão:** em construção. Número reservado.
+- **Decisão:** a versão **2026-11.3** (versão 10) do aviso, numa só vez (API e texto no mesmo PR):
+  - **"O que guardamos"** ganha a **segurança da conta** (os jeitos da verificação em duas etapas, a
+    chave do app autenticador criptografada e os códigos de recuperação em hash, DEC-092) e as
+    **mensagens para o suporte** (a mensagem e o e-mail, sem precisar de dado de saúde);
+  - **"Onde ficam"** cita o **Zoho Mail, nos Estados Unidos**, onde fica a caixa do suporte (DEC-093);
+  - o **contato** do aviso passa a ser `suporte@minhafaisca.com.br`, e não mais o e-mail pessoal do
+    responsável;
+  - **sem área nova:** nada fica bloqueado. O aceite fica na faixa "O aviso de privacidade mudou",
+    como na 2026-10.7 (DEC-078), com o texto desta versão.
+- **Motivo:** pendências registradas na DEC-092 (dados do 2FA) e na DEC-093 (o Zoho), numa versão
+  própria, separada da do Meus Planos (escolha do usuário). O contato pelo domínio tira o e-mail
+  pessoal de quem usa o app (sugestão aceita pelo usuário, #176).
+- **Limite conhecido:** a faixa tem um texto só, o da versão mais nova sem área nova. Quem ficou
+  numa versão sem área nova antiga vê o texto desta, o que basta, porque o aviso completo fica no
+  link "Ver o que mudou".
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
