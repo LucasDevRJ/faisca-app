@@ -1,6 +1,7 @@
 import { skipToken, useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import { fetchPatientAboutMe } from '../about-me/about-me-api';
 import { PATIENTS_KEY } from '../links/use-links';
+import { fetchPatientPeriodSummary } from '../summary/summary-api';
 import { fetchPatientUnread, markRead, unmarkRead, type ReadItem } from './read-marks-api';
 import type { CycleResponse } from '../cycle/cycle-api';
 import { getApiError } from '../auth/auth-api';
@@ -68,6 +69,16 @@ export function usePatientSummary(patientId: string) {
     queryFn: () => fetchPatientSummary(patientId),
     retry: retryUnlessForbidden,
     staleTime: 0,
+  });
+}
+
+// Resumo do período em números (DEC-100): só as áreas liberadas e com o aceite dela; as fechadas vêm
+// como null. range = null enquanto o período não é conhecido.
+export function usePatientPeriodSummary(patientId: string, range: { from: string; to: string } | null) {
+  return useQuery({
+    queryKey: [...THERAPIST_KEY, patientId, 'period-summary', range?.from, range?.to],
+    queryFn: range ? () => fetchPatientPeriodSummary(patientId, range) : skipToken,
+    retry: retryUnlessForbidden,
   });
 }
 

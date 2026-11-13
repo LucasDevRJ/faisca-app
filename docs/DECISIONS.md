@@ -2262,6 +2262,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** sem pensamentos repetidos (#166) nem sono e humor (#188), que entram quando
   existirem. As telas ficam para o PR seguinte.
 
+## DEC-101 — Telas do resumo do período
+- **Decisão (#172, desenho e textos aprovados pelo usuário):** as telas da DEC-100.
+  - **Na profissional:** o cartão "Resumo do período" fica **no topo da página do paciente**, acima das
+    abas, e segue o período da tela: os meses na psiquiatra, o ciclo ou a semana na psicóloga. Os registros
+    detalhados continuam embaixo, como antes, e nada sai. Sem nenhuma área com acesso, o cartão não aparece.
+  - **No paciente:** "Meu resumo", o mesmo cartão em Meus registros, logo abaixo do período. Começa
+    **fechado** ("Ver o resumo") para não empurrar as atividades do dia para baixo, e só pergunta à API
+    depois de aberto.
+  - **Os textos:** os aprovados, com a comparação neutra "(antes: X)", sem seta, cor ou "piorou", e a nota
+    "Números calculados dos registros do período, sem interpretação." Uma área sem registro no período não
+    aparece. Na Ação só com planejadas, sai "1 planejada", sem "0 avaliadas e 0 não realizadas" na frente.
+  - **"Ver registros"** em cada bloco: na profissional, abre a aba da área; no paciente, a página da área no
+    mesmo período (as atividades já estão na tela, sem link).
+- **Motivo:** a psiquiatra achou a página detalhada demais para consultas a cada 3 meses e pediu métricas;
+  o resumo vem primeiro, e quem quiser os detalhes desce ou abre a aba. O paciente vê o que elas veem.
+- **Limite conhecido:** o sono, o humor e o remédio (#188) entram no cartão quando existirem, com um gráfico
+  do período.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

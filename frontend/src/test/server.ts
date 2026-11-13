@@ -7,6 +7,7 @@ import { DEFAULT_ACCESSIBILITY } from '../features/profile/accessibility';
 import type { TensionEpisode } from '../features/tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../features/thought-records/thought-records-api';
 import type { RemindersResponse } from '../features/reminders/reminders-api';
+import type { PeriodSummary } from '../features/summary/summary-api';
 
 // Pessoa fictícia usada nos testes (regra 5 do AGENTS.md).
 export const fakeUser: SessionUser = {
@@ -121,6 +122,21 @@ export function fakeTensionEpisode(overrides: Partial<TensionEpisode> = {}): Ten
   };
 }
 
+// Resumo do período fictício (DEC-100): todas as áreas fechadas, por padrão; cada teste abre as que usa.
+export function fakePeriodSummary(overrides: Partial<PeriodSummary> = {}): PeriodSummary {
+  return {
+    period: { from: '2026-08-13', to: '2026-11-12' },
+    previousPeriod: { from: '2026-05-14', to: '2026-08-12' },
+    daysWithRecords: { current: 0, previous: 0 },
+    activities: null,
+    thoughtRecords: null,
+    tensionEpisodes: null,
+    actions: null,
+    plans: null,
+    ...overrides,
+  };
+}
+
 export function apiError(status: number, code: string, message: string) {
   return HttpResponse.json({ error: { code, message } }, { status });
 }
@@ -169,6 +185,9 @@ export const handlers = [
       counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 0, planEntries: 0 },
     }),
   ),
+  // Resumo do período sem nenhuma área, por padrão (DEC-100): o cartão da profissional fica escondido.
+  http.get('*/api/period-summary', () => HttpResponse.json(fakePeriodSummary())),
+  http.get('*/api/therapist/patients/:patientId/period-summary', () => HttpResponse.json(fakePeriodSummary())),
   // Nenhum plano, por padrão (DEC-094, DEC-095): a aba Meus Planos fica escondida.
   http.get('*/api/plans', () => HttpResponse.json({ plans: [] })),
   http.get('*/api/therapist/patients/:patientId/plans', () => HttpResponse.json({ plans: [] })),

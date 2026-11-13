@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { useSession } from '../features/auth/use-session';
@@ -25,6 +26,8 @@ import { PeriodNav } from '../features/cycle/period-nav';
 import { cycleQuery } from '../features/cycle/use-cycle';
 import { usePeriod, type Period } from '../features/cycle/use-period';
 import { daysInRange } from '../features/therapist/period';
+import { MyPeriodSummaryCard } from '../features/summary/period-summary-card';
+import { AREA_TITLE, summaryLinkClass, type SummaryArea } from '../features/summary/summary-format';
 
 type OpenDialog = { kind: 'create'; date: string } | { kind: ActivityAction; activity: Activity } | null;
 
@@ -81,6 +84,8 @@ function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: Period
   const inCycle = period.mode === 'cycle';
   const here = inCycle ? 'neste ciclo' : 'nesta semana';
 
+  // O período vai junto no "Ver registros" do resumo: as outras páginas usam o mesmo ?ciclo=/?semana=.
+  const { search } = useLocation();
   const week = useRangeActivities(period);
   const activities = week.data ?? [];
   // Dias com sessão agendada ganham um selo (DEC-030, DEC-045).
@@ -125,6 +130,8 @@ function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: Period
             </Button>
           }
         />
+
+        <MyPeriodSummaryCard range={period} link={(area) => <AreaLink area={area} search={search} />} />
 
         {notice && <Alert tone="attention">{notice}</Alert>}
 
@@ -220,5 +227,24 @@ function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: Period
       {dialog?.kind === 'notDone' && <NotDoneDialog activity={dialog.activity} onClose={close} onDone={done} />}
       {dialog?.kind === 'delete' && <DeleteActivityDialog activity={dialog.activity} onClose={close} onDone={done} />}
     </>
+  );
+}
+
+// No "Meu resumo", cada área abre a própria página, no mesmo período. As atividades já estão aqui.
+const AREA_PATH: Record<SummaryArea, string | null> = {
+  activities: null,
+  thoughtRecords: '/pensamentos',
+  tensionEpisodes: '/tensao',
+  actions: '/acao',
+  plans: '/planos',
+};
+
+function AreaLink({ area, search }: { area: SummaryArea; search: string }) {
+  const path = AREA_PATH[area];
+  if (!path) return null;
+  return (
+    <Link to={`${path}${search}`} className={summaryLinkClass}>
+      Ver registros<span className="sr-only"> de {AREA_TITLE[area]}</span>
+    </Link>
   );
 }
