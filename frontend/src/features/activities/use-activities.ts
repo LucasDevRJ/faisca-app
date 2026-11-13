@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MY_PERIOD_SUMMARY_KEY } from '../summary/use-summary';
 import { getApiError } from '../auth/auth-api';
 import {
   completeActivity,
@@ -67,7 +68,12 @@ function useActivityMutation<TInput>(mutationFn: (input: TInput) => Promise<unkn
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ACTIVITIES_KEY }),
+    // O "Meu resumo" (DEC-100) fica na mesma tela: recarrega junto.
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ACTIVITIES_KEY }),
+        queryClient.invalidateQueries({ queryKey: MY_PERIOD_SUMMARY_KEY }),
+      ]),
   });
 }
 

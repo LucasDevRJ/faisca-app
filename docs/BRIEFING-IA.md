@@ -92,6 +92,7 @@ Na prática clínica tradicional:
   - O paciente configura sua agenda recorrente (**semanal** ou **quinzenal**, dia e horário), além de poder criar **consulta avulsa**, **desmarcar** (ou registrar falta) e **remarcar** informando o motivo, **pausar** a terapia (com ou sem data de volta) ou **encerrar**.
   - Pode baixar um arquivo `.ics` para colocar as sessões no **calendário do celular** (com o título neutro `"Consulta"`, sem expor motivos).
   - **Ciclo da consulta automático:** as abas de Atividades, Pensamentos, Tensão e Ação abrem no período exato entre a última sessão realizada e a próxima sessão agendada (com alternância `Ciclo | Semana`), mostrando um resumo neutro do ciclo (quantos dias, atividades feitas, pensamentos, episódios e ações).
+  - **"Meu resumo":** em Meus registros, o paciente abre o mesmo resumo em números que as profissionais veem, comparado com o período anterior do mesmo tamanho.
 
 - **Meus Planos:**
   - Planos de ação combinados com a psicóloga, como *"Quando surgir vontade de ___, registrar: …"*, com até 10 perguntas próprias (há um modelo de 6 perguntas para começar, inserido por um botão).
@@ -121,6 +122,7 @@ Na prática clínica tradicional:
   - Vê **só as áreas que o paciente liberou para ela**; sem nenhuma, a página explica que ele ainda não liberou nada.
   - A **psicóloga** navega pelo **mesmo Ciclo da consulta** (ou Semana) que o paciente vê, nas abas liberadas (**Atividades**, **Pensamentos**, **Tensão**, **Ação** e **Meus Planos**), além da **Agenda de consultas** (com motivos de desmarcação/remarcação) e do cartão **"Sobre [Nome]"**.
   - A **psiquiatra** vê os mesmos registros por **1, 2 ou 3 meses** (começa em 3), com setas para voltar no tempo.
+  - **Resumo do período em números:** no topo da página do paciente, um cartão com o essencial do período (dias com registro, atividades, as emoções mais presentes, a crença no pensamento e o efeito da explicação alternativa, tensão, Ação e Meus Planos), comparado com o **período anterior do mesmo tamanho** em formato neutro ("antes: 6,1"). Só números, sem interpretação e sem texto do paciente; só das áreas liberadas. Pensado para consultas espaçadas, como as da psiquiatra.
   - No cadastro ou no convite, a profissional diz se é **psicóloga ou psiquiatra** e, em Conta, pode informar o número do conselho (CRP ou CRM), que aparece para os pacientes.
   - **Regra inviolável de arquitetura:** a terapeuta nunca altera nem apaga nenhum dado do paciente (bloqueado no backend com `403`).
 

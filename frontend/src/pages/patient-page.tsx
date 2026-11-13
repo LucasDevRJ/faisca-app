@@ -47,6 +47,7 @@ import {
   usePatientSummary,
   usePatientTensionEpisodes,
   usePatientThoughtRecords,
+  usePatientPeriodSummary,
   usePatientUnread,
 } from '../features/therapist/use-therapist';
 import { TensionChart } from '../features/tension-episodes/tension-chart';
@@ -58,6 +59,8 @@ import type { ThoughtRecord } from '../features/thought-records/thought-records-
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 import { AboutMeCard } from '../features/about-me/about-me-card';
 import { PatientPlansTab } from '../features/plans/patient-plans-tab';
+import { PatientPeriodSummaryCard } from '../features/summary/period-summary-card';
+import { AREA_TITLE, summaryLinkClass, type SummaryArea } from '../features/summary/summary-format';
 import { PlanEntryCard } from '../features/plans/plan-entry-card';
 import { Avatar } from '../features/profile/avatar';
 import { avatarUrls } from '../features/profile/profile-api';
@@ -191,6 +194,8 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const agenda = usePatientAppointments(patientId, agendaConsented && agendaShared, range);
   // Os registros para ler (DEC-058), fora do ciclo: sempre que alguma das três áreas tem aceite.
   const unread = usePatientUnread(patientId, anyReadConsented);
+  // Resumo do período em números (DEC-100), no topo: segue o período da tela.
+  const periodSummary = usePatientPeriodSummary(patientId, ready && !noAreas && tab !== 'para-ler' ? range : null);
   const appointmentList = !agendaShared
     ? []
     : agendaConsented
@@ -206,6 +211,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   if (actions.isError && isForbidden(actions.error) && !needsPrivacyConsent(actions.error)) return <NoAccess />;
   if (plans.isError && isForbidden(plans.error) && !needsPrivacyConsent(plans.error)) return <NoAccess />;
   if (unread.isError && isForbidden(unread.error) && !needsPrivacyConsent(unread.error)) return <NoAccess />;
+  if (periodSummary.isError && isForbidden(periodSummary.error)) return <NoAccess />;
 
   const firstName = patient.name.split(' ')[0];
 
@@ -294,6 +300,17 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
         <>
           {unread.data && unreadTotal(unread.data.counts) > 0 && (
             <ToReadCard counts={unread.data.counts} onOpen={() => selectTab('para-ler')} />
+          )}
+
+          {!noAreas && (
+            <PatientPeriodSummaryCard
+              query={periodSummary}
+              link={(area) => (
+                <button type="button" className={summaryLinkClass} onClick={() => selectTab(SUMMARY_TAB[area])}>
+                  Ver registros<span className="sr-only"> de {AREA_TITLE[area]}</span>
+                </button>
+              )}
+            />
           )}
 
           {!noAreas && (
@@ -468,6 +485,15 @@ function DayList({ days, activities, today, appointmentDays }: DayListProps) {
 
 // Nomes curtos, iguais às abas do paciente: "Registro de Pensamentos" não cabe num celular (DEC-043).
 // Com quatro, grade 2×2 no celular (DEC-052); com o Meus Planos, 3 colunas (DEC-095).
+// O "Ver registros" de cada bloco do resumo abre a aba da área.
+const SUMMARY_TAB: Record<SummaryArea, RecordTab> = {
+  activities: null,
+  thoughtRecords: 'pensamentos',
+  tensionEpisodes: 'tensao',
+  actions: 'acao',
+  plans: 'planos',
+};
+
 const TAB_LABELS: { tab: RecordTab; label: string }[] = [
   { tab: null, label: 'Atividades' },
   { tab: 'pensamentos', label: 'Pensamentos' },

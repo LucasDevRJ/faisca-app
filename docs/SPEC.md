@@ -229,6 +229,9 @@ planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
 - Só números calculados na hora, sem interpretação, sem texto do paciente e sem guardar nada novo.
 - Cada área só aparece com acesso: na profissional, liberada pelo paciente e com o aceite dela; no
   paciente, com o aceite dele. Uma área fechada não entra nem na contagem de dias. Período de até 92 dias.
+- **Telas (DEC-101):** na profissional, o cartão "Resumo do período" fica no topo da página do paciente,
+  acima das abas, e segue o período da tela; os registros detalhados continuam embaixo. No paciente, "Meu
+  resumo" fica em Meus registros, fechado por padrão. Cada bloco tem "Ver registros", que abre a área.
 
 ## Tela de registros: ciclo ou semana (paciente e terapeuta)
 - A tela abre no **ciclo da consulta** atual, com o título "Consulta de dd/mm", o período, quantos
