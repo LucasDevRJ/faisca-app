@@ -200,8 +200,10 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 ## Meus Planos (DEC-094, #179)
 Planos de ação combinados com a psicóloga: "Quando surgir vontade de ___, registrar: …", com
 perguntas que mudam de plano para plano, respondidas **toda vez** que a situação acontece.
-1ª entrega: só o paciente cria e registra; a terapeuta com vínculo ativo só lê. A psicóloga criar
-planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
+O paciente pode criar e administrar seus planos. A **psicóloga** também pode criar um plano para o
+paciente quando o vínculo está ativo, o paciente liberou Meus Planos para ela e ambos aceitaram a
+versão do aviso que cita a área. O plano pertence ao paciente: só ele pode editar, encerrar, reabrir,
+apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102).
 - **Plano:** nome de 1 a 120 caracteres (o gatilho) e de 1 a 10 perguntas, de 1 a 200 caracteres
   cada. O app oferece um modelo com 6 perguntas (antes, sentimento, o que procurava, o que imaginou
   que receberia, o que fez, como se sentiu depois). Até 30 planos por conta.
@@ -213,14 +215,17 @@ planos para o paciente fica para a 2ª entrega (exceção nova na regra 1).
   tem texto. O registro guarda **uma cópia das perguntas** como estavam: mudar o plano depois não
   muda o sentido de um registro antigo.
 - Editar e excluir o registro só no dia em que foi feito; depois, **409**, como na Tensão.
-- Na terapeuta: os planos (ativos e encerrados) e os registros, só leitura. Os **registros** entram
-  no "Para ler" e têm o "Lido" (DEC-057); o plano em si, não.
+- Na terapeuta: os planos (ativos e encerrados) e os registros, só leitura, exceto criar plano para
+  a psicóloga nas condições acima. Nem a psicóloga nem a psiquiatra alteram planos existentes ou
+  criam registros. Os **registros** entram no "Para ler" e têm o "Lido" (DEC-057); o plano em si, não.
 - Nome, perguntas e respostas nunca aparecem em notificação nem em log.
 - Usar o Meus Planos exige ter aceitado uma versão do aviso de privacidade que o cite (2026-11.2).
-- **Telas (DEC-095):** a aba **Meus Planos** só aparece quando existe algum plano (e na terapeuta,
-  também enquanto falta o aceite, para ela poder aceitar); sem plano, um link discreto "Criar um
-  plano" abaixo das abas. No celular, com 5 ou 6 abas, a grade passa a ter 3 colunas. O modelo das
-  6 perguntas entra por um botão, e não já preenchido.
+- **Telas (DEC-095, DEC-102):** no paciente, a aba **Meus Planos** só aparece quando existe algum
+  plano; sem plano, um link discreto "Criar um plano" abaixo das abas. Na página da terapeuta, a aba
+  também aparece enquanto falta o aceite para ela aceitar, e para a psicóloga com Meus Planos
+  liberado, mesmo sem planos, para poder criar o primeiro. A psiquiatra continua vendo a aba só quando
+  existe plano. No celular, com 5 ou 6 abas, a grade passa a 3 colunas. O modelo das 6 perguntas entra
+  por um botão, e não já preenchido.
 
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados

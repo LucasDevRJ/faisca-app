@@ -19,8 +19,8 @@ import {
   type UpdatePlanInput,
 } from './plans.schema.js';
 
-// Meus Planos, 1ª entrega (SPEC, "Meus Planos"; DEC-094). Só o paciente escreve; a terapeuta lê
-// pelos mesmos services, atrás do requireActiveLink.
+// Meus Planos (DEC-094, DEC-102): o paciente gerencia planos e registros. A psicóloga pode chamar
+// create para criar um plano sob o paciente; a autorização fica na rota da terapeuta.
 
 export type PublicPlan = {
   id: string;

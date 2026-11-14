@@ -27,9 +27,11 @@ no diff, não o que se pretendia fazer. Responda em pt-BR.
 1. **Autorização no backend**
    - Rota de paciente: `requireAuth, requirePatient`, id sempre de `getAuthUser(req)`, nunca
      `userId`/`patientId` do corpo, da query ou da URL; dono conferido no service.
-   - Rota de terapeuta: só dentro de `therapist.routes.ts`, sob o prefixo que já aplica
-     `onlyReads → requireAuth → requireTherapist → requireActiveLink`. Só GET.
-   - Únicas escritas permitidas à terapeuta: `/links/redeem-code` e `/links/accept-invite`
+   - Rota de terapeuta: dentro de `therapist.routes.ts`, sob o prefixo que aplica
+     `onlyReads → requireAuth → requireTherapist → requireActiveLink`. Só GET, exceto o único POST
+     `/therapist/patients/:patientId/plans` (DEC-102), que só cria plano para psicóloga com área PLANS
+     liberada e os dois aceites de privacidade. Não permite editar plano nem criar registro.
+   - Demais escritas permitidas à terapeuta: `/links/redeem-code` e `/links/accept-invite`
      (DEC-031) e as marcas de leitura em `/therapist/read-marks/:patientId` (DEC-057), que precisam
      de vínculo ativo, conferem que cada registro é daquele paciente e só gravam em `ReadMark`.
      Qualquer outra escrita da terapeuta, ou uma marca que altere o registro, é problema.

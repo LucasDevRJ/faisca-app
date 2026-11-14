@@ -2280,6 +2280,27 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o sono, o humor e o remédio (#188) entram no cartão quando existirem, com um gráfico
   do período.
 
+## DEC-102 — Psicóloga cria plano de ação para o paciente
+- **Decisão:**
+  - exceção à regra 1 (DEC-011): POST /therapist/patients/:patientId/plans é a única rota de escrita
+    de dado do paciente dentro do prefixo da terapeuta;
+  - só a **psicóloga** pode usar a rota, com vínculo ativo, área PLANS liberada para ela e aceite
+    do Meus Planos pela psicóloga e pelo paciente. Psiquiatra e psicóloga continuam sem permissão
+    para editar ou apagar planos existentes, encerrar/reabrir planos ou criar registros;
+  - o plano é criado sob a conta do paciente e compartilha o limite de 30 planos. O service atual
+    mantém a trava da conta antes de contar, sem nova tabela ou migration. O paciente o vê e continua
+    dono das operações de gestão;
+  - a psicóloga vê a aba Meus Planos mesmo quando o paciente ainda não tem plano, se a área foi
+    liberada, para iniciar a criação. A psiquiatra vê a aba apenas quando há plano (ou para aceitar o
+    aviso de privacidade pendente);
+  - a exceção não cria nova categoria de dado: reaproveita o conteúdo e o aceite da área Meus Planos
+    (DEC-094/095). O middleware libera somente POST /plans dentro do prefixo; as outras escritas
+    continuam 403.
+- **Motivo:** a psicóloga combina planos de ação com o paciente. Criá-los no app durante o
+  acompanhamento reduz o trabalho de transcrever e deixa o paciente com a gestão e os registros.
+- **Limite conhecido:** o modelo continua guardando o paciente como dono, sem identificar na tela
+  quem iniciou cada plano. O formulário não permite à profissional criar registros do paciente.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

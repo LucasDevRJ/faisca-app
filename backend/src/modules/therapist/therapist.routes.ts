@@ -1,8 +1,15 @@
-import { Router } from 'express';
-import { onlyReads, requireActiveLink, requireSharedArea } from '../../middlewares/require-patient-access.js';
+import { Router, type RequestHandler } from 'express';
+import {
+  getPatientLink,
+  onlyReads,
+  requireActiveLink,
+  requirePatientPrivacy,
+  requireSharedArea,
+} from '../../middlewares/require-patient-access.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
+import { AppError } from '../../errors/app-error.js';
 import { createAboutMeService } from '../about-me/about-me.service.js';
 import { createActionsController } from '../actions/actions.controller.js';
 import { createActionsService } from '../actions/actions.service.js';
@@ -20,8 +27,15 @@ import { createTherapistController } from './therapist.controller.js';
 import { createTherapistService } from './therapist.service.js';
 
 // Visão da terapeuta (SPEC, "Visão da terapeuta"; DEC-033). Tudo sob o mesmo prefixo, que
-// passa pela mesma cadeia: só leitura → sessão → perfil de terapeuta → vínculo ativo.
+// passa pela mesma cadeia: leitura (com a exceção POST de criação de plano) → sessão → perfil → vínculo.
 const PREFIX = '/therapist/patients/:patientId';
+
+const requirePsychologistForPlanCreation: RequestHandler = (_req, res, next) => {
+  if (getPatientLink(res).kind !== 'PSICOLOGIA') {
+    throw new AppError(403, 'FORBIDDEN', 'Você não tem acesso aos registros deste paciente.');
+  }
+  next();
+};
 
 export function createTherapistRoutes() {
   const thoughtRecords = createThoughtRecordsService();
@@ -89,6 +103,15 @@ export function createTherapistRoutes() {
   router.get(`${PREFIX}/about-me`, requireSharedArea('ABOUT_ME'), requirePrivacy('aboutMe'), controller.aboutMe);
   // Meus Planos (DEC-094): os planos e os registros de cada um, com o aceite da versão que os cita.
   router.get(`${PREFIX}/plans`, requireSharedArea('PLANS'), requirePrivacy('plans'), controller.plans);
+  // Única escrita de dado do paciente pela psicóloga (DEC-102): cria o plano sob o dono paciente.
+  router.post(
+    `${PREFIX}/plans`,
+    requirePsychologistForPlanCreation,
+    requireSharedArea('PLANS'),
+    requirePrivacy('plans'),
+    requirePatientPrivacy('plans'),
+    controller.createPlan,
+  );
   router.get(
     `${PREFIX}/plans/:planId/entries`,
     requireSharedArea('PLANS'),

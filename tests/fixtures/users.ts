@@ -10,6 +10,9 @@ export const users = {
   // Usadas só nos testes de vínculo (api/links.spec.ts).
   linkPatient: { email: 'vinculo-paciente@faisca.test', password: SEED_PASSWORD },
   linkTherapist: { email: 'vinculo-terapeuta@faisca.test', password: SEED_PASSWORD },
+  // Usadas só no fluxo de criação de plano pela psicóloga (api/therapist.spec.ts), com o aviso atual aceito.
+  planPatient: { email: 'plano-paciente@faisca.test', password: SEED_PASSWORD },
+  planTherapist: { email: 'plano-terapeuta@faisca.test', password: SEED_PASSWORD },
   // Usada só no teste de excluir a conta (e2e/account.spec.ts): some durante o teste.
   toDelete: { email: 'excluir@faisca.test', password: SEED_PASSWORD },
   // Usadas só nos testes do Registro de Pensamentos (api/thought-records.spec.ts). Começam sem o

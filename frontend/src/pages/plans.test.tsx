@@ -344,17 +344,26 @@ describe('visão da terapeuta', () => {
   };
   const unreadEntry = { ...fakeEntry(), readStatus: 'NAO_LIDO' as const, readAt: null };
 
-  function therapistApi({ plans = [fakePlan({ hasEntries: true })] } = {}) {
+  function therapistApi({
+    plans = [fakePlan({ hasEntries: true })],
+    kind = 'PSICOLOGIA',
+    planWrites = [] as unknown[],
+  }: { plans?: Plan[]; kind?: PatientSummary['access']['kind']; planWrites?: unknown[] } = {}) {
     const marks: unknown[] = [];
     server.use(
       http.get('*/api/auth/me', () =>
         HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true } } }),
       ),
-      http.get(BASE, () => HttpResponse.json(summary)),
+      http.get(BASE, () => HttpResponse.json({ ...summary, access: { ...summary.access, kind } })),
       http.get(`${BASE}/cycle`, () => HttpResponse.json({ today: '2026-09-24', cycle: null })),
       http.get(`${BASE}/appointments`, () => HttpResponse.json(fakeAgenda())),
       http.get(`${BASE}/activities`, () => HttpResponse.json({ activities: [] })),
       http.get(`${BASE}/plans`, () => HttpResponse.json({ plans })),
+      http.post(`${BASE}/plans`, async ({ request }) => {
+        const body = await request.json();
+        planWrites.push(body);
+        return HttpResponse.json({ plan: fakePlan(body as Partial<Plan>) }, { status: 201 });
+      }),
       http.get(`${BASE}/plans/:planId/entries`, () => HttpResponse.json({ entries: [unreadEntry] })),
       http.get(`${BASE}/unread`, () =>
         HttpResponse.json({
@@ -384,13 +393,31 @@ describe('visão da terapeuta', () => {
     expect(screen.getByText(/1 registro de plano/)).toBeInTheDocument();
   });
 
-  it('sem planos, a aba não aparece', async () => {
-    therapistApi({ plans: [] });
+  it('psicóloga cria um plano para o paciente mesmo quando ainda não existe nenhum', async () => {
+    const planWrites: unknown[] = [];
+    const user = userEvent.setup();
+    therapistApi({ plans: [], planWrites });
+    renderRoute(`/pacientes/${PATIENT_ID}?aba=planos&semana=2026-09-21`);
+
+    expect(await screen.findByText('Paula ainda não criou nenhum plano.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Criar plano para Paula' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Criar plano para Paula' });
+    await user.type(within(dialog).getByLabelText('Nome do plano'), 'Quando surgir uma situação fictícia');
+    await user.type(within(dialog).getByLabelText('Pergunta 1'), 'O que aconteceu antes?');
+    await user.click(within(dialog).getByRole('button', { name: 'Criar plano' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Plano criado.');
+    expect(planWrites).toEqual([{ title: 'Quando surgir uma situação fictícia', questions: ['O que aconteceu antes?'] }]);
+  });
+
+  it('psiquiatra não recebe a ação de criar plano', async () => {
+    therapistApi({ plans: [], kind: 'PSIQUIATRIA' });
     renderRoute(`/pacientes/${PATIENT_ID}`);
 
     const tabs = await screen.findByRole('group', { name: 'Tipo de registro' });
     await waitFor(() => expect(within(tabs).getAllByRole('button')).toHaveLength(4));
     expect(tabs).toHaveClass('grid-cols-2');
+    expect(screen.queryByRole('button', { name: 'Criar plano para Paula' })).not.toBeInTheDocument();
   });
 
   it('na aba, os registros só de leitura e o "Marcar como lido" do registro', async () => {

@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
+import { Dialog } from '../../components/ui/dialog';
+import { getApiError } from '../auth/auth-api';
 import { formatDayHeading } from '../activities/week';
 import { PrivacyConsentGate } from '../auth/privacy-consent';
 import { daysInRange, type DateRange } from '../therapist/period';
 import { MarkAllRead, ReadControl } from '../therapist/read-control';
 import { isPending } from '../therapist/read-marks-api';
-import { usePatientPlanEntries, usePatientPlans } from '../therapist/use-therapist';
+import { useCreatePatientPlan, usePatientPlanEntries, usePatientPlans } from '../therapist/use-therapist';
 import { inPeriod, type PeriodScope } from '../therapist/months-period';
+import { PlanForm } from './plan-form';
+import type { PlanInput } from './plans-api';
 import { PlanEntryCard } from './plan-entry-card';
 
 type PatientPlansTabProps = {
@@ -21,10 +26,11 @@ type PatientPlansTabProps = {
   ready: boolean;
   scope: PeriodScope;
   today: string;
+  canCreate: boolean;
 };
 
-// Meus Planos do paciente, só leitura (DEC-095): escolhe um plano e vê os registros do período, com
-// o "Lido" (DEC-057). A terapeuta não cria nem muda plano nesta entrega (DEC-094).
+// Meus Planos do paciente (DEC-095, DEC-102): a psicóloga pode criar um plano; a terapeuta lê os
+// planos existentes e os registros do período, com o "Lido" (DEC-057). A gestão fica com o paciente.
 export function PatientPlansTab({
   patientId,
   firstName,
@@ -36,7 +42,11 @@ export function PatientPlansTab({
   ready,
   scope,
   today,
+  canCreate,
 }: PatientPlansTabProps) {
+  const [createOpen, setCreateOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const create = useCreatePatientPlan(patientId);
   const list = plans.data ?? [];
   const selected = list.find((plan) => plan.id === selectedId) ?? list.find((plan) => !plan.archived) ?? list[0];
   const entries = usePatientPlanEntries(patientId, consented && ready ? (selected?.id ?? null) : null, range);
@@ -68,9 +78,25 @@ export function PatientPlansTab({
 
   if (!selected) {
     return (
-      <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-        {firstName} ainda não criou nenhum plano.
-      </p>
+      <div className="flex flex-col gap-4">
+        <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
+          {firstName} ainda não criou nenhum plano.
+        </p>
+        {canCreate && (
+          <CreatePlanAction
+            firstName={firstName}
+            open={createOpen}
+            pending={create.isPending}
+            error={create.error}
+            notice={notice}
+            onOpen={() => { create.reset(); setCreateOpen(true); }}
+            onClose={() => { setCreateOpen(false); create.reset(); }}
+            onSubmit={(input) => create.mutate(input, {
+              onSuccess: () => { setCreateOpen(false); setNotice('Plano criado.'); },
+            })}
+          />
+        )}
+      </div>
     );
   }
 
@@ -80,7 +106,25 @@ export function PatientPlansTab({
 
   return (
     <>
-      <p className="text-muted">Os planos de ação de {firstName} e o que foi registrado em cada um. Só leitura.</p>
+      <p className="text-muted">
+        {canCreate
+          ? `Os planos de ação de ${firstName} e o que foi registrado em cada um. Você pode criar um plano; os existentes ficam só para leitura.`
+          : `Os planos de ação de ${firstName} e o que foi registrado em cada um. Só leitura.`}
+      </p>
+      {canCreate && (
+        <CreatePlanAction
+          firstName={firstName}
+          open={createOpen}
+          pending={create.isPending}
+          error={create.error}
+          notice={notice}
+          onOpen={() => { create.reset(); setCreateOpen(true); }}
+          onClose={() => { setCreateOpen(false); create.reset(); }}
+          onSubmit={(input) => create.mutate(input, {
+            onSuccess: () => { setCreateOpen(false); setNotice('Plano criado.'); },
+          })}
+        />
+      )}
 
       {list.length > 1 && (
         <div role="group" aria-label="Plano" className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -185,6 +229,52 @@ export function PatientPlansTab({
             ))}
           </ol>
         </>
+      )}
+    </>
+  );
+}
+
+function CreatePlanAction({
+  firstName,
+  open,
+  pending,
+  error,
+  notice,
+  onOpen,
+  onClose,
+  onSubmit,
+}: {
+  firstName: string;
+  open: boolean;
+  pending: boolean;
+  error: unknown;
+  notice: string | null;
+  onOpen: () => void;
+  onClose: () => void;
+  onSubmit: (input: PlanInput) => void;
+}) {
+  const apiError = error ? getApiError(error) : null;
+  return (
+    <>
+      <Button variant="secondary" className="self-start" onClick={onOpen}>
+        Criar plano para {firstName}
+      </Button>
+      {notice && <p role="status" className="text-muted">{notice}</p>}
+      {open && (
+        <Dialog
+          title={`Criar plano para ${firstName}`}
+          description="O plano ficará nos registros do paciente. Ele poderá editar, encerrar ou apagar o plano."
+          onClose={onClose}
+          size="wide"
+        >
+          <PlanForm
+            submitLabel="Criar plano"
+            pending={pending}
+            apiError={apiError}
+            onCancel={onClose}
+            onSubmit={onSubmit}
+          />
+        </Dialog>
       )}
     </>
   );

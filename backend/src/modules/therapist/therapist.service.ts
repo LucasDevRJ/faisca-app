@@ -8,7 +8,7 @@ import type { ListActivitiesQuery } from '../activities/activities.schema.js';
 import type { CycleQuery, ListAppointmentsQuery } from '../appointments/appointments.schema.js';
 import type { AppointmentsService } from '../appointments/appointments.service.js';
 import type { Session } from '../appointments/sessions.js';
-import type { ListPlanEntriesQuery } from '../plans/plans.schema.js';
+import type { CreatePlanInput, ListPlanEntriesQuery } from '../plans/plans.schema.js';
 import type { PlansService } from '../plans/plans.service.js';
 import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
@@ -42,8 +42,8 @@ export function highlightWindow(nextAppointment: string | null, today: string): 
   return { from: addDays(today, -6), to: today, reason: 'LAST_7_DAYS' };
 }
 
-// Só leitura, sempre atrás do requireActiveLink. Reaproveita os services do paciente para as
-// regras (ordem, formato, última e próxima consulta) ficarem num lugar só.
+// As consultas da terapeuta ficam atrás do requireActiveLink; a única escrita é criar um plano
+// autorizado pela rota. Reaproveita os services do paciente para as regras e formatos ficarem num lugar só.
 export function createTherapistService(
   activities: ActivitiesService,
   appointments: AppointmentsService,
@@ -139,6 +139,11 @@ export function createTherapistService(
     // pessoa é 403, pelo mesmo findOwnedPlan do paciente.
     listPlans(patientId: string) {
       return plans.list(patientId);
+    },
+
+    // A rota valida profissional, vínculo, área e aceites; o plano continua pertencendo ao paciente.
+    createPlan(patientId: string, input: CreatePlanInput) {
+      return plans.create(patientId, input);
     },
 
     async listPlanEntries(therapistId: string, patientId: string, planId: string, query: ListPlanEntriesQuery) {
