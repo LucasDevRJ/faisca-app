@@ -49,10 +49,14 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
 ## Regras invioláveis
 1. **Autorização no backend.** No contexto de terapeuta (a profissional: psicóloga ou psiquiatra),
    só GET, só de pacientes com vínculo ativo e só das **áreas que o paciente liberou para ela**
-   (DEC-097); qualquer outro caso retorna 403. Exceções, que não alteram dado de paciente: os POSTs que
-   criam o vínculo (`/links/redeem-code`, `/links/accept-invite`, DEC-031), as marcas de leitura
-   da própria terapeuta (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057)
-   e os avisos do mural dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079).
+   (DEC-097); qualquer outro caso retorna 403. Exceções: os POSTs que criam o vínculo
+   (`/links/redeem-code`, `/links/accept-invite`, DEC-031), as marcas de leitura da própria terapeuta
+   (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057), os avisos do mural
+   dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079) e **somente a
+   psicóloga** criando um plano para o paciente (`POST /therapist/patients/:patientId/plans`, DEC-102).
+   Essa última rota exige vínculo ativo, área Meus Planos liberada e aceite da área pelo paciente e
+   pela psicóloga; ela não pode editar planos nem criar registros. O plano pertence ao paciente, que
+   continua podendo editar, encerrar ou apagar.
    No contexto de paciente, só os próprios dados.
    Toda rota nova com dado de paciente precisa de teste de autorização (caso permitido e negado).
 2. **Registros finais são imutáveis.** Editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA retorna 409.

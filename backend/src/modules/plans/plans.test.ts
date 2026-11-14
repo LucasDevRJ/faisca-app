@@ -14,6 +14,7 @@ const PATIENT = 'paciente@faisca.test';
 const OTHER_PATIENT = 'outra-paciente@faisca.test';
 const THERAPIST = 'terapeuta@faisca.test';
 const OTHER_THERAPIST = 'outra-terapeuta@faisca.test';
+const PSYCHIATRIST = 'psiquiatra@faisca.test';
 const OLD_CONSENT = 'aviso-antigo@faisca.test';
 
 const QUESTIONS = [
@@ -31,6 +32,7 @@ let app: ReturnType<typeof createApp>;
 let patientId: string;
 let otherPatientId: string;
 let therapistId: string;
+let psychiatristId: string;
 
 beforeEach(async () => {
   await resetDatabase();
@@ -41,8 +43,16 @@ beforeEach(async () => {
   otherPatientId = (await createConfirmedUser({ email: OTHER_PATIENT, privacyVersion })).id;
   therapistId = (await createConfirmedUser({ email: THERAPIST, patient: false, therapist: true, privacyVersion })).id;
   await createConfirmedUser({ email: OTHER_THERAPIST, patient: false, therapist: true, privacyVersion });
+  psychiatristId = (await createConfirmedUser({
+    email: PSYCHIATRIST,
+    patient: false,
+    therapist: true,
+    professionalKind: 'PSIQUIATRIA',
+    privacyVersion,
+  })).id;
   await createConfirmedUser({ email: OLD_CONSENT, privacyVersion: '2026-11' });
   await createTestLink({ patientId, therapistId, method: 'CODE' });
+  await createTestLink({ patientId, therapistId: psychiatristId, kind: 'PSIQUIATRIA', method: 'CODE' });
 });
 
 async function loginAgent(email: string) {
@@ -388,7 +398,60 @@ describe('registros', () => {
   });
 });
 
-describe('visão da terapeuta (só leitura, DEC-094)', () => {
+describe('visão e criação pela psicóloga (DEC-094, DEC-102)', () => {
+  it('psicóloga com vínculo, área e aceites cria plano para o paciente', async () => {
+    const therapist = await loginAgent(THERAPIST);
+    const res = await therapist.post(`/therapist/patients/${patientId}/plans`).send(planBody);
+
+    expect(res.status).toBe(201);
+    expect(res.body.plan).toEqual(expect.objectContaining({ title: planBody.title, questions: QUESTIONS }));
+    expect(res.body.plan).not.toHaveProperty('userId');
+    expect((await prisma.plan.findUniqueOrThrow({ where: { id: res.body.plan.id } })).userId).toBe(patientId);
+    expect((await (await loginAgent(PATIENT)).get('/plans')).body.plans).toHaveLength(1);
+  });
+
+  it('psiquiatra não pode criar; o paciente segue como dono e pode administrar', async () => {
+    const psychiatrist = await loginAgent(PSYCHIATRIST);
+    const res = await psychiatrist.post(`/therapist/patients/${patientId}/plans`).send(planBody);
+    expect(res.status).toBe(403);
+    expect(await prisma.plan.count()).toBe(0);
+
+    const patient = await loginAgent(PATIENT);
+    const created = await patient.post('/plans').send(planBody);
+    expect(created.status).toBe(201);
+    const updated = await patient.patch(`/plans/${created.body.plan.id}`).send({ title: 'Nome atualizado pela pessoa' });
+    expect(updated.status).toBe(200);
+  });
+
+  it('exige área PLANS liberada, aceite da terapeuta e aceite do paciente', async () => {
+    const path = `/therapist/patients/${patientId}/plans`;
+    let therapist = await loginAgent(THERAPIST);
+
+    await prisma.therapistLink.updateMany({ where: { therapistId }, data: { sharedAreas: [] } });
+    expect((await therapist.post(path).send(planBody)).status).toBe(403);
+    await prisma.therapistLink.updateMany({ where: { therapistId }, data: { sharedAreas: ['PLANS'] } });
+
+    await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-11' } });
+    therapist = await loginAgent(THERAPIST);
+    expect((await therapist.post(path).send(planBody)).body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');
+    await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: PLANS_VERSION } });
+
+    await prisma.user.update({ where: { id: patientId }, data: { privacyVersion: '2026-11' } });
+    const patientConsent = await (await loginAgent(THERAPIST)).post(path).send(planBody);
+    expect(patientConsent.status).toBe(403);
+    expect(patientConsent.body.error.code).toBe('PATIENT_PRIVACY_CONSENT_REQUIRED');
+    expect(await prisma.plan.count()).toBe(0);
+  });
+
+  it('sem vínculo ativo ou com o vínculo revogado, a psicóloga não cria', async () => {
+    const therapist = await loginAgent(THERAPIST);
+    const path = `/therapist/patients/${patientId}/plans`;
+    await prisma.therapistLink.updateMany({ where: { therapistId }, data: { revokedAt: new Date() } });
+    const res = await therapist.post(path).send(planBody);
+    expect(res.status).toBe(403);
+    expect(await prisma.plan.count()).toBe(0);
+  });
+
   it('com vínculo ativo, lê os planos e os registros, com o status de leitura', async () => {
     const plan = await seedPlan(patientId);
     await seedEntry(plan.id, patientId);
@@ -423,14 +486,13 @@ describe('visão da terapeuta (só leitura, DEC-094)', () => {
     expect((await therapist.get(`${path}/${plan.id}/entries?${range()}`)).status).toBe(403);
   });
 
-  it('nunca escreve: POST, PATCH e DELETE são 403, mesmo com vínculo ativo', async () => {
+  it('só a criação pela psicóloga é permitida; editar plano e criar ou mudar registro seguem bloqueados', async () => {
     const plan = await seedPlan(patientId);
     const entry = await seedEntry(plan.id, patientId);
     const therapist = await loginAgent(THERAPIST);
     const base = `/therapist/patients/${patientId}/plans`;
 
     for (const res of [
-      await therapist.post(base).send(planBody),
       await therapist.patch(`${base}/${plan.id}`).send({ title: 'Mudado pela terapeuta' }),
       await therapist.delete(`${base}/${plan.id}`),
       await therapist.post(`${base}/${plan.id}/entries`).send(entryBody()),
@@ -445,10 +507,12 @@ describe('visão da terapeuta (só leitura, DEC-094)', () => {
     expect(await prisma.planEntry.count()).toBe(1);
   });
 
-  it('sem sessão: GET 401 e escrita 403; patientId que não é UUID: 403', async () => {
+  it('sem sessão: GET 401, outras escritas 403 e criação de plano 401; patientId inválido: 403', async () => {
     const anon = request(app);
     expect((await anon.get(`/therapist/patients/${patientId}/plans`)).status).toBe(401);
-    expect((await anon.post(`/therapist/patients/${patientId}/plans`).send(planBody)).status).toBe(403);
+    expect((await anon.post(`/therapist/patients/${patientId}/plans`).send(planBody)).status).toBe(401);
+    expect((await anon.post(`/therapist/patients/${patientId}/plans/00000000-0000-4000-8000-000000000001/entries`)
+      .send(entryBody())).status).toBe(403);
     const therapist = await loginAgent(THERAPIST);
     expect((await therapist.get('/therapist/patients/nao-e-uuid/plans')).status).toBe(403);
   });

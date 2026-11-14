@@ -183,10 +183,13 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const thoughts = usePatientThoughtRecords(patientId, ready && tab === 'pensamentos' && consented ? range : null);
   const tension = usePatientTensionEpisodes(patientId, ready && tab === 'tensao' && tensionConsented ? range : null);
   const actions = usePatientActions(patientId, ready && tab === 'acao' && actionsConsented ? range : null);
-  // Os planos decidem se a aba Meus Planos aparece: só quando o paciente tem algum (DEC-095). Sem o
-  // aceite da versão que a cita, não dá para saber; a aba aparece com o pedido de aceite.
+  // Os planos decidem se a aba aparece. Psicóloga com a área liberada pode iniciar mesmo sem planos
+  // (DEC-102); sem o aceite da profissional, a aba aparece para ela aceitar (DEC-095).
   const plans = usePatientPlans(patientId, plansConsented && shared.has('PLANS'));
-  const showPlans = shared.has('PLANS') && (tab === 'planos' || !plansConsented || (plans.data?.length ?? 0) > 0);
+  const canCreatePlans = access.kind === 'PSICOLOGIA' && shared.has('PLANS');
+  const showPlans =
+    shared.has('PLANS') &&
+    (tab === 'planos' || !plansConsented || (plans.data?.length ?? 0) > 0 || canCreatePlans);
   // Selo "consulta" nos dias com sessão. A agenda pede o aceite da versão que a cita (DEC-045);
   // sem ele, só a última e a próxima, que vêm no resumo.
   const agendaShared = shared.has('APPOINTMENTS');
@@ -362,6 +365,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
                   ready={ready}
                   scope={scope}
                   today={today}
+                  canCreate={canCreatePlans && plansConsented}
                 />
               ) : tab === 'acao' ? (
                 <ActionsTab

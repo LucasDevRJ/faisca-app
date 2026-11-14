@@ -4,7 +4,7 @@ import type { Activity } from '../activities/activities-api';
 import type { AgendaResponse, AgendaStatus, DateRange, Pause } from '../appointments/appointments-api';
 import type { CycleResponse } from '../cycle/cycle-api';
 import type { ProfessionalKind, SharedArea } from '../links/links-api';
-import type { Plan, PlanEntry } from '../plans/plans-api';
+import type { Plan, PlanEntry, PlanInput } from '../plans/plans-api';
 import type { TensionEpisode } from '../tension-episodes/tension-episodes-api';
 import type { ThoughtRecord } from '../thought-records/thought-records-api';
 import type { WithRead } from './read-marks-api';
@@ -95,6 +95,12 @@ export async function fetchPatientCycle(patientId: string, date?: string): Promi
 export async function fetchPatientPlans(patientId: string): Promise<Plan[]> {
   const { data } = await api.get<{ plans: Plan[] }>(`${base(patientId)}/plans`);
   return data.plans;
+}
+
+// Única escrita de dado de paciente pela psicóloga (DEC-102): cria o plano para a conta do paciente.
+export async function createPatientPlan(patientId: string, input: PlanInput): Promise<Plan> {
+  const { data } = await api.post<{ plan: Plan }>(`${base(patientId)}/plans`, input);
+  return data.plan;
 }
 
 export async function fetchPatientPlanEntries(

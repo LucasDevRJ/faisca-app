@@ -14,14 +14,16 @@ em caso de dúvida, eles prevalecem sobre esta skill.
   (onde entra, campos, cuidados) é o ponto de partida.
 - Classifique a rota em um dos contextos:
   - **A. Paciente**: só os próprios dados.
-  - **B. Terapeuta sobre um paciente**: só GET, só com vínculo ativo e só da área liberada pelo
-    paciente para aquela profissional (DEC-097).
+  - **B. Terapeuta sobre um paciente**: GET com vínculo ativo e área liberada (DEC-097). Única escrita
+    de dado do paciente: a psicóloga cria um plano em `POST /therapist/patients/:patientId/plans`
+    (DEC-102), com vínculo, PLANS liberada e aceites de privacidade de ambos; sem edição de plano ou
+    criação de registro pela terapeuta.
   - **C. Sem dado de paciente**: conta, vínculo, health. Justifique por que não há dado de paciente.
-- Terapeuta escrevendo dado de paciente **não existe**. As únicas escritas da terapeuta são os
-  POSTs que criam o vínculo (DEC-031), as marcas de leitura dela em `/therapist/read-marks`
-  (DEC-057, `src/modules/read-marks/`), que não tocam no registro, e os avisos do mural dela em
-  `/therapist/notices` (DEC-079, `src/modules/notices/`), que são conteúdo dela. Se o pedido exigir outra,
-  pare e explique antes de continuar: é mudança de regra inviolável.
+- Terapeuta escrevendo dado de paciente só existe na criação estreita de plano da DEC-102. As demais
+  escritas permitidas são os POSTs que criam o vínculo (DEC-031), as marcas de leitura dela em
+  `/therapist/read-marks` (DEC-057, `src/modules/read-marks/`), que não tocam no registro, e os avisos
+  do mural dela em `/therapist/notices` (DEC-079, `src/modules/notices/`), que são conteúdo dela.
+  Qualquer outra escrita exige decisão explícita e alteração desta regra.
 
 ## 2. Estrutura
 `src/modules/<modulo>/` com `schema`, `service`, `controller` e `routes` (backend/CLAUDE.md).
@@ -39,7 +41,8 @@ Registre o router em `src/app.ts`, antes do `notFound`. Modelos a seguir:
 **B. Terapeuta**
 - A rota fica sob `/therapist/patients/:patientId/...`, **dentro** do `therapist.routes.ts`,
   que já aplica `onlyReads → requireAuth → requireTherapist → requireActiveLink` no prefixo.
-  Adicione só o `router.get`. Não crie outro router com esse prefixo nem outra cadeia.
+  Adicione `router.get`, exceto a criação de plano da DEC-102, o único `router.post` de dado do
+  paciente permitido nesse prefixo. Não crie outro router com esse prefixo nem outra cadeia.
 - Toda rota com dado de uma área leva `requireSharedArea('AREA')` antes do handler. Área nova
   entra no enum `SharedArea` (schema e `src/lib/shared-areas.ts`), nas caixas da tela do paciente
   e no "Para ler", se tiver "Lido" (DEC-097).

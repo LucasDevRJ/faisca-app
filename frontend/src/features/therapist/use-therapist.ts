@@ -10,12 +10,14 @@ import {
   fetchPatientActivities,
   fetchPatientAppointments,
   fetchPatientCycle,
+  createPatientPlan,
   fetchPatientPlanEntries,
   fetchPatientPlans,
   fetchPatientSummary,
   fetchPatientTensionEpisodes,
   fetchPatientThoughtRecords,
 } from './therapist-api';
+import type { PlanInput } from '../plans/plans-api';
 
 const THERAPIST_KEY = ['therapist'] as const;
 
@@ -146,6 +148,14 @@ export function usePatientPlans(patientId: string, enabled: boolean) {
     queryKey: [...THERAPIST_KEY, patientId, 'plans'],
     queryFn: enabled ? () => fetchPatientPlans(patientId) : skipToken,
     retry: retryUnlessForbidden,
+  });
+}
+
+export function useCreatePatientPlan(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: PlanInput) => createPatientPlan(patientId, input),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: [...THERAPIST_KEY, patientId, 'plans'] }),
   });
 }
 

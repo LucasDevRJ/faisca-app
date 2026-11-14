@@ -17,8 +17,10 @@
 
 ## O que testar
 - `api/`: autorização acima de tudo (regra 1): para cada rota com dado de paciente, o caso
-  permitido e os negados (sem sessão, outro paciente, terapeuta sem vínculo, terapeuta tentando
-  escrever, aviso de privacidade sem aceite). Os detalhes de validação ficam no Vitest do backend.
+  permitido e os negados (sem sessão, outro paciente, terapeuta sem vínculo, escrita não permitida,
+  aviso de privacidade sem aceite). Para Meus Planos, cubra a exceção da psicóloga criar um plano
+  com vínculo, área liberada e aceites (DEC-102), além de negar as outras escritas. Os detalhes de
+  validação ficam no Vitest do backend.
 - `e2e/`: o fluxo principal de cada tela, como a pessoa usaria. Os casos de borda ficam no Vitest
   do front.
 

@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import { getPatientLink } from '../../middlewares/require-patient-access.js';
+import { createPlanSchema } from '../plans/plans.schema.js';
 import {
   patientParamsSchema,
   patientPlanParamsSchema,
@@ -79,6 +80,12 @@ export function createTherapistController(service: TherapistService) {
     res.status(200).json({ plans: await service.listPlans(patientId) });
   };
 
+  const createPlan: RequestHandler = async (req, res) => {
+    const { patientId } = patientParamsSchema.parse(req.params);
+    const plan = await service.createPlan(patientId, createPlanSchema.parse(req.body));
+    res.status(201).json({ plan });
+  };
+
   const planEntries: RequestHandler = async (req, res) => {
     const { patientId, planId } = patientPlanParamsSchema.parse(req.params);
     const query = therapistPlanEntriesQuerySchema.parse(req.query);
@@ -95,6 +102,7 @@ export function createTherapistController(service: TherapistService) {
     actions,
     aboutMe,
     plans,
+    createPlan,
     planEntries,
     unread,
   };

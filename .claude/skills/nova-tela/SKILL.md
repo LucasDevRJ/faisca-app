@@ -1,6 +1,6 @@
 ---
 name: nova-tela
-description: Guia para criar ou alterar telas do front do Faísca (frontend/src) — página, janela (Dialog), formulário ou cartão — com quem vê cada coisa (paciente ou terapeuta só leitura), aceite do aviso de privacidade, tokens e paletas, acessibilidade, celular, testes de tela e conferência no navegador com as contas fictícias. Use sempre que for mexer no que a pessoa vê, mesmo que o pedido não diga "tela" — por exemplo "mostra X para a psicóloga", "coloca um botão para…", "a pessoa precisa conseguir…", "muda o texto de…".
+description: Guia para criar ou alterar telas do front do Faísca (frontend/src) — página, janela (Dialog), formulário ou cartão — com quem vê cada coisa, aceite do aviso de privacidade, tokens e paletas, acessibilidade, celular, testes de tela e conferência no navegador com as contas fictícias. Use sempre que for mexer no que a pessoa vê, mesmo que o pedido não diga "tela" — por exemplo "mostra X para a psicóloga", "coloca um botão para…", "a pessoa precisa conseguir…", "muda o texto de…".
 ---
 
 # Nova tela
@@ -12,9 +12,10 @@ eles prevalecem sobre esta skill.
 - Leia a seção da `docs/SPEC.md` e as DECs do assunto. Comportamento não definido → pergunte.
 - Se a tarefa vem de uma técnica do `docs/IDEIAS-TCC.md`, leia a parte dela: o que já foi pensado
   (onde entra, campos, cuidados) é o ponto de partida.
-- Decida **quem vê**: paciente, terapeuta ou os dois. A visão da terapeuta é **só leitura**: sem
-  botão que mude dado do paciente; a única ação dela é o "Lido" (DEC-057). A interface não é
-  barreira de segurança: o 403 é da API.
+- Decida **quem vê**: paciente, terapeuta ou os dois. A visão da terapeuta é **só leitura**, com
+  duas exceções: o "Lido" (DEC-057) e a psicóloga criar um plano em Meus Planos (DEC-102). Ela não
+  pode editar plano existente nem criar registros do paciente. A interface não é barreira de
+  segurança: o 403 é da API.
 - Área nova com dado de saúde precisa do **aceite** do aviso de privacidade: `PrivacyConsentGate`
   (no lugar da área, ou numa janela com `onCancel`) e `PrivacyUpdateBanner`
   (`features/auth/privacy-consent.tsx`). Texto novo no aviso → versão nova (DEC-042), exceto

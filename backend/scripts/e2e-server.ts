@@ -41,6 +41,9 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   // Só para os testes de vínculo: um vínculo ativo não interfere nos outros testes.
   { name: 'Vera Fictícia', email: 'vinculo-paciente@faisca.test', patient: true, therapist: false },
   { name: 'Tina Fictícia', email: 'vinculo-terapeuta@faisca.test', patient: false, therapist: true },
+  // Só para criar plano pela psicóloga (api/therapist.spec.ts), já aceitaram o aviso que cita Meus Planos.
+  { name: 'Lia Fictícia', email: 'plano-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-11.4' },
+  { name: 'Mila Fictícia', email: 'plano-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.4' },
   // Só para o teste de excluir a conta: some no meio da execução.
   { name: 'Edu Fictício', email: 'excluir@faisca.test', patient: true, therapist: false },
   // Só para o Registro de Pensamentos (api/thought-records.spec.ts): vínculo e aceite próprios.

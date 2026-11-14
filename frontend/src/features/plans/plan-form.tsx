@@ -17,13 +17,14 @@ type PlanFormProps = {
   pending: boolean;
   // Erro da API: texto geral e erros por campo (VALIDATION_ERROR).
   apiError: { message: string; fields: Record<string, string> } | null;
-  cancelTo: string;
+  cancelTo?: string;
+  onCancel?: () => void;
   onSubmit: (input: PlanInput) => void;
 };
 
 // Criar ou editar um plano (DEC-095): o nome diz quando registrar, e as perguntas são livres, de 1
 // a 10. O modelo das 6 perguntas entra por um botão, e não já preenchido (escolha do usuário).
-export function PlanForm({ initial, submitLabel, pending, apiError, cancelTo, onSubmit }: PlanFormProps) {
+export function PlanForm({ initial, submitLabel, pending, apiError, cancelTo, onCancel, onSubmit }: PlanFormProps) {
   const { directLanguage } = useAccessibility();
   const [title, setTitle] = useState(initial?.title ?? '');
   const [questions, setQuestions] = useState<string[]>(initial?.questions ?? ['']);
@@ -79,6 +80,22 @@ export function PlanForm({ initial, submitLabel, pending, apiError, cancelTo, on
 
   const hasWritten = questions.some((question) => question.trim());
   const fieldError = (key: string) => errors[key] ?? apiError?.fields[key];
+  const actions = (
+    <>
+      <Button type="submit" disabled={pending}>
+        {pending ? 'Salvando…' : submitLabel}
+      </Button>
+      {onCancel ? (
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          Cancelar
+        </Button>
+      ) : (
+        <Link to={cancelTo ?? '/planos'} className={buttonClasses('secondary')}>
+          Cancelar
+        </Link>
+      )}
+    </>
+  );
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
@@ -148,14 +165,11 @@ export function PlanForm({ initial, submitLabel, pending, apiError, cancelTo, on
         <p className="text-sm text-muted">De 1 a {QUESTIONS_MAX} perguntas.</p>
       </fieldset>
 
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Salvando…' : submitLabel}
-        </Button>
-        <Link to={cancelTo} className={buttonClasses('secondary')}>
-          Cancelar
-        </Link>
-      </div>
+      {onCancel ? (
+        <DialogFooter>{actions}</DialogFooter>
+      ) : (
+        <div className="flex flex-wrap gap-3">{actions}</div>
+      )}
 
       {confirmTemplate && (
         <Dialog

@@ -68,9 +68,9 @@ escreveu este código: revise o que está no diff, não o que se pretendia fazer
    - Nada de token, sessão ou dado de saúde em `localStorage`, `sessionStorage` ou na URL. O
      `localStorage` só guarda preferências como o tema.
    - O service worker guarda só o shell do app, **nunca** respostas da API.
-   - Na visão da terapeuta (`readOnly`), nenhum botão ou link que leve a escrever dado do
-     paciente. Lembre que esconder botão não é segurança: confira se a rota correspondente
-     existe só no contexto de paciente.
+   - Na visão da terapeuta (`readOnly`), nenhum controle que escreva dado do paciente, exceto o
+     formulário que cria um plano para a psicóloga (DEC-102). Ela continua sem editar plano ou criar
+     registros. Lembre que esconder botão não é segurança: confira a autorização correspondente na API.
 7. **Testes de tela**
    - Comportamento novo de tela (estado, botão, mensagem, fluxo) tem teste no Vitest + RTL, que
      busca por papel e nome (`getByRole`) e não por classe.
