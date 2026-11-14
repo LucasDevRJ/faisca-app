@@ -129,3 +129,7 @@ A descrição do PR leva a mesma linha: "**Documentos:** mudaram X; conferidos s
 Depois, proponha a mensagem de commit (Conventional Commits, em pt-BR, `Closes #N` ou `Refs #N`)
 e **peça confirmação antes de commit, push, PR ou merge**. Mande a mensagem por heredoc, porque o
 hook confunde algumas palavras dentro de `-m`.
+
+Quando o Codex criar um commit, preserve o autor configurado para a pessoa e acrescente ao fim da
+mensagem o trailer `Co-authored-by: Codex <codex@openai.com>`. Use essa atribuição somente nos commits
+criados pelo Codex. Não reescreva commits já publicados só para adicionar coautoria.
