@@ -40,7 +40,8 @@ export function Dialog({ title, description, onClose, children, size = 'default'
       // Esc dispara "cancel" e depois "close": quem abriu decide fechar.
       onClose={onClose}
       // Celular: painel que sobe de baixo, na largura toda. A partir do sm: janela no centro.
-      className={`mx-0 mt-auto mb-0 w-full max-w-full rounded-t-xl border border-border bg-surface p-0 text-text shadow-soft backdrop:bg-text/40 sm:m-auto sm:rounded-xl ${DESKTOP_SIZE[size].width}`}
+      // A rolagem fica no painel interno; o <dialog> nativo não ganha uma segunda barra.
+      className={`mx-0 mt-auto mb-0 w-full max-w-full overflow-clip rounded-t-xl border border-border bg-surface p-0 text-text shadow-soft backdrop:bg-text/40 sm:m-auto sm:rounded-xl ${DESKTOP_SIZE[size].width}`}
     >
       <div className={`flex max-h-[90dvh] flex-col gap-5 overflow-y-auto px-5 pt-6 sm:px-6 ${DESKTOP_SIZE[size].height}`}>
         <header className="flex flex-col gap-1">
