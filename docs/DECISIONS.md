@@ -2302,7 +2302,37 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   quem iniciou cada plano. O formulário não permite à profissional criar registros do paciente.
 
 ## DEC-103 — Fotos nas atividades (API)
-- **Decisão (#197):** em construção. Reserva também a versão `2026-11.5` do aviso de privacidade.
+- **Decisão (#197, com as respostas do usuário):**
+  - **as mesmas regras das fotos da Ação (DEC-064):** até 10 por atividade, tratadas em `lib/images.ts`
+    (sem metadados, 2560 px e miniatura de 400 px, até 20 MB e 50 MP, tipo conferido pelos bytes),
+    numa tabela à parte (`ActivityPhoto`, em cascata com a atividade), servidas sem cache (DEC-066) e
+    com 60 envios por hora por conta. O que as duas áreas usam ficou em `lib/photos.ts`;
+  - **quando:** com a atividade **aberta** (planejada ou pendente), sem prazo; na **concluída**, até a
+    **próxima consulta** depois da conclusão, como na Ação (prazo congelado em `photosDeadlineAt` na
+    primeira leitura do paciente com uma consulta pela frente). A **não realizada** não recebe nem
+    perde fotos (409 `PHOTOS_NOT_ALLOWED`); depois do prazo, 409 `PHOTOS_CLOSED`. Mexer nas fotos não
+    muda nenhum campo da atividade: a concluída segue imutável (regra 2), como a Ação avaliada;
+  - a atividade passa a guardar **quando foi concluída** (`completedAt`), na transição e no registro
+    já concluído. As já concluídas recebem o `updatedAt` na migration; um CHECK garante que só a
+    concluída tem essa data;
+  - **teto de 300 fotos por conta somando a Ação e as atividades** (DEC-074), com a conta e depois o
+    registro travados na transação, nas duas áreas: envios juntos nas duas não passam do teto. A
+    mensagem do limite passa a falar em "ação ou atividade";
+  - **área própria no vínculo** (`ACTIVITY_PHOTOS`, "fotos das atividades"), como a das fotos da Ação:
+    a imagem pede Atividades e as fotos liberadas; sem a caixa, a lista da profissional vem com
+    `photos: []`, e sem a agenda, sem o prazo. Os vínculos que já existiam começam sem ela;
+  - **área nova no aviso de privacidade** (versão `2026-11.5`, `activityPhotos`): as fotos fazem parte
+    do registro de saúde e podem mostrar outras pessoas. A API **conhece** a versão, mas a atual
+    segue a `2026-11.4` até o PR das telas, que traz o texto (como na DEC-064 e na DEC-065). Sem o
+    aceite, as atividades funcionam e só as fotos pedem o aceite (paciente e profissional);
+  - a lista de atividades traz `photos` (id e data), `photosDeadline` e `photosOpen`; as atividades
+    não têm "Lido", então foto nova não marca "atualizado".
+- **Motivo:** pedido do usuário (#197): guardar como foi a atividade, como já dá na Ação. Seguir as
+  regras da Ação mantém o app coerente e reaproveita o que já passou pela revisão de segurança.
+- **Limite conhecido:** fotos postas com a atividade aberta **ficam** se ela virar não realizada (não
+  dá mais para tirar). Cada área tem o próprio contador de 60 envios por hora (até 120 somando as
+  duas). As telas e o texto do aviso ficam para o PR seguinte. O gatilho para sair do Postgres
+  (1 GB de fotos, DEC-064) passa a contar as duas áreas.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
