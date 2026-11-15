@@ -7,6 +7,8 @@
 - Ao refatorar, preserve a lógica e explique as mudanças importantes.
 
 ## Antes de agir
+- No começo de toda sessão, siga "Antes de começar" do AGENTS.md: veja o que entrou na `main`,
+  os PRs abertos e as regras novas antes da tarefa pedida.
 - No começo de cada etapa, recomende o modelo da conversa, sempre a versão mais recente de cada
   família: Sonnet para texto, documentação e ajustes pequenos; Opus para código; Fable para desenho
   de segurança ou mudança crítica (ex.: 2FA, criptografia no banco). Diga a versão atual e avise

@@ -70,18 +70,33 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    notas ou observações.
 8. **Segredos de vínculo só como hash.** Tokens de convite e códigos de vínculo nunca são guardados em texto.
 
+## Antes de começar (toda sessão, qualquer IA)
+Outros agentes mudam o projeto entre uma sessão e outra. Antes da tarefa pedida, veja como o projeto
+está **agora**; não confie só na memória, num resumo de conversa anterior ou numa cópia local antiga:
+1. `git fetch origin` e `git log --oneline origin/main -20`: o que entrou desde a última vez.
+2. `gh pr list` (inclusive rascunhos) e as issues com a sua etiqueta: o que está em andamento e
+   quem cuida de quê.
+3. Nas mudanças novas, leia o que vale como regra: as últimas DECs do `docs/DECISIONS.md`, a seção
+   da SPEC do assunto, o `AGENTS.md`, o `CLAUDE.md` da pasta e os arquivos de `.claude/` (skills,
+   subagentes e hooks).
+4. Confira os números à mão já usados, inclusive em rascunhos: a última DEC, a versão atual do aviso
+   (`frontend/src/features/auth/privacy-version.ts`) e as novidades.
+
+Se algo contradiz o que você lembrava (uma funcionalidade que já entrou, uma regra que mudou), avise
+a pessoa antes de seguir.
+
 ## Mais de um agente
 Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta (worktree).
 - **Divisão pelas issues:** cada issue tem a etiqueta do agente que cuida dela (`agente:claude`,
-  `agente:antigravity`). Não pegue issue com a etiqueta de outro agente, e evite mexer nos mesmos
-  arquivos de um PR aberto dele.
+  `agente:antigravity`, `agente:codex`). Não pegue issue com a etiqueta de outro agente, e evite
+  mexer nos mesmos arquivos de um PR aberto dele.
 - **Números à mão** (DEC, versão do aviso de privacidade, novidade): reserve com um PR em
   rascunho assim que escolher, e confira os PRs abertos, inclusive rascunhos, antes de escolher.
   O CI `Números únicos` (`scripts/check-unique-ids.mjs`) barra repetição.
 - **Antes do PR:** `git fetch origin main` e `git merge origin/main` (nunca rebase nem force push),
   mantendo as entradas dos dois lados no DECISIONS.md e na SPEC; depois, lint e testes de novo.
-- **Testes:** os dois usam o banco `faisca_test` e as portas 3334/5174; não rode a suíte do backend
-  nem o Playwright ao mesmo tempo que o outro agente.
+- **Testes:** todos usam o banco `faisca_test` e as portas 3334/5174; não rode a suíte do backend
+  nem o Playwright ao mesmo tempo que outro agente.
 
 ## Convenções
 - Identificadores de código em inglês (`Activity`, `activityDate`); valores de estado do domínio
