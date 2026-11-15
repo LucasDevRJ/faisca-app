@@ -9,7 +9,8 @@ describe('/privacidade', () => {
     renderRoute('/privacidade');
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Aviso de privacidade' })).toBeInTheDocument();
-    expect(screen.getByText(/projeto de TCC de Lucas Pereira de Lima/)).toBeInTheDocument();
+    const responsibilityHeading = screen.getByRole('heading', { name: 'Quem cuida dos seus dados' });
+    expect(responsibilityHeading.parentElement).toHaveTextContent(/produto independente/);
     expect(screen.getAllByRole('link', { name: 'suporte@minhafaisca.com.br' })[0]).toHaveAttribute(
       'href',
       'mailto:suporte@minhafaisca.com.br',

@@ -68,7 +68,7 @@ describe('página "O que há de novo"', () => {
     expect(within(entries[0]!).getByText('30 de novembro de 2026')).toBeInTheDocument();
     expect(within(entries[0]!).getByText('Texto fictício para pacientes.')).toBeInTheDocument();
     expect(within(entries[0]!).queryByText('Texto fictício para terapeutas.')).not.toBeInTheDocument();
-    expect(within(entries[8]!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
+    expect(within(entries.at(-1)!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
       'href',
       '/pensamentos',
     );
