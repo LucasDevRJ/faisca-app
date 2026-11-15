@@ -2364,7 +2364,8 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   - **aviso de privacidade versão 12** (`2026-11.5` vira a atual): cita as fotos das atividades em "O
     que guardamos", em "Quem vê" e em "Por quanto tempo" (remover também apaga, e na atividade que não
     aconteceu dá para remover a qualquer hora). É área nova: o aceite é pedido ao usar as fotos;
-  - **novidade `2026-11-fotos-atividades`**, para pacientes e profissionais.
+  - **novidade `2026-11-fotos-atividades`**, para pacientes e profissionais, sem citar o prazo: ele fica
+    no cartão, que respeita o "sem pressão de tempo" (sugestão do `revisor-telas`, aceita pelo usuário).
 - **Motivo:** fechar a #197 com a API da DEC-103 e trocar a versão do aviso no mesmo PR que mostra o
   texto, para ninguém aceitar o que ainda não leu (como na DEC-065).
 - **Limite conhecido:** o envio da foto HEIC depende da conversão do próprio iPhone, como na Ação. O

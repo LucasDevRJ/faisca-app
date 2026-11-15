@@ -196,10 +196,8 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
           Agora você pode <strong>adicionar até 10 fotos</strong> às suas atividades, como lembrança do que fez. É
           opcional.
         </p>
-        <p>
-          Elas aparecem só para quem você liberar em Conta, e dá para pôr ou tirar até a sua próxima consulta depois de
-          concluir.
-        </p>
+        {/* Sem o prazo: ele fica no cartão, que respeita o "sem pressão de tempo" (revisor-telas). */}
+        <p>Elas aparecem só para quem você liberar em Conta.</p>
       </>
     ),
     therapist: <p>Quando o paciente liberar, você vê as fotos das atividades dele, só para leitura.</p>,
