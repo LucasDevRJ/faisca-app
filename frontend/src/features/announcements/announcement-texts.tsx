@@ -20,6 +20,12 @@ export type AnnouncementText = {
 export type Profiles = { patient: boolean; therapist: boolean };
 
 export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
+  '2026-11-tarefas': {
+    title: 'Tarefas combinadas na consulta', date: '2026-11-15',
+    patient: <p>Anote o que você combinou na consulta e responda no seu tempo. Você escolhe com quais profissionais compartilhar a área Tarefas.</p>,
+    therapist: <p>Os pacientes podem anotar tarefas e responder em texto livre. Quando liberarem a área Tarefas para você, as respostas também aparecem em Para ler.</p>,
+    link: { to: '/tarefas', label: 'Ver minhas tarefas' },
+  },
   '2026-10-explicacao-alternativa': {
     title: 'Novidade no Registro de Pensamentos',
     icon: '✨',

@@ -56,6 +56,7 @@ describe('página "O que há de novo"', () => {
     expect(entries.map((entry) => within(entry).getByRole('heading').textContent)).toEqual([
       'Novidade fictícia mais nova',
       'Novidade: fotos nas atividades',
+      'Tarefas combinadas na consulta',
       'Novidade: Meus Planos',
       'Novidade: lembretes de manhã e de noite',
       'Novidade: o “Sobre mim”',
@@ -67,7 +68,7 @@ describe('página "O que há de novo"', () => {
     expect(within(entries[0]!).getByText('30 de novembro de 2026')).toBeInTheDocument();
     expect(within(entries[0]!).getByText('Texto fictício para pacientes.')).toBeInTheDocument();
     expect(within(entries[0]!).queryByText('Texto fictício para terapeutas.')).not.toBeInTheDocument();
-    expect(within(entries[8]!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
+    expect(within(entries.at(-1)!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
       'href',
       '/pensamentos',
     );

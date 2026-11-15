@@ -72,7 +72,7 @@ function recordWrites(responses: Partial<Record<string, (body: unknown) => Respo
 }
 
 describe('/tensao', () => {
-  it('quatro abas; a semana mostra só os dias com episódio', async () => {
+  it('cinco abas; a semana mostra só os dias com episódio', async () => {
     const calls = weekHandler([
       fakeTensionEpisode({ situation: 'Fila do mercado', episodeDate: '2026-09-22' }),
       fakeTensionEpisode({ situation: 'Reunião', episodeDate: '2026-09-24' }),
@@ -86,6 +86,7 @@ describe('/tensao', () => {
       'Pensamentos',
       'Tensão',
       'Ação',
+      'Tarefas',
     ]);
     expect(within(tabs).getByRole('link', { name: 'Tensão' })).toHaveAttribute('aria-current', 'page');
     expect(await screen.findByRole('article', { name: 'Episódio: Fila do mercado' })).toBeInTheDocument();
@@ -192,7 +193,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
     expect(banner).toHaveTextContent(
-      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos e as fotos das atividades. Você só precisa aceitar a nova versão para usar essas partes.',
+      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades e as Tarefas. Você só precisa aceitar a nova versão para usar essas partes.',
     );
   });
 
@@ -201,7 +202,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     renderRoute('/registros');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos e as fotos das atividades');
+    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades e as Tarefas');
     expect(banner).toHaveTextContent('essas partes');
   });
 

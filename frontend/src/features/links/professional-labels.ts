@@ -17,6 +17,7 @@ export const AREA_LABEL: Record<SharedArea, string> = {
   ABOUT_ME: '“Sobre mim”',
   APPOINTMENTS: 'Agenda de consultas (com os motivos)',
   PLANS: 'Meus Planos',
+  TASKS: 'Tarefas',
 };
 
 // O primeiro nome, para os textos curtos ("O que Ana pode ver").

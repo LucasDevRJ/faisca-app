@@ -18,6 +18,7 @@ const GATED: Record<string, PrivacyArea> = {
   '/pensamentos': 'thoughtRecords',
   '/tensao': 'tensionEpisodes',
   '/acao': 'actions',
+  '/tarefas': 'tasks',
 };
 
 function gatedAreaOf(pathname: string): PrivacyArea | undefined {
@@ -50,7 +51,7 @@ export function PatientTabsLayout() {
   const search = kept.size ? `?${kept}` : '';
   return (
     <>
-      <nav aria-label="Registros" className={`grid ${showPlans ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}>
+      <nav aria-label="Registros" className={`grid grid-cols-3 gap-2 sm:flex`}>
         <NavLink to={{ pathname: '/registros', search }} className={tabClass}>
           Atividades
         </NavLink>
@@ -63,6 +64,7 @@ export function PatientTabsLayout() {
         <NavLink to={{ pathname: '/acao', search }} end className={tabClass}>
           Ação
         </NavLink>
+        <NavLink to="/tarefas" end className={tabClass}>Tarefas</NavLink>
         {showPlans && (
           // Sem `end`: a aba continua marcada nos registros de um plano (/planos/:id).
           <NavLink to="/planos" className={tabClass}>

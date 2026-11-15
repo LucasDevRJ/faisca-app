@@ -44,8 +44,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, virou a atual no PR das telas (DEC-095).
 // A 2026-11.3 (DEC-096) e a 2026-11.4 (DEC-098) entraram de uma vez, API e texto no mesmo PR.
 // A 2026-11.5 (fotos das atividades, DEC-103) foi conhecida na API antes e virou a atual no PR das
-// telas, com o texto (DEC-104).
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.5';
+// telas, com o texto (DEC-104). A 2026-11.6 (Tarefas, DEC-106) segue o mesmo fluxo.
+export const PRIVACY_VERSION: PrivacyVersion = '2026-11.6';
 
 // Qual versão gravar no aceite (DEC-105). O app manda a versão que mostrou; o servidor só grava a que
 // a pessoa leu. Sem versão é um app de antes dessa regra (instalado e ainda não atualizado, ou nos
