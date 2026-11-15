@@ -2343,7 +2343,33 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   (1 GB de fotos, DEC-064) passa a contar as duas áreas.
 
 ## DEC-104 — Fotos nas atividades (telas) e aviso de privacidade versão 12
-- **Decisão (#197):** em construção. Reserva também a novidade `2026-11-fotos-atividades`.
+- **Decisão (#197, sobre a API da DEC-103, com os textos aprovados pelo usuário):**
+  - **no cartão da atividade**, o mesmo visual das fotos da Ação (DEC-065): miniaturas, a foto grande
+    numa janela com Anterior e Próxima, "Adicionar fotos" (várias de uma vez, enviadas uma por vez) e
+    "Remover foto" com confirmação. **Só no cartão**, e não na janela "Conta como foi?": logo depois
+    de salvar, o cartão já oferece as fotos, e a janela continua curta (escolha do usuário);
+  - **por estado:** aberta, "Adicionar fotos" sem prazo; concluída, com o prazo da próxima consulta,
+    e depois do prazo só para ver; não realizada com fotos, o aviso "Esta atividade não aconteceu,
+    então não recebe fotos novas. Se quiser, pode tirar as que estão aqui." e "Remover foto"; sem
+    fotos e sem como pôr, o cartão não fala de fotos. O lembrete diz que as fotos aparecem só para
+    quem o paciente liberar em Conta;
+  - **a profissional** vê as miniaturas e a foto grande pelo endereço do vínculo, sem botões de
+    mudança; a página passa o paciente até o cartão;
+  - **o componente comum `RecordPhotos`** (`features/photos/`) serve a Ação e as atividades: cada
+    área diz o que pode (adicionar, remover, mostrar). A Ação segue com as mesmas regras e textos;
+    sem o aceite, o botão diz "Ver as fotos" quando não há como adicionar (antes, o paciente fora do
+    prazo via "Adicionar fotos");
+  - **Conta → "O que [nome] pode ver":** a caixa "Fotos das atividades" só aparece com Atividades
+    marcada, e desmarcar Atividades leva as fotos junto, como na Ação;
+  - **aviso de privacidade versão 12** (`2026-11.5` vira a atual): cita as fotos das atividades em "O
+    que guardamos", em "Quem vê" e em "Por quanto tempo" (remover também apaga, e na atividade que não
+    aconteceu dá para remover a qualquer hora). É área nova: o aceite é pedido ao usar as fotos;
+  - **novidade `2026-11-fotos-atividades`**, para pacientes e profissionais.
+- **Motivo:** fechar a #197 com a API da DEC-103 e trocar a versão do aviso no mesmo PR que mostra o
+  texto, para ninguém aceitar o que ainda não leu (como na DEC-065).
+- **Limite conhecido:** o envio da foto HEIC depende da conversão do próprio iPhone, como na Ação. O
+  lembrete das fotos da Ação ainda fala em "sua psicóloga" (texto da DEC-065); ajustar para "quem você
+  liberar" fica para quando a Ação for revista com as várias profissionais.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

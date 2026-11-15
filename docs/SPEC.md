@@ -92,6 +92,12 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - O teto de **300 fotos por conta** soma as fotos da Ação e das atividades (DEC-074).
 - A profissional vê as fotos só com **Atividades** e **fotos das atividades** liberadas e com o aceite
   da versão do aviso que as cita; o paciente também precisa desse aceite para usá-las.
+- **Na tela (DEC-104):** no cartão da atividade, como na Ação: miniaturas, a foto grande numa janela
+  ("Foto 1 de 3", Anterior e Próxima), "Adicionar fotos" (várias de uma vez, uma por vez no envio) e
+  "Remover foto" com confirmação. O cartão diz o prazo da concluída, quantas cabem e que as fotos
+  aparecem só para quem o paciente liberar. Na não realizada com fotos, um aviso de que ela não recebe
+  fotos novas e que dá para tirar as que estão lá. A profissional vê sem botões de mudança. Sem o
+  aceite, "Adicionar fotos" (ou "Ver as fotos") abre o pedido de aceite numa janela.
 
 ## Consultas
 A terapia costuma ser semanal ou quinzenal: o paciente monta uma **agenda** que se repete, e as
@@ -323,7 +329,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   outro convite nem outro código. Com só uma delas, dá para chamar a outra.
 - Desfazer é por vínculo: desfazer um não mexe no outro.
 - Na tela (DEC-098): em Conta, "Quem me acompanha", com um cartão por profissional, as caixas de
-  "O que [nome] pode ver" (as fotos da Ação só com a Ação marcada) e "Marcar tudo".
+  "O que [nome] pode ver" (as fotos da Ação só com a Ação marcada, e as das atividades só com
+  Atividades marcada, DEC-104) e "Marcar tudo".
 - Na profissional (DEC-099): a profissão vem do cadastro ou do convite e fica em Conta, com o
   conselho; a página do paciente mostra só as abas liberadas; a psiquiatra vê por meses (1, 2 ou 3).
 - Quando um vínculo é criado, o paciente é avisado no app e por e-mail e vê o **nome e o e-mail** de quem se vinculou.
