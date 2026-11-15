@@ -26,6 +26,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.2',
   '2026-11.3',
   '2026-11.4',
+  '2026-11.5',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -37,6 +38,7 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // 2026-11 ("Sobre mim", DEC-081): conhecida antes, virou a atual no PR das telas (DEC-082). E
 // para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, virou a atual no PR das telas (DEC-095).
 // A 2026-11.3 (DEC-096) e a 2026-11.4 (DEC-098) entraram de uma vez, API e texto no mesmo PR.
+// A 2026-11.5 (fotos das atividades, DEC-103) é conhecida na API e vira a atual no PR das telas.
 export const PRIVACY_VERSION: PrivacyVersion = '2026-11.4';
 
 // Cada área de dado novo exige a versão do aviso que passou a citá-la (DEC-042). Assim, uma versão
@@ -55,6 +57,8 @@ export const PRIVACY_AREAS = {
   aboutMe: '2026-11',
   // Meus Planos (DEC-094): os planos de ação, as perguntas e cada registro com as respostas.
   plans: '2026-11.2',
+  // Fotos das atividades (DEC-103): fazem parte do registro de saúde e podem mostrar outras pessoas.
+  activityPhotos: '2026-11.5',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -75,5 +79,6 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     actionPhotos: coversArea(acceptedVersion, 'actionPhotos'),
     aboutMe: coversArea(acceptedVersion, 'aboutMe'),
     plans: coversArea(acceptedVersion, 'plans'),
+    activityPhotos: coversArea(acceptedVersion, 'activityPhotos'),
   };
 }

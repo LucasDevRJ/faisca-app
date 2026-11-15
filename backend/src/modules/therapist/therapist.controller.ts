@@ -25,7 +25,8 @@ export function createTherapistController(service: TherapistService) {
   const activities: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
     const query = therapistActivitiesQuerySchema.parse(req.query);
-    res.status(200).json({ activities: await service.listActivities(patientId, query) });
+    const { sharedAreas } = getPatientLink(res);
+    res.status(200).json({ activities: await service.listActivities(patientId, query, sharedAreas) });
   };
 
   const appointments: RequestHandler = async (req, res) => {

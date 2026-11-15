@@ -15,7 +15,7 @@ import type { TensionEpisodesService } from '../tension-episodes/tension-episode
 import type { ReadMarksService } from '../read-marks/read-marks.service.js';
 import type { SharedArea } from '../../generated/prisma/client.js';
 import type { PatientLinkAccess } from '../../middlewares/require-patient-access.js';
-import { actionForProfessional, thoughtForProfessional } from '../../lib/shared-areas.js';
+import { actionForProfessional, activityForProfessional, thoughtForProfessional } from '../../lib/shared-areas.js';
 import type { ListThoughtRecordsQuery } from '../thought-records/thought-records.schema.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { avatarVersion } from '../profile/profile.service.js';
@@ -92,8 +92,9 @@ export function createTherapistService(
       };
     },
 
-    listActivities(patientId: string, query: ListActivitiesQuery) {
-      return activities.list(patientId, query);
+    // As fotos só com a caixa delas liberada, e o prazo só com a agenda (DEC-103).
+    async listActivities(patientId: string, query: ListActivitiesQuery, sharedAreas: SharedArea[]) {
+      return (await activities.list(patientId, query)).map((a) => activityForProfessional(a, sharedAreas));
     },
 
     cycle(patientId: string, query: CycleQuery) {
