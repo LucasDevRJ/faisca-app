@@ -70,12 +70,6 @@ export function ActivityCard(props: ActivityCardProps) {
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(activity.createdAt)}</p>}
 
-      {/* Fotos (DEC-104): o paciente põe e tira conforme o estado; a profissional só vê. */}
-      <ActivityPhotos
-        activity={activity}
-        viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
-      />
-
       {!props.readOnly && !final && (
         <div className="flex flex-col gap-2">
           {/* No celular, grade de duas colunas: a ação principal ocupa a linha toda.
@@ -116,6 +110,13 @@ export function ActivityCard(props: ActivityCardProps) {
           </div>
         </div>
       )}
+
+      {/* Fotos (DEC-104): o paciente põe e tira conforme o estado; a profissional só vê.
+          Depois dos botões, para a ação do dia ficar no alto do cartão no celular (revisor-telas). */}
+      <ActivityPhotos
+        activity={activity}
+        viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
+      />
     </article>
   );
 }

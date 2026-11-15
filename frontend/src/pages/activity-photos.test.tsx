@@ -173,6 +173,31 @@ describe('/registros: fotos da atividade (paciente)', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Fotos da atividade' });
     expect(dialog).toHaveTextContent('Para adicionar fotos às suas atividades, leia o que mudou e confirme.');
   });
+
+  it('com "sem pressão de tempo" ligado, o cartão não mostra o prazo da consulta', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({ user: { ...fakeUser, accessibility: { ...fakeUser.accessibility, noTimePressure: true } } }),
+      ),
+    );
+    activitiesApi([
+      fakeActivity({
+        name: 'Leitura fictícia',
+        activityDate: '2026-09-23',
+        status: 'CONCLUIDA',
+        wantBefore: 3,
+        pleasure: 7,
+        achievement: 6,
+        photosDeadline: { date: '2026-09-28', time: '14:00' },
+      }),
+    ]);
+    renderRoute('/registros');
+
+    const item = await card('Leitura fictícia');
+    expect(within(item).getByRole('button', { name: 'Adicionar fotos' })).toBeInTheDocument();
+    expect(item).not.toHaveTextContent('Dá para adicionar ou remover até');
+    expect(item).toHaveTextContent('Até 10 fotos.');
+  });
 });
 
 describe('/pacientes/:id: fotos da atividade (profissional)', () => {
@@ -204,6 +229,33 @@ describe('/pacientes/:id: fotos da atividade (profissional)', () => {
     );
     return writes;
   }
+
+  it('sem o aceite da versão nova: "Ver as fotos" abre o pedido de aceite da profissional', async () => {
+    therapistApi([
+      fakeActivity({ name: 'Caminhada fictícia', activityDate: '2026-09-23', status: 'CONCLUIDA', photos: [photo(1)] }),
+    ]);
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({
+          user: {
+            ...fakeUser,
+            profiles: { patient: false, therapist: true },
+            privacyUpToDate: false,
+            privacyAreas: { ...fakeUser.privacyAreas, activityPhotos: false },
+          },
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderRoute(`/pacientes/${PATIENT_ID}`);
+
+    const item = await card('Caminhada fictícia');
+    expect(item).toHaveTextContent('Esta atividade tem 1 foto.');
+    expect(within(item).queryByRole('img')).not.toBeInTheDocument();
+    await user.click(within(item).getByRole('button', { name: 'Ver as fotos' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Fotos da atividade' });
+    expect(dialog).toHaveTextContent('Para ver as fotos das atividades dos seus pacientes, leia o que mudou e confirme.');
+  });
 
   it('vê as miniaturas e a foto grande pelo endereço do vínculo, sem botões de mudança', async () => {
     const activity = fakeActivity({

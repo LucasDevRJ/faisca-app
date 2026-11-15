@@ -156,10 +156,10 @@ type SharedAreasFormProps = {
   onEdit: () => void;
 };
 
-
 // As fotos de cada área têm caixa própria e dependem dela (DEC-098, DEC-104).
 const PHOTOS_OF: Partial<Record<SharedArea, SharedArea>> = { ACTIONS: 'ACTION_PHOTOS', ACTIVITIES: 'ACTIVITY_PHOTOS' };
 const PARENT_OF: Partial<Record<SharedArea, SharedArea>> = { ACTION_PHOTOS: 'ACTIONS', ACTIVITY_PHOTOS: 'ACTIVITIES' };
+
 function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormProps) {
   const save = useSetSharedAreas();
   const [areas, setAreas] = useState<SharedArea[]>(link.sharedAreas);
