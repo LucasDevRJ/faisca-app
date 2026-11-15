@@ -156,6 +156,10 @@ type SharedAreasFormProps = {
   onEdit: () => void;
 };
 
+
+// As fotos de cada área têm caixa própria e dependem dela (DEC-098, DEC-104).
+const PHOTOS_OF: Partial<Record<SharedArea, SharedArea>> = { ACTIONS: 'ACTION_PHOTOS', ACTIVITIES: 'ACTIVITY_PHOTOS' };
+const PARENT_OF: Partial<Record<SharedArea, SharedArea>> = { ACTION_PHOTOS: 'ACTIONS', ACTIVITY_PHOTOS: 'ACTIVITIES' };
 function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormProps) {
   const save = useSetSharedAreas();
   const [areas, setAreas] = useState<SharedArea[]>(link.sharedAreas);
@@ -168,8 +172,10 @@ function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormP
     save.reset();
     setAreas((current) => {
       const next = checked ? [...current, area] : current.filter((item) => item !== area);
-      // Sem a Ação, as fotos dela também saem.
-      return area === 'ACTIONS' && !checked ? next.filter((item) => item !== 'ACTION_PHOTOS') : next;
+      // Sem a Ação ou as atividades, as fotos delas também saem (DEC-098, DEC-104).
+      if (checked) return next;
+      const photos = PHOTOS_OF[area];
+      return photos ? next.filter((item) => item !== photos) : next;
     });
   }
 
@@ -187,7 +193,11 @@ function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormP
     save.mutate({ linkId: link.id, areas: ordered }, { onSuccess: onSaved, onError: () => setAreas(link.sharedAreas) });
   }
 
-  const visible = SHARED_AREAS.filter((area) => area !== 'ACTION_PHOTOS' || areas.includes('ACTIONS'));
+  // A caixa das fotos só aparece com a área delas marcada.
+  const visible = SHARED_AREAS.filter((area) => {
+    const parent = PARENT_OF[area];
+    return !parent || areas.includes(parent);
+  });
   const nothingShared = link.sharedAreas.length === 0;
 
   return (

@@ -5,10 +5,12 @@ import {
   completeActivity,
   createActivity,
   deleteActivity,
+  deleteActivityPhoto,
   fetchActivities,
   markNotDone,
   startActivity,
   updateActivity,
+  uploadActivityPhoto,
   type Activity,
   type CompleteActivityInput,
   type CreateActivityInput,
@@ -127,4 +129,17 @@ export function useMarkNotDone() {
 
 export function useDeleteActivity() {
   return useActivityMutation((id: string) => deleteActivity(id));
+}
+
+// Fotos (DEC-103): recarregam a lista, como as outras gravações.
+export function useAddActivityPhoto() {
+  return useActivityMutation(({ recordId, file }: { recordId: string; file: File }) =>
+    uploadActivityPhoto(recordId, file),
+  );
+}
+
+export function useRemoveActivityPhoto() {
+  return useActivityMutation(({ recordId, photoId }: { recordId: string; photoId: string }) =>
+    deleteActivityPhoto(recordId, photoId),
+  );
 }

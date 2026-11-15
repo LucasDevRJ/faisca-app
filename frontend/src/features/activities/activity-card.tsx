@@ -4,6 +4,7 @@ import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { useAccessibility } from '../profile/use-profile';
 import { isFinal, type Activity } from './activities-api';
+import { ActivityPhotos } from './activity-photos';
 import { SCORE_TEXT, STATUS_LABEL } from './activity-labels';
 
 // Botão de meia largura na grade do celular: texto menor e sem quebra, para caber em 360px.
@@ -12,7 +13,8 @@ const HALF_WIDTH = 'px-2 text-sm whitespace-nowrap sm:px-5 sm:text-base';
 export type ActivityAction = 'start' | 'complete' | 'notDone' | 'edit' | 'delete';
 
 // readOnly: visão da terapeuta (DEC-033). Sem botões e com a hora em que o registro foi feito,
-// porque a SPEC mostra à terapeuta as duas datas (a do dia vem no título do dia).
+// porque a SPEC mostra à terapeuta as duas datas (a do dia vem no título do dia). O patientId monta
+// o endereço das fotos pelo vínculo (DEC-104).
 type ActivityCardProps =
   | {
       activity: Activity;
@@ -20,7 +22,7 @@ type ActivityCardProps =
       onAction: (action: ActivityAction, activity: Activity) => void;
       readOnly?: false;
     }
-  | { activity: Activity; readOnly: true };
+  | { activity: Activity; readOnly: true; patientId: string };
 
 // Os botões seguem o estado (tabela da SPEC). Registro final não tem ações: ele é imutável
 // e o backend responderia 409. Esconder os botões é conforto, não segurança.
@@ -67,6 +69,12 @@ export function ActivityCard(props: ActivityCardProps) {
       )}
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(activity.createdAt)}</p>}
+
+      {/* Fotos (DEC-104): o paciente põe e tira conforme o estado; a profissional só vê. */}
+      <ActivityPhotos
+        activity={activity}
+        viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
+      />
 
       {!props.readOnly && !final && (
         <div className="flex flex-col gap-2">

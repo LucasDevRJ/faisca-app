@@ -185,6 +185,25 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     ),
     link: { to: '/planos', label: 'Abrir o Meus Planos' },
   },
+  // Fotos nas atividades (DEC-104): para paciente e terapeuta.
+  '2026-11-fotos-atividades': {
+    title: 'Novidade: fotos nas atividades',
+    icon: '📷',
+    date: '2026-11-15',
+    patient: (
+      <>
+        <p>
+          Agora você pode <strong>adicionar até 10 fotos</strong> às suas atividades, como lembrança do que fez. É
+          opcional.
+        </p>
+        <p>
+          Elas aparecem só para quem você liberar em Conta, e dá para pôr ou tirar até a sua próxima consulta depois de
+          concluir.
+        </p>
+      </>
+    ),
+    therapist: <p>Quando o paciente liberar, você vê as fotos das atividades dele, só para leitura.</p>,
+  },
 };
 
 // A novidade tem texto para algum perfil da pessoa?

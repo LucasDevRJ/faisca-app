@@ -19,6 +19,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Mail, nos EUA) e o contato suporte@. Pede o aceite de novo, sem bloquear nenhuma área.
 // Versão 2026-11.4 (DEC-097, DEC-098): até duas profissionais, cada uma vendo só as áreas que o
 // paciente escolhe. Pede o aceite de novo, sem bloquear nenhuma área.
+// Versão 2026-11.5 (DEC-103, DEC-104): entram as fotos das atividades, com novo aceite para usá-las.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -30,7 +31,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
 // e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
 // "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
-const VERSION_LABEL = 'versão 11, de novembro de 2026';
+const VERSION_LABEL = 'versão 12, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -90,6 +91,12 @@ export function PrivacyPage() {
             </li>
             <li>
               Nas fotos da Ação: as fotos que você escolher adicionar a uma ação já avaliada, até 10 por ação.
+              Antes de guardar, tiramos os dados escondidos da foto, como o lugar onde ela foi tirada, e
+              diminuímos o tamanho. Se aparecerem outras pessoas, confira se elas estão de acordo.
+            </li>
+            <li>
+              Nas fotos das atividades: as fotos que você escolher adicionar a uma atividade, até 10 por
+              atividade, enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta.
               Antes de guardar, tiramos os dados escondidos da foto, como o lugar onde ela foi tirada, e
               diminuímos o tamanho. Se aparecerem outras pessoas, confira se elas estão de acordo.
             </li>
@@ -158,8 +165,8 @@ export function PrivacyPage() {
             <li>Você vê tudo o que registrou.</li>
             <li>
               Você pode compartilhar com até duas profissionais (uma psicóloga e uma psiquiatra) e escolher, para
-              cada uma, quais áreas ela vê: atividades, Registro de Pensamentos, Episódios de tensão, Ação, fotos
-              das ações, “Sobre mim”, agenda com os motivos e Meus Planos. Uma profissional nova começa sem ver
+              cada uma, quais áreas ela vê: atividades, fotos das atividades, Registro de Pensamentos, Episódios
+              de tensão, Ação, fotos das ações, “Sobre mim”, agenda com os motivos e Meus Planos. Uma profissional nova começa sem ver
               nada. Ela só lê, sem alterar nada, enquanto o vínculo existir. Você muda o que cada uma vê, ou
               desfaz o vínculo, a qualquer momento em <strong>Conta</strong>, e vale na hora. Cada profissional
               pode marcar os seus registros como lidos, para se organizar. Essa marca é só dela: você e a outra
@@ -201,8 +208,9 @@ export function PrivacyPage() {
             Até você excluir a conta. A exclusão, em <strong>Conta</strong>, apaga tudo do app na hora. As cópias
             de segurança expiram em até <strong>5 semanas</strong> e, até lá, não são abertas. Se precisarmos usar
             uma cópia, apagamos de novo o que já tinha sido excluído. Uma foto também é apagada quando você a
-            remove da ação, o que dá para fazer até a próxima consulta depois de avaliá-la, e segue o mesmo prazo
-            nas cópias.
+            remove da ação ou da atividade, o que dá para fazer até a próxima consulta depois de avaliar a ação
+            ou de concluir a atividade (numa atividade que não aconteceu, a qualquer hora), e segue o mesmo
+            prazo nas cópias.
           </p>
         </Section>
 

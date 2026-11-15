@@ -25,6 +25,8 @@ export type SessionUser = {
     aboutMe: boolean;
     // Meus Planos (DEC-094, DEC-095).
     plans: boolean;
+    // Fotos das atividades (DEC-103, DEC-104).
+    activityPhotos: boolean;
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;
