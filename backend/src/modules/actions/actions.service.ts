@@ -1,7 +1,15 @@
 import { AppError } from '../../errors/app-error.js';
 import type { BehavioralAction, Prisma } from '../../generated/prisma/client.js';
 import { addDays, dateOnlyToDate, dateToDateOnly, todayInAppZone } from '../../lib/dates.js';
-import { processImage } from '../../lib/images.js';
+import {
+  accountPhotoLimit,
+  countAccountPhotos,
+  isPastDeadline,
+  MAX_PHOTOS,
+  MAX_PHOTOS_PER_ACCOUNT,
+  photoNotFound,
+  processPhoto,
+} from '../../lib/photos.js';
 import { prisma } from '../../lib/prisma.js';
 import { loadAgenda } from '../appointments/appointments.service.js';
 import { scheduledSessionsFrom, type Session } from '../appointments/sessions.js';
@@ -46,17 +54,8 @@ export type PublicAction = {
   updatedAt: string;
 };
 
-// Fotos (DEC-064): até 10 por ação; a grande cabe em 2560 px e a miniatura é um quadrado de 400 px.
-export const MAX_PHOTOS = 10;
-// Teto por conta (DEC-074): o limite por ação não segura quem cria ações sem fim, e cada foto
-// ocupa o banco. 300 são 30 ações cheias.
-export const MAX_PHOTOS_PER_ACCOUNT = 300;
-// Câmeras de celular de até 50 MP; a fila de lib/images.ts trata uma foto por vez na API toda.
-const PHOTO_MAX_PIXELS = 50_000_000;
-const PHOTO_OUTPUTS = [
-  { width: 2560, height: 2560, fit: 'inside' as const, quality: 85 },
-  { width: 400, height: 400, fit: 'cover' as const, quality: 75 },
-];
+// Fotos (DEC-064): limites e tratamento em lib/photos.ts, compartilhados com as atividades (DEC-103).
+export { MAX_PHOTOS, MAX_PHOTOS_PER_ACCOUNT };
 
 type PhotoRef = { id: string; createdAt: Date };
 export type ActionWithPhotos = BehavioralAction & { photos: PhotoRef[] };
@@ -139,20 +138,12 @@ async function freezeMissingDeadlines(actions: ActionWithPhotos[], sessions: Ses
   }
 }
 
+function photosClosed() {
+  return new AppError(409, 'PHOTOS_CLOSED', 'O prazo para mexer nas fotos desta ação terminou na consulta.');
+}
+
 function photoLimit() {
   return new AppError(409, 'PHOTO_LIMIT', `Cada ação tem espaço para até ${MAX_PHOTOS} fotos.`);
-}
-
-function accountPhotoLimit() {
-  return new AppError(
-    409,
-    'ACCOUNT_PHOTO_LIMIT',
-    `Sua conta chegou ao limite de ${MAX_PHOTOS_PER_ACCOUNT} fotos. Para adicionar outra, remova uma foto de alguma ação que ainda esteja no prazo.`,
-  );
-}
-
-function photoNotFound() {
-  return new AppError(404, 'PHOTO_NOT_FOUND', 'Foto não encontrada.');
 }
 
 function notFound() {
@@ -237,7 +228,7 @@ async function assertPhotosOpen(userId: string, action: BehavioralAction) {
   const sessions = await sessionsFor(userId, [action]);
   await freezeMissingDeadlines([withPhotoRefs], sessions);
   if (!arePhotosOpen(withPhotoRefs, sessions)) {
-    throw new AppError(409, 'PHOTOS_CLOSED', 'O prazo para mexer nas fotos desta ação terminou na consulta.');
+    throw photosClosed();
   }
 }
 
@@ -338,27 +329,26 @@ export function createActionsService() {
     await assertPhotosOpen(userId, action);
     // Confere o limite antes de tratar a imagem, que é a parte cara; a transação confere de novo.
     if ((await prisma.actionPhoto.count({ where: { actionId: id } })) >= MAX_PHOTOS) throw photoLimit();
-    if ((await prisma.actionPhoto.count({ where: { action: { userId } } })) >= MAX_PHOTOS_PER_ACCOUNT) {
-      throw accountPhotoLimit();
-    }
+    if ((await countAccountPhotos(prisma, userId)) >= MAX_PHOTOS_PER_ACCOUNT) throw accountPhotoLimit();
     // Trata a imagem fora da transação: é a parte demorada.
-    const [image, thumbnail] = await processImage(upload, PHOTO_MAX_PIXELS, PHOTO_OUTPUTS);
+    const { image, thumbnail } = await processPhoto(upload);
     const photo = await prisma.$transaction(async (tx) => {
       // Trava a conta e depois a ação, sempre nessa ordem: dois envios ao mesmo tempo, na mesma
       // ação ou em ações diferentes, não passam juntos dos limites. NO KEY: não segura quem só
       // grava em outra tabela que aponta para a conta.
       await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
-      const locked = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "BehavioralAction" WHERE id = ${id}::uuid FOR UPDATE`;
+      const locked = await tx.$queryRaw<{ photosDeadlineAt: Date | null }[]>`
+        SELECT "photosDeadlineAt" FROM "BehavioralAction" WHERE id = ${id}::uuid FOR UPDATE`;
       // A ação (ou a conta) foi apagada enquanto a imagem era tratada.
       if (locked.length === 0) throw notFound();
+      // A consulta começou enquanto a imagem era tratada (achado do revisor-seguranca, DEC-103).
+      if (isPastDeadline(locked[0]!.photosDeadlineAt)) throw photosClosed();
       if ((await tx.actionPhoto.count({ where: { actionId: id } })) >= MAX_PHOTOS) {
         throw photoLimit();
       }
-      if ((await tx.actionPhoto.count({ where: { action: { userId } } })) >= MAX_PHOTOS_PER_ACCOUNT) {
-        throw accountPhotoLimit();
-      }
+      if ((await countAccountPhotos(tx, userId)) >= MAX_PHOTOS_PER_ACCOUNT) throw accountPhotoLimit();
       const created = await tx.actionPhoto.create({
-        data: { actionId: id, image: new Uint8Array(image!), thumbnail: new Uint8Array(thumbnail!) },
+        data: { actionId: id, image, thumbnail },
         select: { id: true, createdAt: true },
       });
       await touchAction(tx, id);

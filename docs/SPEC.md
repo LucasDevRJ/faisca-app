@@ -82,6 +82,17 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - Nome da atividade com 1 a 100 caracteres; observação com até 5000 (DEC-067).
 - No mesmo dia, as atividades aparecem na ordem em que foram registradas.
 
+### Fotos (DEC-103, #197)
+- Até **10 fotos** por atividade, todas opcionais, com o mesmo tratamento das fotos da Ação: sem os
+  metadados da câmera (como a localização), a grande cabendo em 2560 px e uma miniatura quadrada.
+- **Quando:** com a atividade aberta (planejada ou pendente), a qualquer hora; na **concluída**, até a
+  **próxima consulta** depois da conclusão (sem consulta marcada, sem prazo), como na Ação. A
+  **não realizada** não recebe fotos, mas as que já tinha saem a qualquer hora. Pôr ou tirar foto não muda nenhum campo da atividade:
+  a concluída continua imutável (409 ao editar ou excluir).
+- O teto de **300 fotos por conta** soma as fotos da Ação e das atividades (DEC-074).
+- A profissional vê as fotos só com **Atividades** e **fotos das atividades** liberadas e com o aceite
+  da versão do aviso que as cita; o paciente também precisa desse aceite para usá-las.
+
 ## Consultas
 A terapia costuma ser semanal ou quinzenal: o paciente monta uma **agenda** que se repete, e as
 sessões são calculadas a partir dela (DEC-045). Só o paciente mexe na agenda; a terapeuta lê.
@@ -296,8 +307,9 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Limite de tentativas: 5 erros em 15 minutos bloqueiam temporariamente a terapeuta.
 
 ### O que cada profissional vê (DEC-097)
-- Cada vínculo tem as **áreas liberadas** pelo paciente: Atividades, Pensamentos, Tensão, Ação, fotos
-  da Ação, "Sobre mim", agenda (com os motivos) e Meus Planos.
+- Cada vínculo tem as **áreas liberadas** pelo paciente: Atividades, fotos das atividades (DEC-103),
+  Pensamentos, Tensão, Ação, fotos da Ação, "Sobre mim", agenda (com os motivos) e Meus Planos. Os
+  vínculos que já existiam começam sem as fotos das atividades.
 - **Vínculo novo começa sem área nenhuma**: o paciente escolhe o que cada uma vê. Os vínculos que já
   existiam antes da DEC-097 ficaram com todas as áreas.
 - Mudar vale na hora. Área não liberada some para aquela profissional: as rotas respondem 403, e o
@@ -363,7 +375,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O sistema coleta nome, e-mail e senha (guardada só como hash), os registros e o que o aviso de privacidade descreve (preferências da conta, dados de segurança como os da verificação em duas etapas, vínculos e lembretes); nada além disso.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
-- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`; as fotos da Ação, a partir da `2026-10.6`. Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas. O "Sobre mim" exige a `2026-11`, e o Meus Planos, a `2026-11.2`. Uma versão sem área nova (a `2026-10.7`, das cópias de segurança; a `2026-11.3`, com os dados do 2FA, as mensagens ao suporte e o contato; e a `2026-11.4`, com as várias profissionais e as áreas liberadas) pede o aceite numa faixa no topo de Meus registros e de Meus pacientes, sem bloquear nada (DEC-078, DEC-096, DEC-098).
+- Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`; as fotos da Ação, a partir da `2026-10.6`; as fotos das atividades, a partir da `2026-11.5` (DEC-103). Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas. O "Sobre mim" exige a `2026-11`, e o Meus Planos, a `2026-11.2`. Uma versão sem área nova (a `2026-10.7`, das cópias de segurança; a `2026-11.3`, com os dados do 2FA, as mensagens ao suporte e o contato; e a `2026-11.4`, com as várias profissionais e as áreas liberadas) pede o aceite numa faixa no topo de Meus registros e de Meus pacientes, sem bloquear nada (DEC-078, DEC-096, DEC-098).
 - O contato do aviso é `suporte@minhafaisca.com.br` (DEC-096).
 - Nenhum documento pessoal é solicitado.
 - **Cópia de segurança** diária do banco, criptografada antes de sair do Railway e guardada no Cloudflare R2: 7 cópias diárias e 4 semanais, que expiram em até 5 semanas. Só é aberta para recuperar dados depois de um problema grave (DEC-075, DEC-078).

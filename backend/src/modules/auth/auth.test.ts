@@ -768,6 +768,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       actionPhotos: false,
       aboutMe: false,
       plans: false,
+      activityPhotos: false,
     };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
@@ -790,17 +791,22 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       // Meus Planos (DEC-094).
       [
         '2026-11.2',
-        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
       ],
       // 2FA, suporte e contato (DEC-096): versão nova sem área nova, libera o mesmo que a anterior.
       [
         '2026-11.3',
-        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
       ],
       // Várias profissionais (DEC-098): também sem área nova.
       [
         '2026-11.4',
-        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true },
+      ],
+      // Fotos das atividades (DEC-103).
+      [
+        '2026-11.5',
+        { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true },
       ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],

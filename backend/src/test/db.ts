@@ -6,6 +6,7 @@ import { PRIVACY_VERSION } from '../modules/auth/auth.service.js';
 
 // Apaga os dados entre testes. deleteMany em vez de TRUNCATE: o faisca_app só tem DML.
 export async function resetDatabase() {
+  await prisma.activityPhoto.deleteMany();
   await prisma.activity.deleteMany();
   // As emoções saem em cascata.
   await prisma.thoughtRecord.deleteMany();

@@ -20,6 +20,7 @@
 import sharp from 'sharp';
 import type { ActivityStatus, Emotion } from '../src/generated/prisma/client.js';
 import { processImage } from '../src/lib/images.js';
+import { processPhoto } from '../src/lib/photos.js';
 import { toAvatarImage } from '../src/modules/profile/profile.service.js';
 
 // Dados fictícios (regra 5). A senha é pública de propósito: as contas só existem no banco local.
@@ -381,6 +382,17 @@ for (const color of ['#c9b79c', '#8fa9b8', '#b8927a']) {
   await prisma.actionPhoto.create({
     data: { actionId: deskAction.id, image: new Uint8Array(image!), thumbnail: new Uint8Array(thumbnail!) },
   });
+}
+// Fotos das atividades (DEC-103): dois quadros de cor fictícios na atividade concluída mais recente.
+const doneActivity = await prisma.activity.findFirstOrThrow({
+  where: { userId: patient.id, status: 'CONCLUIDA' },
+  orderBy: { activityDate: 'desc' },
+});
+for (const color of ['#a5b8c9', '#c2a59c']) {
+  const original = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: color } })
+    .jpeg()
+    .toBuffer();
+  await prisma.activityPhoto.create({ data: { activityId: doneActivity.id, ...(await processPhoto(original)) } });
 }
 await prisma.userAvatar.upsert({
   where: { userId: therapist.id },

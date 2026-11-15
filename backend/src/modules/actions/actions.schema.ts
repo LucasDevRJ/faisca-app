@@ -84,11 +84,7 @@ export const therapistPhotoParamsSchema = z.object({
   actionId: z.uuid({ error: 'Ação inválida.' }),
   photoId: z.uuid({ error: 'Foto inválida.' }),
 });
-// thumb: a miniatura dos cartões; full: a foto grande, ao tocar.
-export const photoSizeSchema = z.object({ size: z.enum(['thumb', 'full']).default('thumb') });
-// A foto chega como o próprio arquivo; o tipo real é conferido pelo conteúdo (lib/images.ts).
-export const PHOTO_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-export const PHOTO_MAX_BYTES = '20mb';
+export { photoSizeSchema } from '../../lib/photos.js';
 
 // Mesmos tetos das outras listas: 42 dias para o paciente, 92 para a terapeuta (DEC-033).
 export const listActionsQuerySchema = listQuerySchema(LIST_MAX_DAYS);
