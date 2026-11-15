@@ -4,6 +4,7 @@ import { dateOnlyToDate, dateToDateOnly, todayInAppZone } from '../../lib/dates.
 import {
   accountPhotoLimit,
   countAccountPhotos,
+  isPastDeadline,
   MAX_PHOTOS,
   MAX_PHOTOS_PER_ACCOUNT,
   photoNotFound,
@@ -195,6 +196,10 @@ function photosNotAllowed() {
   return new AppError(409, 'PHOTOS_NOT_ALLOWED', 'Uma atividade que não aconteceu não leva fotos.');
 }
 
+function photosClosed() {
+  return new AppError(409, 'PHOTOS_CLOSED', 'O prazo para mexer nas fotos desta atividade terminou na consulta.');
+}
+
 function photoLimit() {
   return new AppError(409, 'PHOTO_LIMIT', `Cada atividade tem espaço para até ${MAX_PHOTOS} fotos.`);
 }
@@ -265,7 +270,7 @@ async function assertPhotosOpen(userId: string, activity: Activity) {
   const sessions = await sessionsFor(userId, [activity]);
   await freezeMissingDeadlines([activity], sessions);
   if (!arePhotosOpen(activity, sessions)) {
-    throw new AppError(409, 'PHOTOS_CLOSED', 'O prazo para mexer nas fotos desta atividade terminou na consulta.');
+    throw photosClosed();
   }
 }
 
@@ -370,12 +375,14 @@ export function createActivitiesService() {
       // Trava a conta e depois a atividade, sempre nessa ordem (como na Ação, DEC-074): dois envios
       // ao mesmo tempo, na mesma área ou em áreas diferentes, não passam juntos dos limites.
       await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
-      const locked = await tx.$queryRaw<{ status: ActivityStatus }[]>`
-        SELECT status FROM "Activity" WHERE id = ${id}::uuid FOR UPDATE`;
+      const locked = await tx.$queryRaw<{ status: ActivityStatus; photosDeadlineAt: Date | null }[]>`
+        SELECT status, "photosDeadlineAt" FROM "Activity" WHERE id = ${id}::uuid FOR UPDATE`;
       // A atividade (ou a conta) foi apagada enquanto a imagem era tratada.
       if (locked.length === 0) throw notFound();
-      // Virou "não realizada" enquanto a imagem era tratada.
+      // Virou "não realizada", ou a consulta começou, enquanto a imagem era tratada (achado do
+      // revisor-seguranca): o prazo já foi congelado no assertPhotosOpen, se havia consulta.
       if (locked[0]!.status === 'NAO_REALIZADA') throw photosNotAllowed();
+      if (locked[0]!.status === 'CONCLUIDA' && isPastDeadline(locked[0]!.photosDeadlineAt)) throw photosClosed();
       if ((await tx.activityPhoto.count({ where: { activityId: id } })) >= MAX_PHOTOS) throw photoLimit();
       if ((await countAccountPhotos(tx, userId)) >= MAX_PHOTOS_PER_ACCOUNT) throw accountPhotoLimit();
       return tx.activityPhoto.create({

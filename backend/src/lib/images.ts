@@ -1,7 +1,8 @@
 import sharp from 'sharp';
 import { AppError } from '../errors/app-error.js';
 
-// Tratamento de imagens enviadas pelas pessoas (foto de perfil, DEC-061; fotos da Ação, DEC-064).
+// Tratamento de imagens enviadas pelas pessoas (foto de perfil, DEC-061; fotos da Ação, DEC-064;
+// fotos das atividades, DEC-103).
 
 // Sem threads extras por imagem e sem cache: a API roda numa instância pequena, e o processamento
 // das fotos não pode tomar a memória e a CPU de quem está usando o resto do app.
@@ -10,9 +11,24 @@ sharp.cache(false);
 
 // Fila: uma imagem por vez em toda a API. O concurrency(1) acima limita os threads de cada imagem,
 // mas não quantas são tratadas ao mesmo tempo; uma foto de 50 MP descomprimida ocupa ~200 MB.
+// Com teto (achado do revisor-seguranca, DEC-103): cada envio esperando guarda o arquivo inteiro na
+// memória (até 20 MB), então uma fila sem fim derrubaria a API. Passando de MAX_PENDING (a que está
+// sendo tratada e as que esperam), o envio é recusado na hora com 503.
+export const MAX_PENDING_IMAGES = 4;
 let queue: Promise<unknown> = Promise.resolve();
+let pending = 0;
 function oneAtATime<T>(task: () => Promise<T>): Promise<T> {
-  const run = queue.then(task, task);
+  if (pending >= MAX_PENDING_IMAGES) {
+    throw new AppError(
+      503,
+      'IMAGE_QUEUE_FULL',
+      'Muitas fotos estão sendo enviadas agora. Espere um pouquinho e tente de novo.',
+    );
+  }
+  pending += 1;
+  const run = queue.then(task, task).finally(() => {
+    pending -= 1;
+  });
   queue = run.catch(() => undefined);
   return run;
 }

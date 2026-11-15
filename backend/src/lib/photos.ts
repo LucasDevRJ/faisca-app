@@ -61,6 +61,12 @@ export function accountPhotoLimit() {
   );
 }
 
+// O prazo congelado das fotos já passou (a consulta começou). Conferido de novo na transação, com o
+// registro travado, porque o tratamento da imagem pode terminar depois do horário.
+export function isPastDeadline(deadlineAt: Date | null, now: Date = new Date()): boolean {
+  return deadlineAt !== null && deadlineAt <= now;
+}
+
 export function photoNotFound() {
   return new AppError(404, 'PHOTO_NOT_FOUND', 'Foto não encontrada.');
 }

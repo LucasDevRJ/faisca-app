@@ -4,6 +4,7 @@ import { addDays, dateOnlyToDate, dateToDateOnly, todayInAppZone } from '../../l
 import {
   accountPhotoLimit,
   countAccountPhotos,
+  isPastDeadline,
   MAX_PHOTOS,
   MAX_PHOTOS_PER_ACCOUNT,
   photoNotFound,
@@ -137,6 +138,10 @@ async function freezeMissingDeadlines(actions: ActionWithPhotos[], sessions: Ses
   }
 }
 
+function photosClosed() {
+  return new AppError(409, 'PHOTOS_CLOSED', 'O prazo para mexer nas fotos desta ação terminou na consulta.');
+}
+
 function photoLimit() {
   return new AppError(409, 'PHOTO_LIMIT', `Cada ação tem espaço para até ${MAX_PHOTOS} fotos.`);
 }
@@ -223,7 +228,7 @@ async function assertPhotosOpen(userId: string, action: BehavioralAction) {
   const sessions = await sessionsFor(userId, [action]);
   await freezeMissingDeadlines([withPhotoRefs], sessions);
   if (!arePhotosOpen(withPhotoRefs, sessions)) {
-    throw new AppError(409, 'PHOTOS_CLOSED', 'O prazo para mexer nas fotos desta ação terminou na consulta.');
+    throw photosClosed();
   }
 }
 
@@ -332,9 +337,12 @@ export function createActionsService() {
       // ação ou em ações diferentes, não passam juntos dos limites. NO KEY: não segura quem só
       // grava em outra tabela que aponta para a conta.
       await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
-      const locked = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "BehavioralAction" WHERE id = ${id}::uuid FOR UPDATE`;
+      const locked = await tx.$queryRaw<{ photosDeadlineAt: Date | null }[]>`
+        SELECT "photosDeadlineAt" FROM "BehavioralAction" WHERE id = ${id}::uuid FOR UPDATE`;
       // A ação (ou a conta) foi apagada enquanto a imagem era tratada.
       if (locked.length === 0) throw notFound();
+      // A consulta começou enquanto a imagem era tratada (achado do revisor-seguranca, DEC-103).
+      if (isPastDeadline(locked[0]!.photosDeadlineAt)) throw photosClosed();
       if ((await tx.actionPhoto.count({ where: { actionId: id } })) >= MAX_PHOTOS) {
         throw photoLimit();
       }

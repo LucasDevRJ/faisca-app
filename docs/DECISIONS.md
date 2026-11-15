@@ -2326,7 +2326,12 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
     segue a `2026-11.4` até o PR das telas, que traz o texto (como na DEC-064 e na DEC-065). Sem o
     aceite, as atividades funcionam e só as fotos pedem o aceite (paciente e profissional);
   - a lista de atividades traz `photos` (id e data), `photosDeadline` e `photosOpen`; as atividades
-    não têm "Lido", então foto nova não marca "atualizado".
+    não têm "Lido", então foto nova não marca "atualizado";
+  - **achados do `revisor-seguranca`, valendo também para a Ação e a foto de perfil:** a fila de
+    imagens (`lib/images.ts`) passa a ter teto de **4** (a que está sendo tratada e as que esperam),
+    porque cada envio esperando guarda o arquivo inteiro na memória; acima disso, 503
+    `IMAGE_QUEUE_FULL` na hora. E o prazo das fotos é conferido de novo na transação, com o registro
+    travado, porque o tratamento pode terminar depois de a consulta começar.
 - **Motivo:** pedido do usuário (#197): guardar como foi a atividade, como já dá na Ação. Seguir as
   regras da Ação mantém o app coerente e reaproveita o que já passou pela revisão de segurança.
 - **Limite conhecido:** fotos postas com a atividade aberta **ficam** se ela virar não realizada (não
