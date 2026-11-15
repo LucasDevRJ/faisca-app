@@ -2309,8 +2309,10 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
     com 60 envios por hora por conta. O que as duas áreas usam ficou em `lib/photos.ts`;
   - **quando:** com a atividade **aberta** (planejada ou pendente), sem prazo; na **concluída**, até a
     **próxima consulta** depois da conclusão, como na Ação (prazo congelado em `photosDeadlineAt` na
-    primeira leitura do paciente com uma consulta pela frente). A **não realizada** não recebe nem
-    perde fotos (409 `PHOTOS_NOT_ALLOWED`); depois do prazo, 409 `PHOTOS_CLOSED`. Mexer nas fotos não
+    primeira leitura do paciente com uma consulta pela frente). A **não realizada** não recebe fotos
+    (409 `PHOTOS_NOT_ALLOWED`), mas as postas com ela aberta **saem a qualquer hora** (escolha do
+    usuário: é dado de saúde, e o paciente não pode ficar sem como tirar); depois do prazo, 409
+    `PHOTOS_CLOSED`. Mexer nas fotos não
     muda nenhum campo da atividade: a concluída segue imutável (regra 2), como a Ação avaliada;
   - a atividade passa a guardar **quando foi concluída** (`completedAt`), na transição e no registro
     já concluído. As já concluídas recebem o `updatedAt` na migration; um CHECK garante que só a
@@ -2334,8 +2336,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
     travado, porque o tratamento pode terminar depois de a consulta começar.
 - **Motivo:** pedido do usuário (#197): guardar como foi a atividade, como já dá na Ação. Seguir as
   regras da Ação mantém o app coerente e reaproveita o que já passou pela revisão de segurança.
-- **Limite conhecido:** fotos postas com a atividade aberta **ficam** se ela virar não realizada (não
-  dá mais para tirar). Cada área tem o próprio contador de 60 envios por hora (até 120 somando as
+- **Limite conhecido:** a lista da profissional mostra quantas fotos existem e quando entraram já com
+  a caixa liberada, antes do aceite da versão nova; a imagem pede o aceite (igual à Ação, escolha do
+  usuário). Cada área tem o próprio contador de 60 envios por hora (até 120 somando as
   duas). As telas e o texto do aviso ficam para o PR seguinte. O gatilho para sair do Postgres
   (1 GB de fotos, DEC-064) passa a contar as duas áreas.
 

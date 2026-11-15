@@ -176,13 +176,23 @@ describe('adicionar e remover fotos', () => {
     expect((await agent.patch(`/activities/${activity.id}`).send({ name: 'Outro nome' })).status).toBe(409);
   });
 
-  it('atividade não realizada não leva fotos', async () => {
+  it('atividade não realizada não recebe fotos, mas as que já tinha saem a qualquer hora', async () => {
     const notDone = await seedActivity(patientId, { ...open, status: 'NAO_REALIZADA' });
+    const [photo] = await prisma.activityPhoto.createManyAndReturn({
+      data: [{ activityId: notDone.id, image: tiny, thumbnail: tiny }],
+    });
+    // Mesmo com uma consulta que já passou: remover não tem prazo na não realizada.
+    await prisma.appointment.create({ data: { userId: patientId, appointmentDate: dateOnlyToDate(addDays(today(), -1)) } });
     const agent = await loginAgent(PATIENT);
 
     const res = await upload(agent, notDone.id, await cameraPhoto(20, 20));
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('PHOTOS_NOT_ALLOWED');
+
+    expect((await agent.delete(`/activities/${notDone.id}/photos/${photo!.id}`)).status).toBe(204);
+    expect(await prisma.activityPhoto.count()).toBe(0);
+    // A atividade em si não muda (regra 2).
+    expect(await prisma.activity.findUniqueOrThrow({ where: { id: notDone.id } })).toEqual(notDone);
   });
 
   it(`até ${MAX_PHOTOS} fotos por atividade`, async () => {

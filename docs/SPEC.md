@@ -87,7 +87,7 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
   metadados da câmera (como a localização), a grande cabendo em 2560 px e uma miniatura quadrada.
 - **Quando:** com a atividade aberta (planejada ou pendente), a qualquer hora; na **concluída**, até a
   **próxima consulta** depois da conclusão (sem consulta marcada, sem prazo), como na Ação. A
-  **não realizada** não recebe nem perde fotos. Pôr ou tirar foto não muda nenhum campo da atividade:
+  **não realizada** não recebe fotos, mas as que já tinha saem a qualquer hora. Pôr ou tirar foto não muda nenhum campo da atividade:
   a concluída continua imutável (409 ao editar ou excluir).
 - O teto de **300 fotos por conta** soma as fotos da Ação e das atividades (DEC-074).
 - A profissional vê as fotos só com **Atividades** e **fotos das atividades** liberadas e com o aceite

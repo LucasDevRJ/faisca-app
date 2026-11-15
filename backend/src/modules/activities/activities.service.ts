@@ -395,7 +395,9 @@ export function createActivitiesService() {
 
   async function removePhoto(userId: string, id: string, photoId: string) {
     const activity = await findOwned(userId, id);
-    await assertPhotosOpen(userId, activity);
+    // Na não realizada, as fotos postas com ela aberta saem a qualquer hora (escolha do usuário):
+    // é dado de saúde, e o paciente não pode ficar sem como tirar. Adicionar continua fechado.
+    if (activity.status !== 'NAO_REALIZADA') await assertPhotosOpen(userId, activity);
     const { count } = await prisma.activityPhoto.deleteMany({ where: { id: photoId, activityId: id } });
     if (count === 0) throw photoNotFound();
   }
