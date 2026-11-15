@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -22,7 +23,7 @@ afterEach(() => {
 // Aceitou a versão do aviso do RPD, mas não a que cita os episódios.
 const rpdOnlyUser = http.get('*/api/auth/me', () =>
   HttpResponse.json({
-    user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false, actions: false } },
+    user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { ...outdatedPrivacy.privacyAreas, thoughtRecords: true } },
   }),
 );
 
@@ -191,7 +192,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
     expect(banner).toHaveTextContent(
-      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim” e o Meus Planos. Você só precisa aceitar a nova versão para usar essas partes.',
+      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos e as fotos das atividades. Você só precisa aceitar a nova versão para usar essas partes.',
     );
   });
 
@@ -200,7 +201,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     renderRoute('/registros');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim” e o Meus Planos');
+    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos e as fotos das atividades');
     expect(banner).toHaveTextContent('essas partes');
   });
 
@@ -229,7 +230,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     await user.click(screen.getByRole('button', { name: 'Aceitar e continuar' }));
 
     expect(await screen.findByRole('article', { name: 'Episódio: Depois do aceite' })).toBeInTheDocument();
-    expect(writes).toEqual([{ method: 'POST', path: '/auth/accept-privacy', body: { acceptPrivacy: true } }]);
+    expect(writes).toEqual([{ method: 'POST', path: '/auth/accept-privacy', body: { acceptPrivacy: true, privacyVersion: SHOWN_PRIVACY_VERSION } }]);
   });
 });
 

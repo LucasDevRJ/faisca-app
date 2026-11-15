@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -207,7 +208,7 @@ describe('novo aceite do aviso de privacidade (DEC-039)', () => {
     await user.click(screen.getByRole('button', { name: 'Aceitar e continuar' }));
 
     expect(await screen.findByRole('article', { name: 'Registro: Depois do aceite' })).toBeInTheDocument();
-    expect(writes).toEqual([{ method: 'POST', path: '/auth/accept-privacy', body: { acceptPrivacy: true } }]);
+    expect(writes).toEqual([{ method: 'POST', path: '/auth/accept-privacy', body: { acceptPrivacy: true, privacyVersion: SHOWN_PRIVACY_VERSION } }]);
   });
 
   it('se a API pedir o aceite (403), mostra o pedido mesmo com a sessão em dia', async () => {

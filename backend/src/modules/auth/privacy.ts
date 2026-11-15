@@ -1,3 +1,5 @@
+import { AppError } from '../../errors/app-error.js';
+
 // Versões do aviso de privacidade (DEC-036), da mais antiga para a mais nova. A última é a atual,
 // gravada no cadastro e no novo aceite. Muda junto com o texto da página /privacidade no front
 // (frontend/src/pages/privacy-page.tsx).
@@ -38,8 +40,30 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // 2026-11 ("Sobre mim", DEC-081): conhecida antes, virou a atual no PR das telas (DEC-082). E
 // para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, virou a atual no PR das telas (DEC-095).
 // A 2026-11.3 (DEC-096) e a 2026-11.4 (DEC-098) entraram de uma vez, API e texto no mesmo PR.
-// A 2026-11.5 (fotos das atividades, DEC-103) é conhecida na API e vira a atual no PR das telas.
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.4';
+// A 2026-11.5 (fotos das atividades, DEC-103) foi conhecida na API antes e virou a atual no PR das
+// telas, com o texto (DEC-104).
+export const PRIVACY_VERSION: PrivacyVersion = '2026-11.5';
+
+// Qual versão gravar no aceite (DEC-105). O app manda a versão que mostrou; o servidor só grava a que
+// a pessoa leu. Sem versão é um app de antes dessa regra (instalado e ainda não atualizado, ou nos
+// minutos em que a API nova já está no ar e o front ainda não): grava a última versão que esses apps
+// mostram, e não a atual, para ninguém aceitar sem ler um texto novo. A faixa continua até atualizar.
+export const LEGACY_SHOWN_VERSION: PrivacyVersion = '2026-11.4';
+
+// current: a versão que a conta já tem. O aceite de um app antigo nunca rebaixa um aceite mais novo
+// (achado do revisor-seguranca): a pessoa que aceitou a atual noutro aparelho continua com ela.
+export function versionToRecord(shownVersion: string | undefined, current: string | null = null): PrivacyVersion {
+  if (shownVersion === undefined) {
+    const kept = PRIVACY_VERSIONS.indexOf(current as PrivacyVersion);
+    return kept > PRIVACY_VERSIONS.indexOf(LEGACY_SHOWN_VERSION) ? PRIVACY_VERSIONS[kept]! : LEGACY_SHOWN_VERSION;
+  }
+  if (shownVersion === PRIVACY_VERSION) return PRIVACY_VERSION;
+  throw new AppError(
+    409,
+    'PRIVACY_VERSION_OUTDATED',
+    'O aviso de privacidade mudou. Atualize o app para ler a versão nova antes de aceitar.',
+  );
+}
 
 // Cada área de dado novo exige a versão do aviso que passou a citá-la (DEC-042). Assim, uma versão
 // nova não bloqueia de novo o que a pessoa já tinha liberado: quem aceitou a 2026-10.2 segue no RPD

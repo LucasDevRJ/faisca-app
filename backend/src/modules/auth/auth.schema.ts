@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { professionalKindSchema } from '../links/links.schema.js';
 import { ANNOUNCEMENTS } from './announcements.js';
 
+// Texto curto, conferido no service contra a versão atual (DEC-105).
+const privacyVersionSchema = z.string().max(20).optional();
+
 // Normaliza antes de validar: "  Ana@Exemplo.com " e "ana@exemplo.com" são a mesma conta.
 const emailSchema = z
   .string()
@@ -35,6 +38,8 @@ export const signupSchema = z.object({
   professionalKind: professionalKindSchema.optional(),
   // Consentimento específico com o aviso de privacidade (LGPD, dado de saúde; DEC-036).
   acceptPrivacy: z.literal(true, { error: 'Para criar a conta, é preciso concordar com o aviso de privacidade.' }),
+  // A versão do aviso que o app mostrou (DEC-105). Sem ela (app antigo), grava a anterior.
+  privacyVersion: privacyVersionSchema,
   // Cadastro aberto pelo link de convite (SPEC, "Convite por e-mail"): o vínculo é criado quando
   // o e-mail for confirmado, e o aceite ativa o perfil de terapeuta se faltar (DEC-031).
   inviteToken: tokenSchema.optional(),
@@ -78,7 +83,10 @@ export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 // Novo aceite do aviso de privacidade (DEC-039): o mesmo consentimento explícito do cadastro.
 export const acceptPrivacySchema = z.strictObject({
   acceptPrivacy: z.literal(true, { error: 'Para continuar, é preciso concordar com o aviso de privacidade.' }),
+  // A versão do aviso que o app mostrou (DEC-105).
+  privacyVersion: privacyVersionSchema,
 });
+export type AcceptPrivacyInput = z.infer<typeof acceptPrivacySchema>;
 
 // Card de Novidades (DEC-054, DEC-058): só a novidade que está aparecendo para a pessoa pode ser
 // marcada como vista (o service confere). Id desconhecido é 400 já aqui.

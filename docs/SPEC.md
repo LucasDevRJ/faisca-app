@@ -92,6 +92,12 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - O teto de **300 fotos por conta** soma as fotos da Ação e das atividades (DEC-074).
 - A profissional vê as fotos só com **Atividades** e **fotos das atividades** liberadas e com o aceite
   da versão do aviso que as cita; o paciente também precisa desse aceite para usá-las.
+- **Na tela (DEC-104):** no cartão da atividade, como na Ação: miniaturas, a foto grande numa janela
+  ("Foto 1 de 3", Anterior e Próxima), "Adicionar fotos" (várias de uma vez, uma por vez no envio) e
+  "Remover foto" com confirmação. O cartão diz o prazo da concluída, quantas cabem e que as fotos
+  aparecem só para quem o paciente liberar. Na não realizada com fotos, um aviso de que ela não recebe
+  fotos novas e que dá para tirar as que estão lá. A profissional vê sem botões de mudança. Sem o
+  aceite, "Adicionar fotos" (ou "Ver as fotos") abre o pedido de aceite numa janela.
 
 ## Consultas
 A terapia costuma ser semanal ou quinzenal: o paciente monta uma **agenda** que se repete, e as
@@ -323,7 +329,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   outro convite nem outro código. Com só uma delas, dá para chamar a outra.
 - Desfazer é por vínculo: desfazer um não mexe no outro.
 - Na tela (DEC-098): em Conta, "Quem me acompanha", com um cartão por profissional, as caixas de
-  "O que [nome] pode ver" (as fotos da Ação só com a Ação marcada) e "Marcar tudo".
+  "O que [nome] pode ver" (as fotos da Ação só com a Ação marcada, e as das atividades só com
+  Atividades marcada, DEC-104) e "Marcar tudo".
 - Na profissional (DEC-099): a profissão vem do cadastro ou do convite e fica em Conta, com o
   conselho; a página do paciente mostra só as abas liberadas; a psiquiatra vê por meses (1, 2 ou 3).
 - Quando um vínculo é criado, o paciente é avisado no app e por e-mail e vê o **nome e o e-mail** de quem se vinculou.
@@ -376,6 +383,9 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
 - Quando o aviso muda para cobrir dados novos, quem aceitou a versão anterior aceita de novo antes de usar a parte nova. Cada área exige a versão que passou a citá-la: o RPD, a partir da `2026-10.2`; os Episódios de tensão, a partir da `2026-10.3`; a agenda (hora, motivos e pausas), a partir da `2026-10.4`; a Ação, a partir da `2026-10.5`; as fotos da Ação, a partir da `2026-10.6`; as fotos das atividades, a partir da `2026-11.5` (DEC-103). Sem ela, só aquela área fica bloqueada (para paciente e terapeuta), e o resto do app funciona. Uma versão nova não bloqueia de novo uma área já liberada, e um aceite só libera todas. O "Sobre mim" exige a `2026-11`, e o Meus Planos, a `2026-11.2`. Uma versão sem área nova (a `2026-10.7`, das cópias de segurança; a `2026-11.3`, com os dados do 2FA, as mensagens ao suporte e o contato; e a `2026-11.4`, com as várias profissionais e as áreas liberadas) pede o aceite numa faixa no topo de Meus registros e de Meus pacientes, sem bloquear nada (DEC-078, DEC-096, DEC-098).
+- O aceite e o cadastro gravam a **versão do aviso que o app mostrou**: outra versão é recusada (409,
+  com o pedido de atualizar o app), e um app antigo, que não manda a versão, grava a anterior, sem
+  liberar a área nova (DEC-105).
 - O contato do aviso é `suporte@minhafaisca.com.br` (DEC-096).
 - Nenhum documento pessoal é solicitado.
 - **Cópia de segurança** diária do banco, criptografada antes de sair do Railway e guardada no Cloudflare R2: 7 cópias diárias e 4 semanais, que expiram em até 5 semanas. Só é aberta para recuperar dados depois de um problema grave (DEC-075, DEC-078).

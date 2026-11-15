@@ -176,6 +176,7 @@ Estes itens estão planejados no backlog e **ainda não estão no ar**:
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
 6. **Sono e humor (#188)** e **medicação (#171)**, pensados para o acompanhamento com a psiquiatra.
 7. **Meus Planos, 2ª parte:** a psicóloga também cria planos para o paciente.
+8. **Fotos nas atividades (#197):** até 10 fotos por atividade, como já existe na Ação, aparecendo só para a profissional a quem o paciente liberar.
 
 ---
 

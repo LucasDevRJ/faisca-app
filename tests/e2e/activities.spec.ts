@@ -42,10 +42,12 @@ test('planejar, contar como foi e ver a atividade feita na semana', async ({ pag
   await complete.getByRole('button', { name: 'Salvar' }).click();
   await expect(complete).toBeHidden();
 
-  // Registro final: notas visíveis e nenhum botão (imutável).
+  // Registro final: notas visíveis e nenhum botão de mudança (imutável). Sem consulta marcada, o prazo
+  // das fotos fica aberto (DEC-103): o único botão é o de pôr fotos, que não muda o registro.
   await expect(card.getByText('Feita')).toBeVisible();
   await expect(card.getByText('Foi melhor do que eu esperava.')).toBeVisible();
-  await expect(card.getByRole('button')).toHaveCount(0);
+  await expect(card.getByRole('button')).toHaveCount(1);
+  await expect(card.getByRole('button', { name: 'Adicionar fotos' })).toBeVisible();
   await expect(page.getByText('Como foram as atividades feitas')).toBeVisible();
 
   // Continua lá depois de recarregar: veio da API, não do estado da tela.

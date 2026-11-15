@@ -427,6 +427,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
                       <WeekChart activities={activities.data} period={onPeriod(scope)} />
 
                       <DayList
+                        patientId={patientId}
                         days={
                           byMonths
                             ? daysInRange(range).filter((day) => activities.data.some((a) => a.activityDate === day))
@@ -449,13 +450,14 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
 }
 
 type DayListProps = {
+  patientId: string;
   days: string[];
   activities: Activity[];
   today: string;
   appointmentDays: Set<string>;
 };
 
-function DayList({ days, activities, today, appointmentDays }: DayListProps) {
+function DayList({ patientId, days, activities, today, appointmentDays }: DayListProps) {
   return (
     <ol className="flex flex-col gap-2 sm:gap-6">
       {days.map((day) => {
@@ -476,7 +478,7 @@ function DayList({ days, activities, today, appointmentDays }: DayListProps) {
             {ofDay.length > 0 && (
               <div className="flex flex-col gap-3">
                 {ofDay.map((activity) => (
-                  <ActivityCard key={activity.id} activity={activity} readOnly />
+                  <ActivityCard key={activity.id} activity={activity} readOnly patientId={patientId} />
                 ))}
               </div>
             )}
