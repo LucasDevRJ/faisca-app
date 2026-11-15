@@ -200,6 +200,11 @@ await prisma.$transaction(async (tx) => {
     })),
   });
   // Meus Planos (DEC-094): um plano com o modelo das 6 perguntas e dois registros, e um encerrado.
+  await tx.homeworkTask.deleteMany({ where: { userId: patient.id } });
+  await tx.homeworkTask.createMany({ data: [
+    { userId: patient.id, title: 'Reflexão fictícia', description: 'Escrever sobre uma situação fictícia combinada na consulta.' },
+    { userId: patient.id, title: 'Outra tarefa fictícia', description: 'Anotar uma observação fictícia.', responseStatus: 'NAO_CONSEGUI', respondedAt: new Date(), responseText: 'Ainda estou pensando sobre o assunto fictício.' },
+  ] });
   await tx.plan.deleteMany({ where: { userId: patient.id } });
   const planQuestions = [
     'O que aconteceu antes?',

@@ -2301,6 +2301,26 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o modelo continua guardando o paciente como dono, sem identificar na tela
   quem iniciou cada plano. O formulário não permite à profissional criar registros do paciente.
 
+## DEC-103 — Tarefas criadas e respondidas pelo paciente
+- **Decisão (#150, comentários de 12/11/2026 e textos aprovados pelo usuário):** implementar a
+  primeira entrega descrita na SPEC, seção Tarefas: tarefa única do paciente, descrição preservada
+  após a resposta, três formas de responder, aba sempre disponível e compartilhamento TASKS
+  independente. A profissional só lê; criar tarefas pela psicóloga fica para outra etapa.
+  Título de até 120, descrição de até 5000 e resposta de até 10000 caracteres; teto de 500 tarefas
+  por conta. Alterações e respostas usam trava da tarefa para impedir exclusão ou edição concorrente.
+  A primeira resposta fixa a base do prazo, sem reiniciá-lo em edições. O prazo segue a próxima
+  sessão da agenda do paciente e é congelado, como na DEC-054; antecipações podem encurtá-lo.
+  Sem consulta, não há prazo; sem horário, vale o início do dia, como na alternativa do RPD.
+  Só respostas entram no Para ler. ReadMark ganha taskId e mantém exatamente um alvo por marca.
+  Aviso 2026-11.5, versão 12, com área tasks e texto no front. Novidade 2026-11-tarefas.
+- **Motivo:** guardar uma reflexão combinada na consulta com resposta livre, sem impor os campos
+  de outras áreas nem acrescentar trabalho à profissional. As três saídas preservam a autonomia.
+- **Limite conhecido:** a agenda atual é única por paciente (não por profissional). Combinada com
+  não altera o prazo nem concede acesso; essa indicação não é exibida às profissionais. A lista
+  traz até 500 tarefas e não filtra por ciclo. Sem resposta, a tarefa continua aberta mesmo depois
+  de uma consulta. A descrição não pode ser alterada depois da primeira resposta. Fotos, áudios,
+  tipos ligados a registros e criação pela psicóloga ficam para etapas futuras.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

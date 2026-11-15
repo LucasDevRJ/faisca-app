@@ -168,6 +168,12 @@ Na prática clínica tradicional:
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
 
+**Em desenvolvimento — Tarefas (#150):** o paciente anota o que combinou na consulta, responde em
+texto livre ou registra que não conseguiu fazer ou que não faz sentido agora. Compartilha a área
+com as profissionais que escolher; as respostas entram em Para ler. A aba fica sempre disponível.
+A primeira entrega ainda não foi publicada. Fotos e ligação a outras áreas ficam para depois.
+
+
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.

@@ -10,6 +10,7 @@ export const SHARED_AREAS = [
   'ABOUT_ME',
   'APPOINTMENTS',
   'PLANS',
+  'TASKS',
 ] as const satisfies readonly SharedArea[];
 
 // Campos que vêm de outra área e não podem vazar por uma área liberada (achados do revisor-regras):

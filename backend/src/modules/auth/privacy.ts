@@ -14,6 +14,7 @@
 //   suporte@ (DEC-096). Sem área nova: nada é bloqueado.
 // - 2026-11.4: até duas profissionais (psicóloga e psiquiatra), cada uma vendo só as áreas que o
 //   paciente escolhe (DEC-097, DEC-098). Sem área nova: nada é bloqueado.
+// - 2026-11.5: entram as Tarefas e suas respostas (DEC-103), com aceite próprio.
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -26,6 +27,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.2',
   '2026-11.3',
   '2026-11.4',
+  '2026-11.5',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -55,6 +57,7 @@ export const PRIVACY_AREAS = {
   aboutMe: '2026-11',
   // Meus Planos (DEC-094): os planos de ação, as perguntas e cada registro com as respostas.
   plans: '2026-11.2',
+  tasks: '2026-11.5',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -75,5 +78,6 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     actionPhotos: coversArea(acceptedVersion, 'actionPhotos'),
     aboutMe: coversArea(acceptedVersion, 'aboutMe'),
     plans: coversArea(acceptedVersion, 'plans'),
+    tasks: coversArea(acceptedVersion, 'tasks'),
   };
 }

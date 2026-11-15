@@ -12,6 +12,7 @@ export async function resetDatabase() {
   await prisma.tensionEpisode.deleteMany();
   // Os registros saem em cascata com o plano.
   await prisma.plan.deleteMany();
+  await prisma.homeworkTask.deleteMany();
   await prisma.actionPhoto.deleteMany();
   await prisma.behavioralAction.deleteMany();
   await prisma.appointment.deleteMany();

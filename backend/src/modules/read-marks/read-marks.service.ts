@@ -1,3 +1,4 @@
+import { createTasksService, taskForProfessional } from '../tasks/tasks.service.js';
 import { AppError } from '../../errors/app-error.js';
 import { Prisma, type SharedArea } from '../../generated/prisma/client.js';
 import { prisma } from '../../lib/prisma.js';
@@ -19,7 +20,7 @@ import { READ_TYPES, type ReadMarkItem, type ReadType } from './read-marks.schem
 export type ReadStatus = 'NAO_LIDO' | 'LIDO' | 'ATUALIZADO';
 export type ReadInfo = { readStatus: ReadStatus; readAt: string | null };
 
-type Column = 'thoughtRecordId' | 'tensionEpisodeId' | 'actionId' | 'aboutId' | 'planEntryId';
+type Column = 'thoughtRecordId' | 'tensionEpisodeId' | 'actionId' | 'aboutId' | 'planEntryId' | 'taskId';
 
 // Para cada tipo: a área do aviso de privacidade (DEC-042), a coluna da marca e a área que o
 // paciente libera para a profissional (DEC-097).
@@ -29,6 +30,7 @@ const AREA: Record<ReadType, { privacy: PrivacyArea; column: Column; shared: Sha
   ACTION: { privacy: 'actions', column: 'actionId', shared: 'ACTIONS' },
   ABOUT_ME: { privacy: 'aboutMe', column: 'aboutId', shared: 'ABOUT_ME' },
   PLAN_ENTRY: { privacy: 'plans', column: 'planEntryId', shared: 'PLANS' },
+  TASK: { privacy: 'tasks', column: 'taskId', shared: 'TASKS' },
 };
 
 // Função pura, para testar as bordas sem banco.
@@ -57,6 +59,7 @@ async function recordsOf(type: ReadType, patientId: string, ids?: string[]) {
   if (type === 'THOUGHT_RECORD') return prisma.thoughtRecord.findMany({ where, select });
   if (type === 'TENSION_EPISODE') return prisma.tensionEpisode.findMany({ where, select });
   if (type === 'ABOUT_ME') return prisma.patientAbout.findMany({ where, select });
+  if (type === 'TASK') return prisma.homeworkTask.findMany({ where: { ...where, respondedAt: { not: null } }, select });
   if (type === 'PLAN_ENTRY') return prisma.planEntry.findMany({ where, select });
   return prisma.behavioralAction.findMany({ where, select });
 }
@@ -72,6 +75,7 @@ async function readAtByRecord(therapistId: string, type: ReadType, ids: string[]
       actionId: true,
       aboutId: true,
       planEntryId: true,
+      taskId: true,
       readAt: true,
     },
   });
@@ -121,7 +125,9 @@ export async function countUnread(
             ? await prisma.patientAbout.findMany({ where, select })
             : type === 'PLAN_ENTRY'
               ? await prisma.planEntry.findMany({ where, select })
-              : await prisma.behavioralAction.findMany({ where, select });
+              : type === 'TASK'
+                ? await prisma.homeworkTask.findMany({ where: { ...where, respondedAt: { not: null } }, select })
+                : await prisma.behavioralAction.findMany({ where, select });
     const readAt = await readAtByRecord(
       therapistId,
       type,
@@ -198,7 +204,9 @@ export function createReadMarksService(
                   ? { therapistId_aboutId: { therapistId, aboutId: id } }
                   : column === 'planEntryId'
                     ? { therapistId_planEntryId: { therapistId, planEntryId: id } }
-                    : { therapistId_actionId: { therapistId, actionId: id } },
+                    : column === 'taskId'
+                      ? { therapistId_taskId: { therapistId, taskId: id } }
+                      : { therapistId_actionId: { therapistId, actionId: id } },
           create: { therapistId, patientId, [column]: id, readAt },
           update: { readAt },
         });
@@ -292,7 +300,11 @@ export function createReadMarksService(
       about = current ? await withReadStatus(therapistId, 'ABOUT_ME', [current]) : [];
     }
 
+    const tasks = covered.has('TASK')
+      ? await withReadStatus(therapistId, 'TASK', (await createTasksService().list(patientId, await pendingIds('TASK'))).map((task) => taskForProfessional(task, sharedAreas)))
+      : null;
     return {
+      tasks,
       thoughtRecords: thought,
       tensionEpisodes: tension,
       actions: action,
@@ -301,6 +313,7 @@ export function createReadMarksService(
       // Meus Planos (DEC-094): null sem o aceite da versão que o cita.
       planEntries,
       counts: {
+        tasks: tasks?.length ?? null,
         thoughtRecords: thought?.length ?? null,
         tensionEpisodes: tension?.length ?? null,
         actions: action?.length ?? null,
