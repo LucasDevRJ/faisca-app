@@ -856,6 +856,20 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       expect(res.body.user.privacyAreas).toMatchObject({ plans: true, activityPhotos: false });
     });
 
+    it('app antigo depois de um aceite mais novo: não rebaixa a versão nem a data', async () => {
+      const user = await createConfirmedUser({ email: EMAIL, password: PASSWORD });
+      const agent = await loginAgent();
+      const before = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+
+      const res = await agent.post('/auth/accept-privacy').send({ acceptPrivacy: true });
+
+      expect(res.status).toBe(200);
+      expect(res.body.user.privacyAreas.activityPhotos).toBe(true);
+      const after = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+      expect(after.privacyVersion).toBe(PRIVACY_VERSION);
+      expect(after.privacyAcceptedAt).toEqual(before.privacyAcceptedAt);
+    });
+
     it('versão diferente da atual: 409 e nada muda', async () => {
       const user = await createConfirmedUser({ email: EMAIL, password: PASSWORD, privacyVersion: '2026-10' });
       const agent = await loginAgent();
@@ -873,6 +887,18 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       const withoutVersion = { ...signupBody, privacyVersion: undefined };
       expect((await request(app).post('/auth/signup').send(withoutVersion)).status).toBe(202);
       expect((await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } })).privacyVersion).toBe(LEGACY_SHOWN_VERSION);
+
+      // Mesma resposta exista o e-mail ou não (DEC-025): a versão é conferida antes de buscar a conta.
+      await createConfirmedUser({ email: 'confirmada@faisca.test' });
+      mailer.sent.length = 0;
+      for (const email of ['confirmada@faisca.test', EMAIL]) {
+        const before = await prisma.user.findUniqueOrThrow({ where: { email } });
+        const res = await request(app).post('/auth/signup').send({ ...signupBody, email, privacyVersion: '2026-10' });
+        expect(res.status, email).toBe(409);
+        expect(res.body.error.code).toBe('PRIVACY_VERSION_OUTDATED');
+        expect(await prisma.user.findUniqueOrThrow({ where: { email } })).toEqual(before);
+      }
+      expect(mailer.sent).toHaveLength(0);
 
       const other = { ...signupBody, email: 'outra.pessoa@faisca.test', privacyVersion: '2026-10' };
       const res = await request(app).post('/auth/signup').send(other);

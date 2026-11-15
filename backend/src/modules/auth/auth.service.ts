@@ -97,6 +97,8 @@ function invalidToken() {
 type PreparedSignup = Omit<SignupInput, 'password' | 'privacyVersion'> & {
   passwordHash: string;
   privacyVersion: PrivacyVersion;
+  // O que o app mandou (undefined = app antigo), para não rebaixar um aceite mais novo.
+  shownVersion: string | undefined;
 };
 
 // Os dados de um cadastro, guardados no link de confirmação que ele gerou (DEC-072).
@@ -228,7 +230,12 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
     // resposta, que fica só com banco e e-mail.
     // A versão do aviso é conferida aqui, antes da resposta: o cadastro em si roda depois dela.
     async prepareSignup({ password, privacyVersion, ...input }: SignupInput): Promise<PreparedSignup> {
-      return { ...input, privacyVersion: versionToRecord(privacyVersion), passwordHash: await hashPassword(password) };
+      return {
+        ...input,
+        privacyVersion: versionToRecord(privacyVersion),
+        shownVersion: privacyVersion,
+        passwordHash: await hashPassword(password),
+      };
     },
 
     // A resposta é sempre a mesma, exista ou não a conta (DEC-025). Roda depois da resposta (DEC-073).
@@ -254,7 +261,10 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
             where: { id: existing.id },
             data: {
               privacyAcceptedAt: new Date(),
-              privacyVersion: input.privacyVersion,
+              // Um cadastro refeito por app antigo não rebaixa um aceite mais novo (DEC-105).
+              privacyVersion: input.shownVersion === undefined
+                ? versionToRecord(undefined, existing.privacyVersion)
+                : input.privacyVersion,
               ...(input.profiles.therapist && {
                 professionalKind: input.professionalKind ?? existing.professionalKind ?? 'PSICOLOGIA',
               }),
@@ -453,9 +463,15 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
     // versão, como no cadastro (DEC-036).
     // Grava a versão que o app mostrou (DEC-105): um app antigo não libera área de um texto que não mostrou.
     async acceptPrivacy(userId: string, shownVersion?: string): Promise<User> {
+      // Confere antes de ler a conta: versão errada é 409 sem tocar no banco.
+      versionToRecord(shownVersion);
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+      const privacyVersion = versionToRecord(shownVersion, user.privacyVersion);
+      // App antigo depois de um aceite mais novo: nada muda, nem a data do aceite.
+      if (privacyVersion === user.privacyVersion && shownVersion === undefined) return user;
       return prisma.user.update({
         where: { id: userId },
-        data: { privacyAcceptedAt: new Date(), privacyVersion: versionToRecord(shownVersion) },
+        data: { privacyAcceptedAt: new Date(), privacyVersion },
       });
     },
 

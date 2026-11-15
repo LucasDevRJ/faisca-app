@@ -50,8 +50,13 @@ export const PRIVACY_VERSION: PrivacyVersion = '2026-11.5';
 // mostram, e não a atual, para ninguém aceitar sem ler um texto novo. A faixa continua até atualizar.
 export const LEGACY_SHOWN_VERSION: PrivacyVersion = '2026-11.4';
 
-export function versionToRecord(shownVersion: string | undefined): PrivacyVersion {
-  if (shownVersion === undefined) return LEGACY_SHOWN_VERSION;
+// current: a versão que a conta já tem. O aceite de um app antigo nunca rebaixa um aceite mais novo
+// (achado do revisor-seguranca): a pessoa que aceitou a atual noutro aparelho continua com ela.
+export function versionToRecord(shownVersion: string | undefined, current: string | null = null): PrivacyVersion {
+  if (shownVersion === undefined) {
+    const kept = PRIVACY_VERSIONS.indexOf(current as PrivacyVersion);
+    return kept > PRIVACY_VERSIONS.indexOf(LEGACY_SHOWN_VERSION) ? PRIVACY_VERSIONS[kept]! : LEGACY_SHOWN_VERSION;
+  }
   if (shownVersion === PRIVACY_VERSION) return PRIVACY_VERSION;
   throw new AppError(
     409,

@@ -2383,6 +2383,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
     a API nova já está no ar e o front ainda não, DEC-056): grava a **última versão que esses apps
     mostram** (`LEGACY_SHOWN_VERSION`, hoje a `2026-11.4`). Ninguém fica travado, e a área nova só
     libera com o app novo; a faixa continua aparecendo até atualizar;
+  - **nunca rebaixa:** o aceite (ou o cadastro refeito) de um app antigo não troca uma versão mais nova
+    já gravada, nem a data do aceite: quem aceitou a atual noutro aparelho continua com ela (achado do
+    `revisor-seguranca`);
   - a faixa do aviso calcula o que falta liberar pelas áreas que **a API** manda, e não pela lista do
     app. Com uma área que o app não conhece, ela pede para atualizar o app em vez de oferecer o aceite
     de uma versão sem área nova, com um texto antigo.
@@ -2390,7 +2393,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   antigo mostrava o texto da versão anterior e o servidor gravava a nova: a pessoa liberava uma área
   (aqui, as fotos das atividades) sem ter lido o texto dela, o que a DEC-064, a DEC-065 e a DEC-104
   queriam evitar. A brecha já existia nas trocas de versão anteriores.
-- **Limite conhecido:** a cada versão nova, `LEGACY_SHOWN_VERSION` fica onde está (é a versão dos apps
+- **Limite conhecido:** no deploy deste PR, o front só deve ir ao ar depois de a API estar no ar
+  (`/health` com o commit, DEC-056): nos minutos entre os dois, a API antiga recusa (400) o aceite que
+  o app novo manda com a versão. A cada versão nova, `LEGACY_SHOWN_VERSION` fica onde está (é a versão dos apps
   de antes desta regra); os apps novos mandam a versão. O texto da faixa de versão sem área nova
   (`PrivacyVersionConsent`) ainda é escrito à mão a cada versão.
 
