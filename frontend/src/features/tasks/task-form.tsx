@@ -55,7 +55,7 @@ export function TaskResponseForm({ task, pending, error, onCancel, onSubmit }: C
         <span>{value === 'RESPONDIDA' ? 'Responder' : RESPONSE_LABELS[value]}</span>
       </label>)}
     </fieldset>
-    <TextAreaField label={status === 'RESPONDIDA' ? 'Quer escrever sobre a tarefa?' : status === 'NAO_CONSEGUI' ? 'Quer contar o que aconteceu?' : 'Quer comentar?'} hint={status === 'RESPONDIDA' ? undefined : 'Opcional.'} value={text} onChange={(e) => setText(e.target.value)} rows={8} limit={10000} error={invalid && ((status === 'RESPONDIDA' && !text.trim()) || text.trim().length > 10000) ? 'Escreva sua resposta em até 10.000 caracteres.' : apiError?.fields?.responseText} />
+    <TextAreaField label={status === 'RESPONDIDA' ? 'Sua resposta (obrigatória)' : status === 'NAO_CONSEGUI' ? 'Quer contar o que aconteceu?' : 'Quer comentar?'} hint={status === 'RESPONDIDA' ? undefined : 'Opcional.'} value={text} onChange={(e) => setText(e.target.value)} rows={8} limit={10000} error={invalid && ((status === 'RESPONDIDA' && !text.trim()) || text.trim().length > 10000) ? 'Escreva sua resposta em até 10.000 caracteres.' : apiError?.fields?.responseText} />
     <p className="text-sm text-muted">Você pode editar a resposta até a próxima consulta. Sem consulta marcada, não há prazo.</p>
     <DialogActions submitLabel="Salvar resposta" pending={pending} onCancel={onCancel} />
   </DialogForm>;

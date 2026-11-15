@@ -50,7 +50,7 @@ it.each(['Não consegui fazer', 'Não faz sentido para mim agora'])('salva %s se
 it('responde em texto livre e permite editar enquanto o prazo está aberto', async () => {
   const user = userEvent.setup(); const writes = tasksApi(fakeTask); renderRoute('/tarefas');
   await user.click(await screen.findByRole('button', { name: /Responder.*Reflexão fictícia/ }));
-  await user.type(screen.getByLabelText('Quer escrever sobre a tarefa?'), 'Minha reflexão fictícia.');
+  await user.type(screen.getByLabelText('Sua resposta (obrigatória)'), 'Minha reflexão fictícia.');
   await user.click(screen.getByRole('button', { name: 'Salvar resposta' }));
   expect(await screen.findByRole('button', { name: /Editar resposta.*Reflexão fictícia/ })).toBeInTheDocument();
   expect(writes).toEqual([{ responseStatus: 'RESPONDIDA', responseText: 'Minha reflexão fictícia.' }]);
@@ -65,10 +65,10 @@ it('exibe erro da API sem perder a resposta digitada', async () => {
   const user = userEvent.setup(); tasksApi(fakeTask);
   server.use(http.put('*/api/tasks/:id/response', () => apiError(409, 'TASK_RESPONSE_FINAL', 'A resposta ficou final na consulta.')));
   renderRoute('/tarefas'); await user.click(await screen.findByRole('button', { name: /Responder.*Reflexão fictícia/ }));
-  await user.type(screen.getByLabelText('Quer escrever sobre a tarefa?'), 'Reflexão fictícia preservada.');
+  await user.type(screen.getByLabelText('Sua resposta (obrigatória)'), 'Reflexão fictícia preservada.');
   await user.click(screen.getByRole('button', { name: 'Salvar resposta' }));
   expect(await screen.findByText('A resposta ficou final na consulta.')).toBeInTheDocument();
-  expect(screen.getByLabelText('Quer escrever sobre a tarefa?')).toHaveValue('Reflexão fictícia preservada.');
+  expect(screen.getByLabelText('Sua resposta (obrigatória)')).toHaveValue('Reflexão fictícia preservada.');
 });
 it('profissional vê tarefas compartilhadas só para leitura', async () => {
   const patientId = '00000000-0000-4000-8000-00000000000a';
@@ -112,7 +112,7 @@ it('edita a tarefa antes de responder e associa o erro ao campo de resposta', as
   expect(writes).toEqual([{ title: 'Reflexão fictícia', description: 'Nova descrição fictícia.', agreedLinkId: null }]);
   await user.click(screen.getByRole('button', { name: /Responder.*Reflexão fictícia/ }));
   await user.click(screen.getByRole('button', { name: 'Salvar resposta' }));
-  const field = screen.getByLabelText('Quer escrever sobre a tarefa?');
+  const field = screen.getByLabelText('Sua resposta (obrigatória)');
   expect(field).toHaveAttribute('aria-invalid', 'true');
   expect(field).toHaveAccessibleDescription('Escreva sua resposta em até 10.000 caracteres.');
 });
