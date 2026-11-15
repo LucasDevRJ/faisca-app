@@ -1,3 +1,4 @@
+import type { Task } from '../tasks/tasks-api';
 import { api } from '../../lib/api';
 import type { AboutMe } from '../about-me/about-me-api';
 import type { Action } from '../actions/actions-api';
@@ -13,7 +14,7 @@ export type ReadStatus = 'NAO_LIDO' | 'LIDO' | 'ATUALIZADO';
 export type ReadInfo = { readStatus: ReadStatus; readAt: string | null };
 export type WithRead<T> = T & ReadInfo;
 
-export type ReadType = 'THOUGHT_RECORD' | 'TENSION_EPISODE' | 'ACTION' | 'ABOUT_ME' | 'PLAN_ENTRY';
+export type ReadType = 'THOUGHT_RECORD' | 'TENSION_EPISODE' | 'ACTION' | 'ABOUT_ME' | 'PLAN_ENTRY' | 'TASK';
 export type ReadItem = { type: ReadType; id: string };
 
 // Área sem o aceite do aviso vem como null (a tela simplesmente não a mostra).
@@ -25,12 +26,14 @@ export type UnreadResponse = {
   aboutMe: WithRead<AboutMe>[] | null;
   // Os registros do Meus Planos (DEC-094); o plano em si não entra.
   planEntries: WithRead<PlanEntry>[] | null;
+  tasks: WithRead<Task>[] | null;
   counts: {
     thoughtRecords: number | null;
     tensionEpisodes: number | null;
     actions: number | null;
     aboutMe: number | null;
     planEntries: number | null;
+    tasks: number | null;
   };
 };
 

@@ -245,7 +245,7 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   por um botão, e não já preenchido.
 
 ## Tarefas (DEC-106, #150)
-**API preparada; telas e ativação do aviso na segunda etapa.**
+**Paciente cria e responde; a profissional vinculada só lê quando a área estiver liberada e aceita.**
 - Tarefa única combinada na consulta, separada dos planos que têm registros recorrentes.
 - Só o paciente cria: descrição obrigatória (1–5000 caracteres), título opcional (1–120) e
   "Combinada com" opcional, escolhida dentre os vínculos ativos. Essa escolha não libera a área.
@@ -409,7 +409,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Sair de um aparelho remove a inscrição de push daquela sessão; trocar a senha remove as dos outros aparelhos e mantém a do aparelho atual; "Sair de todos os aparelhos" remove todas (DEC-085, DEC-089).
 
 ## Privacidade (LGPD)
-- Tarefas exigem a versão `2026-11.6` (DEC-106). A API a conhece na primeira etapa; o front só a ativa quando exibe o texto novo.
+- Tarefas exigem a versão `2026-11.6` (DEC-106), apresentada junto com o texto novo no app.
 - O sistema coleta nome, e-mail e senha (guardada só como hash), os registros e o que o aviso de privacidade descreve (preferências da conta, dados de segurança como os da verificação em duas etapas, vínculos e lembretes); nada além disso.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.

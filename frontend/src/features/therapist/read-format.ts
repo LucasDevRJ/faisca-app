@@ -20,6 +20,7 @@ export function unreadBreakdown(counts: UnreadResponse['counts']): string {
   if (counts.actions) parts.push(plural(counts.actions, 'ação', 'ações'));
   if (counts.aboutMe) parts.push('o “Sobre mim”');
   if (counts.planEntries) parts.push(plural(counts.planEntries, 'registro de plano', 'registros de plano'));
+  if (counts.tasks) parts.push(plural(counts.tasks, 'resposta de tarefa', 'respostas de tarefas'));
   return parts.join(' · ');
 }
 
@@ -29,7 +30,8 @@ export function unreadTotal(counts: UnreadResponse['counts']): number {
     (counts.tensionEpisodes ?? 0) +
     (counts.actions ?? 0) +
     (counts.aboutMe ?? 0) +
-    (counts.planEntries ?? 0)
+    (counts.planEntries ?? 0) +
+    (counts.tasks ?? 0)
   );
 }
 

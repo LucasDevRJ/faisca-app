@@ -28,6 +28,8 @@ export type SessionUser = {
     plans: boolean;
     // Fotos das atividades (DEC-103, DEC-104).
     activityPhotos: boolean;
+    // Tarefas (DEC-106).
+    tasks: boolean;
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;

@@ -37,14 +37,15 @@ const ABOUT_ME = '2026-11-sobre-mim';
 const REMINDERS = '2026-11-lembretes';
 const PLANS = '2026-11-meus-planos';
 const ACTIVITY_PHOTOS = '2026-11-fotos-atividades';
+const TASKS = '2026-11-tarefas';
 
 describe('card de Novidades (DEC-054, DEC-058)', () => {
   it('a paciente vê a novidade que é para ela até tocar em "Entendi"; fica no banco', async () => {
     const agent = await loginAgent();
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(ACTIVITY_PHOTOS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(TASKS);
 
-    const seen = await agent.post('/auth/announcement-seen').send({ announcement: ACTIVITY_PHOTOS });
+    const seen = await agent.post('/auth/announcement-seen').send({ announcement: TASKS });
     expect(seen.status).toBe(200);
     expect(seen.body.user.pendingAnnouncement).toBeNull();
     expect((await request.agent(app).post('/auth/login').send({ email: PATIENT, password: PASSWORD })).body.user
@@ -55,10 +56,10 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     await createConfirmedUser({ email: 'terapeuta@faisca.test', patient: false, therapist: true });
     const agent = await loginAgent('terapeuta@faisca.test');
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(ACTIVITY_PHOTOS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(TASKS);
     // A anterior não pode ser marcada no lugar da que está aparecendo.
     expect((await agent.post('/auth/announcement-seen').send({ announcement: MURAL })).status).toBe(400);
-    expect((await agent.post('/auth/announcement-seen').send({ announcement: ACTIVITY_PHOTOS })).status).toBe(200);
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: TASKS })).status).toBe(200);
   });
 
   it('conta nova não recebe como novidade o que já existia no cadastro', async () => {
@@ -90,21 +91,22 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     const therapist = { patient: false, therapist: true };
     const both = { patient: true, therapist: true };
 
-    expect(pendingAnnouncement(null, patient)).toBe(ACTIVITY_PHOTOS);
+    expect(pendingAnnouncement(null, patient)).toBe(TASKS);
     // O Meus Planos é para os dois perfis (DEC-095): a terapeuta também o recebe.
-    expect(pendingAnnouncement(null, therapist)).toBe(ACTIVITY_PHOTOS);
+    expect(pendingAnnouncement(null, therapist)).toBe(TASKS);
     // O "Sobre mim" e os lembretes são só de quem é paciente (DEC-082, DEC-090): a terapeuta que já viu
     // o mural não tem nada entre ele e o Meus Planos.
-    expect(pendingAnnouncement(MURAL, therapist)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(READ_MARKS, both)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(PHOTOS, both)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(BACKUPS, both)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(REMINDERS, both)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(REMINDERS, therapist)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(PLANS, both)).toBe(ACTIVITY_PHOTOS);
-    expect(pendingAnnouncement(ACTIVITY_PHOTOS, both)).toBeNull();
-    expect(pendingAnnouncement('desconhecida', patient)).toBe(ACTIVITY_PHOTOS);
+    expect(pendingAnnouncement(MURAL, therapist)).toBe(TASKS);
+    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(TASKS);
+    expect(pendingAnnouncement(READ_MARKS, both)).toBe(TASKS);
+    expect(pendingAnnouncement(PHOTOS, both)).toBe(TASKS);
+    expect(pendingAnnouncement(BACKUPS, both)).toBe(TASKS);
+    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(TASKS);
+    expect(pendingAnnouncement(REMINDERS, both)).toBe(TASKS);
+    expect(pendingAnnouncement(REMINDERS, therapist)).toBe(TASKS);
+    expect(pendingAnnouncement(PLANS, both)).toBe(TASKS);
+    expect(pendingAnnouncement(ACTIVITY_PHOTOS, both)).toBe(TASKS);
+    expect(pendingAnnouncement(TASKS, both)).toBeNull();
+    expect(pendingAnnouncement('desconhecida', patient)).toBe(TASKS);
   });
 });

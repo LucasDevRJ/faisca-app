@@ -93,7 +93,7 @@ function plansApi({ plans = [fakePlan()], entries = [] as PlanEntry[] } = {}) {
 }
 
 describe('abas do paciente', () => {
-  it('sem plano: a aba fica escondida, a grade continua 2×2 e um link leva a criar o primeiro', async () => {
+  it('sem plano: a aba fica escondida, a grade tem 3 colunas com Tarefas e um link leva a criar o primeiro', async () => {
     plansApi({ plans: [] });
     renderRoute('/tensao');
 
@@ -101,7 +101,7 @@ describe('abas do paciente', () => {
     expect(link).toHaveAttribute('href', '/planos/novo');
     const nav = screen.getByRole('navigation', { name: 'Registros' });
     expect(within(nav).queryByRole('link', { name: 'Meus Planos' })).not.toBeInTheDocument();
-    expect(nav).toHaveClass('grid-cols-2');
+    expect(nav).toHaveClass('grid-cols-3');
   });
 
   it('com plano: a aba aparece, a grade passa a 3 colunas e o link sai', async () => {
@@ -117,7 +117,7 @@ describe('abas do paciente', () => {
   it('sem o aceite da versão que cita o Meus Planos: pede o aceite na área', async () => {
     server.use(
       http.get('*/api/auth/me', () =>
-        HttpResponse.json({ user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { ...fakeUser.privacyAreas, plans: false } } }),
+        HttpResponse.json({ user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { ...fakeUser.privacyAreas, plans: false, tasks: false } } }),
       ),
     );
     renderRoute('/planos');
@@ -415,8 +415,8 @@ describe('visão da terapeuta', () => {
     renderRoute(`/pacientes/${PATIENT_ID}`);
 
     const tabs = await screen.findByRole('group', { name: 'Tipo de registro' });
-    await waitFor(() => expect(within(tabs).getAllByRole('button')).toHaveLength(4));
-    expect(tabs).toHaveClass('grid-cols-2');
+    await waitFor(() => expect(within(tabs).getAllByRole('button')).toHaveLength(5));
+    expect(tabs).toHaveClass('grid-cols-3');
     expect(screen.queryByRole('button', { name: 'Criar plano para Paula' })).not.toBeInTheDocument();
   });
 

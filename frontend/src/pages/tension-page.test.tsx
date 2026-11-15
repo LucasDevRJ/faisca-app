@@ -192,7 +192,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
     expect(banner).toHaveTextContent(
-      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos e as fotos das atividades. Você só precisa aceitar a nova versão para usar essas partes.',
+      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades e as Tarefas. Você só precisa aceitar a nova versão para usar essas partes.',
     );
   });
 

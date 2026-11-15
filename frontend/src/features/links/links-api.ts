@@ -18,6 +18,7 @@ export const SHARED_AREAS = [
   'ABOUT_ME',
   'APPOINTMENTS',
   'PLANS',
+  'TASKS',
 ] as const;
 export type SharedArea = (typeof SHARED_AREAS)[number];
 

@@ -210,7 +210,7 @@ describe('página do paciente → Sobre a Paula (terapeuta)', () => {
           actions: [],
           aboutMe: [],
           planEntries: [],
-          counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 0, planEntries: 0 },
+          counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 0, planEntries: 0, tasks: 0 },
           ...unread,
         }),
       ),
@@ -252,7 +252,7 @@ describe('página do paciente → Sobre a Paula (terapeuta)', () => {
       { ...about, readStatus: 'ATUALIZADO', readAt: '2026-09-20T12:00:00.000Z' },
       {
         aboutMe: [{ ...about, readStatus: 'ATUALIZADO', readAt: '2026-09-20T12:00:00.000Z' }],
-        counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 1, planEntries: 0 },
+        counts: { thoughtRecords: 0, tensionEpisodes: 0, actions: 0, aboutMe: 1, planEntries: 0, tasks: 0 },
       },
     );
     renderRoute(`/pacientes/${PATIENT_ID}?aba=para-ler`);

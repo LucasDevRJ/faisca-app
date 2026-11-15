@@ -19,7 +19,7 @@ import {
 } from './therapist-api';
 import type { PlanInput } from '../plans/plans-api';
 
-const THERAPIST_KEY = ['therapist'] as const;
+export const THERAPIST_KEY = ['therapist'] as const;
 
 // 403 é resposta definitiva (vínculo desfeito ou inexistente): tentar de novo não adianta.
 function retryUnlessForbidden(failureCount: number, error: unknown) {
