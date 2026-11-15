@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
+import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -14,13 +15,32 @@ function sessionWithAccept() {
   let accepted = false;
   server.use(
     http.get('*/api/auth/me', () => HttpResponse.json({ user: accepted ? fakeUser : outdatedVersion })),
-    http.post('*/api/auth/accept-privacy', () => {
+    http.post('*/api/auth/accept-privacy', async ({ request }) => {
+      // Manda a versão que este app mostra (DEC-105).
+      expect(await request.json()).toEqual({ acceptPrivacy: true, privacyVersion: SHOWN_PRIVACY_VERSION });
       accepted = true;
       return HttpResponse.json({ user: fakeUser });
     }),
   );
   return { wasAccepted: () => accepted };
 }
+
+describe('faixa com uma área que este app ainda não conhece (DEC-105)', () => {
+  it('pede para atualizar o app, sem oferecer o aceite de um texto antigo', async () => {
+    server.use(
+      http.get('*/api/auth/me', () =>
+        HttpResponse.json({
+          user: { ...outdatedVersion, privacyAreas: { ...fakeUser.privacyAreas, areaFuturaFicticia: false } },
+        }),
+      ),
+    );
+    renderRoute('/registros');
+
+    expect(await screen.findByText(/Atualize o app para ver o que mudou/)).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'O aviso de privacidade mudou' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Li e concordo com o aviso de privacidade.' })).not.toBeInTheDocument();
+  });
+});
 
 describe('faixa do aviso de privacidade sem área nova', () => {
   it('aparece para o paciente, sem bloquear, e some depois do aceite', async () => {

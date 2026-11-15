@@ -1,5 +1,5 @@
-import type { Request, RequestHandler, Response } from 'express';
-import { AppError } from '../../errors/app-error.js';
+import type { Request, RequestHandler } from 'express';
+import { assertPhotoBody, sendPhoto } from '../../lib/photos.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import {
   actionIdSchema,
@@ -17,13 +17,6 @@ import type { ActionsService } from './actions.service.js';
 // Contexto de paciente: o userId sai sempre da sessão, nunca do corpo ou da URL.
 function owner(req: Request) {
   return { userId: getAuthUser(req).id, id: actionIdSchema.parse(req.params).id };
-}
-
-// Sem cache nenhum (DEC-066): a foto é dado de saúde e não pode ficar no disco do aparelho depois
-// de sair da conta ou de desfazer o vínculo. O custo é baixar de novo a cada visita.
-function sendPhoto(res: Response, image: Uint8Array) {
-  res.set({ 'Content-Type': 'image/webp', 'Cache-Control': 'no-store' });
-  res.status(200).send(Buffer.from(image));
 }
 
 export function createActionsController(service: ActionsService) {
@@ -68,10 +61,7 @@ export function createActionsController(service: ActionsService) {
 
   const addPhoto: RequestHandler = async (req, res) => {
     const { userId, id } = owner(req);
-    // Sem Content-Type de imagem, o express.raw não lê o corpo.
-    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-      throw new AppError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Envie uma foto em JPEG, PNG ou WebP.');
-    }
+    assertPhotoBody(req.body);
     res.status(201).json(await service.addPhoto(userId, id, req.body));
   };
 

@@ -117,6 +117,25 @@ describe('/conta: quem me acompanha', () => {
     await waitFor(() => expect(writes[0]?.body).toEqual({ areas: [] }));
   });
 
+  it('as fotos das atividades só aparecem com Atividades marcada, e saem junto com ela (DEC-104)', async () => {
+    const writes = linkApi([psychologist, psychiatrist]);
+    const user = userEvent.setup();
+    renderRoute('/conta');
+
+    const ana = await screen.findByRole('article', { name: 'Ana Fictícia' });
+    expect(within(ana).queryByRole('checkbox', { name: 'Fotos das atividades' })).not.toBeInTheDocument();
+    await user.click(within(ana).getByRole('checkbox', { name: 'Atividades' }));
+    await user.click(within(ana).getByRole('checkbox', { name: 'Fotos das atividades' }));
+    await user.click(within(ana).getByRole('checkbox', { name: 'Atividades' }));
+    expect(within(ana).queryByRole('checkbox', { name: 'Fotos das atividades' })).not.toBeInTheDocument();
+    await user.click(within(ana).getByRole('checkbox', { name: 'Atividades' }));
+    await user.click(within(ana).getByRole('checkbox', { name: 'Fotos das atividades' }));
+    await user.click(within(ana).getByRole('button', { name: /Salvar o que Ana vê/ }));
+
+    // Na ordem das telas: as atividades e, logo depois, as fotos delas.
+    await waitFor(() => expect(writes[0]?.body).toEqual({ areas: ['ACTIVITIES', 'ACTIVITY_PHOTOS'] }));
+  });
+
   it('desfaz só o vínculo escolhido', async () => {
     const writes = linkApi([psychologist, psychiatrist]);
     const user = userEvent.setup();
@@ -181,6 +200,7 @@ describe('aviso de novo vínculo com duas profissionais', () => {
     await user.click(within(ana).getByRole('button', { name: /Marcar tudo/ }));
     expect(within(ana).getByText('Ainda não salvo.')).toBeInTheDocument();
     expect(within(ana).getByRole('checkbox', { name: 'Fotos da Ação' })).toBeChecked();
+    expect(within(ana).getByRole('checkbox', { name: 'Fotos das atividades' })).toBeChecked();
     expect(within(ana).getByRole('button', { name: /Marcar tudo/ })).toBeDisabled();
     await user.click(within(ana).getByRole('button', { name: /Salvar o que Ana vê/ }));
 

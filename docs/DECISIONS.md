@@ -2301,7 +2301,105 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o modelo continua guardando o paciente como dono, sem identificar na tela
   quem iniciou cada plano. O formulário não permite à profissional criar registros do paciente.
 
-## DEC-103 — Tarefas criadas e respondidas pelo paciente
+## DEC-103 — Fotos nas atividades (API)
+- **Decisão (#197, com as respostas do usuário):**
+  - **as mesmas regras das fotos da Ação (DEC-064):** até 10 por atividade, tratadas em `lib/images.ts`
+    (sem metadados, 2560 px e miniatura de 400 px, até 20 MB e 50 MP, tipo conferido pelos bytes),
+    numa tabela à parte (`ActivityPhoto`, em cascata com a atividade), servidas sem cache (DEC-066) e
+    com 60 envios por hora por conta. O que as duas áreas usam ficou em `lib/photos.ts`;
+  - **quando:** com a atividade **aberta** (planejada ou pendente), sem prazo; na **concluída**, até a
+    **próxima consulta** depois da conclusão, como na Ação (prazo congelado em `photosDeadlineAt` na
+    primeira leitura do paciente com uma consulta pela frente). A **não realizada** não recebe fotos
+    (409 `PHOTOS_NOT_ALLOWED`), mas as postas com ela aberta **saem a qualquer hora** (escolha do
+    usuário: é dado de saúde, e o paciente não pode ficar sem como tirar); depois do prazo, 409
+    `PHOTOS_CLOSED`. Mexer nas fotos não
+    muda nenhum campo da atividade: a concluída segue imutável (regra 2), como a Ação avaliada;
+  - a atividade passa a guardar **quando foi concluída** (`completedAt`), na transição e no registro
+    já concluído. As já concluídas recebem o `updatedAt` na migration; um CHECK garante que só a
+    concluída tem essa data;
+  - **teto de 300 fotos por conta somando a Ação e as atividades** (DEC-074), com a conta e depois o
+    registro travados na transação, nas duas áreas: envios juntos nas duas não passam do teto. A
+    mensagem do limite passa a falar em "ação ou atividade";
+  - **área própria no vínculo** (`ACTIVITY_PHOTOS`, "fotos das atividades"), como a das fotos da Ação:
+    a imagem pede Atividades e as fotos liberadas; sem a caixa, a lista da profissional vem com
+    `photos: []`, e sem a agenda, sem o prazo. Os vínculos que já existiam começam sem ela;
+  - **área nova no aviso de privacidade** (versão `2026-11.5`, `activityPhotos`): as fotos fazem parte
+    do registro de saúde e podem mostrar outras pessoas. A API **conhece** a versão, mas a atual
+    segue a `2026-11.4` até o PR das telas, que traz o texto (como na DEC-064 e na DEC-065). Sem o
+    aceite, as atividades funcionam e só as fotos pedem o aceite (paciente e profissional);
+  - a lista de atividades traz `photos` (id e data), `photosDeadline` e `photosOpen`; as atividades
+    não têm "Lido", então foto nova não marca "atualizado";
+  - **achados do `revisor-seguranca`, valendo também para a Ação e a foto de perfil:** a fila de
+    imagens (`lib/images.ts`) passa a ter teto de **4** (a que está sendo tratada e as que esperam),
+    porque cada envio esperando guarda o arquivo inteiro na memória; acima disso, 503
+    `IMAGE_QUEUE_FULL` na hora. E o prazo das fotos é conferido de novo na transação, com o registro
+    travado, porque o tratamento pode terminar depois de a consulta começar.
+- **Motivo:** pedido do usuário (#197): guardar como foi a atividade, como já dá na Ação. Seguir as
+  regras da Ação mantém o app coerente e reaproveita o que já passou pela revisão de segurança.
+- **Limite conhecido:** a lista da profissional mostra quantas fotos existem e quando entraram já com
+  a caixa liberada, antes do aceite da versão nova; a imagem pede o aceite (igual à Ação, escolha do
+  usuário). Cada área tem o próprio contador de 60 envios por hora (até 120 somando as
+  duas). As telas e o texto do aviso ficam para o PR seguinte. O gatilho para sair do Postgres
+  (1 GB de fotos, DEC-064) passa a contar as duas áreas.
+
+## DEC-104 — Fotos nas atividades (telas) e aviso de privacidade versão 12
+- **Decisão (#197, sobre a API da DEC-103, com os textos aprovados pelo usuário):**
+  - **no cartão da atividade**, o mesmo visual das fotos da Ação (DEC-065): miniaturas, a foto grande
+    numa janela com Anterior e Próxima, "Adicionar fotos" (várias de uma vez, enviadas uma por vez) e
+    "Remover foto" com confirmação. **Só no cartão**, e não na janela "Conta como foi?": logo depois
+    de salvar, o cartão já oferece as fotos, e a janela continua curta (escolha do usuário);
+  - **por estado:** aberta, "Adicionar fotos" sem prazo; concluída, com o prazo da próxima consulta,
+    e depois do prazo só para ver; não realizada com fotos, o aviso "Esta atividade não aconteceu,
+    então não recebe fotos novas. Se quiser, pode tirar as que estão aqui." e "Remover foto"; sem
+    fotos e sem como pôr, o cartão não fala de fotos. O lembrete diz que as fotos aparecem só para
+    quem o paciente liberar em Conta;
+  - **a profissional** vê as miniaturas e a foto grande pelo endereço do vínculo, sem botões de
+    mudança; a página passa o paciente até o cartão;
+  - **o componente comum `RecordPhotos`** (`features/photos/`) serve a Ação e as atividades: cada
+    área diz o que pode (adicionar, remover, mostrar). A Ação segue com as mesmas regras e textos;
+    sem o aceite, o botão diz "Ver as fotos" quando não há como adicionar (antes, o paciente fora do
+    prazo via "Adicionar fotos");
+  - **Conta → "O que [nome] pode ver":** a caixa "Fotos das atividades" só aparece com Atividades
+    marcada, e desmarcar Atividades leva as fotos junto, como na Ação;
+  - **aviso de privacidade versão 12** (`2026-11.5` vira a atual): cita as fotos das atividades em "O
+    que guardamos", em "Quem vê" e em "Por quanto tempo" (remover também apaga, e na atividade que não
+    aconteceu dá para remover a qualquer hora). É área nova: o aceite é pedido ao usar as fotos;
+  - **novidade `2026-11-fotos-atividades`**, para pacientes e profissionais, sem citar o prazo: ele fica
+    no cartão, que respeita o "sem pressão de tempo" (sugestão do `revisor-telas`, aceita pelo usuário).
+- **Motivo:** fechar a #197 com a API da DEC-103 e trocar a versão do aviso no mesmo PR que mostra o
+  texto, para ninguém aceitar o que ainda não leu (como na DEC-065).
+- **Limite conhecido:** o envio da foto HEIC depende da conversão do próprio iPhone, como na Ação. O
+  lembrete das fotos da Ação ainda fala em "sua psicóloga" (texto da DEC-065); ajustar para "quem você
+  liberar" fica para quando a Ação for revista com as várias profissionais.
+
+## DEC-105 — O aceite do aviso grava a versão que o app mostrou
+- **Decisão (achado médio do `revisor-seguranca` no PR das telas da DEC-104, escolhas do usuário):**
+  - o app manda, no aceite (`POST /auth/accept-privacy`) e no cadastro, a **versão do aviso que ele
+    mostra** (`privacyVersion`, em `features/auth/privacy-version.ts`); o servidor grava essa versão,
+    e não "a atual";
+  - **versão diferente da atual:** 409 `PRIVACY_VERSION_OUTDATED`, "O aviso de privacidade mudou.
+    Atualize o app para ler a versão nova antes de aceitar." Nada é gravado, nem a conta nova;
+  - **sem versão** (app de antes desta regra, instalado e ainda não atualizado, ou nos minutos em que
+    a API nova já está no ar e o front ainda não, DEC-056): grava a **última versão que esses apps
+    mostram** (`LEGACY_SHOWN_VERSION`, hoje a `2026-11.4`). Ninguém fica travado, e a área nova só
+    libera com o app novo; a faixa continua aparecendo até atualizar;
+  - **nunca rebaixa:** o aceite (ou o cadastro refeito) de um app antigo não troca uma versão mais nova
+    já gravada, nem a data do aceite: quem aceitou a atual noutro aparelho continua com ela (achado do
+    `revisor-seguranca`);
+  - a faixa do aviso calcula o que falta liberar pelas áreas que **a API** manda, e não pela lista do
+    app. Com uma área que o app não conhece, ela pede para atualizar o app em vez de oferecer o aceite
+    de uma versão sem área nova, com um texto antigo.
+- **Motivo:** o service worker só troca o app quando a pessoa toca em "Atualizar" (DEC-041). Um app
+  antigo mostrava o texto da versão anterior e o servidor gravava a nova: a pessoa liberava uma área
+  (aqui, as fotos das atividades) sem ter lido o texto dela, o que a DEC-064, a DEC-065 e a DEC-104
+  queriam evitar. A brecha já existia nas trocas de versão anteriores.
+- **Limite conhecido:** no deploy deste PR, o front só deve ir ao ar depois de a API estar no ar
+  (`/health` com o commit, DEC-056): nos minutos entre os dois, a API antiga recusa (400) o aceite que
+  o app novo manda com a versão. A cada versão nova, `LEGACY_SHOWN_VERSION` fica onde está (é a versão dos apps
+  de antes desta regra); os apps novos mandam a versão. O texto da faixa de versão sem área nova
+  (`PrivacyVersionConsent`) ainda é escrito à mão a cada versão.
+
+## DEC-106 — Tarefas criadas e respondidas pelo paciente
 - **Decisão (#150, comentários de 12/11/2026 e textos aprovados pelo usuário):** implementar a
   primeira entrega descrita na SPEC, seção Tarefas: tarefa única do paciente, descrição preservada
   após a resposta, três formas de responder, aba sempre disponível e compartilhamento TASKS
@@ -2312,7 +2410,8 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   sessão da agenda do paciente e é congelado, como na DEC-054; antecipações podem encurtá-lo.
   Sem consulta, não há prazo; sem horário, vale o início do dia, como na alternativa do RPD.
   Só respostas entram no Para ler. ReadMark ganha taskId e mantém exatamente um alvo por marca.
-  Aviso 2026-11.5, versão 12, com área tasks e texto no front. Novidade 2026-11-tarefas.
+  Aviso 2026-11.6, com área tasks e texto no front, que a tela ativa; novidade
+  `2026-11-tarefas`.
 - **Motivo:** guardar uma reflexão combinada na consulta com resposta livre, sem impor os campos
   de outras áreas nem acrescentar trabalho à profissional. As três saídas preservam a autonomia.
 - **Limite conhecido:** a agenda atual é única por paciente (não por profissional). Combinada com

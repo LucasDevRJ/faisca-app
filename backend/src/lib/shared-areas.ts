@@ -1,8 +1,10 @@
 import type { SharedArea } from '../generated/prisma/client.js';
 
-// As áreas que o paciente libera para cada profissional (DEC-097), na ordem das telas.
+// As áreas que o paciente libera para cada profissional (DEC-097), na ordem das telas. As fotos das
+// atividades (DEC-103) vêm logo depois das atividades, como as da Ação depois da Ação.
 export const SHARED_AREAS = [
   'ACTIVITIES',
+  'ACTIVITY_PHOTOS',
   'THOUGHT_RECORDS',
   'TENSION_EPISODES',
   'ACTIONS',
@@ -32,5 +34,16 @@ export function actionForProfessional<
     ...action,
     ...(!sharedAreas.includes('APPOINTMENTS') && { photosDeadline: null, photosOpen: false }),
     ...(!sharedAreas.includes('ACTION_PHOTOS') && { photos: [] }),
+  };
+}
+
+// Fotos das atividades (DEC-103): têm caixa própria, como as da Ação, e o prazo delas vem da agenda.
+export function activityForProfessional<
+  T extends { photos: unknown[]; photosDeadline: unknown; photosOpen: boolean },
+>(activity: T, sharedAreas: SharedArea[]): T {
+  return {
+    ...activity,
+    ...(!sharedAreas.includes('APPOINTMENTS') && { photosDeadline: null, photosOpen: false }),
+    ...(!sharedAreas.includes('ACTIVITY_PHOTOS') && { photos: [] }),
   };
 }

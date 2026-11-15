@@ -9,6 +9,8 @@ export type ProfessionalKind = 'PSICOLOGIA' | 'PSIQUIATRIA';
 // As áreas que o paciente libera para cada profissional (DEC-097), na ordem das telas.
 export const SHARED_AREAS = [
   'ACTIVITIES',
+  // Fotos das atividades (DEC-103, DEC-104): logo depois das atividades, como na API.
+  'ACTIVITY_PHOTOS',
   'THOUGHT_RECORDS',
   'TENSION_EPISODES',
   'ACTIONS',

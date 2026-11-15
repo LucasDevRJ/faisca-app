@@ -9,6 +9,7 @@ export const KIND_LABEL: Record<ProfessionalKind, string> = {
 
 export const AREA_LABEL: Record<SharedArea, string> = {
   ACTIVITIES: 'Atividades',
+  ACTIVITY_PHOTOS: 'Fotos das atividades',
   THOUGHT_RECORDS: 'Pensamentos',
   TENSION_EPISODES: 'Tensão',
   ACTIONS: 'Ação',

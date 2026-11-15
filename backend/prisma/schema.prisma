@@ -170,26 +170,48 @@ enum ActivityStatus {
 // Registro de atividade do paciente. Os campos exigidos por estado e a faixa das notas
 // (inteiros de 0 a 10) são garantidos por CHECK na migration, além do Zod (DEC-028).
 model Activity {
-  id           String         @id @default(uuid()) @db.Uuid
+  id               String         @id @default(uuid()) @db.Uuid
   // O paciente dono do registro.
-  userId       String         @db.Uuid
-  name         String
+  userId           String         @db.Uuid
+  name             String
   // Dia da atividade, no fuso America/Sao_Paulo (DEC-007). Separado do createdAt.
-  activityDate DateTime       @db.Date
-  status       ActivityStatus
+  activityDate     DateTime       @db.Date
+  status           ActivityStatus
   // Vontade antes (0–10): exigida a partir de PENDENTE.
-  wantBefore   Int?
+  wantBefore       Int?
   // Prazer e realização (0–10): só na CONCLUIDA.
-  pleasure     Int?
-  achievement  Int?
+  pleasure         Int?
+  achievement      Int?
   // Só nos estados finais, e sempre opcional.
-  observation  String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  observation      String?
+  // Quando foi concluída (DEC-103): o prazo das fotos é a próxima consulta depois disso. As já
+  // concluídas recebem o updatedAt na migration, porque concluída é final e só mudava ali.
+  completedAt      DateTime?
+  // O prazo das fotos, congelado como o da Ação (DEC-064): desmarcar ou apagar uma consulta que já
+  // passou não reabre o prazo; antecipar a consulta encurta.
+  photosDeadlineAt DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos ActivityPhoto[]
 
   @@index([userId, activityDate])
+}
+
+// Fotos de uma atividade (DEC-103), como as da Ação (DEC-064): até 10, guardadas já tratadas (sem
+// metadados, como a localização), numa tabela à parte para as listas não carregarem imagens. Entram
+// com a atividade aberta e na concluída até a próxima consulta. Saem em cascata com a atividade.
+model ActivityPhoto {
+  id         String   @id @default(uuid()) @db.Uuid
+  activityId String   @db.Uuid
+  image      Bytes
+  thumbnail  Bytes
+  createdAt  DateTime @default(now())
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId, createdAt])
 }
 
 // Datas das consultas, registradas pelo paciente (DEC-017). Servem para "última" e "próxima"
@@ -441,6 +463,9 @@ enum ProfessionalKind {
 // As áreas que o paciente libera para cada profissional (DEC-097). As fotos da Ação têm caixa própria.
 enum SharedArea {
   ACTIVITIES
+  // Fotos das atividades (DEC-103): caixa própria, como as fotos da Ação. Vínculos que já liberavam
+  // as atividades começam sem elas.
+  ACTIVITY_PHOTOS
   THOUGHT_RECORDS
   TENSION_EPISODES
   ACTIONS

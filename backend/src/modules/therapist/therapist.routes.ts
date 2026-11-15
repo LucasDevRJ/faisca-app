@@ -14,6 +14,7 @@ import { AppError } from '../../errors/app-error.js';
 import { createAboutMeService } from '../about-me/about-me.service.js';
 import { createActionsController } from '../actions/actions.controller.js';
 import { createActionsService } from '../actions/actions.service.js';
+import { createActivitiesController } from '../activities/activities.controller.js';
 import { createActivitiesService } from '../activities/activities.service.js';
 import { createAppointmentsService } from '../appointments/appointments.service.js';
 import { createPlansService } from '../plans/plans.service.js';
@@ -39,6 +40,7 @@ const requirePsychologistForPlanCreation: RequestHandler = (_req, res, next) => 
 };
 
 export function createTherapistRoutes() {
+  const activities = createActivitiesService();
   const thoughtRecords = createThoughtRecordsService();
   const tensionEpisodes = createTensionEpisodesService();
   const actions = createActionsService();
@@ -46,7 +48,7 @@ export function createTherapistRoutes() {
   const plans = createPlansService();
   const controller = createTherapistController(
     createTherapistService(
-      createActivitiesService(),
+      activities,
       createAppointmentsService(),
       thoughtRecords,
       tensionEpisodes,
@@ -99,6 +101,14 @@ export function createTherapistRoutes() {
     requirePrivacy('actions'),
     requirePrivacy('actionPhotos'),
     createActionsController(actions).therapistPhoto,
+  );
+  // Fotos das atividades (DEC-103): as atividades e a caixa das fotos liberadas, e o aceite da versão
+  // do aviso que as cita.
+  router.get(
+    `${PREFIX}/activities/:activityId/photos/:photoId`,
+    requireSharedArea('ACTIVITIES', 'ACTIVITY_PHOTOS'),
+    requirePrivacy('activityPhotos'),
+    createActivitiesController(activities).therapistPhoto,
   );
   // "Sobre mim" do paciente (DEC-081): também pede o aceite da versão do aviso que o cita.
   router.get(`${PREFIX}/about-me`, requireSharedArea('ABOUT_ME'), requirePrivacy('aboutMe'), controller.aboutMe);

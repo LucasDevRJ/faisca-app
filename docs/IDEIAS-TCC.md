@@ -95,7 +95,7 @@ Hoje a tela de registros tem **4 abas principais** (**Atividades | Pensamentos |
 ## Tarefas de casa (#150) — primeira entrega em desenvolvimento
 Tarefa única combinada na consulta, criada pelo paciente, com resposta livre ou registro de que
 não conseguiu fazer ou de que não faz sentido agora. Textos aprovados pelo usuário. Separada de
-Meus Planos, que é uma prática recorrente. Detalhes e limites na SPEC, seção Tarefas, e na DEC-103.
+Meus Planos, que é uma prática recorrente. Detalhes e limites na SPEC, seção Tarefas, e na DEC-106.
 Fotos e tarefas ligadas a outras áreas continuam na fase 2 (#151).
 
 ## Checklist obrigatório para quando formos implementar qualquer uma delas

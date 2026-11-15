@@ -63,6 +63,7 @@ Na prática clínica tradicional:
   - Planejar atividades para os dias da semana/ciclo (`PLANEJADA`), registrar quanta **vontade antes** tem de fazer de 0 a 10 (`PENDENTE`) e, a partir do dia da atividade, contar como foi (`CONCLUIDA`) dando notas de 0 a 10 para **prazer** e **sensação de realização**, além de uma observação opcional (até 5.000 caracteres).
   - Se não conseguiu fazer, marca **"Não aconteceu"** (`NAO_REALIZADA`) com o diálogo acolhedor *"Tudo bem, quer contar o que aconteceu?"* e observação opcional.
   - Também permite criar registro retroativo de algo já feito.
+  - **Fotos das atividades:** o paciente pode adicionar **até 10 fotos** a uma atividade, como lembrança do que fez: enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta. Numa atividade que não aconteceu, dá para tirar as fotos que já estavam lá. Elas aparecem só para a profissional a quem o paciente liberar.
   - Exibe um **gráfico comparativo** (*Vontade antes × Prazer × Realização*) em barras horizontais no celular e colunas lado a lado no tablet/computador, usando uma única cor em três intensidades (nunca vermelho/verde).
 
 - **Registro de Pensamentos (RPD):**
@@ -111,7 +112,7 @@ Na prática clínica tradicional:
 
 - **Vínculo com a psicóloga e a psiquiatra ("Quem me acompanha") e Mural de avisos:**
   - O paciente pode ter **uma psicóloga e uma psiquiatra** ao mesmo tempo. Cria cada vínculo de duas formas: enviando um **convite por e-mail** ou gerando um **código de 8 caracteres** (`K7M4-P9QX`, válido por 24h) para a profissional digitar.
-  - **O paciente escolhe o que cada uma vê** ("O que [nome] pode ver"): atividades, pensamentos, tensão, Ação e fotos, "Sobre mim", agenda e Meus Planos. Uma profissional nova **começa sem ver nada**, e mudar vale na hora.
+  - **O paciente escolhe o que cada uma vê** ("O que [nome] pode ver"): atividades e as fotos delas, pensamentos, tensão, Ação e as fotos dela, "Sobre mim", agenda e Meus Planos. Uma profissional nova **começa sem ver nada**, e mudar vale na hora.
   - O paciente pode **desfazer cada vínculo a qualquer momento** em Conta, e o acesso daquela profissional cessa imediatamente.
   - Quando a psicóloga publica um comunicado no mural dela, o paciente vê um cartão discreto no topo de *Meus registros* com o selo `"Novo"` e a página `/avisos`.
 
@@ -121,6 +122,7 @@ Na prática clínica tradicional:
   - Vê a lista de todos os seus pacientes vinculados (com foto, nome, status da agenda se estiver em pausa/encerrada e quantidade de registros para ler).
   - Vê **só as áreas que o paciente liberou para ela**; sem nenhuma, a página explica que ele ainda não liberou nada.
   - A **psicóloga** navega pelo **mesmo Ciclo da consulta** (ou Semana) que o paciente vê, nas abas liberadas (**Atividades**, **Pensamentos**, **Tensão**, **Ação** e **Meus Planos**), além da **Agenda de consultas** (com motivos de desmarcação/remarcação) e do cartão **"Sobre [Nome]"**.
+  - **A psicóloga cria planos de ação para o paciente** em Meus Planos, quando a área está liberada. O plano fica na conta do paciente, que continua dono dele e faz os registros; a psicóloga não edita planos nem cria registros.
   - A **psiquiatra** vê os mesmos registros por **1, 2 ou 3 meses** (começa em 3), com setas para voltar no tempo.
   - **Resumo do período em números:** no topo da página do paciente, um cartão com o essencial do período (dias com registro, atividades, as emoções mais presentes, a crença no pensamento e o efeito da explicação alternativa, tensão, Ação e Meus Planos), comparado com o **período anterior do mesmo tamanho** em formato neutro ("antes: 6,1"). Só números, sem interpretação e sem texto do paciente; só das áreas liberadas. Pensado para consultas espaçadas, como as da psiquiatra.
   - No cadastro ou no convite, a profissional diz se é **psicóloga ou psiquiatra** e, em Conta, pode informar o número do conselho (CRP ou CRM), que aparece para os pacientes.
@@ -181,7 +183,6 @@ Estes itens estão planejados no backlog e **ainda não estão no ar**:
 4. **Trava do app (#137) e entrar com passkey.**
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
 6. **Sono e humor (#188)** e **medicação (#171)**, pensados para o acompanhamento com a psiquiatra.
-7. **Meus Planos, 2ª parte:** a psicóloga também cria planos para o paciente.
 
 ---
 
@@ -243,12 +244,12 @@ O Faísca trata registros psicológicos como **dados pessoais sensíveis de saú
    - **Autorização rígida no backend:** no papel de terapeuta, um middleware (`onlyReads`) barra na porta qualquer método que não seja `GET`, e valida o vínculo ativo antes de tocar no banco. Esconder botão no front é tratado apenas como conforto visual, nunca como segurança.
    - **Imutabilidade de registros finais (`409 Conflict`):** atividades concluídas ou não realizadas e ações avaliadas não podem ser alteradas nem excluídas; pensamentos e episódios de tensão só podem ser editados no próprio dia em que foram criados.
    - **Menor privilégio no banco de dados (PostgreSQL):** a API em produção conecta com a role `faisca_app` (que só tem permissão de leitura/escrita `DML`, sem poder dar `DROP` ou `ALTER`), enquanto as migrations rodam separadas no pre-deploy com a role `faisca_migrator` (`DDL`). O superusuário nunca é usado pela aplicação.
-   - **Proteção de imagens e remoção de metadados (`sharp`):** fotos de perfil e fotos da Ação têm os *magic bytes* conferidos antes de abrir, passam por uma fila de processamento para não derrubar a memória do servidor e são regravadas em WebP **sem nenhum metadado EXIF/GPS** (removendo a localização de onde a foto foi tirada). Fotos da Ação usam `Cache-Control: no-store` para não ficarem gravadas no disco de aparelhos compartilhados.
+   - **Proteção de imagens e remoção de metadados (`sharp`):** fotos de perfil, da Ação e das atividades têm os *magic bytes* conferidos antes de abrir, passam por uma fila de processamento com teto (acima dele, a API pede para tentar de novo em vez de acumular arquivos na memória) e são regravadas em WebP **sem nenhum metadado EXIF/GPS** (removendo a localização de onde a foto foi tirada). As fotos usam `Cache-Control: no-store` para não ficarem gravadas no disco de aparelhos compartilhados.
    - **Segredos de vínculo nunca salvos em texto:** tokens de convite e códigos de 8 caracteres são guardados no banco apenas como hash (`HMAC-SHA256`).
    - **Logs limpos (`redact`):** senhas, tokens, códigos, nomes de atividades, pensamentos, emoções, notas e observações são filtrados e nunca aparecem nos logs do servidor.
    - **O paciente decide o que cada profissional vê:** cada vínculo (psicóloga ou psiquiatra) guarda as áreas liberadas, e a API responde `403` para qualquer área fechada; uma profissional nova começa sem ver nada.
    - **Verificação em duas etapas e aviso de novos acessos:** código por e-mail ou app autenticador, códigos de recuperação de uso único e um e-mail neutro (sem link) a cada login.
-   - **Consentimento granular por versão do aviso de privacidade:** cada área nova que coleta dados de saúde (Pensamentos, Tensão, Agenda, Ação, Fotos da Ação, Sobre mim) exige aceite explícito da versão correspondente do aviso de privacidade; quem ainda não aceitou uma versão nova continua usando o resto do app sem perder acesso ao que já usava.
+   - **Consentimento granular por versão do aviso de privacidade:** cada área nova que coleta dados de saúde (Pensamentos, Tensão, Agenda, Ação, Fotos da Ação, Sobre mim, Meus Planos, Fotos das atividades) exige aceite explícito da versão correspondente do aviso de privacidade, e o servidor grava a versão que o app mostrou, para ninguém aceitar um texto que não leu; quem ainda não aceitou uma versão nova continua usando o resto do app sem perder acesso ao que já usava.
    - **Backups diários criptografados (`age` + Cloudflare R2) e direito ao esquecimento:** todo dia um serviço isolado gera um dump do banco e o **criptografa com `age` (chave pública) antes de sair do servidor**, guardando no Cloudflare R2 com retenção de até 5 semanas. Quando alguém exclui a conta, tudo some do app na hora, e o ID aleatório entra numa tabela `DeletedAccount` por 35 dias para que, mesmo se um backup precisar ser restaurado após um desastre, as contas excluídas sejam apagadas novamente.
    - **Deploy sem janela de quebra (`DEC-056`):** como a Vercel publica o front em ~1 minuto e o Railway publica a API + migrations em ~8 minutos, mudanças de contrato sempre sobem em dois PRs separados (primeiro a API retrocompatível, confirmada pelo commit no `/health`, e só depois o front).
    - **Desenvolvimento assistido por IA com governança:** uso de agentes (Claude Code e Antigravity/Gemini) com regras invioláveis no repositório, hooks automáticos de proteção (bloqueando edição de `.env`, `prisma db push`, force push ou alteração de migrations já aplicadas) e **3 subagentes revisores independentes** antes de cada PR (`revisor-regras`, `revisor-telas` para contraste WCAG/tom/acessibilidade e `revisor-seguranca`).

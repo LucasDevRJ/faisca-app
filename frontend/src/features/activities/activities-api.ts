@@ -14,9 +14,17 @@ export type Activity = {
   pleasure: number | null;
   achievement: number | null;
   observation: string | null;
+  // Fotos (DEC-103). photosOpen diz se dá para adicionar agora (aberta, ou concluída antes do prazo);
+  // photosDeadline é a consulta que fecha o prazo da concluída (null aberta ou sem consulta marcada).
+  photos: { id: string; createdAt: string }[];
+  photosDeadline: { date: string; time: string | null } | null;
+  photosOpen: boolean;
   createdAt: string;
   updatedAt: string;
 };
+
+// Até 10 fotos por atividade, como na Ação (DEC-103).
+export const MAX_ACTIVITY_PHOTOS = 10;
 
 export type CreateActivityInput =
   | { status: 'PLANEJADA'; name: string; activityDate: string }
@@ -72,4 +80,21 @@ export async function markNotDone(id: string, observation?: string): Promise<Act
 
 export async function deleteActivity(id: string): Promise<void> {
   await api.delete(`/activities/${id}`);
+}
+
+// ——— Fotos (DEC-103) ———
+
+// A foto vai como o próprio arquivo, com o tipo dele; o backend confere pelo conteúdo.
+export async function uploadActivityPhoto(activityId: string, file: File): Promise<void> {
+  await api.post(`/activities/${activityId}/photos`, file, { headers: { 'Content-Type': file.type } });
+}
+
+export async function deleteActivityPhoto(activityId: string, photoId: string): Promise<void> {
+  await api.delete(`/activities/${activityId}/photos/${photoId}`);
+}
+
+// Endereço da imagem para o <img>: a do paciente, ou a da profissional pelo prefixo do vínculo
+// (base = '/therapist/patients/:id'). O cookie da sessão vai junto, como em toda a API.
+export function activityPhotoUrl(base: string, activityId: string, photoId: string, size: 'thumb' | 'full'): string {
+  return `/api${base}/activities/${activityId}/photos/${photoId}?size=${size}`;
 }

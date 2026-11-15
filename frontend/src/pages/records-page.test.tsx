@@ -157,6 +157,8 @@ describe('RecordsPage: ações por estado', () => {
         wantBefore: 3,
         ...(status === 'CONCLUIDA' ? { pleasure: 7, achievement: 8 } : {}),
         observation: 'Choveu um pouco.',
+        // Fora do prazo das fotos (DEC-104): sem nenhum botão. Com o prazo aberto, só os das fotos.
+        photosOpen: false,
       }),
     ]);
     renderRoute('/registros');

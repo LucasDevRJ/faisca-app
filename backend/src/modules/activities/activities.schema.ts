@@ -88,6 +88,19 @@ export const therapistActivitiesQuerySchema = listQuerySchema(THERAPIST_LIST_MAX
 
 export const activityIdSchema = z.object({ id: z.uuid({ error: 'Atividade inválida.' }) });
 
+// Fotos (DEC-103), como as da Ação.
+export const activityPhotoParamsSchema = z.object({
+  id: z.uuid({ error: 'Atividade inválida.' }),
+  photoId: z.uuid({ error: 'Foto inválida.' }),
+});
+// A terapeuta chega pela cadeia do prefixo (vínculo ativo já conferido).
+export const therapistActivityPhotoParamsSchema = z.object({
+  patientId: z.uuid(),
+  activityId: z.uuid({ error: 'Atividade inválida.' }),
+  photoId: z.uuid({ error: 'Foto inválida.' }),
+});
+export { photoSizeSchema } from '../../lib/photos.js';
+
 export type CreateActivityInput = z.infer<typeof createActivitySchema>;
 export type UpdateActivityInput = z.infer<typeof updateActivitySchema>;
 export type StartActivityInput = z.infer<typeof startActivitySchema>;

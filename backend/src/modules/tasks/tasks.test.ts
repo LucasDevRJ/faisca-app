@@ -15,11 +15,11 @@ const taskBody = { description: 'Reflexão fictícia combinada na consulta.', ti
 const reply = { responseStatus: 'RESPONDIDA', responseText: 'Resposta fictícia.' };
 beforeEach(async () => {
   await resetDatabase(); app = createApp({ mailer: new FakeMailer() });
-  patientId = (await createConfirmedUser({ privacyVersion: '2026-11.5' })).id;
-  otherId = (await createConfirmedUser({ email: 'outra@faisca.test', privacyVersion: '2026-11.5' })).id;
-  therapistId = (await createConfirmedUser({ email: 'profissional@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.5' })).id;
-  await createConfirmedUser({ email: 'sem-vinculo@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.5' });
-  await createConfirmedUser({ email: 'sem-aceite@faisca.test', privacyVersion: '2026-11.4' });
+  patientId = (await createConfirmedUser({ privacyVersion: '2026-11.6' })).id;
+  otherId = (await createConfirmedUser({ email: 'outra@faisca.test', privacyVersion: '2026-11.6' })).id;
+  therapistId = (await createConfirmedUser({ email: 'profissional@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.6' })).id;
+  await createConfirmedUser({ email: 'sem-vinculo@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.6' });
+  await createConfirmedUser({ email: 'sem-aceite@faisca.test', privacyVersion: '2026-11.5' });
   linkId = (await createTestLink({ patientId, therapistId })).id;
 });
 async function login(email = 'paciente@faisca.test') {
@@ -88,9 +88,9 @@ describe('autorização (regra 1)', () => {
     await prisma.therapistLink.update({ where: { id: linkId }, data: { sharedAreas: ['TASKS'] } });
     const allowed = await professional.get(path); expect(allowed.status).toBe(200);
     expect(allowed.body.tasks[0]).toMatchObject({ agreedWith: null, agreedLinkId: null, responseDeadline: null, responseEditable: false });
-    await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-11.4' } });
-    expect((await professional.get(path)).status).toBe(403);
     await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-11.5' } });
+    expect((await professional.get(path)).status).toBe(403);
+    await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-11.6' } });
     await prisma.therapistLink.update({ where: { id: linkId }, data: { revokedAt: new Date() } });
     expect((await professional.get(path)).status).toBe(403);
   });
