@@ -2342,6 +2342,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   duas). As telas e o texto do aviso ficam para o PR seguinte. O gatilho para sair do Postgres
   (1 GB de fotos, DEC-064) passa a contar as duas áreas.
 
+## DEC-104 — Fotos nas atividades (telas) e aviso de privacidade versão 12
+- **Decisão (#197):** em construção. Reserva também a novidade `2026-11-fotos-atividades`.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
