@@ -33,6 +33,10 @@ const { runInline } = await import('../src/lib/background.js');
 const SEED_PASSWORD = 'senha-ficticia-123';
 // privacyVersion: versão do aviso já aceita. Sem ela, a conta é de antes do aviso (null).
 const SEED_USERS: { name: string; email: string; patient: boolean; therapist: boolean; privacyVersion?: string }[] = [
+  // Só Tarefas (api/tasks.spec.ts e e2e/tasks.spec.ts).
+  { name: 'Paciente Tarefas Fictícia', email: 'tarefas-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-11.6' },
+  { name: 'Profissional Tarefas Fictícia', email: 'tarefas-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.6' },
+  { name: 'Tarefas Tela Fictícia', email: 'tarefas-tela@faisca.test', patient: true, therapist: false },
   { name: 'Paciente Fictícia', email: 'paciente@faisca.test', patient: true, therapist: false },
   { name: 'Terapeuta Fictícia', email: 'terapeuta@faisca.test', patient: false, therapist: true },
   { name: 'Pessoa Fictícia', email: 'dois-perfis@faisca.test', patient: true, therapist: true },

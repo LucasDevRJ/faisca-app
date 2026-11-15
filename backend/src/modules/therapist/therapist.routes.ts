@@ -1,3 +1,4 @@
+import { createTasksService, taskForProfessional } from '../tasks/tasks.service.js';
 import { Router, type RequestHandler } from 'express';
 import {
   getPatientLink,
@@ -6,7 +7,7 @@ import {
   requirePatientPrivacy,
   requireSharedArea,
 } from '../../middlewares/require-patient-access.js';
-import { requireAuth } from '../../middlewares/require-auth.js';
+import { getAuthUser, requireAuth } from '../../middlewares/require-auth.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { AppError } from '../../errors/app-error.js';
@@ -135,6 +136,12 @@ export function createTherapistRoutes() {
   router.get(`${PREFIX}/avatar`, profile.patientAvatar);
   // Não lidos (DEC-057): o aceite é conferido por área dentro do service. Escrever as marcas fica
   // em /therapist/read-marks (read-marks.routes.ts), fora deste prefixo só leitura.
+  router.get(`${PREFIX}/tasks`, requireSharedArea('TASKS'), requirePrivacy('tasks'), async (req, res) => {
+    const link = getPatientLink(res);
+    const tasks = await createTasksService().list(String(req.params.patientId));
+    const marks = createReadMarksService(thoughtRecords, tensionEpisodes, actions, aboutMe, plans);
+    res.json({ tasks: await marks.withReadStatus(getAuthUser(req).id, 'TASK', tasks.map((task) => taskForProfessional(task, link.sharedAreas))) });
+  });
   router.get(`${PREFIX}/unread`, controller.unread);
 
   return router;

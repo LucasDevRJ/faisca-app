@@ -244,6 +244,36 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   existe plano. No celular, com 5 ou 6 abas, a grade passa a 3 colunas. O modelo das 6 perguntas entra
   por um botão, e não já preenchido.
 
+## Tarefas (DEC-106, #150)
+**API preparada; telas e ativação do aviso na segunda etapa.**
+- Tarefa única combinada na consulta, separada dos planos que têm registros recorrentes.
+- Só o paciente cria: descrição obrigatória (1–5000 caracteres), título opcional (1–120) e
+  "Combinada com" opcional, escolhida dentre os vínculos ativos. Essa escolha não libera a área.
+- Até 500 tarefas por conta, com trava da conta ao conferir o teto. Antes de responder, pode editar
+  ou apagar. Depois de responder, a descrição fica preservada e a tarefa não pode ser apagada (409).
+- Uma resposta: texto livre (1–10000 caracteres), "Não consegui fazer" ou "Não faz sentido para mim
+  agora". Nas duas últimas opções, comentário opcional (até 10000). Todas são respostas válidas.
+- O prazo de edição é a primeira consulta posterior à **primeira resposta**, segundo a agenda do
+  paciente. A resposta pode ser iniciada mesmo depois de uma consulta. Sem consulta marcada,
+  continua editável. Ao aparecer consulta, o prazo é congelado; antecipar encurta, apagar ou
+  desmarcar não reabre um prazo congelado. Sem horário, a consulta fecha a edição no início do dia,
+  como na explicação alternativa (DEC-054). Exatamente no prazo, a resposta fica final (409).
+- Aba **Tarefas** sempre disponível ao paciente. Cinco ou seis abas usam grade de três colunas no
+  celular; Meus Planos continua condicional. As tarefas são listadas de qualquer data, mais novas
+  primeiro; na profissional, essa lista não depende do período selecionado para as outras áreas.
+- A profissional só lê com vínculo ativo, área **TASKS** liberada pelo paciente e aceite do aviso
+  que cobre Tarefas. A área nova começa fechada, inclusive nos vínculos existentes. Nada muda na
+  regra de escrita da profissional. "Combinada com" é omitido na visão profissional; o prazo da
+  resposta também é omitido quando a agenda não está compartilhada.
+- Só tarefas respondidas entram no **Para ler** (tipo TASK, coluna taskId em ReadMark). Alterar a
+  resposta depois da leitura volta a contar como atualizado. A leitura pela profissional nunca
+  congela prazo nem grava no registro do paciente.
+- Rotas do paciente: GET/POST `/tasks`, PATCH/DELETE `/tasks/:id`, PUT `/tasks/:id/response`.
+  Profissional: GET `/therapist/patients/:patientId/tasks` na cadeia existente de autorização.
+- Aviso **2026-11.6** com área `tasks`, texto e aceite para paciente e profissional.
+  Não bloqueia áreas cujo aviso já foi aceito. Textos e status de resposta fora dos logs; sem
+  notificação nesta entrega. Fotos e ligação a outras áreas continuam na #151.
+
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados
   com o **período anterior do mesmo tamanho**: dias com registro, atividades, pensamentos (as emoções mais
@@ -379,6 +409,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Sair de um aparelho remove a inscrição de push daquela sessão; trocar a senha remove as dos outros aparelhos e mantém a do aparelho atual; "Sair de todos os aparelhos" remove todas (DEC-085, DEC-089).
 
 ## Privacidade (LGPD)
+- Tarefas exigem a versão `2026-11.6` (DEC-106). A API a conhece na primeira etapa; o front só a ativa quando exibe o texto novo.
 - O sistema coleta nome, e-mail e senha (guardada só como hash), os registros e o que o aviso de privacidade descreve (preferências da conta, dados de segurança como os da verificação em duas etapas, vínculos e lembretes); nada além disso.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.

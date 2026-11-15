@@ -10,6 +10,7 @@ export const ALL_AREAS = [
   'ABOUT_ME',
   'APPOINTMENTS',
   'PLANS',
+  'TASKS',
 ];
 
 // Vínculo novo começa sem área nenhuma (DEC-097). Os testes que leem os registros liberam tudo,

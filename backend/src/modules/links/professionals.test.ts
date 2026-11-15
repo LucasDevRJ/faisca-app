@@ -119,6 +119,7 @@ describe('áreas liberadas por vínculo (regra 1, DEC-097)', () => {
       actions: null,
       aboutMe: null,
       planEntries: null,
+      tasks: null,
     });
   });
 

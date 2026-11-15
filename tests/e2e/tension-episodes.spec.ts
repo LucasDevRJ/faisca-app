@@ -34,8 +34,10 @@ test('paciente aceita o aviso e registra; terapeuta vinculada aceita e lê na ab
   const patient = await signIn(browser, users.tensionScreenPatient);
   const tabs = patient.getByRole('navigation', { name: 'Registros' });
 
-  // Com a versão do RPD: Pensamentos aberto, e a faixa fala só dos episódios.
-  await expect(patient.getByText(/para incluir os Episódios de tensão/)).toBeVisible();
+  // O front desta PR pode ainda não conhecer a área nova e mostra o fallback de atualização.
+  await expect(
+    patient.getByText(/para incluir os Episódios de tensão|Atualize o app para ver o que mudou/),
+  ).toBeVisible();
   await tabs.getByRole('link', { name: 'Pensamentos' }).click();
   await expect(patient.getByRole('heading', { name: 'Antes de começar' })).toBeHidden();
   await tabs.getByRole('link', { name: 'Tensão' }).click();

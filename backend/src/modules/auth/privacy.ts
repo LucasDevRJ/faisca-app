@@ -16,6 +16,8 @@ import { AppError } from '../../errors/app-error.js';
 //   suporte@ (DEC-096). Sem área nova: nada é bloqueado.
 // - 2026-11.4: até duas profissionais (psicóloga e psiquiatra), cada uma vendo só as áreas que o
 //   paciente escolhe (DEC-097, DEC-098). Sem área nova: nada é bloqueado.
+// - 2026-11.5: entram as fotos nas atividades (DEC-103), com área própria.
+// - 2026-11.6: entram as Tarefas e suas respostas (DEC-106), com área própria.
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -29,6 +31,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.3',
   '2026-11.4',
   '2026-11.5',
+  '2026-11.6',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -83,6 +86,8 @@ export const PRIVACY_AREAS = {
   plans: '2026-11.2',
   // Fotos das atividades (DEC-103): fazem parte do registro de saúde e podem mostrar outras pessoas.
   activityPhotos: '2026-11.5',
+  // Tarefas e respostas (DEC-106): conteúdo de saúde escrito pelo paciente.
+  tasks: '2026-11.6',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -104,5 +109,6 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     aboutMe: coversArea(acceptedVersion, 'aboutMe'),
     plans: coversArea(acceptedVersion, 'plans'),
     activityPhotos: coversArea(acceptedVersion, 'activityPhotos'),
+    tasks: coversArea(acceptedVersion, 'tasks'),
   };
 }

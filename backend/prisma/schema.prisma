@@ -13,6 +13,7 @@ datasource db {
 }
 
 model User {
+  tasks               HomeworkTask[]
   id                  String            @id @default(uuid()) @db.Uuid
   name                String
   // Sempre em minúsculas e sem espaços nas pontas (normalizado no schema Zod).
@@ -472,12 +473,14 @@ enum SharedArea {
   ABOUT_ME
   APPOINTMENTS
   PLANS
+  TASKS
 }
 
 // Vínculo paciente ↔ terapeuta (SPEC, "Vínculo"). Revogar preenche revokedAt e o registro fica.
 // Escritos à mão na migration: no máximo um vínculo ativo por paciente e tipo (índice único parcial, DEC-097)
 // e ninguém se vincula a si mesmo (CHECK).
 model TherapistLink {
+  agreedTasks     HomeworkTask[]
   id              String           @id @default(uuid()) @db.Uuid
   patientId       String           @db.Uuid
   therapistId     String           @db.Uuid
@@ -622,6 +625,7 @@ model ReadMark {
   aboutId          String?  @db.Uuid
   // Registro de um plano de "Meus Planos" (DEC-094). O plano em si não entra no "Para ler".
   planEntryId      String?  @db.Uuid
+  taskId           String?  @db.Uuid
   // Quando foi lido. Se o registro mudar depois (updatedAt maior), volta a contar como não lido.
   readAt           DateTime @default(now())
 
@@ -633,6 +637,9 @@ model ReadMark {
   about          PatientAbout?     @relation(fields: [aboutId], references: [id], onDelete: Cascade)
   planEntry      PlanEntry?        @relation(fields: [planEntryId], references: [id], onDelete: Cascade)
 
+  task HomeworkTask? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([therapistId, taskId])
   // Uma marca por terapeuta e registro. NULL não colide no Postgres: vale para a coluna preenchida.
   @@unique([therapistId, thoughtRecordId])
   @@unique([therapistId, tensionEpisodeId])
@@ -803,4 +810,32 @@ model TwoFactorChallenge {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// Tarefa única combinada na consulta, criada e respondida pelo paciente (DEC-103).
+// A descrição não muda depois da primeira resposta. O prazo congelado impede reabertura.
+enum TaskResponseStatus {
+  RESPONDIDA
+  NAO_CONSEGUI
+  NAO_FAZ_SENTIDO
+}
+
+model HomeworkTask {
+  id                 String              @id @default(uuid()) @db.Uuid
+  userId             String              @db.Uuid
+  title              String?
+  description        String
+  agreedLinkId       String?             @db.Uuid
+  responseStatus     TaskResponseStatus?
+  responseText       String?
+  respondedAt        DateTime?
+  responseDeadlineAt DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agreedLink TherapistLink? @relation(fields: [agreedLinkId], references: [id], onDelete: SetNull)
+  readMarks  ReadMark[]
+
+  @@index([userId, createdAt])
 }

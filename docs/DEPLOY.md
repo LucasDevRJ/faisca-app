@@ -450,3 +450,15 @@ curl -s -o /dev/null -w "%{http_code}" --resolve minhafaisca.com.br:443:76.76.21
 ```
 
 Atenção: `faisca-app.vercel.app` **não** é o nosso app (é de outro projeto).
+
+## Entrega de Tarefas (DEC-106, #150)
+A migration `20261115211200_homework_tasks` é aditiva: tabela HomeworkTask, tipo de resposta,
+área TASKS e alvo taskId nas marcas de leitura. Aplicar pelo pre-deploy com faisca_migrator.
+Entregar em dois PRs, como na DEC-064/065:
+1. API e migration: 2026-11.6 conhecida, mantendo PRIVACY_VERSION em 2026-11.5.
+2. Telas e texto do aviso: ativar PRIVACY_VERSION=2026-11.6 junto com o frontend.
+O diff de trabalho representa o estado final das duas etapas; não publicar a ativação no primeiro PR.
+O front passa a mostrar o aviso 2026-11.6, a aba
+Tarefas e a novidade 2026-11-tarefas. Vínculos existentes não ganham TASKS automaticamente.
+Conferir com contas fictícias em ambiente local; a verificação de produção é feita pelo usuário.
+Sem variável de ambiente ou serviço novo. O backup existente inclui a tabela nova.
