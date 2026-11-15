@@ -21,7 +21,7 @@ import {
 } from './auth.emails.js';
 import type { AddProfileInput, ChangePasswordInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 import { CURRENT_ANNOUNCEMENT, pendingAnnouncement, type Announcement } from './announcements.js';
-import { PRIVACY_VERSION, privacyAreas, type PrivacyArea } from './privacy.js';
+import { PRIVACY_VERSION, privacyAreas, versionToRecord, type PrivacyArea, type PrivacyVersion } from './privacy.js';
 
 // A versão atual do aviso e as áreas que dependem dele ficam em ./privacy.ts (DEC-042).
 export { PRIVACY_VERSION };
@@ -93,7 +93,11 @@ function invalidToken() {
 }
 
 // O cadastro já com a senha trocada pelo hash (DEC-073).
-type PreparedSignup = Omit<SignupInput, 'password'> & { passwordHash: string };
+// privacyVersion: a versão a gravar, já resolvida antes da resposta (DEC-105).
+type PreparedSignup = Omit<SignupInput, 'password' | 'privacyVersion'> & {
+  passwordHash: string;
+  privacyVersion: PrivacyVersion;
+};
 
 // Os dados de um cadastro, guardados no link de confirmação que ele gerou (DEC-072).
 type PendingSignup = { passwordHash: string; name: string; patient: boolean; therapist: boolean };
@@ -222,8 +226,9 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
     // O hash da senha, antes da resposta (DEC-073): sempre acontece, exista a conta ou não, então
     // não muda o tempo; e assim a parte que ocupa a CPU não entra na fila do trabalho depois da
     // resposta, que fica só com banco e e-mail.
-    async prepareSignup({ password, ...input }: SignupInput): Promise<PreparedSignup> {
-      return { ...input, passwordHash: await hashPassword(password) };
+    // A versão do aviso é conferida aqui, antes da resposta: o cadastro em si roda depois dela.
+    async prepareSignup({ password, privacyVersion, ...input }: SignupInput): Promise<PreparedSignup> {
+      return { ...input, privacyVersion: versionToRecord(privacyVersion), passwordHash: await hashPassword(password) };
     },
 
     // A resposta é sempre a mesma, exista ou não a conta (DEC-025). Roda depois da resposta (DEC-073).
@@ -249,7 +254,7 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
             where: { id: existing.id },
             data: {
               privacyAcceptedAt: new Date(),
-              privacyVersion: PRIVACY_VERSION,
+              privacyVersion: input.privacyVersion,
               ...(input.profiles.therapist && {
                 professionalKind: input.professionalKind ?? existing.professionalKind ?? 'PSICOLOGIA',
               }),
@@ -275,7 +280,7 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
             // Todo perfil de terapeuta tem um tipo (DEC-097); sem escolha, psicóloga.
             professionalKind: input.profiles.therapist ? (input.professionalKind ?? 'PSICOLOGIA') : null,
             privacyAcceptedAt: new Date(),
-            privacyVersion: PRIVACY_VERSION,
+            privacyVersion: input.privacyVersion,
             // Conta nova já conhece o app como ele está: a novidade atual não é novidade para ela.
             seenAnnouncement: CURRENT_ANNOUNCEMENT,
           },
@@ -446,10 +451,11 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
 
     // Novo aceite do aviso, para quem aceitou uma versão anterior (DEC-039). Grava a data e a
     // versão, como no cadastro (DEC-036).
-    async acceptPrivacy(userId: string): Promise<User> {
+    // Grava a versão que o app mostrou (DEC-105): um app antigo não libera área de um texto que não mostrou.
+    async acceptPrivacy(userId: string, shownVersion?: string): Promise<User> {
       return prisma.user.update({
         where: { id: userId },
-        data: { privacyAcceptedAt: new Date(), privacyVersion: PRIVACY_VERSION },
+        data: { privacyAcceptedAt: new Date(), privacyVersion: versionToRecord(shownVersion) },
       });
     },
 

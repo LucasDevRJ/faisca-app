@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -22,7 +23,7 @@ afterEach(() => {
 // Aceitou a versão do aviso do RPD, mas não a que cita os episódios.
 const rpdOnlyUser = http.get('*/api/auth/me', () =>
   HttpResponse.json({
-    user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { thoughtRecords: true, tensionEpisodes: false, appointmentSchedule: false, actions: false } },
+    user: { ...fakeUser, privacyUpToDate: false, privacyAreas: { ...outdatedPrivacy.privacyAreas, thoughtRecords: true } },
   }),
 );
 
@@ -229,7 +230,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     await user.click(screen.getByRole('button', { name: 'Aceitar e continuar' }));
 
     expect(await screen.findByRole('article', { name: 'Episódio: Depois do aceite' })).toBeInTheDocument();
-    expect(writes).toEqual([{ method: 'POST', path: '/auth/accept-privacy', body: { acceptPrivacy: true } }]);
+    expect(writes).toEqual([{ method: 'POST', path: '/auth/accept-privacy', body: { acceptPrivacy: true, privacyVersion: SHOWN_PRIVACY_VERSION } }]);
   });
 });
 

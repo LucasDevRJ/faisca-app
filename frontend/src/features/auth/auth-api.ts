@@ -1,4 +1,5 @@
 import { isAxiosError } from 'axios';
+import { SHOWN_PRIVACY_VERSION } from './privacy-version';
 import { api } from '../../lib/api';
 import type { AccessibilitySettings } from '../profile/accessibility';
 import type { Palette } from '../profile/palettes';
@@ -127,8 +128,9 @@ export async function changePassword(input: ChangePasswordInput): Promise<void> 
   await api.post('/auth/change-password', input);
 }
 
+// Com a versão do aviso que este app mostra (DEC-105).
 export async function signup(input: SignupInput): Promise<void> {
-  await api.post('/auth/signup', input);
+  await api.post('/auth/signup', { ...input, privacyVersion: SHOWN_PRIVACY_VERSION });
 }
 
 // A senha do cadastro que gerou o link (DEC-072).
@@ -148,7 +150,11 @@ export async function addProfile(profile: 'patient' | 'therapist'): Promise<Sess
 
 // Novo aceite do aviso de privacidade (DEC-039), com o mesmo consentimento explícito do cadastro.
 export async function acceptPrivacy(): Promise<SessionUser> {
-  const { data } = await api.post<{ user: SessionUser }>('/auth/accept-privacy', { acceptPrivacy: true });
+  const { data } = await api.post<{ user: SessionUser }>('/auth/accept-privacy', {
+    acceptPrivacy: true,
+    // A versão que este app mostra (DEC-105): o servidor recusa outra.
+    privacyVersion: SHOWN_PRIVACY_VERSION,
+  });
   return data.user;
 }
 

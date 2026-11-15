@@ -2372,6 +2372,28 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   lembrete das fotos da Ação ainda fala em "sua psicóloga" (texto da DEC-065); ajustar para "quem você
   liberar" fica para quando a Ação for revista com as várias profissionais.
 
+## DEC-105 — O aceite do aviso grava a versão que o app mostrou
+- **Decisão (achado médio do `revisor-seguranca` no PR das telas da DEC-104, escolhas do usuário):**
+  - o app manda, no aceite (`POST /auth/accept-privacy`) e no cadastro, a **versão do aviso que ele
+    mostra** (`privacyVersion`, em `features/auth/privacy-version.ts`); o servidor grava essa versão,
+    e não "a atual";
+  - **versão diferente da atual:** 409 `PRIVACY_VERSION_OUTDATED`, "O aviso de privacidade mudou.
+    Atualize o app para ler a versão nova antes de aceitar." Nada é gravado, nem a conta nova;
+  - **sem versão** (app de antes desta regra, instalado e ainda não atualizado, ou nos minutos em que
+    a API nova já está no ar e o front ainda não, DEC-056): grava a **última versão que esses apps
+    mostram** (`LEGACY_SHOWN_VERSION`, hoje a `2026-11.4`). Ninguém fica travado, e a área nova só
+    libera com o app novo; a faixa continua aparecendo até atualizar;
+  - a faixa do aviso calcula o que falta liberar pelas áreas que **a API** manda, e não pela lista do
+    app. Com uma área que o app não conhece, ela pede para atualizar o app em vez de oferecer o aceite
+    de uma versão sem área nova, com um texto antigo.
+- **Motivo:** o service worker só troca o app quando a pessoa toca em "Atualizar" (DEC-041). Um app
+  antigo mostrava o texto da versão anterior e o servidor gravava a nova: a pessoa liberava uma área
+  (aqui, as fotos das atividades) sem ter lido o texto dela, o que a DEC-064, a DEC-065 e a DEC-104
+  queriam evitar. A brecha já existia nas trocas de versão anteriores.
+- **Limite conhecido:** a cada versão nova, `LEGACY_SHOWN_VERSION` fica onde está (é a versão dos apps
+  de antes desta regra); os apps novos mandam a versão. O texto da faixa de versão sem área nova
+  (`PrivacyVersionConsent`) ainda é escrito à mão a cada versão.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

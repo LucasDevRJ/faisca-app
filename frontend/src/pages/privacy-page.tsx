@@ -5,7 +5,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Aviso de privacidade (SPEC, "Privacidade"; DEC-036). Pública: abre com ou sem sessão, pelo
 // link do cadastro, da tela de entrar, do rodapé do app e de Conta.
 // Mudou o texto? Acrescente também uma versão em PRIVACY_VERSIONS no backend
-// (src/modules/auth/privacy.ts): é a versão que fica gravada no aceite de cada cadastro.
+// (src/modules/auth/privacy.ts): é a versão que fica gravada no aceite de cada cadastro. E troque o
+// SHOWN_PRIVACY_VERSION (features/auth/privacy-version.ts), que o app manda no aceite (DEC-105).
 // Versão 2026-10.2 (DEC-039): entra o Registro de Pensamentos, com novo aceite para usá-lo.
 // Versão 2026-10.3 (DEC-042): entram os Episódios de tensão, com novo aceite para usá-los.
 // Versão 2026-10.4 (DEC-045): entra a agenda (hora, motivos e pausas), com novo aceite para usá-la.

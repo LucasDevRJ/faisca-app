@@ -105,8 +105,8 @@ export function createAuthController(
   };
 
   const acceptPrivacy: RequestHandler = async (req, res) => {
-    acceptPrivacySchema.parse(req.body);
-    const user = await service.acceptPrivacy(getAuthUser(req).id);
+    const { privacyVersion } = acceptPrivacySchema.parse(req.body);
+    const user = await service.acceptPrivacy(getAuthUser(req).id, privacyVersion);
     res.status(200).json({ user: toPublicUser(user) });
   };
 

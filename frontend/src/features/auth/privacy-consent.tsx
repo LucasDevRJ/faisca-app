@@ -220,13 +220,28 @@ export function PrivacyUpdateBanner({ gatedArea }: { gatedArea?: PrivacyArea }) 
   if (!user || user.privacyUpToDate) return null;
   if (gatedArea && !user.privacyAreas[gatedArea]) return null;
 
-  const missing = (Object.keys(AREA_NAME) as PrivacyArea[]).filter((area) => !user.privacyAreas[area]);
+  // O que falta liberar vem da API, e não da lista deste app (achado do revisor-seguranca, DEC-105):
+  // um app desatualizado não conhece a área nova e mostraria o aceite de uma versão sem área nova,
+  // com um texto que não é o da versão atual.
+  const missing = Object.entries(user.privacyAreas)
+    .filter(([, allowed]) => !allowed)
+    .map(([area]) => area);
+  if (missing.some((area) => !(area in AREA_NAME))) {
+    return (
+      <Alert>
+        Atualizamos o aviso de privacidade. Atualize o app para ver o que mudou.{' '}
+        <Link to="/privacidade" className={linkClass}>
+          Ver o aviso
+        </Link>
+      </Alert>
+    );
+  }
   // Versão nova sem área nova (2026-10.7, DEC-078): nada a liberar, então o aceite fica na faixa.
   if (missing.length === 0) return <PrivacyVersionConsent />;
 
   return (
     <Alert>
-      Atualizamos o aviso de privacidade para incluir {joinAreas(missing)}. Você só precisa aceitar a nova versão
+      Atualizamos o aviso de privacidade para incluir {joinAreas(missing as PrivacyArea[])}. Você só precisa aceitar a nova versão
       para usar {missing.length > 1 ? 'essas partes' : 'essa parte'}.{' '}
       <Link to="/privacidade" className={linkClass}>
         Ver o que mudou

@@ -1,4 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
+import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -43,6 +44,8 @@ describe('SignupPage', () => {
       profiles: { patient: true, therapist: true },
       professionalKind: 'PSIQUIATRIA',
       acceptPrivacy: true,
+      // A versão do aviso que este app mostra (DEC-105).
+      privacyVersion: SHOWN_PRIVACY_VERSION,
     });
   });
 
