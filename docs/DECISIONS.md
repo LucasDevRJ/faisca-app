@@ -2301,6 +2301,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o modelo continua guardando o paciente como dono, sem identificar na tela
   quem iniciou cada plano. O formulário não permite à profissional criar registros do paciente.
 
+## DEC-103 — Fotos nas atividades (API)
+- **Decisão (#197):** em construção. Reserva também a versão `2026-11.5` do aviso de privacidade.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
