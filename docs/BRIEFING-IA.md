@@ -122,6 +122,7 @@ Na prática clínica tradicional:
   - Vê a lista de todos os seus pacientes vinculados (com foto, nome, status da agenda se estiver em pausa/encerrada e quantidade de registros para ler).
   - Vê **só as áreas que o paciente liberou para ela**; sem nenhuma, a página explica que ele ainda não liberou nada.
   - A **psicóloga** navega pelo **mesmo Ciclo da consulta** (ou Semana) que o paciente vê, nas abas liberadas (**Atividades**, **Pensamentos**, **Tensão**, **Ação** e **Meus Planos**), além da **Agenda de consultas** (com motivos de desmarcação/remarcação) e do cartão **"Sobre [Nome]"**.
+  - **A psicóloga cria planos de ação para o paciente** em Meus Planos, quando a área está liberada. O plano fica na conta do paciente, que continua dono dele e faz os registros; a psicóloga não edita planos nem cria registros.
   - A **psiquiatra** vê os mesmos registros por **1, 2 ou 3 meses** (começa em 3), com setas para voltar no tempo.
   - **Resumo do período em números:** no topo da página do paciente, um cartão com o essencial do período (dias com registro, atividades, as emoções mais presentes, a crença no pensamento e o efeito da explicação alternativa, tensão, Ação e Meus Planos), comparado com o **período anterior do mesmo tamanho** em formato neutro ("antes: 6,1"). Só números, sem interpretação e sem texto do paciente; só das áreas liberadas. Pensado para consultas espaçadas, como as da psiquiatra.
   - No cadastro ou no convite, a profissional diz se é **psicóloga ou psiquiatra** e, em Conta, pode informar o número do conselho (CRP ou CRM), que aparece para os pacientes.
@@ -176,7 +177,6 @@ Estes itens estão planejados no backlog e **ainda não estão no ar**:
 4. **Trava do app (#137) e entrar com passkey.**
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
 6. **Sono e humor (#188)** e **medicação (#171)**, pensados para o acompanhamento com a psiquiatra.
-7. **Meus Planos, 2ª parte:** a psicóloga também cria planos para o paciente.
 
 ---
 
