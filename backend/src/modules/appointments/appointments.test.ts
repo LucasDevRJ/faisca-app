@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../app.js';
 import { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
@@ -618,9 +618,12 @@ describe('GET /appointments/cycle (DEC-049)', () => {
     expect(res.body).toEqual({
       today: today(),
       cycle: {
-        from: day(-5),
+        from: day(-6),
         to: day(1),
         session: { date: day(1), time: '14:00', kind: 'RECORRENTE' },
+        completedSessionToday: null,
+        isCurrent: true,
+        nextChangeAt: null,
         truncated: false,
         previous: day(-6),
         next: day(2),
@@ -636,12 +639,57 @@ describe('GET /appointments/cycle (DEC-049)', () => {
     const later = await agent.get('/appointments/cycle').query({ date: day(10) });
     const invalid = await agent.get('/appointments/cycle').query({ date: '2026-02-30' });
 
-    expect(later.body.cycle).toEqual(expect.objectContaining({ from: day(9), to: day(15) }));
+    expect(later.body.cycle).toEqual(expect.objectContaining({ from: day(8), to: day(15) }));
     expect(invalid.status).toBe(400);
     // Data muito distante: 400, sem calcular milhares de sessões.
     const farAway = await agent.get('/appointments/cycle').query({ date: '9999-12-31' });
     expect(farAway.status).toBe(400);
     expect(farAway.body.error.code).toBe('DATE_TOO_FAR');
+  });
+
+  it('a rota troca o ciclo na hora da sessão no relógio de São Paulo', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-10-14T16:59:00.000Z')); // 13:59 em São Paulo.
+      await seedSchedule(patientId, '2026-10-14');
+      const agent = await loginAgent();
+
+      const before = await agent.get('/appointments/cycle');
+      expect(before.body).toMatchObject({
+        today: '2026-10-14',
+        cycle: {
+          from: '2026-10-08',
+          to: '2026-10-14',
+          isCurrent: true,
+          completedSessionToday: null,
+          nextChangeAt: '2026-10-14T17:00:00.000Z',
+        },
+      });
+
+      vi.setSystemTime(new Date('2026-10-14T17:00:00.000Z')); // 14:00 em São Paulo.
+      const after = await agent.get('/appointments/cycle');
+      expect(after.body).toMatchObject({
+        today: '2026-10-14',
+        cycle: {
+          from: '2026-10-14',
+          to: '2026-10-21',
+          isCurrent: true,
+          completedSessionToday: { time: '14:00' },
+          nextChangeAt: null,
+        },
+      });
+
+      const explicit = await agent.get('/appointments/cycle').query({ date: '2026-10-14' });
+      expect(explicit.body.cycle).toMatchObject({
+        from: '2026-10-08',
+        to: '2026-10-14',
+        isCurrent: false,
+        completedSessionToday: null,
+        nextChangeAt: null,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('não pede o aceite da agenda: só dias, sem motivos', async () => {

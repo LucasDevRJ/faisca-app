@@ -75,9 +75,12 @@ function patientApi({ data = summary(), activities = [] as Activity[], cycle = n
 }
 
 const CYCLE: Cycle = {
-  from: '2026-09-18',
+  from: '2026-09-17',
   to: '2026-09-28',
   session: { date: '2026-09-28', time: '14:00', kind: 'RECORRENTE' },
+  completedSessionToday: null,
+  isCurrent: true,
+  nextChangeAt: null,
   truncated: false,
   previous: '2026-09-17',
   next: '2026-09-29',
@@ -175,12 +178,12 @@ describe('/pacientes/:id', () => {
     renderRoute(path);
 
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
-    expect(screen.getByText('18/09 a 28/09')).toBeInTheDocument();
+    expect(screen.getByText('17/09 a 28/09')).toBeInTheDocument();
     expect(screen.getByText('A consulta é daqui a 4 dias.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ciclo' })).toHaveAttribute('aria-pressed', 'true');
-    expect(await screen.findByText(/^11 dias · 1 atividade feita/)).toBeInTheDocument();
+    expect(await screen.findByText(/^12 dias · 1 atividade feita/)).toBeInTheDocument();
     expect(await screen.findByRole('article', { name: 'Caminhada no ciclo' })).toBeInTheDocument();
-    expect(calls).toContainEqual({ from: '2026-09-18', to: '2026-09-28' });
+    expect(calls).toContainEqual({ from: '2026-09-17', to: '2026-09-28' });
     expect(cycleDates[0]).toBeNull();
     // Sem destaque: o ciclo é o período.
     expect(screen.queryByText(/Em destaque/)).not.toBeInTheDocument();

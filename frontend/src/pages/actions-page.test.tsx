@@ -41,14 +41,17 @@ function fakeAction(overrides: Partial<Action> = {}): Action {
 
 // Ciclo da consulta de segunda, 28/09 (a anterior foi na segunda, 21/09).
 const CYCLE = {
-  from: '2026-09-22',
+  from: '2026-09-21',
   to: '2026-09-28',
   session: { date: '2026-09-28', time: '14:00', kind: 'RECORRENTE' },
+  completedSessionToday: null,
+  isCurrent: true,
+  nextChangeAt: null,
   truncated: false,
   previous: '2026-09-21',
   next: '2026-09-29',
 };
-const PREVIOUS_CYCLE = { ...CYCLE, from: '2026-09-15', to: '2026-09-21', previous: '2026-09-14', next: '2026-09-22' };
+const PREVIOUS_CYCLE = { ...CYCLE, from: '2026-09-14', to: '2026-09-21', previous: '2026-09-07', next: '2026-09-22' };
 
 // Responde o ciclo e as ações do período pedido.
 function actionsApi(actions: Action[]) {

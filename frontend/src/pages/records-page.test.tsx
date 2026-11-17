@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -447,9 +447,12 @@ describe('RecordsPage: editar e excluir', () => {
 describe('RecordsPage: ciclo da consulta (DEC-050)', () => {
   // Consulta na segunda, 28/09, às 14:00; a anterior foi na segunda, 21/09.
   const cycle = {
-    from: '2026-09-22',
+    from: '2026-09-21',
     to: '2026-09-28',
     session: { date: '2026-09-28', time: '14:00', kind: 'RECORRENTE' },
+    completedSessionToday: null,
+    isCurrent: true,
+    nextChangeAt: null,
     truncated: false,
     previous: '2026-09-21',
     next: '2026-09-29',
@@ -474,12 +477,51 @@ describe('RecordsPage: ciclo da consulta (DEC-050)', () => {
     renderRoute('/registros');
 
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
-    expect(screen.getByText('22/09 a 28/09')).toBeInTheDocument();
+    expect(screen.getByText('21/09 a 28/09')).toBeInTheDocument();
     expect(screen.getByText('Sua consulta é daqui a 4 dias.')).toBeInTheDocument();
-    expect(await screen.findByText(/^7 dias · 1 atividade feita/)).toBeInTheDocument();
+    expect(await screen.findByText(/^8 dias · 1 atividade feita/)).toBeInTheDocument();
     expect(await screen.findByRole('heading', { level: 3, name: /segunda-feira, 28\/09/ })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 3, name: /segunda-feira, 21\/09/ })).not.toBeInTheDocument();
-    await waitFor(() => expect(calls).toContainEqual({ from: '2026-09-22', to: '2026-09-28' }));
+    expect(screen.getByRole('heading', { level: 3, name: /segunda-feira, 21\/09/ })).toBeInTheDocument();
+    await waitFor(() => expect(calls).toContainEqual({ from: '2026-09-21', to: '2026-09-28' }));
+  });
+
+  it('atualiza o cabeçalho após a sessão de hoje, sem recarregar a tela', async () => {
+    vi.setSystemTime(new Date('2026-09-28T16:59:00.000Z')); // 13:59 em São Paulo.
+    const afterSession = {
+      from: '2026-09-28',
+      to: '2026-10-05',
+      session: { date: '2026-10-05', time: '14:00', kind: 'RECORRENTE' },
+      completedSessionToday: { time: '14:00' },
+      isCurrent: true,
+      nextChangeAt: null,
+      truncated: false,
+      previous: '2026-09-28',
+      next: '2026-10-06',
+    };
+    server.use(
+      http.get('*/api/appointments/cycle', () =>
+        HttpResponse.json({
+          today: '2026-09-28',
+          cycle:
+            Date.now() >= new Date('2026-09-28T17:00:00.000Z').getTime()
+              ? afterSession
+              : { ...cycle, nextChangeAt: '2026-09-28T17:00:00.000Z' },
+        }),
+      ),
+    );
+    weekHandler([]);
+    const { queryClient } = renderRoute('/registros');
+
+    expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
+    expect(screen.getByText('Sua consulta é hoje, às 14:00.')).toBeInTheDocument();
+
+    vi.setSystemTime(new Date('2026-09-28T17:01:00.000Z')); // 14:01 em São Paulo.
+    await act(async () => {
+      await queryClient.refetchQueries({ queryKey: ['appointments', 'cycle', null] });
+    });
+
+    expect(await screen.findByRole('heading', { name: 'Consulta de 05/10' })).toBeInTheDocument();
+    expect(await screen.findByText('Sua consulta foi hoje, às 14:00.')).toBeInTheDocument();
   });
 
   it('setas e alternância ficam na URL, e trocar de aba mantém o período', async () => {
