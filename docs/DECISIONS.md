@@ -2420,6 +2420,13 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   de uma consulta. A descrição não pode ser alterada depois da primeira resposta. Fotos, áudios,
   tipos ligados a registros e criação pela psicóloga ficam para etapas futuras.
 
+## DEC-107 — Sono, humor e remédio (API)
+- **Decisão (#188, #171):** em construção. Reserva também a versão `2026-11.7` do aviso de privacidade e a
+  DEC-108 (telas).
+
+## DEC-108 — Sono, humor e remédio (telas)
+- **Decisão (#188, #171):** em construção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
