@@ -25,6 +25,7 @@ import { createNoticesRoutes } from './modules/notices/notices.routes.js';
 import { createReadMarksRoutes } from './modules/read-marks/read-marks.routes.js';
 import { createThoughtRecordsRoutes } from './modules/thought-records/thought-records.routes.js';
 import { createTasksRoutes } from './modules/tasks/tasks.routes.js';
+import { createDailyCheckInsRoutes } from './modules/daily-check-ins/daily-check-ins.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 
 export type AppDependencies = {
@@ -81,6 +82,7 @@ export function createApp({
   app.use(createAboutMeRoutes());
   app.use(createPlansRoutes());
   app.use(createTasksRoutes());
+  app.use(createDailyCheckInsRoutes());
   app.use(createSummaryRoutes());
   app.use(createLinksRoutes(mailer));
   app.use(createProfileRoutes());

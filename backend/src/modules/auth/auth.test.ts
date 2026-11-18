@@ -773,6 +773,8 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       plans: false,
       activityPhotos: false,
       tasks: false,
+      sleepMood: false,
+      medication: false,
     };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
@@ -816,6 +818,11 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       [
         '2026-11.6',
         { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true },
+      ],
+      // Sono, humor e remédio (DEC-107): duas áreas novas na mesma versão.
+      [
+        '2026-11.7',
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true },
       ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],

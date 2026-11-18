@@ -33,6 +33,9 @@ const { runInline } = await import('../src/lib/background.js');
 const SEED_PASSWORD = 'senha-ficticia-123';
 // privacyVersion: versão do aviso já aceita. Sem ela, a conta é de antes do aviso (null).
 const SEED_USERS: { name: string; email: string; patient: boolean; therapist: boolean; privacyVersion?: string }[] = [
+  // Só Sono, humor e remédio (api/daily-check-ins.spec.ts, DEC-107), com a versão que cita a área.
+  { name: 'Paciente Sono Fictícia', email: 'sono-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-11.7' },
+  { name: 'Psiquiatra Sono Fictícia', email: 'sono-psiquiatra@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.7' },
   // Só Tarefas (api/tasks.spec.ts e e2e/tasks.spec.ts).
   { name: 'Paciente Tarefas Fictícia', email: 'tarefas-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-11.6' },
   { name: 'Profissional Tarefas Fictícia', email: 'tarefas-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.6' },

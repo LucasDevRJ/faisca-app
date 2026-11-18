@@ -2420,6 +2420,43 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   de uma consulta. A descrição não pode ser alterada depois da primeira resposta. Fotos, áudios,
   tipos ligados a registros e criação pela psicóloga ficam para etapas futuras.
 
+## DEC-107 — Sono, humor e remédio (API)
+- **Decisão (#188 e parte da #171, desenho e textos aprovados pelo usuário em 17/11/2026):**
+  - **um registro por dia, todo opcional** (`DailyCheckIn`): a hora em que deitou e a hora em que
+    acordou (vêm juntas; as horas de sono são calculadas na leitura), a nota do sono e a do humor, de 0
+    a 10, uma palavra para o dia (até 40 caracteres) e o remédio do dia. Precisa de ao menos uma
+    resposta. **A noite pertence ao dia em que a pessoa acordou** (23:30 → 07:00 = 7h30 nesse dia);
+  - **o remédio é só "tomou como combinado?"**: `TOMOU`, `ESQUECEU_ALGUM` ou `NAO_TOMOU`. O Faísca não
+    guarda nome, dose nem efeito de remédio; a lista de remédios e as mudanças continuam na #171, para
+    depois. A pergunta só aparece para quem liga "Registrar se tomei o remédio" (`tracksMedication` na
+    conta, desligado por padrão), guardado e trocado pelas rotas do próprio módulo;
+  - **o paciente registra e edita só os últimos 7 dias** (hoje e os 6 anteriores): dia futuro é 400
+    `CHECK_IN_FUTURE` e dia mais antigo, 409 `CHECK_IN_CLOSED`. É mais simples que o prazo da próxima
+    consulta e não depende da agenda (escolha do usuário);
+  - **rotas do paciente**: `GET /daily-check-ins?from&to` (até 92 dias, para o gráfico), `PUT` e
+    `DELETE /daily-check-ins/:date` e `PUT /daily-check-ins/settings`, sempre com o id da sessão;
+  - **duas caixas no vínculo** (`SLEEP_MOOD` e `MEDICATION`), fechadas para todas as profissionais,
+    inclusive nos vínculos que já existiam: assim o paciente pode liberar o remédio só para a
+    psiquiatra. A profissional lê em `GET /therapist/patients/:patientId/daily-check-ins`, que pede uma
+    das duas caixas (`requireAnySharedArea`) e tira o que a outra mostraria; um dia que fica vazio para
+    ela sai da lista. Sem "Lido" e fora do "Para ler": é um registro diário e encheria a lista dela;
+  - **área nova no aviso de privacidade** (`2026-11.7`, `sleepMood` e `medication`), conhecida na API e
+    atual só no PR das telas, que traz o texto (como na DEC-103 e na DEC-106);
+  - **no resumo do período (DEC-100)**: Sono e humor (noites, média das horas e da nota do sono, dias
+    com humor, média, a menor e a maior nota e a série do período para o gráfico) e Remédio (dias
+    registrados, tomou, esqueceu algum, não tomou), cada um só com a própria caixa. A palavra do dia
+    fica fora do resumo, que não leva texto do paciente;
+  - a palavra do dia entra no `SENSITIVE_KEYS` do logger (regra 7), e um CHECK no banco repete os
+    limites do Zod.
+- **Motivo:** a psiquiatra achou o app detalhado demais e precisa de métricas como o sono para consultas
+  espaçadas; sono, humor e a adesão ao remédio são o que a psiquiatria costuma acompanhar entre as
+  consultas. O usuário pediu para decidir pela prática comum, sem consultar a profissional.
+- **Limite conhecido:** sem lembrete diário nesta entrega, para não virar cobrança. Os textos, o gráfico
+  e a pergunta do remédio em Conta ficam para o PR das telas (DEC-108).
+
+## DEC-108 — Sono, humor e remédio (telas)
+- **Decisão (#188, #171):** em construção.
+
 ## DEC-109 — Virada do ciclo na hora da consulta
 - **Decisão (#185, opção B):** revê a regra da DEC-049 e o cabeçalho da DEC-050:
   - cada sessão fecha um ciclo e inicia o seguinte no mesmo dia; esse dia aparece nos dois períodos;

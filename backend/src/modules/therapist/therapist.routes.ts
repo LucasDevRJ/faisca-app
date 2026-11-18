@@ -4,6 +4,7 @@ import {
   getPatientLink,
   onlyReads,
   requireActiveLink,
+  requireAnySharedArea,
   requirePatientPrivacy,
   requireSharedArea,
 } from '../../middlewares/require-patient-access.js';
@@ -12,6 +13,7 @@ import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { AppError } from '../../errors/app-error.js';
 import { createAboutMeService } from '../about-me/about-me.service.js';
+import { createDailyCheckInsController } from '../daily-check-ins/daily-check-ins.controller.js';
 import { createActionsController } from '../actions/actions.controller.js';
 import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesController } from '../activities/activities.controller.js';
@@ -142,6 +144,13 @@ export function createTherapistRoutes() {
     const marks = createReadMarksService(thoughtRecords, tensionEpisodes, actions, aboutMe, plans);
     res.json({ tasks: await marks.withReadStatus(getAuthUser(req).id, 'TASK', tasks.map((task) => taskForProfessional(task, link.sharedAreas))) });
   });
+  // Sono, humor e remédio (DEC-107): pede uma das duas caixas. O controller confere o aceite dela por
+  // caixa e tira o que a caixa fechada (ou sem aceite) mostraria.
+  router.get(
+    `${PREFIX}/daily-check-ins`,
+    requireAnySharedArea('SLEEP_MOOD', 'MEDICATION'),
+    createDailyCheckInsController().patient,
+  );
   router.get(`${PREFIX}/unread`, controller.unread);
 
   return router;

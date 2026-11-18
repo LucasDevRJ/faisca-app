@@ -1,7 +1,8 @@
 import type { Emotion, SharedArea } from '../../generated/prisma/client.js';
-import { addDays, dateOnlyToDate, dateToDateOnly, daysBetween } from '../../lib/dates.js';
+import { addDays, dateOnlyToDate, dateToDateOnly, dateToTimeOnly, daysBetween } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import { coversArea, type PrivacyArea } from '../auth/privacy.js';
+import { sleepMinutes } from '../daily-check-ins/daily-check-ins.service.js';
 import type { PeriodSummaryQuery } from './summary.schema.js';
 
 // Resumo do período em números (DEC-100, #172): só contagens e médias calculadas na hora, a partir
@@ -9,7 +10,15 @@ import type { PeriodSummaryQuery } from './summary.schema.js';
 // mesmo tamanho e termina na véspera do atual.
 
 // As áreas do resumo e o aceite do aviso que cada uma pede (as Atividades não pedem nenhum).
-export const SUMMARY_AREAS = ['ACTIVITIES', 'THOUGHT_RECORDS', 'TENSION_EPISODES', 'ACTIONS', 'PLANS'] as const;
+export const SUMMARY_AREAS = [
+  'ACTIVITIES',
+  'THOUGHT_RECORDS',
+  'TENSION_EPISODES',
+  'ACTIONS',
+  'PLANS',
+  'SLEEP_MOOD',
+  'MEDICATION',
+] as const;
 export type SummaryArea = (typeof SUMMARY_AREAS)[number];
 
 const PRIVACY_OF: Record<SummaryArea, PrivacyArea | null> = {
@@ -18,6 +27,8 @@ const PRIVACY_OF: Record<SummaryArea, PrivacyArea | null> = {
   TENSION_EPISODES: 'tensionEpisodes',
   ACTIONS: 'actions',
   PLANS: 'plans',
+  SLEEP_MOOD: 'sleepMood',
+  MEDICATION: 'medication',
 };
 
 // O que quem pede pode ver: na profissional, a área liberada pelo paciente (DEC-097) e o aceite
@@ -156,6 +167,57 @@ async function plansStats(userId: string, range: Range, days: Set<string>) {
   return { entries: rows.length, plans: new Set(rows.map((row) => row.planId)).size };
 }
 
+// Sono e humor (DEC-107): noites com os dois horários, a média das horas e das notas, e a série do
+// período para o gráfico (sem a palavra do dia, que é texto do paciente).
+async function sleepMoodStats(userId: string, range: Range, days: Set<string>) {
+  const rows = await prisma.dailyCheckIn.findMany({
+    where: {
+      userId,
+      checkInDate: between(range),
+      OR: [{ bedTime: { not: null } }, { sleepQuality: { not: null } }, { mood: { not: null } }, { moodWord: { not: null } }],
+    },
+    select: { checkInDate: true, bedTime: true, wakeTime: true, sleepQuality: true, mood: true },
+    orderBy: { checkInDate: 'asc' },
+  });
+  rows.forEach((row) => days.add(dateToDateOnly(row.checkInDate)));
+  const series = rows.map((row) => ({
+    date: dateToDateOnly(row.checkInDate),
+    sleepMinutes:
+      row.bedTime && row.wakeTime ? sleepMinutes(dateToTimeOnly(row.bedTime), dateToTimeOnly(row.wakeTime)) : null,
+    sleepQuality: row.sleepQuality,
+    mood: row.mood,
+  }));
+  const minutes = present(series.map((day) => day.sleepMinutes));
+  const moods = present(series.map((day) => day.mood));
+  const avgMinutes = average(minutes);
+  return {
+    nights: minutes.length,
+    // Em minutos inteiros: a tela mostra "6h50".
+    avgSleepMinutes: avgMinutes === null ? null : Math.round(avgMinutes),
+    avgSleepQuality: average(present(series.map((day) => day.sleepQuality))),
+    moodDays: moods.length,
+    avgMood: average(moods),
+    minMood: moods.length === 0 ? null : Math.min(...moods),
+    maxMood: moods.length === 0 ? null : Math.max(...moods),
+    series,
+  };
+}
+
+// Remédio (DEC-107): em quantos dias registrados tomou como combinado, esqueceu algum ou não tomou.
+async function medicationStats(userId: string, range: Range, days: Set<string>) {
+  const rows = await prisma.dailyCheckIn.findMany({
+    where: { userId, checkInDate: between(range), medication: { not: null } },
+    select: { checkInDate: true, medication: true },
+  });
+  rows.forEach((row) => days.add(dateToDateOnly(row.checkInDate)));
+  return {
+    days: rows.length,
+    taken: rows.filter((row) => row.medication === 'TOMOU').length,
+    forgotSome: rows.filter((row) => row.medication === 'ESQUECEU_ALGUM').length,
+    notTaken: rows.filter((row) => row.medication === 'NAO_TOMOU').length,
+  };
+}
+
 type Comparison<T> = { current: T; previous: T };
 type DaySets = { current: Set<string>; previous: Set<string> };
 
@@ -185,12 +247,14 @@ export function createSummaryService() {
     const ranges = { current: { from: query.from, to: query.to }, previous: previousRange(query) };
     const days: DaySets = { current: new Set(), previous: new Set() };
     const sees = (area: SummaryArea) => areas.includes(area);
-    const [activities, thoughtRecords, tensionEpisodes, actions, plans] = await Promise.all([
+    const [activities, thoughtRecords, tensionEpisodes, actions, plans, sleepMood, medication] = await Promise.all([
       compare(sees('ACTIVITIES'), activitiesStats, userId, ranges, days),
       compare(sees('THOUGHT_RECORDS'), thoughtRecordsStats, userId, ranges, days),
       compare(sees('TENSION_EPISODES'), tensionEpisodesStats, userId, ranges, days),
       compare(sees('ACTIONS'), actionsStats, userId, ranges, days),
       compare(sees('PLANS'), plansStats, userId, ranges, days),
+      compare(sees('SLEEP_MOOD'), sleepMoodStats, userId, ranges, days),
+      compare(sees('MEDICATION'), medicationStats, userId, ranges, days),
     ]);
     return {
       period: ranges.current,
@@ -202,6 +266,8 @@ export function createSummaryService() {
       tensionEpisodes,
       actions,
       plans,
+      sleepMood,
+      medication,
     };
   }
 

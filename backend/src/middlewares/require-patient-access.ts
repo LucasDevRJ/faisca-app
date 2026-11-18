@@ -76,6 +76,16 @@ export function requireSharedArea(...areas: SharedArea[]): RequestHandler {
   };
 }
 
+// Pelo menos uma das áreas liberada: para rotas que juntam caixas separadas, como o Sono e humor e
+// o Remédio (DEC-107). O que cada caixa mostra é filtrado depois, no controller.
+export function requireAnySharedArea(...areas: SharedArea[]): RequestHandler {
+  return (_req, res, next) => {
+    const { sharedAreas } = getPatientLink(res);
+    if (!areas.some((area) => sharedAreas.includes(area))) throw forbidden();
+    next();
+  };
+}
+
 // Escrita de um dado do paciente pela psicóloga: além do aceite de quem escreve, exige que o
 // paciente tenha aceitado o aviso que cobre a área (DEC-094, DEC-102).
 export function requirePatientPrivacy(area: PrivacyArea): RequestHandler {
