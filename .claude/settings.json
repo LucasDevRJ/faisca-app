@@ -1,4 +1,9 @@
 {
+  "env": {
+    "FAISCA_TEST_DB": "faisca_test_claude",
+    "E2E_API_PORT": "3334",
+    "E2E_WEB_PORT": "5174"
+  },
   "permissions": {
     "deny": ["Read(**/.env)"],
     "ask": [

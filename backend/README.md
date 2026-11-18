@@ -34,8 +34,8 @@ O `docker/init-db.sh` só roda com o volume vazio. Para recriar o banco do zero:
 | `dev` | API com recarga automática (tsx watch) |
 | `build` / `start` | compila para `dist/` e roda a versão compilada |
 | `lint` / `typecheck` | ESLint e checagem de tipos |
-| `test` / `test:watch` | Vitest + Supertest, no banco `faisca_test` (precisa do Postgres ligado) |
-| `test:e2e-server` | API para o Playwright (`tests/`), na porta 3334 e no `faisca_test` |
+| `test` / `test:watch` | Vitest + Supertest, no banco de testes (`faisca_test` ou o do agente, `FAISCA_TEST_DB`; precisa do Postgres ligado) |
+| `test:e2e-server` | API para o Playwright (`tests/`), na porta `E2E_API_PORT` (padrão 3334) e no banco de testes |
 | `db:up` / `db:down` | liga e desliga o Postgres local |
 | `db:migrate` | cria e aplica migration em dev (`prisma migrate dev`) |
 | `db:deploy` | aplica migrations pendentes, sem criar nova (produção e CI) |
@@ -70,6 +70,10 @@ Os testes usam o mesmo Postgres de dev, num banco separado: `faisca_test`. Ele �
 sozinho na primeira execução do `npm test` (pelo faisca_migrator, que tem `CREATEDB` só localmente)
 e recebe as migrations a cada execução. As URLs vêm do `.env`, trocando só o nome do banco.
 Os dados são apagados antes de cada teste; nada de dev é tocado.
+
+Com mais de um agente de IA, cada um usa o próprio banco e as próprias portas do Playwright
+(`FAISCA_TEST_DB`, `E2E_API_PORT` e `E2E_WEB_PORT`; tabela no AGENTS.md, DEC-110). O nome do banco
+precisa começar com `faisca_test`.
 
 ## Dois usuários de banco (DEC-003)
 
