@@ -18,6 +18,7 @@ import { AppError } from '../../errors/app-error.js';
 //   paciente escolhe (DEC-097, DEC-098). Sem área nova: nada é bloqueado.
 // - 2026-11.5: entram as fotos nas atividades (DEC-103), com área própria.
 // - 2026-11.6: entram as Tarefas e suas respostas (DEC-106), com área própria.
+// - 2026-11.7: entram o Sono e humor e o Remédio do dia (DEC-107), cada um com área própria.
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -32,6 +33,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.4',
   '2026-11.5',
   '2026-11.6',
+  '2026-11.7',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -44,7 +46,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // para a 2026-11.2 (Meus Planos, DEC-094): conhecida na API, virou a atual no PR das telas (DEC-095).
 // A 2026-11.3 (DEC-096) e a 2026-11.4 (DEC-098) entraram de uma vez, API e texto no mesmo PR.
 // A 2026-11.5 (fotos das atividades, DEC-103) foi conhecida na API antes e virou a atual no PR das
-// telas, com o texto (DEC-104). A 2026-11.6 (Tarefas, DEC-106) segue o mesmo fluxo.
+// telas, com o texto (DEC-104). A 2026-11.6 (Tarefas, DEC-106) segue o mesmo fluxo, e a 2026-11.7
+// (sono, humor e remédio, DEC-107) também: conhecida na API, vira a atual no PR das telas (DEC-108).
 export const PRIVACY_VERSION: PrivacyVersion = '2026-11.6';
 
 // Qual versão gravar no aceite (DEC-105). O app manda a versão que mostrou; o servidor só grava a que
@@ -88,6 +91,10 @@ export const PRIVACY_AREAS = {
   activityPhotos: '2026-11.5',
   // Tarefas e respostas (DEC-106): conteúdo de saúde escrito pelo paciente.
   tasks: '2026-11.6',
+  // Sono e humor (DEC-107): horários de deitar e acordar, notas do sono e do humor e a palavra do dia.
+  sleepMood: '2026-11.7',
+  // Remédio (DEC-107): só se tomou como combinado em cada dia, sem nome nem dose.
+  medication: '2026-11.7',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -110,5 +117,7 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     plans: coversArea(acceptedVersion, 'plans'),
     activityPhotos: coversArea(acceptedVersion, 'activityPhotos'),
     tasks: coversArea(acceptedVersion, 'tasks'),
+    sleepMood: coversArea(acceptedVersion, 'sleepMood'),
+    medication: coversArea(acceptedVersion, 'medication'),
   };
 }

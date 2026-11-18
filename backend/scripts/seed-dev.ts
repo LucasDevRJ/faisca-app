@@ -200,6 +200,24 @@ await prisma.$transaction(async (tx) => {
       consequence,
     })),
   });
+  // Sono, humor e remédio (DEC-107): 3 semanas fictícias, com alguns dias em branco (esquecer é normal).
+  await tx.dailyCheckIn.deleteMany({ where: { userId: patient.id } });
+  await tx.user.update({ where: { id: patient.id }, data: { tracksMedication: true } });
+  const words = ['cansado', 'tranquilo', 'ansioso', null, 'animado', null, 'leve'];
+  await tx.dailyCheckIn.createMany({
+    data: Array.from({ length: 21 }, (_, index) => index)
+      .filter((index) => index % 5 !== 3)
+      .map((index) => ({
+        userId: patient.id,
+        checkInDate: dateOnlyToDate(addDays(today, -index)),
+        bedTime: timeOnlyToDate(index % 3 === 0 ? '00:30' : '23:15'),
+        wakeTime: timeOnlyToDate(index % 4 === 0 ? '06:00' : '07:30'),
+        sleepQuality: 4 + (index % 5),
+        mood: 3 + (index % 6),
+        moodWord: words[index % words.length] ?? null,
+        medication: index % 9 === 4 ? ('ESQUECEU_ALGUM' as const) : ('TOMOU' as const),
+      })),
+  });
   // Meus Planos (DEC-094): um plano com o modelo das 6 perguntas e dois registros, e um encerrado.
   await tx.homeworkTask.deleteMany({ where: { userId: patient.id } });
   await tx.homeworkTask.createMany({ data: [

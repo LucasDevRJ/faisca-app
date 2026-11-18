@@ -274,6 +274,17 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   Não bloqueia áreas cujo aviso já foi aceito. Textos e status de resposta fora dos logs; sem
   notificação nesta entrega. Fotos e ligação a outras áreas continuam na #151.
 
+## Sono, humor e remédio (DEC-107, #188 e #171)
+- Um registro por dia, todo opcional: a hora em que deitou e a hora em que acordou (as horas de sono
+  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra para o dia e, para quem liga a
+  opção em Conta, "Tomou o remédio como combinado?" (Sim, Esqueci algum ou Hoje não). A noite pertence
+  ao dia em que a pessoa acordou.
+- O paciente registra e edita os últimos 7 dias. Sem cobrança, sem sequência e sem lembrete diário.
+- O Faísca não guarda nome, dose nem efeito de remédio.
+- Duas áreas no vínculo, "Sono e humor" e "Remédio", fechadas para todas as profissionais até o
+  paciente liberar. A profissional só lê, sem "Lido". As duas entram no resumo do período, sem a
+  palavra do dia.
+
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados
   com o **período anterior do mesmo tamanho**: dias com registro, atividades, pensamentos (as emoções mais
