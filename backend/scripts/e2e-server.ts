@@ -1,7 +1,7 @@
 import express from 'express';
-import { prepareTestDatabase, testDatabaseUrls } from './test-db.js';
+import { prepareTestDatabase, testDatabaseName, testDatabaseUrls } from './test-db.js';
 
-// API para os testes do Playwright (tests/), no banco faisca_test (DEC-026).
+// API para os testes do Playwright (tests/), no banco faisca_test ou no do agente (FAISCA_TEST_DB, DEC-026).
 // Fica fora de src/: nunca entra no build nem em produção.
 // Em cada subida: aplica as migrations, apaga os dados e cria os usuários fictícios.
 
@@ -138,5 +138,5 @@ server.get('/__test__/emails/latest', (req, res) => {
 server.use(createApp({ mailer, pushSender, runAfterResponse: runInline }));
 
 server.listen(env.PORT, () => {
-  logger.warn({ port: env.PORT }, 'API de testes E2E no ar (banco faisca_test)');
+  logger.warn({ port: env.PORT }, `API de testes E2E no ar (banco ${testDatabaseName()})`);
 });
