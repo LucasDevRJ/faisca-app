@@ -7,6 +7,7 @@ import { useAccessibility } from '../profile/use-profile';
 import { ActionPhotos } from './action-photos';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action } from './actions-api';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
 
 const STATUS_LABEL: Record<Action['status'], string> = {
   PLANEJADA: 'Planejada',
@@ -105,6 +106,7 @@ export function ActionCard(props: ActionCardProps) {
           </div>
         </div>
       )}
+      {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTION" id={action.id} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
     </article>
   );
 }

@@ -6,12 +6,13 @@ import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { FIELD_TEXT, formatEpisodeTime } from './tension-episode-labels';
 import type { TensionEpisode } from './tension-episodes-api';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
 
 // readOnly: visão da terapeuta. Sem botões e sempre com a hora do registro (a SPEC mostra à
 // terapeuta as duas datas; a do episódio vem no título do dia).
 type TensionEpisodeCardProps =
   | { episode: TensionEpisode; onDelete: (episode: TensionEpisode) => void; readOnly?: false }
-  | { episode: TensionEpisode; readOnly: true; footer?: ReactNode };
+  | { episode: TensionEpisode; readOnly: true; footer?: ReactNode; patientId?: string };
 
 // Editar e excluir só no dia em que foi registrado (DEC-042). Depois disso, o registro fica
 // fixo e o backend responderia 409: esconder os botões é conforto, não segurança.
@@ -19,6 +20,7 @@ export function TensionEpisodeCard(props: TensionEpisodeCardProps) {
   const { episode } = props;
   const titleId = useId();
   const canChange = !props.readOnly && episode.editable;
+  const linkPatientId = props.readOnly ? props.patientId : undefined;
 
   return (
     <article
@@ -55,6 +57,10 @@ export function TensionEpisodeCard(props: TensionEpisodeCardProps) {
           </Button>
         </div>
       )}
+      {!props.readOnly && <Link to={`/tensao/novo?repetir=${episode.id}`} className={buttonClasses('secondary', 'self-start')}>
+        Isso aconteceu de novo
+      </Link>}
+      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="TENSION_EPISODE" id={episode.id} readOnly={props.readOnly} patientId={linkPatientId} />}
     </article>
   );
 }

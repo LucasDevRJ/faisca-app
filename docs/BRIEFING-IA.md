@@ -77,7 +77,6 @@ Na prática clínica tradicional:
   - Para registrar momentos de tensão física/emocional ou tiques vocais/de ansiedade.
   - Campos: **dia**, **hora** (opcional, para quem não lembra a hora exata), **situação**, **tensão no corpo** (0 a 10), **vontade de vocalizar** (0 a 10 — falar, gritar ou se movimentar para expressar a ansiedade), **o que fez** e **o que aconteceu depois**.
   - No fim da tela, um **gráfico de linha** mostra a evolução da tensão e da vontade de vocalizar ao longo do período, marcando os dias em que houve consulta.
-
 - **Ação (Prazer, Conexão e Realização):**
   - Ações intencionais que a pessoa escolhe fazer no ciclo, divididas em três categorias claras:
     1. **Prazer:** algo que se gosta de fazer (ex.: ouvir música, tomar sol, cozinhar algo gostoso);
@@ -174,6 +173,12 @@ Na prática clínica tradicional:
 texto livre ou registra que não conseguiu fazer ou que não faz sentido agora. Compartilha a área
 com as profissionais que escolher; as respostas entram em Para ler. A aba fica sempre disponível.
 A primeira entrega ainda não foi publicada. Fotos e ligação a outras áreas ficam para depois.
+
+**Em desenvolvimento — Ligações entre registros (#207) e repetição de pensamentos (#166):** o
+paciente poderá relacionar registros de diferentes áreas. A psicóloga só verá a ligação se as duas
+áreas estiverem compartilhadas e cobertas pelos aceites de privacidade. Pensamentos e episódios de
+tensão terão atalhos para criar uma nova ocorrência sem alterar a anterior; o histórico mostrará a
+evolução de crença, emoções e tensão. Ainda não publicado.
 
 
 Estes itens estão planejados no backlog e **ainda não estão no ar**:

@@ -11,6 +11,7 @@ import {
   processPhoto,
 } from '../../lib/photos.js';
 import { prisma } from '../../lib/prisma.js';
+import { removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import { loadAgenda } from '../appointments/appointments.service.js';
 import { scheduledSessionsFrom, type Session } from '../appointments/sessions.js';
 import {
@@ -355,10 +356,11 @@ export function createActivitiesService() {
     assertEditable(activity.status);
 
     // Mesmo cuidado do guardedUpdate: só apaga se ainda não for final.
-    const { count } = await prisma.activity.deleteMany({
-      where: { id, status: { in: [...EDITABLE_STATUSES] } },
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.activity.deleteMany({ where: { id, userId, status: { in: [...EDITABLE_STATUSES] } } });
+      if (count === 0) throw await conflictAfterRace(id);
+      await removeRecordLinks(tx, userId, 'ACTIVITY', id);
     });
-    if (count === 0) throw await conflictAfterRace(id);
   }
 
   // ——— Fotos (DEC-103) ———

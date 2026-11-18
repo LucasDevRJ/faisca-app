@@ -11,6 +11,7 @@ import {
   processPhoto,
 } from '../../lib/photos.js';
 import { prisma } from '../../lib/prisma.js';
+import { removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import { loadAgenda } from '../appointments/appointments.service.js';
 import { scheduledSessionsFrom, type Session } from '../appointments/sessions.js';
 import {
@@ -307,8 +308,11 @@ export function createActionsService() {
 
   async function remove(userId: string, id: string) {
     await findPlanned(userId, id);
-    const { count } = await prisma.behavioralAction.deleteMany({ where: { id, userId, status: 'PLANEJADA' } });
-    if (count === 0) throw await conflictAfterRace(id);
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.behavioralAction.deleteMany({ where: { id, userId, status: 'PLANEJADA' } });
+      if (count === 0) throw await conflictAfterRace(id);
+      await removeRecordLinks(tx, userId, 'ACTION', id);
+    });
   }
 
   // Ações escolhidas por id, de qualquer data, na ordem da lista (visão "Não lidos", DEC-057).

@@ -39,6 +39,7 @@ const fields = {
 export const createTensionEpisodeSchema = z.strictObject({
   ...fields,
   episodeTime: fields.episodeTime.optional(),
+  repeatFromId: z.uuid().optional(),
 });
 
 // Na edição, manda só o que mudou. episodeTime: null apaga a hora.

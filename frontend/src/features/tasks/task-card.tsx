@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { LongText } from '../../components/ui/long-text';
 import { RESPONSE_LABELS } from './task-labels';
 import type { Task } from './tasks-api';
-export function TaskCard({ task, children, footer }: { task: Task; children?: ReactNode; footer?: ReactNode }) {
+import { RecordLinksPanel } from '../record-links/record-links-panel';
+export function TaskCard({ task, children, footer, patientId, readOnly = false }: { task: Task; children?: ReactNode; footer?: ReactNode; patientId?: string; readOnly?: boolean }) {
   return <article aria-labelledby={`task-${task.id}`} className="flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft">
     <h2 id={`task-${task.id}`} className="text-lg font-semibold break-words">{task.title ?? 'Tarefa'}</h2>
     <LongText text={task.description} />
@@ -13,5 +14,6 @@ export function TaskCard({ task, children, footer }: { task: Task; children?: Re
     </div>}
     {children}
     {footer}
+    {(!readOnly || patientId) && <RecordLinksPanel type="TASK" id={task.id} readOnly={readOnly} patientId={patientId} />}
   </article>;
 }
