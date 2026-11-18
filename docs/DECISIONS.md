@@ -2523,6 +2523,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   acontecer, uma delas troca a variável no `.claude/settings.local.json`. Os bancos de teste antigos
   podem ficar no Postgres de dev; apagar é seguro, porque são recriados.
 
+## DEC-111 — Ligações entre registros e repetição (18/11/2026)
+- **Decisão:** ligações bidirecionais pertencem ao paciente e podem conectar registros das áreas
+  Atividades, Pensamentos, Tensão, Ação, Meus Planos, Tarefas, Sono e humor e Remédio do dia. O
+  paciente cria e remove; a profissional só lê. O backend confirma dono, vínculo, áreas e aceite
+  de privacidade para as duas pontas; se uma ponta não estiver visível, não revela a associação.
+- **Repetição:** RPD e Tensão usam o mesmo modelo de ligação (`REPETITION`) das associações manuais.
+  No RPD, a nova ocorrência copia pensamento, crença, emoções, comportamento e consequência,
+  deixa situação em branco e mostra a alternativa anterior só como lembrete. Na Tensão, copia só a
+  situação. Novos registros são independentes e não alteram a origem.
+- **Família:** a repetição aponta da raiz para cada nova ocorrência. Se a raiz for apagada, a
+  ocorrência sobrevivente mais antiga vira a raiz. Apagar uma ocorrência remove apenas sua aresta;
+  apagar registros remove suas associações. Ligações podem envolver registros finais.
+- **Motivo:** relacionar eventos sem expor áreas privadas e observar a recorrência sem sobrescrever
+  o histórico nem transformar a relação em interpretação clínica.
+- **Limite conhecido:** o vínculo guarda IDs polimórficos, então toda rota de exclusão precisa
+  remover as associações na mesma transação. A API e a interface devem manter os tipos de registro
+  sincronizados com as áreas liberadas.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

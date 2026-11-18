@@ -14,6 +14,8 @@ import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { AppError } from '../../errors/app-error.js';
 import { createAboutMeService } from '../about-me/about-me.service.js';
 import { createDailyCheckInsController } from '../daily-check-ins/daily-check-ins.controller.js';
+import { createRecordLinksController } from '../record-links/record-links.controller.js';
+import { createRecordLinksService } from '../record-links/record-links.service.js';
 import { createActionsController } from '../actions/actions.controller.js';
 import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesController } from '../activities/activities.controller.js';
@@ -61,6 +63,7 @@ export function createTherapistRoutes() {
     ),
   );
   const profile = createProfileController(createProfileService());
+  const recordLinks = createRecordLinksController(createRecordLinksService());
   const router = Router();
 
   // router.use com o prefixo pega também caminhos que não existem: um POST em qualquer
@@ -152,6 +155,9 @@ export function createTherapistRoutes() {
     createDailyCheckInsController().patient,
   );
   router.get(`${PREFIX}/unread`, controller.unread);
+  router.get(`${PREFIX}/record-links`, requireAnySharedArea(
+    'ACTIVITIES', 'THOUGHT_RECORDS', 'TENSION_EPISODES', 'ACTIONS', 'PLANS', 'TASKS', 'SLEEP_MOOD', 'MEDICATION',
+  ), recordLinks.therapistList);
 
   return router;
 }

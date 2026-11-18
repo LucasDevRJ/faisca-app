@@ -198,6 +198,9 @@ export const handlers = [
   // Sono e humor (DEC-107): nenhum dia registrado e a pergunta do remédio desligada, por padrão.
   http.get('*/api/daily-check-ins', () => HttpResponse.json({ checkIns: [], tracksMedication: false })),
   http.get('*/api/therapist/patients/:patientId/daily-check-ins', () => HttpResponse.json({ checkIns: [] })),
+  http.get('*/api/record-links', () => HttpResponse.json({ links: [] })),
+  http.get('*/api/record-links/candidates', () => HttpResponse.json({ records: [] })),
+  http.get('*/api/therapist/patients/:patientId/record-links', () => HttpResponse.json({ links: [] })),
   // Nenhum plano, por padrão (DEC-094, DEC-095): a aba Meus Planos fica escondida.
   http.get('*/api/plans', () => HttpResponse.json({ plans: [] })),
   http.get('*/api/therapist/patients/:patientId/plans', () => HttpResponse.json({ plans: [] })),

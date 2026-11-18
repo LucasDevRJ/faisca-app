@@ -9,6 +9,7 @@ import {
   todayInAppZone,
 } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
+import { removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import { futureMoment, isEditable } from '../tension-episodes/tension-episodes.service.js';
 import {
   PLANS_MAX,
@@ -172,8 +173,8 @@ function stillEditable(userId: string, id: string): Prisma.PlanEntryWhereInput {
   return { id, userId, createdAt: { gte: startOfDayInAppZone(todayInAppZone()) } };
 }
 
-async function conflictAfterRace(id: string): Promise<AppError> {
-  const exists = await prisma.planEntry.findUnique({ where: { id }, select: { id: true } });
+async function conflictAfterRace(id: string, db: Prisma.TransactionClient = prisma): Promise<AppError> {
+  const exists = await db.planEntry.findUnique({ where: { id }, select: { id: true } });
   return exists ? planEntryLocked() : entryNotFound();
 }
 
@@ -226,6 +227,7 @@ export function createPlansService() {
         SELECT id FROM "Plan" WHERE id = ${id}::uuid AND "userId" = ${userId}::uuid FOR UPDATE`;
       if (locked.length === 0) throw planNotFound();
       if ((await tx.planEntry.count({ where: { planId: id } })) > 0) throw planHasEntries();
+      await removeRecordLinks(tx, userId, 'PLAN', id);
       await tx.plan.delete({ where: { id } });
     });
   }
@@ -303,8 +305,11 @@ export function createPlansService() {
     const entry = await findOwnedEntry(userId, id);
     if (!isEditable(entry.createdAt)) throw planEntryLocked();
 
-    const { count } = await prisma.planEntry.deleteMany({ where: stillEditable(userId, id) });
-    if (count === 0) throw await conflictAfterRace(id);
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.planEntry.deleteMany({ where: stillEditable(userId, id) });
+      if (count === 0) throw await conflictAfterRace(id, tx);
+      await removeRecordLinks(tx, userId, 'PLAN_ENTRY', id);
+    });
   }
 
   // Registros escolhidos por id, de qualquer plano e data (visão "Para ler", DEC-057).

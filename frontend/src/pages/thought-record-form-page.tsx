@@ -72,6 +72,21 @@ export function NewThoughtRecordPage() {
   const today = todayInAppZone();
   const day = searchParams.get('dia');
   const initialDate = isValidDateOnly(day) && day <= today ? day : today;
+  const repeatFromId = searchParams.get('repetir') ?? '';
+  const repeated = useThoughtRecord(repeatFromId, Boolean(repeatFromId));
+  const repeatInitial: ThoughtRecord | undefined = repeated.data ? {
+    ...repeated.data,
+    situationDate: today,
+    situation: '',
+    alternativeExplanation: null,
+    alternativeAddedAt: null,
+    editable: true,
+    alternativeDeadline: null,
+    canAddAlternative: false,
+    emotions: repeated.data.emotions.map((emotion) => ({ ...emotion, intensityAfter: null })),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } : undefined;
 
   if (!user?.privacyAreas.thoughtRecords || (create.isError && needsPrivacyConsent(create.error))) {
     return (
@@ -83,14 +98,19 @@ export function NewThoughtRecordPage() {
 
   return (
     <Frame title="Novo registro">
-      <ThoughtRecordForm
+      {repeatFromId && repeated.isPending ? <p aria-busy="true" className="text-muted">Carregando o registro anterior…</p> : null}
+      {repeatFromId && repeated.isError ? <Alert tone="attention">Não foi possível carregar o pensamento anterior. Volte e tente de novo.</Alert> : null}
+      {repeated.data?.alternativeExplanation && <p className="rounded-md bg-accent/10 p-3 text-sm text-muted">Da última vez, você pensou: “{repeated.data.alternativeExplanation}”. Use como lembrete; este novo registro começa em branco.</p>}
+      {(!repeatFromId || repeatInitial) && <ThoughtRecordForm
+        key={repeatFromId || 'new-thought'}
+        initial={repeatInitial}
         initialDate={initialDate}
         submitLabel="Salvar registro"
         pending={create.isPending}
         apiError={formError(create.error)}
         cancelTo="/pensamentos"
-        onSubmit={(input) => create.mutate(input, { onSuccess: (record) => backToWeek(record, 'Registro salvo.') })}
-      />
+        onSubmit={(input) => create.mutate({ ...input, ...(repeatFromId && { repeatFromId }) }, { onSuccess: (record) => backToWeek(record, 'Registro salvo.') })}
+      />}
     </Frame>
   );
 }

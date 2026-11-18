@@ -128,7 +128,7 @@ describe('/acao', () => {
     const done = screen.getByRole('article', { name: 'Ouvir um disco' });
     expect(done).toHaveTextContent('Esperava3');
     expect(done).toHaveTextContent('Prazer7');
-    expect(within(done).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(done).getByRole('button', { name: 'Ligar a outro registro' })).toBeInTheDocument();
     const notDone = screen.getByRole('article', { name: 'Café com amiga' });
     expect(notDone).toHaveTextContent('Não deu desta vez');
     expect(notDone).toHaveTextContent('Ela desmarcou.');

@@ -20,6 +20,6 @@ export function PatientTasksTab({ patientId, consented }: { patientId: string; c
     {query.isPending && <p aria-busy="true">Carregando as tarefas…</p>}
     {query.isError && <Alert tone="attention">{getApiError(query.error).message}<Button variant="secondary" onClick={() => query.refetch()}>Tentar de novo</Button></Alert>}
     {query.isSuccess && query.data.length === 0 && <p className="text-muted">Ainda não há tarefas.</p>}
-    {(query.data ?? []).map((task) => <TaskCard key={task.id} task={task} footer={task.respondedAt ? <ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} /> : <p className="text-sm text-muted">Ainda sem resposta.</p>} />)}
+    {(query.data ?? []).map((task) => <TaskCard key={task.id} task={task} readOnly patientId={patientId} footer={task.respondedAt ? <ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} /> : <p className="text-sm text-muted">Ainda sem resposta.</p>} />)}
   </>;
 }

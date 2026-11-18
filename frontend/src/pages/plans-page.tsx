@@ -11,6 +11,7 @@ import { useSession } from '../features/auth/use-session';
 import type { Plan } from '../features/plans/plans-api';
 import { useDeletePlan, usePlans, useUpdatePlan } from '../features/plans/use-plans';
 import { useAccessibility } from '../features/profile/use-profile';
+import { RecordLinksPanel } from '../features/record-links/record-links-panel';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 // Aviso vindo de outra página (ex.: "Plano criado."), por navigate(..., { state }).
@@ -210,6 +211,7 @@ function PlanCard({ plan, onArchive, onDelete }: { plan: Plan; onArchive: () => 
           Ver registros<span className="sr-only"> do plano {plan.title}</span>
         </Link>
       </div>
+      <RecordLinksPanel type="PLAN" id={plan.id} />
       <div className="flex flex-wrap gap-1">
         <Link to={`/planos/${plan.id}/editar`} className={buttonClasses('ghost', 'px-3')}>
           Editar plano<span className="sr-only"> {plan.title}</span>

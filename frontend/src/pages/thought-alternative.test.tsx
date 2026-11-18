@@ -117,7 +117,9 @@ describe('cartão do registro', () => {
     renderRoute('/pensamentos?ciclo=2026-09-23');
 
     const card = await screen.findByRole('article', { name: 'Registro: Situação de ontem' });
-    expect(within(card).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(card).queryByRole('link', { name: 'Adicionar explicação alternativa' })).not.toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: 'Tive esse pensamento de novo' })).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: 'Ligar a outro registro' })).toBeInTheDocument();
     expect(within(card).queryByText(/explicação alternativa/i)).not.toBeInTheDocument();
   });
 });

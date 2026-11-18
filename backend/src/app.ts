@@ -27,6 +27,7 @@ import { createThoughtRecordsRoutes } from './modules/thought-records/thought-re
 import { createTasksRoutes } from './modules/tasks/tasks.routes.js';
 import { createDailyCheckInsRoutes } from './modules/daily-check-ins/daily-check-ins.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { createRecordLinksRoutes } from './modules/record-links/record-links.routes.js';
 
 export type AppDependencies = {
   // Os testes passam um mailer em memória; em dev e produção é o Resend.
@@ -83,6 +84,7 @@ export function createApp({
   app.use(createPlansRoutes());
   app.use(createTasksRoutes());
   app.use(createDailyCheckInsRoutes());
+  app.use(createRecordLinksRoutes());
   app.use(createSummaryRoutes());
   app.use(createLinksRoutes(mailer));
   app.use(createProfileRoutes());
