@@ -2441,6 +2441,23 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** registros do dia compartilhado aparecem nos dois ciclos, inclusive no resumo
   e na meta de Ação. A agenda tem resolução de minuto, então a virada ocorre no minuto marcado.
 
+## DEC-110 — Um banco de testes e um par de portas por agente
+- **Decisão (pedido do usuário, 17/11/2026):** o nome do banco de testes vem de `FAISCA_TEST_DB`
+  (padrão `faisca_test`, o de sempre e o do CI), e as portas do Playwright de `E2E_API_PORT` e
+  `E2E_WEB_PORT` (já existiam, padrão 3334 e 5174). Cada agente tem os seus (tabela no AGENTS.md:
+  Claude `faisca_test_claude`, Codex `faisca_test_codex`, Antigravity `faisca_test_antigravity`); o
+  Claude já os define no `env` do `.claude/settings.json`. O nome só é aceito se começar com
+  `faisca_test` e tiver só `[a-z0-9_]`, para nunca apontar para o banco de dev ou de produção e entrar
+  no `CREATE DATABASE` sem risco. O banco é criado sozinho na primeira vez, como o `faisca_test`.
+- **Motivo:** o usuário trabalha com mais de um agente ao mesmo tempo. Com um banco só, a suíte de um
+  apagava os dados do outro no meio dos testes (em 17/11, a suíte do backend e o Playwright falharam em
+  áreas que o PR nem tocava). A regra "não rode ao mesmo tempo" dependia de um agente saber o que o
+  outro fazia. Uma trava em arquivo resolveria, mas deixaria um agente parado esperando.
+- **Limite conhecido:** dentro do mesmo agente, a suíte do backend e o Playwright continuam sem rodar
+  juntos (mesmo banco). Duas sessões do Claude ao mesmo tempo dividem o `faisca_test_claude`; se
+  acontecer, uma delas troca a variável no `.claude/settings.local.json`. Os bancos de teste antigos
+  podem ficar no Postgres de dev; apagar é seguro, porque são recriados.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

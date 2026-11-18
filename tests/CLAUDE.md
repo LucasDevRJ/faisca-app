@@ -1,11 +1,13 @@
 # Testes de API e E2E — regras específicas
 
 ## Como roda
-- `npm test` sobe a API de testes na porta **3334** (`backend/scripts/e2e-server.ts`, banco
-  `faisca_test` recriado a cada execução, mailer em memória) e o Vite na **5174**, repassando
-  `/api` para ela (DEC-026).
+- `npm test` sobe a API de testes na porta `E2E_API_PORT` (padrão **3334**;
+  `backend/scripts/e2e-server.ts`, banco de testes do agente, `FAISCA_TEST_DB`, recriado a cada
+  execução, mailer em memória) e o Vite na `E2E_WEB_PORT` (padrão **5174**), repassando `/api` para
+  ela (DEC-026). Cada agente tem o seu banco e as suas portas (tabela no AGENTS.md, DEC-110).
 - `workers: 1`: os testes compartilham o banco e o servidor e rodam um de cada vez.
-- **Nunca rode ao mesmo tempo que o `npm test` do backend**: os dois usam o `faisca_test`.
+- **Nunca rode ao mesmo tempo que o `npm test` do backend do mesmo agente**: os dois usam o mesmo
+  banco de testes.
 
 ## Usuários
 - Use sempre os usuários **semeados** pelo `e2e-server.ts` e declarados em `fixtures/users.ts`,

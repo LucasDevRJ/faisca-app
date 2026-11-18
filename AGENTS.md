@@ -31,7 +31,7 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 ## Comandos
 Backend (rodar dentro de `backend/`; detalhes em `backend/README.md`):
 - `npm run dev`: API em modo dev (porta 3333)
-- `npm run lint` · `npm run typecheck` · `npm test`: rodar ao terminar uma mudança (`npm test` precisa do Postgres ligado; usa o banco `faisca_test`, DEC-026)
+- `npm run lint` · `npm run typecheck` · `npm test`: rodar ao terminar uma mudança (`npm test` precisa do Postgres ligado; usa o banco de testes do agente, DEC-026 e DEC-110)
 - `npm run build`: compila para `dist/`
 - `npm run db:up`: sobe o Postgres local (Docker)
 - `npm run db:migrate`: nova migration em dev · `npm run db:deploy`: aplica as pendentes
@@ -42,7 +42,7 @@ Frontend (rodar dentro de `frontend/`; detalhes em `frontend/README.md`):
 - `npm run build` · `npm run preview`: build com service worker e servidor local para testá-lo
 
 Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
-- `npm test`: sobe a API de testes (porta 3334, `faisca_test`) e o front (porta 5174) e roda tudo
+- `npm test`: sobe a API de testes e o front nas portas do agente (padrão 3334 e 5174) e roda tudo
 - `npm run test:api` · `npm run test:e2e` · `npm run typecheck`
 - Na primeira vez: `npx playwright install chromium`
 
@@ -95,8 +95,30 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
   O CI `Números únicos` (`scripts/check-unique-ids.mjs`) barra repetição.
 - **Antes do PR:** `git fetch origin main` e `git merge origin/main` (nunca rebase nem force push),
   mantendo as entradas dos dois lados no DECISIONS.md e na SPEC; depois, lint e testes de novo.
-- **Testes:** todos usam o banco `faisca_test` e as portas 3334/5174; não rode a suíte do backend
-  nem o Playwright ao mesmo tempo que outro agente.
+- **Testes (DEC-110):** cada agente usa o próprio banco de testes e as próprias portas do Playwright,
+  para rodar ao mesmo tempo que os outros sem um apagar os dados do outro. Defina as variáveis no
+  ambiente do agente (o Claude já as tem no `.claude/settings.json`):
+
+  | Agente | `FAISCA_TEST_DB` | `E2E_API_PORT` | `E2E_WEB_PORT` |
+  |---|---|---|---|
+  | Claude | `faisca_test_claude` | 3334 | 5174 |
+  | Codex | `faisca_test_codex` | 3344 | 5184 |
+  | Antigravity | `faisca_test_antigravity` | 3354 | 5194 |
+  | CI e sem variável | `faisca_test` | 3334 | 5174 |
+
+  **Para configurar** (cada agente, uma vez):
+  1. Defina as três variáveis da sua linha no ambiente em que roda os comandos, antes do `npm test`
+     do backend ou do Playwright. No PowerShell, por exemplo:
+     `$env:FAISCA_TEST_DB='faisca_test_codex'; $env:E2E_API_PORT='3344'; $env:E2E_WEB_PORT='5184'`.
+     Se a sua ferramenta permite deixá-las fixas na configuração, use.
+  2. Rode a suíte do backend uma vez: o banco é criado sozinho e precisa passar.
+
+  **Agente novo:** ganha uma linha nova, com `faisca_test_<nome>` (só letras minúsculas, números e
+  `_`) e as portas seguintes, de 10 em 10 (3364/5204, depois 3374/5214…), e a etiqueta
+  `agente:<nome>` nas issues.
+
+  Dentro do mesmo agente, a suíte do backend e o Playwright continuam sem rodar juntos, porque usam o
+  mesmo banco.
 
 ## Convenções
 - Identificadores de código em inglês (`Activity`, `activityDate`); valores de estado do domínio
