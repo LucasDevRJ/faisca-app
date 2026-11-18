@@ -106,8 +106,19 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
   | Antigravity | `faisca_test_antigravity` | 3354 | 5194 |
   | CI e sem variável | `faisca_test` | 3334 | 5174 |
 
-  Agente novo ganha uma linha nova. O banco é criado sozinho na primeira vez. Dentro do mesmo agente,
-  a suíte do backend e o Playwright continuam sem rodar juntos, porque usam o mesmo banco.
+  **Para configurar** (cada agente, uma vez):
+  1. Defina as três variáveis da sua linha no ambiente em que roda os comandos, antes do `npm test`
+     do backend ou do Playwright. No PowerShell, por exemplo:
+     `$env:FAISCA_TEST_DB='faisca_test_codex'; $env:E2E_API_PORT='3344'; $env:E2E_WEB_PORT='5184'`.
+     Se a sua ferramenta permite deixá-las fixas na configuração, use.
+  2. Rode a suíte do backend uma vez: o banco é criado sozinho e precisa passar.
+
+  **Agente novo:** ganha uma linha nova, com `faisca_test_<nome>` (só letras minúsculas, números e
+  `_`) e as portas seguintes, de 10 em 10 (3364/5204, depois 3374/5214…), e a etiqueta
+  `agente:<nome>` nas issues.
+
+  Dentro do mesmo agente, a suíte do backend e o Playwright continuam sem rodar juntos, porque usam o
+  mesmo banco.
 
 ## Convenções
 - Identificadores de código em inglês (`Activity`, `activityDate`); valores de estado do domínio
