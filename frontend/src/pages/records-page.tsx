@@ -19,6 +19,7 @@ import { sessionDays } from '../features/appointments/appointments-api';
 import { useAgenda } from '../features/appointments/use-appointments';
 import { NewLinkNotice } from '../features/links/new-link-notice';
 import { NoticesCard } from '../features/notices/notices-card';
+import { TodayCheckInCard } from '../features/daily-check-ins/today-check-in-card';
 import { formatDayHeading, todayInAppZone } from '../features/activities/week';
 import { WeekChart } from '../features/activities/week-chart';
 import { PatientCycleSummary } from '../features/cycle/cycle-summary';
@@ -51,6 +52,8 @@ export function RecordsPage() {
       <NoticesCard />
 
       <AppointmentsCard today={today} />
+
+      <TodayCheckInCard today={today} />
 
       {period ? (
         <PeriodRecords
@@ -237,6 +240,8 @@ const AREA_PATH: Record<SummaryArea, string | null> = {
   tensionEpisodes: '/tensao',
   actions: '/acao',
   plans: '/planos',
+  sleepMood: '/sono-humor',
+  medication: '/sono-humor',
 };
 
 function AreaLink({ area, search }: { area: SummaryArea; search: string }) {

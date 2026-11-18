@@ -19,6 +19,7 @@ const GATED: Record<string, PrivacyArea> = {
   '/tensao': 'tensionEpisodes',
   '/acao': 'actions',
   '/tarefas': 'tasks',
+  '/sono-humor': 'sleepMood',
 };
 
 function gatedAreaOf(pathname: string): PrivacyArea | undefined {
@@ -65,6 +66,9 @@ export function PatientTabsLayout() {
           Ação
         </NavLink>
         <NavLink to="/tarefas" end className={tabClass}>Tarefas</NavLink>
+        <NavLink to={{ pathname: '/sono-humor', search }} end className={tabClass}>
+          Sono e humor
+        </NavLink>
         {showPlans && (
           // Sem `end`: a aba continua marcada nos registros de um plano (/planos/:id).
           <NavLink to="/planos" className={tabClass}>

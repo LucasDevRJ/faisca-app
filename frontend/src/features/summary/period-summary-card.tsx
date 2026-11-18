@@ -3,6 +3,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import type { DateRange } from '../appointments/appointments-api';
+import { SleepMoodChart } from '../daily-check-ins/sleep-mood-chart';
 import type { PeriodSummary } from './summary-api';
 import { daysLine, hasAnyArea, periodLine, summaryBlocks, type SummaryArea } from './summary-format';
 import { useMyPeriodSummary } from './use-summary';
@@ -58,6 +59,9 @@ function SummaryBody({ query, link }: BodyProps) {
                     {line}
                   </p>
                 ))}
+                {block.area === 'sleepMood' && summary.sleepMood && (
+                  <SleepMoodChart points={summary.sleepMood.current.series} title="Sono e humor no período" />
+                )}
                 {link(block.area)}
               </li>
             ))}

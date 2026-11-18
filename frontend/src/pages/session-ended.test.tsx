@@ -38,7 +38,7 @@ describe('sessão terminada em outro aparelho', () => {
     server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: fakeUser }), { once: true }));
     const { router, queryClient } = renderRoute('/registros');
 
-    const notice = await screen.findByRole('status');
+    const notice = (await screen.findByText(ENDED)).closest('[role="status"]') as HTMLElement;
     expect(notice).toHaveTextContent(ENDED);
     // A pessoa não pediu para sair: o foco vai para o aviso.
     await waitFor(() => expect(notice.parentElement).toHaveFocus());

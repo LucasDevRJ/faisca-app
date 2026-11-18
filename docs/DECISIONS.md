@@ -2454,8 +2454,36 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** sem lembrete diário nesta entrega, para não virar cobrança. Os textos, o gráfico
   e a pergunta do remédio em Conta ficam para o PR das telas (DEC-108).
 
-## DEC-108 — Sono, humor e remédio (telas)
-- **Decisão (#188, #171):** em construção.
+## DEC-108 — Sono, humor e remédio (telas) e aviso de privacidade versão 14
+- **Decisão (#188 e parte da #171, sobre a API da DEC-107, desenho e textos aprovados pelo usuário):**
+  - **cartão "Sono e humor de hoje" em Meus registros**, o caminho rápido do dia a dia: sem registro,
+    "Quer registrar como dormiu e como está o dia? Leva menos de um minuto."; com registro, a linha curta
+    ("Dormiu 7h30 · sono 6 · humor 7 · remédio: como combinado") e "Editar". Sem cobrança, sem sequência
+    e sem "você não registrou ontem";
+  - **a janela do dia**: os dois horários (com "Dá 7h30 de sono." enquanto preenche), as notas do sono e
+    do humor (cada uma pode voltar a ficar em branco), a palavra do dia e, para quem ligou em Conta, "Tomou
+    o remédio como combinado?" (Sim, Esqueci algum, Hoje não), com "Mudanças no remédio, só com quem
+    receitou." e "Tudo bem preencher só uma parte.". Apagar o registro do dia pede confirmação;
+  - **aba "Sono e humor"**, depois de Tarefas: o mesmo período das outras abas, o gráfico e os dias, do
+    mais recente ao mais antigo. Aparecem os dias com registro e os que ainda aceitam registro (os
+    últimos 7); um dia antigo fica só para ver;
+  - **o gráfico**: horas de sono (eixo da esquerda) e humor de 0 a 10 (eixo da direita), na cor sálvia em
+    dois tons, com linha contínua e tracejada e a tabela "Ver os números", como o gráfico da tensão;
+  - **Conta → "Sono e humor"**: a caixa "Registrar se tomei o remédio". O texto diz que desligar só
+    esconde a pergunta, que o que já foi respondido continua guardado e que quem vê o remédio é decidido
+    na área Remédio de cada profissional (dúvida do `revisor-seguranca`, confirmada pelo usuário);
+  - **a profissional**: aba "Sono e humor" quando o paciente libera pelo menos uma das duas caixas, só
+    leitura, com o gráfico e o remédio em terceira pessoa ("remédio: esqueceu algum"). No "Resumo do
+    período" (DEC-101) entram os blocos Sono e humor (com o gráfico) e Remédio, nos textos aprovados;
+  - **Conta → "O que [nome] pode ver"**: as caixas "Sono e humor" e "Remédio (se tomou como combinado)";
+  - **aviso de privacidade versão 14** (`2026-11.7` vira a atual): cita o Sono e humor e o Remédio em "O
+    que guardamos", em "Para quê" e em "Quem vê", com "O Faísca não guarda o nome nem a dose de nenhum
+    remédio.";
+  - **novidade `2026-11-sono-humor`**, para pacientes e profissionais.
+- **Motivo:** fechar o pedido da psiquiatra (métricas entre consultas espaçadas) com a API da DEC-107, e
+  trocar a versão do aviso no mesmo PR que mostra o texto, para ninguém aceitar o que ainda não leu.
+- **Limite conhecido:** sem lembrete diário (para não virar cobrança). A lista de remédios, as mudanças de
+  dose e os efeitos colaterais continuam na #171, para depois.
 
 ## DEC-109 — Virada do ciclo na hora da consulta
 - **Decisão (#185, opção B):** revê a regra da DEC-049 e o cabeçalho da DEC-050:

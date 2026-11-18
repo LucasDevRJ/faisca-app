@@ -22,6 +22,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // paciente escolhe. Pede o aceite de novo, sem bloquear nenhuma área.
 // Versão 2026-11.5 (DEC-103, DEC-104): entram as fotos das atividades, com novo aceite para usá-las.
 // Versão 2026-11.6 (DEC-106): entram as Tarefas e suas respostas, com novo aceite.
+// Versão 2026-11.7 (DEC-107, DEC-108): entram o Sono e humor e o Remédio do dia, com novo aceite.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -33,7 +34,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
 // e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
 // "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
-const VERSION_LABEL = 'versão 13, de novembro de 2026';
+const VERSION_LABEL = 'versão 14, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -135,6 +136,12 @@ export function PrivacyPage() {
               saúde. Só as profissionais com vínculo ativo e com a área Tarefas liberada por você podem ler. Esses
               textos não aparecem nas notificações nem nos registros técnicos do sistema.
             </li>
+            <li>
+              No Sono e humor: os horários em que você deitou e acordou, a nota do sono, a nota do humor e a palavra
+              do dia, se escrever. No Remédio: só se você tomou como combinado em cada dia (Sim, Esqueci algum ou
+              Hoje não). O Faísca não guarda o nome nem a dose de nenhum remédio. São dados de saúde: só as
+              profissionais com vínculo ativo e com a área liberada por você podem ver.
+            </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
             <li>
@@ -160,7 +167,8 @@ export function PrivacyPage() {
         <Section title="Para quê">
           <p>
             Para você registrar suas atividades, o seu Registro de Pensamentos, os seus Episódios de tensão, as
-            suas ações, os seus planos de ação e as Tarefas combinadas na consulta e,
+            suas ações, os seus planos de ação, as Tarefas combinadas na consulta, o seu sono e humor e, se quiser,
+            se tomou o remédio como combinado e,
             se quiser, compartilhá-los com quem cuida de você (psicóloga ou psiquiatra). Também usamos
             o seu e-mail para mensagens da conta (confirmação, nova senha e aviso de exclusão) e, quando você ligar os
             lembretes, para avisar que há atividades ou ações para ver, sempre sem mostrar o que você escreveu. Não
@@ -174,7 +182,8 @@ export function PrivacyPage() {
             <li>
               Você pode compartilhar com até duas profissionais (uma psicóloga e uma psiquiatra) e escolher, para
               cada uma, quais áreas ela vê: atividades, fotos das atividades, Registro de Pensamentos, Episódios
-              de tensão, Ação, fotos das ações, “Sobre mim”, agenda com os motivos, Meus Planos e Tarefas. Uma profissional nova começa sem ver
+              de tensão, Ação, fotos das ações, “Sobre mim”, agenda com os motivos, Meus Planos, Tarefas, Sono e
+              humor e Remédio. Uma profissional nova começa sem ver
               nada. Ela só lê, sem alterar nada, enquanto o vínculo existir. Você muda o que cada uma vê, ou
               desfaz o vínculo, a qualquer momento em <strong>Conta</strong>, e vale na hora. Cada profissional
               pode marcar os seus registros como lidos, para se organizar. Essa marca é só dela: você e a outra

@@ -100,6 +100,16 @@ Na prática clínica tradicional:
   - A cada vez que a situação acontece, o paciente registra as respostas; o registro guarda as perguntas como estavam, e o plano pode ser encerrado e reaberto.
   - A aba só aparece quando existe algum plano.
 
+- **Tarefas (combinadas na consulta):**
+  - O próprio paciente anota a tarefa que combinou na consulta (descrição e título opcional) e responde no seu tempo: em texto livre, com "Não consegui fazer" ou com "Não faz sentido para mim agora", sem a palavra "atrasada".
+  - Pode editar a resposta até a próxima consulta, quando ela fica guardada como final.
+  - A aba fica sempre disponível. Tarefas com tipos ligados às outras áreas, fotos na resposta e a psicóloga criando tarefas ficam para depois.
+
+- **Sono e humor (e o remédio do dia):**
+  - Um cartão em Meus registros para registrar, em menos de um minuto, a hora em que deitou e acordou (o app calcula as horas de sono), uma nota de 0 a 10 para o sono e outra para o humor e, se quiser, uma palavra para o dia. Tudo opcional, sem sequência e sem cobrança por dia esquecido.
+  - Quem quiser liga em Conta a pergunta **"Tomou o remédio como combinado?"** (Sim, Esqueci algum, Hoje não). O Faísca **não guarda nome nem dose** de remédio.
+  - A aba **Sono e humor** mostra um gráfico das horas de sono e do humor no período. Dá para registrar e editar os últimos 7 dias.
+
 - **Lembretes de manhã e de noite:**
   - Por e-mail ou como notificação no aparelho (Web Push), quando há atividades ou ações planejadas, sempre com **texto 100% neutro** (nunca mostram o que a pessoa escreveu), horário de silêncio e opção de pausar.
 
@@ -125,6 +135,8 @@ Na prática clínica tradicional:
   - **A psicóloga cria planos de ação para o paciente** em Meus Planos, quando a área está liberada. O plano fica na conta do paciente, que continua dono dele e faz os registros; a psicóloga não edita planos nem cria registros.
   - A **psiquiatra** vê os mesmos registros por **1, 2 ou 3 meses** (começa em 3), com setas para voltar no tempo.
   - **Resumo do período em números:** no topo da página do paciente, um cartão com o essencial do período (dias com registro, atividades, as emoções mais presentes, a crença no pensamento e o efeito da explicação alternativa, tensão, Ação e Meus Planos), comparado com o **período anterior do mesmo tamanho** em formato neutro ("antes: 6,1"). Só números, sem interpretação e sem texto do paciente; só das áreas liberadas. Pensado para consultas espaçadas, como as da psiquiatra.
+  - **Tarefas:** quando o paciente libera a área, a profissional lê as tarefas e as respostas, que entram em "Para ler".
+  - **Sono e humor:** quando o paciente libera (são duas áreas separadas, "Sono e humor" e "Remédio"), a profissional vê o gráfico das horas de sono e do humor, os dias registrados e, se liberado, se o paciente tomou o remédio como combinado. Os números também entram no Resumo do período.
   - No cadastro ou no convite, a profissional diz se é **psicóloga ou psiquiatra** e, em Conta, pode informar o número do conselho (CRP ou CRM), que aparece para os pacientes.
   - **Regra inviolável de arquitetura:** a terapeuta nunca altera nem apaga nenhum dado do paciente (bloqueado no backend com `403`).
 
@@ -170,19 +182,13 @@ Na prática clínica tradicional:
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
 
-**Em desenvolvimento — Tarefas (#150):** o paciente anota o que combinou na consulta, responde em
-texto livre ou registra que não conseguiu fazer ou que não faz sentido agora. Compartilha a área
-com as profissionais que escolher; as respostas entram em Para ler. A aba fica sempre disponível.
-A primeira entrega ainda não foi publicada. Fotos e ligação a outras áreas ficam para depois.
-
-
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.
 3. **Feedback sensorial suave ao salvar:** animação, som e vibração sutis ao concluir um registro, com opção de desligar.
 4. **Trava do app (#137) e entrar com passkey.**
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
-6. **Sono e humor (#188)** e **medicação (#171)**, pensados para o acompanhamento com a psiquiatra.
+6. **Lista de remédios e efeitos percebidos (#171)**, para a psiquiatra: o registro diário de se tomou o remédio já está no ar; a lista com nomes, doses e mudanças ainda não.
 
 ---
 

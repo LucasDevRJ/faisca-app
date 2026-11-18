@@ -21,6 +21,7 @@ import { EditPlanEntryPage, NewPlanEntryPage } from '../pages/plan-entry-form-pa
 import { EditPlanPage, NewPlanPage } from '../pages/plan-form-page';
 import { PlanPage } from '../pages/plan-page';
 import { TasksPage } from '../pages/tasks-page';
+import { SleepMoodPage } from '../pages/sleep-mood-page';
 import { PlansPage } from '../pages/plans-page';
 import { RecordsPage } from '../pages/records-page';
 import { AddAlternativePage, EditThoughtRecordPage, NewThoughtRecordPage } from '../pages/thought-record-form-page';
@@ -61,6 +62,7 @@ export const routes = [
                       { path: 'acao', element: <ActionsPage /> },
                       { path: 'planos', element: <PlansPage /> },
                       { path: 'tarefas', element: <TasksPage /> },
+                      { path: 'sono-humor', element: <SleepMoodPage /> },
                       { path: 'planos/:id', element: <PlanPage /> },
                     ],
                   },
