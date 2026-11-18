@@ -3,7 +3,7 @@ import { fetchPatientAboutMe } from '../about-me/about-me-api';
 import { PATIENTS_KEY } from '../links/use-links';
 import { fetchPatientPeriodSummary } from '../summary/summary-api';
 import { fetchPatientUnread, markRead, unmarkRead, type ReadItem } from './read-marks-api';
-import type { CycleResponse } from '../cycle/cycle-api';
+import { cycleRefreshInterval, type CycleResponse } from '../cycle/cycle-api';
 import { getApiError } from '../auth/auth-api';
 import {
   fetchPatientActions,
@@ -129,6 +129,8 @@ export function patientCycleQuery(patientId: string, enabled = true) {
     queryFn: enabled
       ? () => fetchPatientCycle(patientId, date ?? undefined)
       : async () => ({ today: '', cycle: null }) as unknown as CycleResponse,
+    refetchInterval: (query) => enabled ? cycleRefreshInterval(query.state.data, date) : false,
+    staleTime: 0,
     retry: retryUnlessForbidden,
   });
 }

@@ -129,15 +129,20 @@ sessões são calculadas a partir dela (DEC-045). Só o paciente mexe na agenda;
 
 ## Ciclo da consulta
 O período que cada sessão olha: o que a pessoa viveu desde a sessão anterior (DEC-049).
-- O ciclo de uma sessão vai do **dia seguinte à sessão agendada anterior até o dia da sessão,
-  inclusive**. Na agenda semanal, 7 dias; na quinzenal, 14.
+- O ciclo vai do **dia da sessão anterior ao dia da próxima sessão, os dois inclusive**. O dia de
+  cada sessão, portanto, aparece nos dois ciclos que se encontram nela. As sessões costumam distar
+  7 ou 14 dias; por causa do dia compartilhado, esses ciclos mostram 8 ou 15 datas, respectivamente.
 - Sessão **desmarcada** não fecha ciclo: o período se junta ao da sessão seguinte. Sessão
   **remarcada** fecha no dia novo. Consulta **avulsa** também fecha um ciclo.
 - A **primeira sessão** (sem anterior) olha os 7 dias que terminam nela (14 na quinzenal).
 - **Teto de 42 dias** (depois de uma pausa longa, por exemplo): ficam os dias mais recentes, com aviso.
-- O **ciclo atual** é o que contém hoje; no dia da consulta, o ciclo ainda é o dela, mesmo depois da
-  sessão. Sem próxima sessão, o ciclo fica **aberto**: do dia seguinte à última sessão até hoje. Sem
-  nenhuma sessão, não há ciclo, e as telas usam a semana.
+- No dia da consulta, o **ciclo atual vira na hora marcada**, no relógio de São Paulo. Antes dela, o
+  ciclo termina na consulta de hoje; a partir do horário, começa o ciclo seguinte, no mesmo dia. Uma
+  sessão sem horário só vira o ciclo no dia seguinte. Sem próxima sessão, o ciclo fica **aberto** a
+  partir do dia da última sessão até hoje. Sem nenhuma sessão, não há ciclo, e as telas usam a semana.
+- Na URL, `?ciclo=AAAA-MM-DD` com a data de uma sessão escolhe o ciclo que **termina** nela; as setas
+  usam o dia seguinte para abrir o ciclo seguinte. Isso deixa possível navegar entre os dois ciclos
+  que compartilham o dia da consulta.
 
 ## Registro de Pensamentos (RPD)
 Registro da TCC, independente das atividades. O paciente alterna entre as abas **Atividades** e

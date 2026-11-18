@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../app.js';
 import { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
@@ -571,6 +571,37 @@ describe('ciclo da consulta da terapeuta (DEC-049)', () => {
     expect(res.body.cycle).toEqual(
       expect.objectContaining({ from: addDays(today(), -4), to: addDays(today(), 2) }),
     );
+  });
+
+  it('a visão da psicóloga também vira o ciclo no horário da sessão', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-10-14T16:59:00.000Z')); // 13:59 em São Paulo.
+      await prisma.appointmentSchedule.updateMany({
+        where: { userId: patientId },
+        data: { startDate: dateOnlyToDate('2026-10-07'), time: timeOnlyToDate('14:00') },
+      });
+      const agent = await loginAgent(THERAPIST);
+      const before = await agent.get(`${base()}/cycle`);
+      expect(before.body.cycle).toMatchObject({
+        from: '2026-10-07',
+        to: '2026-10-14',
+        isCurrent: true,
+        nextChangeAt: '2026-10-14T17:00:00.000Z',
+      });
+
+      vi.setSystemTime(new Date('2026-10-14T17:00:00.000Z')); // 14:00 em São Paulo.
+      const after = await agent.get(`${base()}/cycle`);
+      expect(after.body.cycle).toMatchObject({
+        from: '2026-10-14',
+        to: '2026-10-21',
+        isCurrent: true,
+        completedSessionToday: { time: '14:00' },
+        nextChangeAt: null,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('sem vínculo com o paciente: 403; escrita no caminho: 403', async () => {

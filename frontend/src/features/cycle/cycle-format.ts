@@ -44,7 +44,17 @@ export type Audience = 'patient' | 'therapist';
 
 // "Sua consulta é daqui a 3 dias" (paciente) ou "A consulta é amanhã" (terapeuta). Só para a
 // consulta de hoje em diante: ciclos que já passaram não contam dias.
-export function countdown(session: { date: string; time: string | null }, today: string, audience: Audience) {
+export function countdown(
+  session: { date: string; time: string | null } | null,
+  today: string,
+  audience: Audience,
+  completedSessionToday: { time: string } | null = null,
+) {
+  if (completedSessionToday) {
+    const subject = audience === 'patient' ? 'Sua consulta foi' : 'A consulta foi';
+    return `${subject} hoje, às ${completedSessionToday.time}.`;
+  }
+  if (!session) return null;
   const days = daysBetween(today, session.date);
   if (days < 0) return null;
   const subject = audience === 'patient' ? 'Sua consulta é' : 'A consulta é';

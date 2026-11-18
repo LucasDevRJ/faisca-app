@@ -35,7 +35,10 @@ export function PeriodNav({ period, today, audience, onCycle, onWeek, currentMon
   } else {
     title = formatWeekRange(monday!);
   }
-  const note = !noTimePressure && inCycle && cycle.session ? countdown(cycle.session, today, audience) : null;
+  const note =
+    !noTimePressure && inCycle && (cycle.session || cycle.completedSessionToday)
+      ? countdown(cycle.session, today, audience, cycle.completedSessionToday)
+      : null;
 
   const previous = inCycle ? cycle.previous : addDays(monday!, -7);
   const next = inCycle ? cycle.next : addDays(monday!, 7);
