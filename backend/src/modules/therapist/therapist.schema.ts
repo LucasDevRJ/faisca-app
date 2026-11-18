@@ -7,6 +7,7 @@ export { therapistThoughtRecordsQuerySchema } from '../thought-records/thought-r
 export { therapistActionsQuerySchema } from '../actions/actions.schema.js';
 export { therapistTensionEpisodesQuerySchema } from '../tension-episodes/tension-episodes.schema.js';
 export { therapistPlanEntriesQuerySchema } from '../plans/plans.schema.js';
+export { unreadQuerySchema as therapistUnreadQuerySchema } from '../read-marks/read-marks.schema.js';
 
 // Já validado pelo requireActiveLink; aqui só dá o tipo certo para o controller.
 export const patientParamsSchema = z.object({ patientId: z.uuid() });

@@ -12,6 +12,7 @@ import { loadAgenda } from '../appointments/appointments.service.js';
 import { firstSessionAfter, hasStarted, scheduledSessionsFrom, type Session } from '../appointments/sessions.js';
 import {
   EMOTIONS,
+  THOUGHT_RECORDS_MAX,
   type AddAlternativeInput,
   type CreateThoughtRecordInput,
   type EmotionInput,
@@ -287,17 +288,24 @@ export function createThoughtRecordsService() {
     const deadline = deadlineFor(sessions, createdAt);
 
     const { emotions, situationDate, ...rest } = input;
-    const record = await prisma.thoughtRecord.create({
-      data: {
-        ...rest,
-        userId,
-        situationDate: dateOnlyToDate(situationDate),
-        createdAt,
-        alternativeAddedAt: rest.alternativeExplanation === undefined ? null : createdAt,
-        alternativeDeadlineAt: deadline && deadlineInstant(deadline),
-        emotions: { create: emotionRows(emotions) },
-      },
-      include: withEmotions,
+    // Trava a conta antes de contar (DEC-112): pedidos ao mesmo tempo não passam juntos do teto.
+    const record = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
+      if ((await tx.thoughtRecord.count({ where: { userId } })) >= THOUGHT_RECORDS_MAX) {
+        throw new AppError(409, 'THOUGHT_RECORDS_LIMIT', 'Você chegou ao limite de registros de pensamento desta conta.');
+      }
+      return tx.thoughtRecord.create({
+        data: {
+          ...rest,
+          userId,
+          situationDate: dateOnlyToDate(situationDate),
+          createdAt,
+          alternativeAddedAt: rest.alternativeExplanation === undefined ? null : createdAt,
+          alternativeDeadlineAt: deadline && deadlineInstant(deadline),
+          emotions: { create: emotionRows(emotions) },
+        },
+        include: withEmotions,
+      });
     });
     return toPublicThoughtRecord(record, sessions);
   }

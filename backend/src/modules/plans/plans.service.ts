@@ -11,6 +11,7 @@ import {
 import { prisma } from '../../lib/prisma.js';
 import { futureMoment, isEditable } from '../tension-episodes/tension-episodes.service.js';
 import {
+  PLAN_ENTRIES_MAX,
   PLANS_MAX,
   type CreatePlanEntryInput,
   type CreatePlanInput,
@@ -131,6 +132,10 @@ function planArchived() {
 
 function plansLimit() {
   return new AppError(409, 'PLANS_LIMIT', `Dá para ter até ${PLANS_MAX} planos. Apague um plano sem registros para criar outro.`);
+}
+
+function planEntriesLimit() {
+  return new AppError(409, 'PLAN_ENTRIES_LIMIT', 'Você chegou ao limite de registros em planos desta conta.');
 }
 
 function answersMismatch() {
@@ -254,11 +259,13 @@ export function createPlansService() {
     assertNotFuture(entryDate, entryTime);
 
     const entry = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
       const [plan] = await tx.$queryRaw<{ questions: string[]; archivedAt: Date | null }[]>`
         SELECT questions, "archivedAt" FROM "Plan" WHERE id = ${planId}::uuid AND "userId" = ${userId}::uuid FOR SHARE`;
       if (!plan) throw planNotFound();
       if (plan.archivedAt) throw planArchived();
       if (answers.length !== plan.questions.length) throw answersMismatch();
+      if ((await tx.planEntry.count({ where: { userId } })) >= PLAN_ENTRIES_MAX) throw planEntriesLimit();
       return tx.planEntry.create({
         data: {
           planId,

@@ -4,8 +4,10 @@ import { createApp } from '../../app.js';
 import type { ActivityStatus } from '../../generated/prisma/client.js';
 import { addDays, dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
+import { RECORD_WRITE_LIMIT_PER_MINUTE } from '../../middlewares/rate-limit.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
+import { ACTIVITIES_MAX } from './activities.schema.js';
 
 // Dados fictícios (regra 5 do AGENTS.md).
 const PASSWORD = 'senha-ficticia-123';
@@ -507,5 +509,71 @@ describe('CHECKs do banco (segunda linha de defesa)', () => {
     await prisma.user.delete({ where: { id: patientId } });
 
     expect(await prisma.activity.count({ where: { userId: patientId } })).toBe(0);
+  });
+});
+
+describe('teto por conta e limite por minuto (DEC-112)', () => {
+  const payload = () => ({ status: 'PLANEJADA', name: 'Caminhada fictícia', activityDate: today() });
+
+  it(
+    `até ${ACTIVITIES_MAX} atividades por conta; a seguinte é 409 ACTIVITIES_LIMIT`,
+    { timeout: 60_000 },
+    async () => {
+      const activityDate = dateOnlyToDate(today());
+      await prisma.activity.createMany({
+        data: Array.from({ length: ACTIVITIES_MAX - 1 }, () => ({
+          userId: patientId,
+          name: 'Caminhada fictícia',
+          activityDate,
+          status: 'PLANEJADA' as const,
+        })),
+      });
+      const agent = await loginAgent();
+
+      const atLimit = await agent.post('/activities').send(payload());
+      const overLimit = await agent.post('/activities').send(payload());
+
+      expect(atLimit.status).toBe(201);
+      expect(overLimit.status).toBe(409);
+      expect(overLimit.body.error.code).toBe('ACTIVITIES_LIMIT');
+      expect(await prisma.activity.count({ where: { userId: patientId } })).toBe(ACTIVITIES_MAX);
+      await prisma.activity.deleteMany({ where: { userId: patientId } });
+    },
+  );
+
+  it(
+    `pedidos ao mesmo tempo não passam do teto de ${ACTIVITIES_MAX} atividades`,
+    { timeout: 60_000 },
+    async () => {
+      const activityDate = dateOnlyToDate(today());
+      await prisma.activity.createMany({
+        data: Array.from({ length: ACTIVITIES_MAX - 1 }, () => ({
+          userId: patientId,
+          name: 'Caminhada fictícia',
+          activityDate,
+          status: 'PLANEJADA' as const,
+        })),
+      });
+      const agent = await loginAgent();
+
+      const results = await Promise.all(Array.from({ length: 5 }, () => agent.post('/activities').send(payload())));
+
+      expect(results.filter((res) => res.status === 201)).toHaveLength(1);
+      expect(results.filter((res) => res.status === 409)).toHaveLength(4);
+      expect(await prisma.activity.count({ where: { userId: patientId } })).toBe(ACTIVITIES_MAX);
+      await prisma.activity.deleteMany({ where: { userId: patientId } });
+    },
+  );
+
+  it(`limite de ${RECORD_WRITE_LIMIT_PER_MINUTE} escritas por minuto por conta`, async () => {
+    const agent = await loginAgent();
+    for (let i = 0; i < RECORD_WRITE_LIMIT_PER_MINUTE; i++) {
+      expect((await agent.post('/activities').send(payload())).status).toBe(201);
+    }
+
+    const blocked = await agent.post('/activities').send(payload());
+
+    expect(blocked.status).toBe(429);
+    expect(blocked.body.error.code).toBe('TOO_MANY_REQUESTS');
   });
 });

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createRecordWriteLimit } from '../../middlewares/rate-limit.js';
 import { createAboutMeService } from '../about-me/about-me.service.js';
 import { requireActiveLink } from '../../middlewares/require-patient-access.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
@@ -26,12 +27,13 @@ export function createReadMarksRoutes() {
     ),
   );
   const router = Router();
+  const writeLimit = createRecordWriteLimit();
 
   // Mesma cadeia da visão da terapeuta, sem o onlyReads: sessão → perfil → vínculo ativo. O aceite
   // do aviso é conferido por área no service, porque um pedido pode trazer as três.
   router.use(PREFIX, requireAuth, requireTherapist, requireActiveLink);
-  router.put(PREFIX, controller.mark);
-  router.delete(PREFIX, controller.unmark);
+  router.put(PREFIX, writeLimit, controller.mark);
+  router.delete(PREFIX, writeLimit, controller.unmark);
 
   return router;
 }

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createRecordWriteLimit } from '../../middlewares/rate-limit.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requirePatient } from '../../middlewares/require-patient.js';
@@ -12,14 +13,15 @@ export function createThoughtRecordsRoutes() {
   const router = Router();
   // Sem o aceite de uma versão do aviso que cite o RPD, só esta área fica bloqueada (SPEC, "Privacidade").
   const patient = [requireAuth, requirePatient, requirePrivacy('thoughtRecords')];
+  const writeLimit = createRecordWriteLimit();
 
   router.get('/thought-records', ...patient, controller.list);
   router.get('/thought-records/:id', ...patient, controller.get);
-  router.post('/thought-records', ...patient, controller.create);
-  router.patch('/thought-records/:id', ...patient, controller.update);
+  router.post('/thought-records', ...patient, writeLimit, controller.create);
+  router.patch('/thought-records/:id', ...patient, writeLimit, controller.update);
   // Uma vez só, até a hora da próxima consulta (DEC-054).
-  router.post('/thought-records/:id/alternative', ...patient, controller.addAlternative);
-  router.delete('/thought-records/:id', ...patient, controller.remove);
+  router.post('/thought-records/:id/alternative', ...patient, writeLimit, controller.addAlternative);
+  router.delete('/thought-records/:id', ...patient, writeLimit, controller.remove);
 
   return router;
 }

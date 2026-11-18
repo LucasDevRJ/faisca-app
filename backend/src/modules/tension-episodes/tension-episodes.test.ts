@@ -5,6 +5,7 @@ import { addDays, dateOnlyToDate, nowTimeInAppZone, timeOnlyToDate, todayInAppZo
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
+import { TENSION_EPISODES_MAX } from './tension-episodes.schema.js';
 import { futureMoment, isEditable } from './tension-episodes.service.js';
 
 // Episódios de tensão (SPEC, "Episódios de tensão"; DEC-042).
@@ -381,4 +382,55 @@ describe('exclusão da conta', () => {
 
     expect(await prisma.tensionEpisode.count()).toBe(0);
   });
+});
+
+describe('teto por conta (DEC-112)', () => {
+  function seedMany(count: number) {
+    const episodeDate = dateOnlyToDate(addDays(today(), -1));
+    return prisma.tensionEpisode.createMany({
+      data: Array.from({ length: count }, () => ({
+        userId: patientId,
+        episodeDate,
+        situation: 'Situação fictícia',
+        tensionLevel: 7,
+        vocalizeUrge: 5,
+        behavior: 'Comportamento fictício',
+        consequence: 'Consequência fictícia',
+      })),
+    });
+  }
+
+  it(
+    `até ${TENSION_EPISODES_MAX} episódios por conta; o seguinte é 409 TENSION_EPISODES_LIMIT`,
+    { timeout: 60_000 },
+    async () => {
+      await seedMany(TENSION_EPISODES_MAX - 1);
+      const agent = await loginAgent();
+
+      const atLimit = await agent.post('/tension-episodes').send(body());
+      const overLimit = await agent.post('/tension-episodes').send(body());
+
+      expect(atLimit.status).toBe(201);
+      expect(overLimit.status).toBe(409);
+      expect(overLimit.body.error.code).toBe('TENSION_EPISODES_LIMIT');
+      expect(await prisma.tensionEpisode.count({ where: { userId: patientId } })).toBe(TENSION_EPISODES_MAX);
+      await prisma.tensionEpisode.deleteMany({ where: { userId: patientId } });
+    },
+  );
+
+  it(
+    `pedidos ao mesmo tempo não passam do teto de ${TENSION_EPISODES_MAX} episódios`,
+    { timeout: 60_000 },
+    async () => {
+      await seedMany(TENSION_EPISODES_MAX - 1);
+      const agent = await loginAgent();
+
+      const results = await Promise.all(Array.from({ length: 5 }, () => agent.post('/tension-episodes').send(body())));
+
+      expect(results.filter((res) => res.status === 201)).toHaveLength(1);
+      expect(results.filter((res) => res.status === 409)).toHaveLength(4);
+      expect(await prisma.tensionEpisode.count({ where: { userId: patientId } })).toBe(TENSION_EPISODES_MAX);
+      await prisma.tensionEpisode.deleteMany({ where: { userId: patientId } });
+    },
+  );
 });

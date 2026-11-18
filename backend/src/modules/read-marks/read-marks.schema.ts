@@ -25,4 +25,48 @@ export const readMarksBodySchema = z.strictObject({
     }),
 });
 
+// Página da visão "Para ler" (DEC-112): do mais antigo ao mais novo entre as áreas liberadas.
+export const UNREAD_PAGE_SIZE = 50;
+
+const cursorPayloadSchema = z.strictObject({
+  date: z.iso.date(),
+  sortAt: z.iso.datetime(),
+  type: z.enum(READ_TYPES),
+  id: z.uuid(),
+});
+
+export type UnreadCursor = z.infer<typeof cursorPayloadSchema>;
+
+export function encodeUnreadCursor(cursor: UnreadCursor): string {
+  return Buffer.from(JSON.stringify(cursor), 'utf8').toString('base64url');
+}
+
+export function decodeUnreadCursor(raw: string): UnreadCursor | null {
+  try {
+    const parsed: unknown = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+    const result = cursorPayloadSchema.safeParse(parsed);
+    return result.success ? result.data : null;
+  } catch {
+    return null;
+  }
+}
+
+export const unreadQuerySchema = z.strictObject({
+  cursor: z
+    .string()
+    .trim()
+    .min(1, { error: 'Cursor inválido.' })
+    .max(500, { error: 'Cursor inválido.' })
+    .transform((raw, ctx) => {
+      const decoded = decodeUnreadCursor(raw);
+      if (!decoded) {
+        ctx.addIssue({ code: 'custom', message: 'Cursor inválido.' });
+        return z.NEVER;
+      }
+      return decoded;
+    })
+    .optional(),
+});
+
 export type ReadMarkItem = z.infer<typeof itemSchema>;
+export type UnreadQuery = z.infer<typeof unreadQuerySchema>;

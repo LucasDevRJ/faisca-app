@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createRecordWriteLimit } from '../../middlewares/rate-limit.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePatient } from '../../middlewares/require-patient.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
@@ -10,10 +11,11 @@ export function createDailyCheckInsRoutes() {
   const router = Router();
   const controller = createDailyCheckInsController();
   const patient = [requireAuth, requirePatient, requirePrivacy('sleepMood')];
+  const writeLimit = createRecordWriteLimit();
   router.get('/daily-check-ins', ...patient, controller.list);
   // Antes de /:date, para "settings" não ser lido como uma data.
-  router.put('/daily-check-ins/settings', ...patient, controller.updateSettings);
-  router.put('/daily-check-ins/:date', ...patient, controller.save);
-  router.delete('/daily-check-ins/:date', ...patient, controller.remove);
+  router.put('/daily-check-ins/settings', ...patient, writeLimit, controller.updateSettings);
+  router.put('/daily-check-ins/:date', ...patient, writeLimit, controller.save);
+  router.delete('/daily-check-ins/:date', ...patient, writeLimit, controller.remove);
   return router;
 }

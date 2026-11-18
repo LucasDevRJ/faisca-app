@@ -5,6 +5,7 @@ import { addDays, dateOnlyToDate, timeOnlyToDate, todayInAppZone } from '../../l
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
+import { UNREAD_PAGE_SIZE } from './read-marks.schema.js';
 import { readStatusOf } from './read-marks.service.js';
 
 // Marcas de leitura da terapeuta (SPEC, "Visão da terapeuta"; DEC-057). Dados fictícios (regra 5).
@@ -309,6 +310,91 @@ describe('visão "Não lidos" e contador (DEC-057)', () => {
     expect(res.body.tensionEpisodes).toEqual([]);
     expect(res.body.actions).toHaveLength(1);
     expect(res.body.counts).toEqual({ thoughtRecords: 1, tensionEpisodes: 0, actions: 1, aboutMe: 0, planEntries: 0, tasks: 0 });
+    expect(res.body.nextCursor).toBeNull();
+  });
+
+  it(`pagina de ${UNREAD_PAGE_SIZE} em ${UNREAD_PAGE_SIZE} com cursor, do mais antigo ao mais novo, mantendo counts com o total (DEC-112)`, async () => {
+    const baseTime = new Date('2026-09-01T12:00:00.000Z').getTime();
+    const olderThoughts = await Promise.all(
+      Array.from({ length: 30 }, (_, index) =>
+        prisma.thoughtRecord.create({
+          data: {
+            userId: patientId,
+            situationDate: dateOnlyToDate(addDays(today(), -60)),
+            situation: `Pensamento fictício ${index}`,
+            automaticThought: 'Pensamento fictício',
+            beliefLevel: 5,
+            behavior: 'Comportamento fictício',
+            consequence: 'Consequência fictícia',
+            createdAt: new Date(baseTime + index * 1000),
+            updatedAt: new Date(baseTime + index * 1000),
+          },
+        }),
+      ),
+    );
+    const newerTensions = await Promise.all(
+      Array.from({ length: 25 }, (_, index) =>
+        prisma.tensionEpisode.create({
+          data: {
+            userId: patientId,
+            episodeDate: dateOnlyToDate(addDays(today(), -10)),
+            situation: `Tensão fictícia ${index}`,
+            tensionLevel: 7,
+            vocalizeUrge: 4,
+            behavior: 'Comportamento fictício',
+            consequence: 'Consequência fictícia',
+            createdAt: new Date(baseTime + (30 + index) * 1000),
+            updatedAt: new Date(baseTime + (30 + index) * 1000),
+          },
+        }),
+      ),
+    );
+    const therapist = await loginAgent(THERAPIST);
+
+    const firstPage = await therapist.get(`${base()}/unread`);
+    expect(firstPage.status).toBe(200);
+    expect(firstPage.body.counts).toEqual({
+      thoughtRecords: 30,
+      tensionEpisodes: 25,
+      actions: 0,
+      aboutMe: 0,
+      planEntries: 0,
+      tasks: 0,
+    });
+    expect(firstPage.body.thoughtRecords).toHaveLength(30);
+    expect(firstPage.body.tensionEpisodes).toHaveLength(20);
+    expect(firstPage.body.thoughtRecords.map((r: { id: string }) => r.id)).toEqual(olderThoughts.map((r) => r.id));
+    expect(firstPage.body.tensionEpisodes.map((r: { id: string }) => r.id)).toEqual(
+      newerTensions.slice(0, 20).map((r) => r.id),
+    );
+    expect(typeof firstPage.body.nextCursor).toBe('string');
+
+    // Mesmo se a profissional marcar o último registro da 1ª página antes de abrir a 2ª, o cursor
+    // continua avançando sem pular nem repetir os registros seguintes.
+    const lastOfFirstPage = newerTensions[19]!;
+    await therapist.put(marks()).send({ items: [item('TENSION_EPISODE', lastOfFirstPage.id)] });
+
+    const secondPage = await therapist.get(`${base()}/unread`).query({ cursor: firstPage.body.nextCursor });
+    expect(secondPage.status).toBe(200);
+    expect(secondPage.body.counts).toEqual({
+      thoughtRecords: 30,
+      tensionEpisodes: 24,
+      actions: 0,
+      aboutMe: 0,
+      planEntries: 0,
+      tasks: 0,
+    });
+    expect(secondPage.body.thoughtRecords).toEqual([]);
+    expect(secondPage.body.tensionEpisodes.map((r: { id: string }) => r.id)).toEqual(
+      newerTensions.slice(20).map((r) => r.id),
+    );
+    expect(secondPage.body.nextCursor).toBeNull();
+  });
+
+  it('cursor inválido ou parâmetro desconhecido no unread retorna 400', async () => {
+    const therapist = await loginAgent(THERAPIST);
+    expect((await therapist.get(`${base()}/unread`).query({ cursor: 'cursor-invalido' })).status).toBe(400);
+    expect((await therapist.get(`${base()}/unread`).query({ extra: '1' })).status).toBe(400);
   });
 
   it('área sem o aceite do aviso vem como null', async () => {

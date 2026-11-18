@@ -9,6 +9,7 @@ import {
   requireSharedArea,
 } from '../../middlewares/require-patient-access.js';
 import { getAuthUser, requireAuth } from '../../middlewares/require-auth.js';
+import { createRecordWriteLimit } from '../../middlewares/rate-limit.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { AppError } from '../../errors/app-error.js';
@@ -123,6 +124,7 @@ export function createTherapistRoutes() {
     requireSharedArea('PLANS'),
     requirePrivacy('plans'),
     requirePatientPrivacy('plans'),
+    createRecordWriteLimit(),
     controller.createPlan,
   );
   router.get(

@@ -20,13 +20,14 @@ import {
   isBeforeDeadline,
   type AlternativeDeadline,
 } from '../thought-records/thought-records.service.js';
-import type {
-  CompleteActivityInput,
-  CreateActivityInput,
-  ListActivitiesQuery,
-  NotDoneActivityInput,
-  StartActivityInput,
-  UpdateActivityInput,
+import {
+  ACTIVITIES_MAX,
+  type CompleteActivityInput,
+  type CreateActivityInput,
+  type ListActivitiesQuery,
+  type NotDoneActivityInput,
+  type StartActivityInput,
+  type UpdateActivityInput,
 } from './activities.schema.js';
 
 // Máquina de estados da SPEC (Atividades > Transições). É o único lugar que decide
@@ -291,14 +292,21 @@ export function createActivitiesService() {
       throw futureDateOnCreate();
     }
 
-    const activity = await prisma.activity.create({
-      data: {
-        ...input,
-        userId,
-        activityDate: dateOnlyToDate(input.activityDate),
-        // Já concluída no registro: o prazo das fotos conta daqui (DEC-103).
-        ...(input.status === 'CONCLUIDA' && { completedAt: new Date() }),
-      },
+    // Trava a conta antes de contar (DEC-112): pedidos ao mesmo tempo não passam juntos do teto.
+    const activity = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
+      if ((await tx.activity.count({ where: { userId } })) >= ACTIVITIES_MAX) {
+        throw new AppError(409, 'ACTIVITIES_LIMIT', 'Você chegou ao limite de atividades desta conta.');
+      }
+      return tx.activity.create({
+        data: {
+          ...input,
+          userId,
+          activityDate: dateOnlyToDate(input.activityDate),
+          // Já concluída no registro: o prazo das fotos conta daqui (DEC-103).
+          ...(input.status === 'CONCLUIDA' && { completedAt: new Date() }),
+        },
+      });
     });
     return getPublic(userId, activity.id);
   }

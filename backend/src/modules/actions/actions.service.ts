@@ -20,12 +20,13 @@ import {
   isBeforeDeadline,
   type AlternativeDeadline,
 } from '../thought-records/thought-records.service.js';
-import type {
-  CreateActionInput,
-  EvaluateActionInput,
-  ListActionsQuery,
-  NotDoneActionInput,
-  UpdateActionInput,
+import {
+  ACTIONS_MAX,
+  type CreateActionInput,
+  type EvaluateActionInput,
+  type ListActionsQuery,
+  type NotDoneActionInput,
+  type UpdateActionInput,
 } from './actions.schema.js';
 
 // Ação (SPEC, "Ação"; DEC-051).
@@ -265,15 +266,22 @@ export function createActionsService() {
       input.status === 'PLANEJADA' ? planDateError(input.actionDate, today) : recordDateError(input.actionDate, today),
     );
     const { actionDate, ...rest } = input;
-    const action = await prisma.behavioralAction.create({
-      // Registrar algo já feito já nasce avaliado: o prazo das fotos conta daqui (DEC-064).
-      data: {
-        ...rest,
-        userId,
-        actionDate: dateOnlyToDate(actionDate),
-        evaluatedAt: rest.status === 'AVALIADA' ? new Date() : null,
-      },
-      include: withPhotos,
+    // Trava a conta antes de contar (DEC-112): pedidos ao mesmo tempo não passam juntos do teto.
+    const action = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
+      if ((await tx.behavioralAction.count({ where: { userId } })) >= ACTIONS_MAX) {
+        throw new AppError(409, 'ACTIONS_LIMIT', 'Você chegou ao limite de ações desta conta.');
+      }
+      return tx.behavioralAction.create({
+        // Registrar algo já feito já nasce avaliado: o prazo das fotos conta daqui (DEC-064).
+        data: {
+          ...rest,
+          userId,
+          actionDate: dateOnlyToDate(actionDate),
+          evaluatedAt: rest.status === 'AVALIADA' ? new Date() : null,
+        },
+        include: withPhotos,
+      });
     });
     const [created] = await toPublicActions(userId, [action], true);
     return created!;

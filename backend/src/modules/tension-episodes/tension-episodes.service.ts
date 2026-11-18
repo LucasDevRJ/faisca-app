@@ -10,10 +10,11 @@ import {
   todayInAppZone,
 } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
-import type {
-  CreateTensionEpisodeInput,
-  ListTensionEpisodesQuery,
-  UpdateTensionEpisodeInput,
+import {
+  TENSION_EPISODES_MAX,
+  type CreateTensionEpisodeInput,
+  type ListTensionEpisodesQuery,
+  type UpdateTensionEpisodeInput,
 } from './tension-episodes.schema.js';
 
 // Episódios de tensão (SPEC, "Episódios de tensão"; DEC-042).
@@ -137,13 +138,20 @@ export function createTensionEpisodesService() {
     const { episodeDate, episodeTime = null, ...rest } = input;
     assertNotFuture(episodeDate, episodeTime);
 
-    const episode = await prisma.tensionEpisode.create({
-      data: {
-        ...rest,
-        userId,
-        episodeDate: dateOnlyToDate(episodeDate),
-        episodeTime: timeColumn(episodeTime),
-      },
+    // Trava a conta antes de contar (DEC-112): pedidos ao mesmo tempo não passam juntos do teto.
+    const episode = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
+      if ((await tx.tensionEpisode.count({ where: { userId } })) >= TENSION_EPISODES_MAX) {
+        throw new AppError(409, 'TENSION_EPISODES_LIMIT', 'Você chegou ao limite de episódios de tensão desta conta.');
+      }
+      return tx.tensionEpisode.create({
+        data: {
+          ...rest,
+          userId,
+          episodeDate: dateOnlyToDate(episodeDate),
+          episodeTime: timeColumn(episodeTime),
+        },
+      });
     });
     return toPublicTensionEpisode(episode);
   }

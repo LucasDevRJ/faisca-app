@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
 import { createPhotoUploadLimit, PHOTO_CONTENT_TYPES, PHOTO_MAX_BYTES } from '../../lib/photos.js';
+import { createRecordWriteLimit } from '../../middlewares/rate-limit.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePatient } from '../../middlewares/require-patient.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
@@ -12,16 +13,17 @@ export function createActivitiesRoutes() {
   const controller = createActivitiesController(createActivitiesService());
   const router = Router();
   const patient = [requireAuth, requirePatient];
+  const writeLimit = createRecordWriteLimit();
 
   router.get('/activities', ...patient, controller.list);
-  router.post('/activities', ...patient, controller.create);
-  router.patch('/activities/:id', ...patient, controller.update);
-  router.delete('/activities/:id', ...patient, controller.remove);
+  router.post('/activities', ...patient, writeLimit, controller.create);
+  router.patch('/activities/:id', ...patient, writeLimit, controller.update);
+  router.delete('/activities/:id', ...patient, writeLimit, controller.remove);
 
   // Transições da SPEC, uma rota por transição, cada uma com o próprio schema.
-  router.post('/activities/:id/start', ...patient, controller.start);
-  router.post('/activities/:id/complete', ...patient, controller.complete);
-  router.post('/activities/:id/not-done', ...patient, controller.notDone);
+  router.post('/activities/:id/start', ...patient, writeLimit, controller.start);
+  router.post('/activities/:id/complete', ...patient, writeLimit, controller.complete);
+  router.post('/activities/:id/not-done', ...patient, writeLimit, controller.notDone);
 
   // Fotos (DEC-103): pedem o aceite da versão do aviso que as cita; sem ele, as atividades seguem
   // funcionando. O limite por conta e o corpo cru são os mesmos das fotos da Ação.

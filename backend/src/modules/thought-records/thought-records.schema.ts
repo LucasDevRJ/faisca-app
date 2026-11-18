@@ -5,6 +5,8 @@ import { LIST_MAX_DAYS, THERAPIST_LIST_MAX_DAYS, listQuerySchema } from '../acti
 // Limites da DEC-039, com o texto em 5000 pela DEC-053. Os mesmos valores estão nos CHECKs do banco.
 export const TEXT_MAX = 5000;
 export const OTHER_LABEL_MAX = 50;
+// Teto de registros de pensamento por conta (DEC-112).
+export const THOUGHT_RECORDS_MAX = 5000;
 
 // Ordem em que as emoções aparecem (a da lista na SPEC).
 export const EMOTIONS = Object.values(Emotion);

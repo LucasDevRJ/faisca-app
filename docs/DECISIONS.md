@@ -2495,6 +2495,39 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   acontecer, uma delas troca a variável no `.claude/settings.local.json`. Os bancos de teste antigos
   podem ficar no Postgres de dev; apagar é seguro, porque são recriados.
 
+## DEC-112 — Teto de registros por conta, limite de escritas por minuto e paginação no "Para ler" (API)
+- **Decisão (#181, achado do `revisor-seguranca` na DEC-094, com escolhas aprovadas pelo usuário):**
+  - **teto de 5000 registros por conta em cada área** que ainda não tinha limite: Atividades
+    (`ACTIVITIES_MAX`, 409 `ACTIVITIES_LIMIT`), Pensamentos (`THOUGHT_RECORDS_MAX`, 409
+    `THOUGHT_RECORDS_LIMIT`), Episódios de tensão (`TENSION_EPISODES_MAX`, 409
+    `TENSION_EPISODES_LIMIT`), Ação (`ACTIONS_MAX`, 409 `ACTIONS_LIMIT`) e registros em Meus Planos
+    somando todos os planos da conta (`PLAN_ENTRIES_MAX`, 409 `PLAN_ENTRIES_LIMIT`). Tarefas já tem
+    500 (DEC-106), Planos tem 30 (DEC-094) e fotos somadas têm 300 (DEC-074, DEC-103);
+  - cada teto é conferido dentro de transação depois de travar a conta (`SELECT id FROM "User" WHERE
+    id = ... FOR NO KEY UPDATE`), como nas fotos e nos planos: pedidos concorrentes não passam juntos
+    do limite, e no registro de plano a trava da conta vem sempre antes da trava do plano (`FOR SHARE`);
+  - **limite de 30 escritas por minuto por conta** (`createRecordWriteLimit`, `key: 'user'`) nas rotas
+    de escrita de registros de cada área (Atividades, Pensamentos, Tensão, Ação, Meus Planos, Tarefas,
+    Sono e humor, Sobre mim e marcas de leitura da profissional);
+  - **paginação com cursor no "Para ler"** (`GET /therapist/patients/:patientId/unread`): a API lê
+    primeiro apenas os metadados leves (`id`, datas de referência e `updatedAt`) das áreas que a
+    profissional pode ver, calcula os contadores totais (`counts` continua trazendo o total geral de
+    cada área liberada), ordena todos os registros pendentes do mais antigo ao mais novo (`(date,
+    sortAt, type, id)`) e carrega o texto completo de no máximo **50 registros por vez**
+    (`UNREAD_PAGE_SIZE = 50`), devolvendo `nextCursor: string | null` (base64url validado no Zod;
+    cursor malformado retorna 400). Como o filtro compara a posição `(date, sortAt, type, id)` em vez
+    de buscar o índice do registro no banco, marcar itens da página anterior como lidos antes de pedir
+    a página seguinte não pula nem repete registros.
+- **Motivo:** sem teto por conta nem página no "Para ler", uma sessão roubada ou um script conseguia
+  gravar milhares de registros de até ~100 kB, fazendo o banco crescer sem controle e levando a
+  resposta do `GET .../unread` a dezenas de MB de uma vez na memória da API e no navegador da
+  profissional. 5000 registros por área equivalem a anos de uso diário intenso, e 50 itens por página
+  mantêm a resposta leve sem mudar o formato dos campos que o front já consome (DEC-056).
+- **Limite conhecido:** o botão "Carregar mais" na visão "Para ler" do front entra no PR seguinte
+  (`feat/paginacao-para-ler-telas`); até lá, a tela mostra os 50 registros mais antigos para ler e os
+  contadores continuam mostrando o total geral. As listas por período das abas da profissional continuam
+  limitadas pela janela de até 92 dias (DEC-033), sem cursor próprio.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

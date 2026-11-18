@@ -13,6 +13,7 @@ import type { PlansService } from '../plans/plans.service.js';
 import type { ListTensionEpisodesQuery } from '../tension-episodes/tension-episodes.schema.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ReadMarksService } from '../read-marks/read-marks.service.js';
+import type { UnreadQuery } from '../read-marks/read-marks.schema.js';
 import type { SharedArea } from '../../generated/prisma/client.js';
 import type { PatientLinkAccess } from '../../middlewares/require-patient-access.js';
 import { actionForProfessional, activityForProfessional, thoughtForProfessional } from '../../lib/shared-areas.js';
@@ -151,9 +152,15 @@ export function createTherapistService(
       return readMarks.withReadStatus(therapistId, 'PLAN_ENTRY', await plans.listEntries(patientId, planId, query));
     },
 
-    // A visão "Não lidos" (DEC-057), fora do ciclo, só nas áreas liberadas (DEC-097).
-    unread(therapistId: string, patientId: string, privacyVersion: string | null, sharedAreas: SharedArea[]) {
-      return readMarks.unread(therapistId, patientId, privacyVersion, sharedAreas);
+    // A visão "Não lidos" (DEC-057), fora do ciclo, só nas áreas liberadas (DEC-097), paginada (DEC-112).
+    unread(
+      therapistId: string,
+      patientId: string,
+      privacyVersion: string | null,
+      sharedAreas: SharedArea[],
+      query?: UnreadQuery,
+    ) {
+      return readMarks.unread(therapistId, patientId, privacyVersion, sharedAreas, query);
     },
   };
 }
