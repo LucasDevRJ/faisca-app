@@ -53,6 +53,7 @@ export type ThoughtRecordInput = {
   consequence: string;
   // Na edição, null apaga a alternativa (e a reavaliação junto).
   alternativeExplanation?: string | null;
+  repeatFromId?: string;
 };
 
 export type AddAlternativeInput = {

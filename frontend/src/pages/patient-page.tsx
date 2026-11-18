@@ -680,7 +680,7 @@ function ToReadView({
     ...(tasks ?? []).map((task) => ({
       key: `task-${task.id}`, area: 'Tarefa', date: todayInAppZone(new Date(task.respondedAt ?? task.updatedAt)), createdAt: task.updatedAt,
       item: { type: 'TASK' as const, id: task.id },
-      card: <TaskCard task={task} footer={<ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} />} />,
+      card: <TaskCard task={task} readOnly patientId={patientId} footer={<ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} />} />,
     })),
     ...(thoughtRecords ?? []).map((record) => ({
       key: `t-${record.id}`,
@@ -752,6 +752,7 @@ function ToReadView({
         <PlanEntryCard
           entry={entry}
           readOnly
+          patientId={patientId}
           showPlan
           footer={<ReadControl patientId={patientId} type="PLAN_ENTRY" record={entry} label={entry.planTitle} />}
         />
@@ -881,6 +882,7 @@ function ThoughtsDay({ patientId, day, records, today }: ThoughtsDayProps) {
             key={record.id}
             record={record}
             readOnly
+            patientId={patientId}
             footer={
               <ReadControl patientId={patientId} type="THOUGHT_RECORD" record={record} label={record.situation} />
             }
@@ -981,6 +983,7 @@ function TensionDay({ patientId, day, episodes, today }: TensionDayProps) {
             key={episode.id}
             episode={episode}
             readOnly
+            patientId={patientId}
             footer={
               <ReadControl patientId={patientId} type="TENSION_EPISODE" record={episode} label={episode.situation} />
             }
