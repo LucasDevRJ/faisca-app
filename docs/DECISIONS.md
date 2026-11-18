@@ -2420,7 +2420,28 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   de uma consulta. A descrição não pode ser alterada depois da primeira resposta. Fotos, áudios,
   tipos ligados a registros e criação pela psicóloga ficam para etapas futuras.
 
-## DEC-109 — Um banco de testes e um par de portas por agente
+## DEC-109 — Virada do ciclo na hora da consulta
+- **Decisão (#185, opção B):** revê a regra da DEC-049 e o cabeçalho da DEC-050:
+  - cada sessão fecha um ciclo e inicia o seguinte no mesmo dia; esse dia aparece nos dois períodos;
+  - o ciclo atual vira no horário da sessão, pelo relógio de São Paulo. Antes do horário, a sessão de
+    hoje fecha o ciclo; no horário e depois, o ciclo atual começa nela e termina na próxima sessão;
+  - sessão sem horário só deixa de fechar o ciclo no dia seguinte. Desmarcada continua sem fechar;
+    avulsa e remarcada fecham no dia e horário em que acontecem;
+  - primeira sessão mantém o período de 7 dias (14 na agenda quinzenal), contando a própria sessão.
+    Sem próxima sessão, o período aberto começa no dia da última sessão. O limite de 42 dias conta
+    datas inclusivas;
+  - `?ciclo=AAAA-MM-DD` numa data de sessão continua selecionando o ciclo que termina nela. As setas
+    passam pelo dia seguinte para selecionar o ciclo que começa nela;
+  - a API informa se o período pedido é o atual e o instante UTC da próxima virada (`nextChangeAt`),
+    calculado no fuso de São Paulo. A interface agenda um refetch para esse instante, sem precisar
+    sair da tela. Quando uma sessão com hora acabou de ocorrer hoje, a API envia o horário para mostrar
+    “Sua consulta foi hoje, às HH:MM” (ou “A consulta foi” para a psicóloga).
+- **Motivo:** depois da sessão, registros daquele dia devem entrar também no período que começa nela;
+  antes do horário, paciente e psicóloga precisam continuar vendo o material que será discutido.
+- **Limite conhecido:** registros do dia compartilhado aparecem nos dois ciclos, inclusive no resumo
+  e na meta de Ação. A agenda tem resolução de minuto, então a virada ocorre no minuto marcado.
+
+## DEC-110 — Um banco de testes e um par de portas por agente
 - **Decisão (pedido do usuário, 17/11/2026):** o nome do banco de testes vem de `FAISCA_TEST_DB`
   (padrão `faisca_test`, o de sempre e o do CI), e as portas do Playwright de `E2E_API_PORT` e
   `E2E_WEB_PORT` (já existiam, padrão 3334 e 5174). Cada agente tem os seus (tabela no AGENTS.md:

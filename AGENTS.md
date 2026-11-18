@@ -31,7 +31,7 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 ## Comandos
 Backend (rodar dentro de `backend/`; detalhes em `backend/README.md`):
 - `npm run dev`: API em modo dev (porta 3333)
-- `npm run lint` · `npm run typecheck` · `npm test`: rodar ao terminar uma mudança (`npm test` precisa do Postgres ligado; usa o banco de testes do agente, DEC-026 e DEC-109)
+- `npm run lint` · `npm run typecheck` · `npm test`: rodar ao terminar uma mudança (`npm test` precisa do Postgres ligado; usa o banco de testes do agente, DEC-026 e DEC-110)
 - `npm run build`: compila para `dist/`
 - `npm run db:up`: sobe o Postgres local (Docker)
 - `npm run db:migrate`: nova migration em dev · `npm run db:deploy`: aplica as pendentes
@@ -95,7 +95,7 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
   O CI `Números únicos` (`scripts/check-unique-ids.mjs`) barra repetição.
 - **Antes do PR:** `git fetch origin main` e `git merge origin/main` (nunca rebase nem force push),
   mantendo as entradas dos dois lados no DECISIONS.md e na SPEC; depois, lint e testes de novo.
-- **Testes (DEC-109):** cada agente usa o próprio banco de testes e as próprias portas do Playwright,
+- **Testes (DEC-110):** cada agente usa o próprio banco de testes e as próprias portas do Playwright,
   para rodar ao mesmo tempo que os outros sem um apagar os dados do outro. Defina as variáveis no
   ambiente do agente (o Claude já as tem no `.claude/settings.json`):
 

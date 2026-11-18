@@ -72,7 +72,7 @@ e recebe as migrations a cada execução. As URLs vêm do `.env`, trocando só o
 Os dados são apagados antes de cada teste; nada de dev é tocado.
 
 Com mais de um agente de IA, cada um usa o próprio banco e as próprias portas do Playwright
-(`FAISCA_TEST_DB`, `E2E_API_PORT` e `E2E_WEB_PORT`; tabela no AGENTS.md, DEC-109). O nome do banco
+(`FAISCA_TEST_DB`, `E2E_API_PORT` e `E2E_WEB_PORT`; tabela no AGENTS.md, DEC-110). O nome do banco
 precisa começar com `faisca_test`.
 
 ## Dois usuários de banco (DEC-003)

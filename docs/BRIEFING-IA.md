@@ -39,7 +39,7 @@ Na prática clínica tradicional:
 - Na hora da sessão, os primeiros 15 a 20 minutos acabam gastos tentando lembrar *"o que aconteceu desde a última consulta?"*.
 
 **A resposta do Faísca:**
-1. Organiza todos os registros pelo **Ciclo da consulta** (o período exato desde o dia seguinte à última sessão até o dia da próxima sessão);
+1. Organiza todos os registros pelo **Ciclo da consulta** (do dia de uma sessão ao dia da próxima, com a virada no horário da consulta);
 2. Registra **tanto o que foi feito quanto o que não deu para fazer**, sem julgamento e sem culpa;
 3. Compara **o que a pessoa esperava sentir antes** com **o que realmente sentiu depois** (mostrando na prática que muitas vezes agir trouxe mais prazer ou realização do que a mente previa);
 4. Permite que a **psicóloga acompanhe tudo em modo somente leitura**, com o consentimento do paciente, sabendo exatamente o que é novo desde a última vez que leu.
@@ -92,7 +92,7 @@ Na prática clínica tradicional:
 - **Agenda de consultas e Ciclo da consulta:**
   - O paciente configura sua agenda recorrente (**semanal** ou **quinzenal**, dia e horário), além de poder criar **consulta avulsa**, **desmarcar** (ou registrar falta) e **remarcar** informando o motivo, **pausar** a terapia (com ou sem data de volta) ou **encerrar**.
   - Pode baixar um arquivo `.ics` para colocar as sessões no **calendário do celular** (com o título neutro `"Consulta"`, sem expor motivos).
-  - **Ciclo da consulta automático:** as abas de Atividades, Pensamentos, Tensão e Ação abrem no período exato entre a última sessão realizada e a próxima sessão agendada (com alternância `Ciclo | Semana`), mostrando um resumo neutro do ciclo (quantos dias, atividades feitas, pensamentos, episódios e ações).
+  - **Ciclo da consulta automático:** as abas de Atividades, Pensamentos, Tensão e Ação abrem no período entre uma sessão e a próxima. No dia da sessão, o ciclo vira no horário marcado e esse dia aparece nos dois ciclos (com alternância `Ciclo | Semana`), mostrando um resumo neutro de cada período.
   - **"Meu resumo":** em Meus registros, o paciente abre o mesmo resumo em números que as profissionais veem, comparado com o período anterior do mesmo tamanho.
 
 - **Meus Planos:**

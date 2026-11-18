@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_TEST_DATABASE, testDatabaseName } from '../../scripts/test-db.js';
 
-// Banco de testes por agente (DEC-109): só nomes que começam com faisca_test e são seguros no
+// Banco de testes por agente (DEC-110): só nomes que começam com faisca_test e são seguros no
 // CREATE DATABASE.
 describe('nome do banco de testes', () => {
   it('sem a variável, o faisca_test de sempre', () => {

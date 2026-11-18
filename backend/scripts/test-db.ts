@@ -9,7 +9,7 @@ import { PrismaClient } from '../src/generated/prisma/client.js';
 export const DEFAULT_TEST_DATABASE = 'faisca_test';
 
 // Com mais de um agente rodando os testes ao mesmo tempo, cada um usa o próprio banco
-// (FAISCA_TEST_DB=faisca_test_claude, por exemplo; tabela no AGENTS.md, DEC-109). Sem a variável,
+// (FAISCA_TEST_DB=faisca_test_claude, por exemplo; tabela no AGENTS.md, DEC-110). Sem a variável,
 // o de sempre (CI e quem não configurou nada). Só aceita nomes que começam com faisca_test e têm só
 // letras minúsculas, números e "_": nunca aponta para o banco de dev nem para o de produção, e o nome
 // entra no CREATE DATABASE sem risco de injeção.

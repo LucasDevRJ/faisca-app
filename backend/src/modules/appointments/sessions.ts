@@ -1,4 +1,4 @@
-import { addDays, daysBetween } from '../../lib/dates.js';
+import { addDays, daysBetween, startOfDayInAppZone } from '../../lib/dates.js';
 
 // Cálculo das sessões da agenda (DEC-045). Funções puras, com datas 'AAAA-MM-DD' e horas 'HH:MM'
 // no relógio de São Paulo, para testar as bordas sem banco. O service carrega os dados do
@@ -220,10 +220,11 @@ export function currentOrUpcomingPause<T extends PauseData>(pauses: T[], today: 
   return pauses.find((p) => p.returnDate === null || p.returnDate > today) ?? null;
 }
 
-// Ciclo da consulta (DEC-049): do dia seguinte à sessão agendada anterior até o dia da sessão,
-// inclusive. Desmarcada não fecha ciclo; avulsa e remarcada fecham no dia em que acontecem.
+// Ciclo da consulta (DEC-049/109): o dia da sessão pertence aos dois ciclos que se encontram nela.
+// A sessão sem hora só inicia o ciclo seguinte no dia posterior; com hora, a virada ocorre no horário.
+// Desmarcada não fecha ciclo; avulsa e remarcada fecham no dia em que acontecem.
 // Sem sessão anterior, 7 dias (14 na quinzenal) terminando na sessão. Sem próxima sessão, o ciclo
-// fica aberto: do dia seguinte à última até hoje. Sem nenhuma sessão, não há ciclo (a tela usa a
+// fica aberto a partir do dia da última sessão até hoje. Sem nenhuma sessão, não há ciclo (a tela usa a
 // semana). Teto de CYCLE_MAX_DAYS, ficando com os dias mais recentes.
 export const CYCLE_MAX_DAYS = 42;
 
@@ -232,12 +233,29 @@ export type Cycle = {
   to: string;
   // A sessão que fecha o ciclo; null no ciclo aberto (sem próxima sessão).
   session: { date: string; time: string | null; kind: Session['kind'] } | null;
+  // Só no ciclo atual, se uma sessão com hora acabou de começar hoje.
+  completedSessionToday: { time: string } | null;
+  // Ciclo calculado para o instante atual, mesmo quando a URL pede explicitamente outro ciclo.
+  isCurrent: boolean;
   // Passou do teto: mostra só os CYCLE_MAX_DAYS dias mais recentes.
   truncated: boolean;
   // Um dia dentro do ciclo anterior e do seguinte, para as setas; null quando não há.
   previous: string | null;
   next: string | null;
 };
+
+// Momento em que a API precisa recalcular o ciclo atual. Um dia sem horário vira à meia-noite
+// seguinte; uma sessão com horário vira naquele minuto, ambos no relógio de São Paulo.
+export function nextCycleChangeAt(cycle: Cycle, today: string): string | null {
+  if (!cycle.isCurrent || cycle.session?.date !== today || cycle.completedSessionToday) return null;
+  const boundary = cycle.session.time
+    ? new Date(
+        startOfDayInAppZone(today).getTime() +
+          cycle.session.time.split(':').reduce((minutes, part) => minutes * 60 + Number(part), 0) * 60_000,
+      )
+    : startOfDayInAppZone(addDays(today, 1));
+  return boundary.toISOString();
+}
 
 // Tamanho do primeiro ciclo: o passo da regra que marcou a sessão (7 para avulsa).
 function firstCycleDays(session: Session, data: AgendaData): number {
@@ -247,7 +265,13 @@ function firstCycleDays(session: Session, data: AgendaData): number {
   return schedule ? STEP[schedule.frequency] : 7;
 }
 
-export function cycleFor(data: AgendaData, date: string, today: string): Cycle | null {
+export function cycleFor(
+  data: AgendaData,
+  date: string,
+  today: string,
+  nowTime = '00:00',
+  current = false,
+): Cycle | null {
   const start = earliestDate(data);
   if (start === null) return null;
   const until = addDays(date > today ? date : today, SEARCH_DAYS);
@@ -258,7 +282,15 @@ export function cycleFor(data: AgendaData, date: string, today: string): Cycle |
   }
   if (sessions.length === 0) return null;
 
-  const endIndex = sessions.findIndex((s) => s.date >= date);
+  const justStartedToday = sessions.find((s) => s.date === today && s.time !== null && s.time <= nowTime);
+  const currentEndIndex = sessions.findIndex(
+    (s) => s.date > today || (s.date === today && (s.time === null || s.time > nowTime)),
+  );
+  // A data explícita da URL escolhe o ciclo que termina na consulta desse dia. Sem `date`,
+  // a sessão de hoje só deixa de fechar o ciclo atual a partir da hora marcada.
+  const endIndex = sessions.findIndex(
+    (s) => s.date >= date && !(current && s.date === today && s.time !== null && s.time <= nowTime),
+  );
   let from: string;
   let to: string;
   let session: Cycle['session'] = null;
@@ -269,20 +301,29 @@ export function cycleFor(data: AgendaData, date: string, today: string): Cycle |
     const end = sessions[endIndex]!;
     const prev = endIndex > 0 ? sessions[endIndex - 1]! : null;
     to = end.date;
-    from = prev ? addDays(prev.date, 1) : addDays(end.date, -(firstCycleDays(end, data) - 1));
+    from = prev ? prev.date : addDays(end.date, -(firstCycleDays(end, data) - 1));
     session = { date: end.date, time: end.time, kind: end.kind };
     previous = prev ? prev.date : null;
     // Depois da última sessão marcada, o seguinte é o ciclo aberto, se já tiver começado.
     next = endIndex < sessions.length - 1 || to < today ? addDays(to, 1) : null;
   } else {
     const last = sessions.at(-1)!;
-    from = addDays(last.date, 1);
+    from = last.date;
     to = today > from ? today : from;
     previous = last.date;
     next = null;
   }
 
-  const truncated = daysBetween(from, to) >= CYCLE_MAX_DAYS;
+  const truncated = daysBetween(from, to) + 1 > CYCLE_MAX_DAYS;
   if (truncated) from = addDays(to, -(CYCLE_MAX_DAYS - 1));
-  return { from, to, session, truncated, previous, next };
+  return {
+    from,
+    to,
+    session,
+    completedSessionToday: current && justStartedToday ? { time: justStartedToday.time! } : null,
+    isCurrent: endIndex === currentEndIndex && from <= today && today <= to,
+    truncated,
+    previous,
+    next,
+  };
 }
