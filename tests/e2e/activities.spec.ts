@@ -44,15 +44,15 @@ test('planejar, contar como foi e ver a atividade feita na semana', async ({ pag
 
   // Registro final: notas visíveis e nenhum botão de mudança (imutável). Sem consulta marcada, o prazo
   // das fotos fica aberto (DEC-103): o único botão é o de pôr fotos, que não muda o registro.
-  await expect(card.getByText('Feita')).toBeVisible();
+  await expect(card.getByText('Feita', { exact: true }).first()).toBeVisible();
   await expect(card.getByText('Foi melhor do que eu esperava.')).toBeVisible();
-  await expect(card.getByRole('button')).toHaveCount(1);
+  await expect(card.getByRole('button')).toHaveCount(2);
   await expect(card.getByRole('button', { name: 'Adicionar fotos' })).toBeVisible();
   await expect(page.getByText('Como foram as atividades feitas')).toBeVisible();
 
   // Continua lá depois de recarregar: veio da API, não do estado da tela.
   await page.reload();
-  await expect(page.getByRole('article', { name: 'Caminhada no parque' }).getByText('Feita')).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Caminhada no parque' }).getByText('Feita', { exact: true }).first()).toBeVisible();
 });
 
 test('registrar, no dia de hoje, algo que não aconteceu', async ({ page }) => {
@@ -67,8 +67,9 @@ test('registrar, no dia de hoje, algo que não aconteceu', async ({ page }) => {
   await expect(create).toBeHidden();
 
   const card = page.getByRole('article', { name: 'Academia' });
-  await expect(card.getByText('Não aconteceu')).toBeVisible();
-  await expect(card.getByRole('button')).toHaveCount(0);
+  await expect(card.getByText('Não aconteceu', { exact: true }).first()).toBeVisible();
+  await expect(card.getByRole('button')).toHaveCount(1);
+  await expect(card.getByRole('button', { name: 'Ligar a outro registro' })).toBeVisible();
 });
 
 test('navegar para a semana anterior e voltar', async ({ page }) => {
