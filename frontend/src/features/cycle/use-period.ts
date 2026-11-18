@@ -64,7 +64,7 @@ export function usePeriod(cycleQueryFor: CycleQueryFor, today: string) {
       cycle,
       monday: null,
       hasCycle,
-      isCurrent: cycle.from <= today && today <= cycle.to,
+      isCurrent: cycle.isCurrent,
     };
   } else {
     // Semana pedida ou, sem agenda, a semana do dia pedido.

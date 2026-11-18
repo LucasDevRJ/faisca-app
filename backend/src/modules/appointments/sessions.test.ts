@@ -4,10 +4,12 @@ import {
   cycleFor,
   hasStarted,
   lastAndNext,
+  nextCycleChangeAt,
   ruleDates,
   sessionsBetween,
   therapyStatus,
   upcomingSessions,
+  type Cycle,
   type AgendaData,
   type ScheduleData,
 } from './sessions.js';
@@ -175,24 +177,60 @@ describe('cycleFor (DEC-049)', () => {
   // Sessões às quartas: 07/10, 14/10, 21/10, 28/10...
   const TODAY = '2026-10-10';
 
-  it('normal: do dia seguinte à sessão anterior até o dia da sessão, inclusive', () => {
+  it('normal: do dia da sessão anterior até o dia da sessão, inclusive', () => {
     expect(cycleFor(agenda(), '2026-10-10', TODAY)).toEqual({
-      from: '2026-10-08',
+      from: '2026-10-07',
       to: '2026-10-14',
       session: { date: '2026-10-14', time: '14:00', kind: 'RECORRENTE' },
+      completedSessionToday: null,
+      isCurrent: true,
       truncated: false,
       previous: '2026-10-07',
       next: '2026-10-15',
     });
     // O dia da consulta é do ciclo que termina nele.
-    expect(cycleFor(agenda(), '2026-10-14', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-14' });
+    expect(cycleFor(agenda(), '2026-10-14', TODAY)).toMatchObject({ from: '2026-10-07', to: '2026-10-14', isCurrent: true });
+  });
+
+  it('vira na hora da sessão e mantém a data na consulta explícita da URL', () => {
+    const before = cycleFor(agenda(), '2026-10-14', '2026-10-14', '13:59', true)!;
+    expect(before).toMatchObject({ from: '2026-10-07', to: '2026-10-14', isCurrent: true, completedSessionToday: null });
+
+    const atSessionTime = cycleFor(agenda(), '2026-10-14', '2026-10-14', '14:00', true)!;
+    expect(atSessionTime).toMatchObject({
+      from: '2026-10-14',
+      to: '2026-10-21',
+      isCurrent: true,
+      completedSessionToday: { time: '14:00' },
+    });
+
+    const explicitlySelected = cycleFor(agenda(), '2026-10-14', '2026-10-14', '14:00', false)!;
+    expect(explicitlySelected).toMatchObject({ from: '2026-10-07', to: '2026-10-14', isCurrent: false });
+  });
+
+  it('sessão sem horário só deixa de fechar o ciclo no dia seguinte', () => {
+    const data = agenda({
+      schedules: [],
+      extras: [{ id: 'a1', date: '2026-10-14', time: null }],
+    });
+    expect(cycleFor(data, '2026-10-14', '2026-10-14', '23:59', true)).toMatchObject({
+      from: '2026-10-08',
+      to: '2026-10-14',
+      isCurrent: true,
+    });
+    expect(cycleFor(data, '2026-10-15', '2026-10-15', '00:00', true)).toMatchObject({
+      from: '2026-10-14',
+      to: '2026-10-15',
+      session: null,
+      isCurrent: true,
+    });
   });
 
   it('primeira sessão: 7 dias terminando nela; 14 na quinzenal', () => {
     expect(cycleFor(agenda(), '2026-10-03', TODAY)).toMatchObject({ from: '2026-10-01', to: '2026-10-07', previous: null });
     const biweekly = agenda({ schedules: [{ ...weekly, frequency: 'QUINZENAL' }] });
     expect(cycleFor(biweekly, '2026-10-03', TODAY)).toMatchObject({ from: '2026-09-24', to: '2026-10-07' });
-    expect(cycleFor(biweekly, '2026-10-10', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-21' });
+    expect(cycleFor(biweekly, '2026-10-10', TODAY)).toMatchObject({ from: '2026-10-07', to: '2026-10-21' });
   });
 
   it('desmarcada não fecha ciclo: junta com a sessão seguinte', () => {
@@ -201,27 +239,43 @@ describe('cycleFor (DEC-049)', () => {
         { scheduleId: 's1', originalDate: '2026-10-14', type: 'DESMARCADA', newDate: null, newTime: null, reason: 'x' },
       ],
     });
-    expect(cycleFor(data, '2026-10-10', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-21' });
+    expect(cycleFor(data, '2026-10-10', TODAY)).toMatchObject({ from: '2026-10-07', to: '2026-10-21' });
   });
 
-  it('remarcada fecha no dia novo, e o ciclo seguinte começa no outro dia', () => {
+  it('remarcada fecha no dia e na hora novos, e o ciclo seguinte começa na mesma data', () => {
     const data = agenda({
       exceptions: [
         { scheduleId: 's1', originalDate: '2026-10-14', type: 'REMARCADA', newDate: '2026-10-16', newTime: '09:00', reason: 'x' },
       ],
     });
-    expect(cycleFor(data, '2026-10-15', TODAY)).toMatchObject({ from: '2026-10-08', to: '2026-10-16' });
-    expect(cycleFor(data, '2026-10-17', TODAY)).toMatchObject({ from: '2026-10-17', to: '2026-10-21' });
+    expect(cycleFor(data, '2026-10-15', TODAY)).toMatchObject({ from: '2026-10-07', to: '2026-10-16' });
+    expect(cycleFor(data, '2026-10-16', '2026-10-16', '08:59', true)).toMatchObject({
+      from: '2026-10-07',
+      to: '2026-10-16',
+      isCurrent: true,
+    });
+    expect(cycleFor(data, '2026-10-16', '2026-10-16', '09:00', true)).toMatchObject({
+      from: '2026-10-16',
+      to: '2026-10-21',
+      completedSessionToday: { time: '09:00' },
+      isCurrent: true,
+    });
   });
 
   it('avulsa fecha ciclo', () => {
     const data = agenda({ extras: [{ id: 'a1', date: '2026-10-10', time: '18:00' }] });
     expect(cycleFor(data, '2026-10-09', TODAY)).toMatchObject({
-      from: '2026-10-08',
+      from: '2026-10-07',
       to: '2026-10-10',
       session: { date: '2026-10-10', kind: 'AVULSA' },
     });
-    expect(cycleFor(data, '2026-10-11', TODAY)).toMatchObject({ from: '2026-10-11', to: '2026-10-14' });
+    expect(cycleFor(data, '2026-10-11', TODAY)).toMatchObject({ from: '2026-10-10', to: '2026-10-14' });
+    expect(cycleFor(data, '2026-10-10', '2026-10-10', '17:59', true)).toMatchObject({ to: '2026-10-10' });
+    expect(cycleFor(data, '2026-10-10', '2026-10-10', '18:00', true)).toMatchObject({
+      from: '2026-10-10',
+      to: '2026-10-14',
+      completedSessionToday: { time: '18:00' },
+    });
   });
 
   it('depois de uma pausa longa: teto de 42 dias, com os mais recentes', () => {
@@ -231,12 +285,14 @@ describe('cycleFor (DEC-049)', () => {
     expect(cycle.from).toBe('2026-10-22');
   });
 
-  it('sem próxima sessão: ciclo aberto, do dia seguinte à última até hoje', () => {
+  it('sem próxima sessão: ciclo aberto, a partir da última sessão até hoje', () => {
     const data = agenda({ pauses: [{ startDate: '2026-10-10', returnDate: null }] });
     expect(cycleFor(data, '2026-10-20', '2026-10-20')).toEqual({
-      from: '2026-10-08',
+      from: '2026-10-07',
       to: '2026-10-20',
       session: null,
+      completedSessionToday: null,
+      isCurrent: true,
       truncated: false,
       previous: '2026-10-07',
       next: null,
@@ -247,5 +303,38 @@ describe('cycleFor (DEC-049)', () => {
 
   it('sem nenhuma sessão: sem ciclo (a tela usa a semana)', () => {
     expect(cycleFor(agenda({ schedules: [] }), TODAY, TODAY)).toBeNull();
+  });
+});
+
+describe('nextCycleChangeAt (DEC-109)', () => {
+  it('converte a hora marcada e a meia-noite de São Paulo para UTC', () => {
+    const scheduled: Cycle = {
+      from: '2026-10-07',
+      to: '2026-10-14',
+      session: { date: '2026-10-14', time: '14:00', kind: 'RECORRENTE' },
+      completedSessionToday: null,
+      isCurrent: true,
+      truncated: false,
+      previous: null,
+      next: '2026-10-15',
+    };
+    expect(nextCycleChangeAt(scheduled, '2026-10-14')).toBe('2026-10-14T17:00:00.000Z');
+    expect(nextCycleChangeAt({ ...scheduled, session: { ...scheduled.session!, time: null } }, '2026-10-14')).toBe(
+      '2026-10-15T03:00:00.000Z',
+    );
+  });
+
+  it('não agenda uma nova virada depois de a sessão de hoje começar', () => {
+    const past: Cycle = {
+      from: '2026-10-14',
+      to: '2026-10-21',
+      session: { date: '2026-10-21', time: '14:00', kind: 'RECORRENTE' },
+      completedSessionToday: { time: '14:00' },
+      isCurrent: true,
+      truncated: false,
+      previous: '2026-10-14',
+      next: '2026-10-22',
+    };
+    expect(nextCycleChangeAt(past, '2026-10-14')).toBeNull();
   });
 });

@@ -45,9 +45,12 @@ function fakeAction(overrides: Partial<Action> = {}): Action {
 }
 
 const CYCLE = {
-  from: '2026-09-22',
+  from: '2026-09-21',
   to: '2026-09-28',
   session: { date: '2026-09-28', time: '14:00', kind: 'RECORRENTE' },
+  completedSessionToday: null,
+  isCurrent: true,
+  nextChangeAt: null,
   truncated: false,
   previous: '2026-09-21',
   next: '2026-09-29',

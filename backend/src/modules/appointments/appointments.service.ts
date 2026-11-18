@@ -23,6 +23,7 @@ import {
   cycleFor,
   hasStarted,
   lastAndNext,
+  nextCycleChangeAt,
   ruleDates,
   scheduleOn,
   sessionsBetween,
@@ -178,14 +179,18 @@ export function createAppointmentsService() {
     };
   }
 
-  // Ciclo da consulta que contém o dia pedido (DEC-049). O "hoje" vem junto, no fuso de São Paulo,
-  // para a tela contar os dias até a consulta.
+  // O ciclo vem junto com o relógio de São Paulo para virar na hora da sessão (DEC-109).
   async function cycle(userId: string, query: CycleQuery = {}) {
-    const { today } = now();
+    const { today, nowTime } = now();
     // O cálculo vai até o dia pedido: sem teto, uma data muito distante pesaria na API.
     if (query.date && query.date > addDays(today, MAX_AHEAD_DAYS)) throw tooFarAhead();
     const agenda = await loadAgenda(prisma, userId);
-    return { today, cycle: cycleFor(agenda, query.date ?? today, today) };
+    const cycle = cycleFor(agenda, query.date ?? today, today, nowTime, query.date === undefined);
+    if (!cycle) return { today, cycle: null };
+    return {
+      today,
+      cycle: { ...cycle, nextChangeAt: query.date === undefined ? nextCycleChangeAt(cycle, today) : null },
+    };
   }
 
   // Consultas avulsas (DEC-030), agora com hora.
