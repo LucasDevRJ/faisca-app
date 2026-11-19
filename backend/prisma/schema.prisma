@@ -91,22 +91,31 @@ model User {
   recordLinks     RecordLink[]
 
   // Vínculo (DEC-015, DEC-031): o mesmo usuário pode estar dos dois lados, em vínculos diferentes.
-  linksAsPatient       TherapistLink[]   @relation("LinkPatient")
-  linksAsTherapist     TherapistLink[]   @relation("LinkTherapist")
+  linksAsPatient            TherapistLink[]       @relation("LinkPatient")
+  linksAsTherapist          TherapistLink[]       @relation("LinkTherapist")
+  // Comunidade de apoio entre pacientes (DEC-113): conteúdo separado dos registros terapêuticos.
+  ownedCommunity            Community?            @relation("CommunityOwner")
+  communityMemberships      CommunityMembership[]
+  communityPosts            CommunityPost[]       @relation("CommunityPostAuthor")
+  communityComments         CommunityComment[]    @relation("CommunityCommentAuthor")
+  communityReports          CommunityReport[]     @relation("CommunityReportAuthor")
+  communityDecisions        CommunityPost[]       @relation("CommunityPostModerator")
+  communityCommentDecisions CommunityComment[]    @relation("CommunityCommentModerator")
+  reviewedCommunityReports  CommunityReport[]     @relation("CommunityReportModerator")
   // Marcas de leitura (DEC-057): as que esta conta fez como terapeuta e as que foram feitas nos
   // registros dela como paciente (só a terapeuta as vê).
-  readMarksAsTherapist ReadMark[]        @relation("ReadMarkTherapist")
-  readMarksAsPatient   ReadMark[]        @relation("ReadMarkPatient")
-  invitesSent          LinkInvite[]      @relation("InvitePatient")
-  invitesSignedUp      LinkInvite[]      @relation("InviteSignupUser")
-  linkCodes            LinkCode[]
-  linkCodeAttempts     LinkCodeAttempt[]
+  readMarksAsTherapist      ReadMark[]            @relation("ReadMarkTherapist")
+  readMarksAsPatient        ReadMark[]            @relation("ReadMarkPatient")
+  invitesSent               LinkInvite[]          @relation("InvitePatient")
+  invitesSignedUp           LinkInvite[]          @relation("InviteSignupUser")
+  linkCodes                 LinkCode[]
+  linkCodeAttempts          LinkCodeAttempt[]
   // Mural de avisos (DEC-079): os avisos que esta conta publicou como terapeuta e os que ela já viu
   // como paciente.
-  notices              TherapistNotice[]
+  notices                   TherapistNotice[]
   // "Sobre mim" do paciente (DEC-081): um só por conta.
-  about                PatientAbout?
-  noticesSeen          NoticeSeen[]
+  about                     PatientAbout?
+  noticesSeen               NoticeSeen[]
 
   // Lembretes e notificações (DEC-004, DEC-006, DEC-089): configuração, inscrições de Web Push e
   // registro de envio para idempotência.
@@ -511,6 +520,42 @@ enum RecordLinkKind {
   REPETITION
 }
 
+// Estados da participação na comunidade de apoio (DEC-113).
+enum CommunityMembershipStatus {
+  INVITED
+  REQUESTED
+  ACTIVE
+  LEFT
+  SUSPENDED
+  REJECTED
+}
+
+// Autoria e revisão humana do conteúdo da comunidade (DEC-113).
+enum CommunityAuthorKind {
+  PATIENT
+  THERAPIST
+}
+
+enum CommunityContentStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  HIDDEN
+  DELETED
+}
+
+enum CommunityReportReason {
+  HARASSMENT
+  PRIVACY
+  UNSAFE_ADVICE
+  OTHER
+}
+
+enum CommunityReportStatus {
+  OPEN
+  REVIEWED
+}
+
 // Vínculo paciente ↔ terapeuta (SPEC, "Vínculo"). Revogar preenche revokedAt e o registro fica.
 // Escritos à mão na migration: no máximo um vínculo ativo por paciente e tipo (índice único parcial, DEC-097)
 // e ninguém se vincula a si mesmo (CHECK).
@@ -714,6 +759,130 @@ model NoticeSeen {
 
   @@id([noticeId, patientId])
   @@index([patientId])
+}
+
+// Comunidade opcional de apoio de uma psicóloga. Excluir a conta da psicóloga apaga a comunidade e
+// os conteúdos em cascata; o paciente pode apagar os próprios conteúdos antes disso (DEC-113).
+model Community {
+  id          String   @id @default(uuid()) @db.Uuid
+  therapistId String   @unique @db.Uuid
+  createdAt   DateTime @default(now())
+
+  therapist   User                  @relation("CommunityOwner", fields: [therapistId], references: [id], onDelete: Cascade)
+  memberships CommunityMembership[]
+  posts       CommunityPost[]
+  events      CommunityEvent[]
+  reports     CommunityReport[]
+}
+
+// Participação opcional do paciente. A confirmação 18+ guarda somente a data, nunca a data de
+// nascimento. A adesão depende de vínculo ativo com a psicóloga e aprovação dela (DEC-113).
+model CommunityMembership {
+  id               String                    @id @default(uuid()) @db.Uuid
+  communityId      String                    @db.Uuid
+  patientId        String                    @db.Uuid
+  status           CommunityMembershipStatus @default(REQUESTED)
+  displayName      String?
+  acceptedRulesAt  DateTime?
+  adultConfirmedAt DateTime?
+  announceOnJoin   Boolean                   @default(false)
+  requestedAt      DateTime?
+  invitedAt        DateTime?
+  joinedAt         DateTime?
+  leftAt           DateTime?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  patient   User      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, patientId])
+  @@index([communityId, status, createdAt])
+}
+
+// Publicação que só aparece para a comunidade depois da revisão humana (DEC-113).
+model CommunityPost {
+  id                String                 @id @default(uuid()) @db.Uuid
+  communityId       String                 @db.Uuid
+  authorId          String                 @db.Uuid
+  authorKind        CommunityAuthorKind
+  authorDisplayName String
+  body              String
+  status            CommunityContentStatus @default(PENDING)
+  moderationMessage String?
+  reviewedAt        DateTime?
+  moderatorId       String?                @db.Uuid
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  community Community          @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author    User               @relation("CommunityPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  moderator User?              @relation("CommunityPostModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+  comments  CommunityComment[]
+  reports   CommunityReport[]
+
+  @@index([communityId, status, createdAt])
+  @@index([authorId, createdAt])
+}
+
+// Comentários sem resposta encadeada, também revisados antes de aparecer (DEC-113).
+model CommunityComment {
+  id                String                 @id @default(uuid()) @db.Uuid
+  postId            String                 @db.Uuid
+  authorId          String                 @db.Uuid
+  authorKind        CommunityAuthorKind
+  authorDisplayName String
+  body              String
+  status            CommunityContentStatus @default(PENDING)
+  moderationMessage String?
+  reviewedAt        DateTime?
+  moderatorId       String?                @db.Uuid
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  post      CommunityPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User              @relation("CommunityCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  moderator User?             @relation("CommunityCommentModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+  reports   CommunityReport[]
+
+  @@index([postId, status, createdAt])
+  @@index([authorId, createdAt])
+}
+
+// Aviso opcional de boas-vindas no feed, sem expor a identidade da conta (DEC-113).
+model CommunityEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  communityId String   @db.Uuid
+  body        String
+  createdAt   DateTime @default(now())
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@index([communityId, createdAt])
+}
+
+// Denúncias feitas por membros. Cada alvo é uma publicação ou um comentário (CHECK na migration).
+model CommunityReport {
+  id          String                @id @default(uuid()) @db.Uuid
+  communityId String                @db.Uuid
+  reporterId  String                @db.Uuid
+  postId      String?               @db.Uuid
+  commentId   String?               @db.Uuid
+  reason      CommunityReportReason
+  details     String?
+  status      CommunityReportStatus @default(OPEN)
+  reviewedAt  DateTime?
+  moderatorId String?               @db.Uuid
+  createdAt   DateTime              @default(now())
+
+  community Community         @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  reporter  User              @relation("CommunityReportAuthor", fields: [reporterId], references: [id], onDelete: Cascade)
+  post      CommunityPost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   CommunityComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  moderator User?             @relation("CommunityReportModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  @@index([communityId, status, createdAt])
+  @@index([reporterId, createdAt])
 }
 
 // Contas excluídas nas últimas 5 semanas, só pelo id (DEC-077). Se um dia for preciso restaurar uma

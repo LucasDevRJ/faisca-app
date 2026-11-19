@@ -16,6 +16,9 @@ import { NotFoundPage } from '../pages/not-found-page';
 import { NoticesPage } from '../pages/notices-page';
 import { PatientPage } from '../pages/patient-page';
 import { PrivacyPage } from '../pages/privacy-page';
+import { CommunityPage } from '../pages/community-page';
+import { CommunityModerationPage } from '../pages/community-moderation-page';
+import { TherapistCommunityPage } from '../pages/therapist-community-page';
 import { PatientsPage } from '../pages/patients-page';
 import { EditPlanEntryPage, NewPlanEntryPage } from '../pages/plan-entry-form-page';
 import { EditPlanPage, NewPlanPage } from '../pages/plan-form-page';
@@ -52,8 +55,8 @@ export const routes = [
               {
                 element: <RequireProfile profile="patient" />,
                 children: [
-                  // Atividades, Pensamentos, Tensão, Ação e Meus Planos em abas (DEC-040, DEC-043, DEC-052,
-                  // DEC-095).
+                  // Abas dos registros e recursos de apoio do paciente (DEC-040, DEC-043, DEC-052,
+                  // DEC-095, DEC-106, DEC-107, DEC-113).
                   {
                     element: <PatientTabsLayout />,
                     children: [
@@ -65,6 +68,7 @@ export const routes = [
                       { path: 'planos', element: <PlansPage /> },
                       { path: 'tarefas', element: <TasksPage /> },
                       { path: 'sono-humor', element: <SleepMoodPage /> },
+                      { path: 'comunidade', element: <CommunityPage /> },
                       { path: 'planos/:id', element: <PlanPage /> },
                     ],
                   },
@@ -92,8 +96,10 @@ export const routes = [
                   { path: 'pacientes/:patientId/buscar', element: <RecordSearchPage audience="therapist" /> },
                   // Mural de avisos da terapeuta (DEC-079, DEC-080).
                   { path: 'mural', element: <MuralPage /> },
+                  { path: 'comunidade-psicologa', element: <TherapistCommunityPage /> },
                 ],
               },
+              { path: 'comunidade/moderacao', element: <CommunityModerationPage /> },
             ],
           },
         ],

@@ -8,7 +8,7 @@ import {
   setSessionCookie,
   shouldRenewSession,
 } from '../lib/session.js';
-import type { Palette } from '../generated/prisma/client.js';
+import type { Palette, ProfessionalKind } from '../generated/prisma/client.js';
 
 export type AuthUser = {
   id: string;
@@ -16,6 +16,7 @@ export type AuthUser = {
   email: string;
   hasPatientProfile: boolean;
   hasTherapistProfile: boolean;
+  professionalKind: ProfessionalKind | null;
   // Versão do aviso de privacidade aceita (DEC-036); a área de RPD exige a atual (DEC-039).
   privacyVersion: string | null;
   // Última novidade vista (card de Novidades, DEC-054).
@@ -51,6 +52,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
           email: true,
           hasPatientProfile: true,
           hasTherapistProfile: true,
+          professionalKind: true,
           emailConfirmedAt: true,
           sessionVersion: true,
           privacyVersion: true,
@@ -82,6 +84,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     email: user.email,
     hasPatientProfile: user.hasPatientProfile,
     hasTherapistProfile: user.hasTherapistProfile,
+    professionalKind: user.professionalKind,
     privacyVersion: user.privacyVersion,
     seenAnnouncement: user.seenAnnouncement,
     palette: user.palette,

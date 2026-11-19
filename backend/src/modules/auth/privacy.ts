@@ -19,7 +19,8 @@ import { AppError } from '../../errors/app-error.js';
 // - 2026-11.5: entram as fotos nas atividades (DEC-103), com área própria.
 // - 2026-11.6: entram as Tarefas e suas respostas (DEC-106), com área própria.
 // - 2026-11.7: entram o Sono e humor e o Remédio do dia (DEC-107), cada um com área própria.
-// - 2026-11.8: entram os remédios, as mudanças e o que o paciente sente (DEC-114), com área própria.
+// - 2026-11.8: entra a Comunidade de apoio entre pacientes (DEC-113), com área própria.
+// - 2026-11.9: entram os remédios, as mudanças e o que o paciente sente (DEC-114), com área própria.
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -36,6 +37,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.6',
   '2026-11.7',
   '2026-11.8',
+  '2026-11.9',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -50,8 +52,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // A 2026-11.5 (fotos das atividades, DEC-103) foi conhecida na API antes e virou a atual no PR das
 // telas, com o texto (DEC-104). A 2026-11.6 (Tarefas, DEC-106) segue o mesmo fluxo, e a 2026-11.7
 // (sono, humor e remédio, DEC-107) também: conhecida na API, vira a atual no PR das telas (DEC-108).
-// A 2026-11.8 (remédios e o que sinto, DEC-114) segue igual: vira a atual no PR das telas (DEC-115).
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.7';
+// A 2026-11.9 (remédios e o que sinto, DEC-114) segue igual: vira a atual no PR das telas (DEC-115).
+export const PRIVACY_VERSION: PrivacyVersion = '2026-11.8';
 
 // Qual versão gravar no aceite (DEC-105). O app manda a versão que mostrou; o servidor só grava a que
 // a pessoa leu. Sem versão é um app de antes dessa regra (instalado e ainda não atualizado, ou nos
@@ -98,9 +100,10 @@ export const PRIVACY_AREAS = {
   sleepMood: '2026-11.7',
   // Remédio (DEC-107): só se tomou como combinado em cada dia, sem nome nem dose.
   medication: '2026-11.7',
+  community: '2026-11.8',
   // Remédios e o que sinto (DEC-114): nome, dose e horário dos remédios, as mudanças com data e o que
   // o paciente sente, com a intensidade.
-  medications: '2026-11.8',
+  medications: '2026-11.9',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -125,6 +128,7 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     tasks: coversArea(acceptedVersion, 'tasks'),
     sleepMood: coversArea(acceptedVersion, 'sleepMood'),
     medication: coversArea(acceptedVersion, 'medication'),
+    community: coversArea(acceptedVersion, 'community'),
     medications: coversArea(acceptedVersion, 'medications'),
   };
 }

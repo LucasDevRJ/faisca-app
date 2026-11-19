@@ -100,6 +100,11 @@ const SENSITIVE_KEYS = [
   'expectation',
   // Mural da terapeuta (DEC-079): o texto do aviso.
   'body',
+  // Comunidade (DEC-113): publicações, comentários, motivos de denúncia e mensagem de moderação.
+  'moderationMessage',
+  'details',
+  'displayName',
+  'authorDisplayName',
   // Web Push (DEC-089): endereço e chaves da inscrição do aparelho.
   'endpoint',
   'p256dh',

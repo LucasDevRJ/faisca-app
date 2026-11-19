@@ -2559,6 +2559,16 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   flexões aproximadas se restringem a gênero final “a/o” e não cobrem sinônimos ou derivações gerais.
   O filtro de não lidos só considera tipos com marca de leitura, e Tarefas respondidas.
 
+## DEC-113 — Comunidade opcional de apoio (19/11/2026)
+- **Decisão:** reabrimos a ideia de comunidade entre pacientes, antes recusada na DEC-079, com limites explícitos. Cada psicóloga pode ter uma comunidade opcional; pacientes com vínculo ativo de psicologia podem solicitar entrada, e a psicóloga aprova ou recusa. Só maiores de 18 anos participam na primeira versão, por autoconfirmação; não coletamos data de nascimento. Cada pessoa escolhe um apelido, aceita regras e pode optar por aparecer num evento neutro de boas-vindas.
+- Membros ativos podem ler o histórico completo aprovado antes de entrarem. Sair bloqueia o acesso, mas a pessoa pode solicitar entrada de novo e, se voltar a ser aprovada, recupera o acesso ao histórico. O fim do vínculo de psicologia bloqueia o acesso imediatamente. A comunidade não integra nem concede acesso aos registros clínicos. A psicóloga pode criar, convidar, aprovar, publicar e comentar somente dentro da comunidade.
+- **Moderação:** toda publicação e comentário começa pendente e precisa de revisão humana antes de aparecer. Participantes podem denunciar; a autora ou o autor pode editar (reiniciando a revisão) ou apagar o próprio conteúdo. Rejeição e ocultação registram mensagem privada de motivo. Uma pessoa moderadora da plataforma é explicitamente autorizada por e-mail e precisa ter 2FA ativo; suas rotas só expõem conteúdo da comunidade e nunca perfil clínico ou registros. A psicóloga responsável também pode ler esse conteúdo para moderar seu grupo.
+- **Dados e exclusão:** nomes e e-mails da conta não aparecem aos outros pacientes. A exclusão da conta do paciente remove seu conteúdo. A exclusão da conta da psicóloga remove a comunidade e todo o conteúdo em cascata. O banco guarda a confirmação de maioridade e o aceite das regras, sem data de nascimento.
+- **Privacidade:** nova área `community`, com aceite da versão `2026-11.8`; aviso de privacidade explica conteúdo, apelido, visibilidade e revisão humana. O card de novidade é `2026-11-comunidade`.
+- **Regra de autorização:** nova exceção isolada para conteúdo comunitário, fora de `/therapist/patients`; não altera a proibição de escritas em dados clínicos. A moderação não é um perfil administrativo geral.
+- **Motivo:** oferecer apoio entre pessoas acompanhadas pela mesma profissional, preservando pseudonimato entre pacientes, entrada consentida, mediação antes da publicação e limites claros de acesso.
+- **Limite conhecido:** maiores de 18 anos é uma escolha conservadora para a primeira versão, não uma conclusão de que a lei proíbe a participação de adolescentes. A maioridade é autodeclarada, não verificada por documento. O evento de entrada aparece apenas no feed, sem push/e-mail; o funcionamento exige revisão humana ativa. O histórico completo é carregado sem paginação e pode ficar pesado se a comunidade crescer. Sem painel de gestão de denúncias fora da fila dedicada e sem moderação automatizada nesta etapa.
+
 ## DEC-114 — Remédios, mudanças e o que o paciente sente (API)
 - **Decisão (#171, desenho aprovado pelo usuário em 19/11/2026, pela prática comum da psiquiatria):**
   - **anotações do paciente, sem catálogo** (`Medication`, `MedicationChange`, `Symptom` e
@@ -2581,7 +2591,7 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   - **resumo do período (DEC-100)**: o bloco Remédios só com números e datas (remédios em uso, mudanças
     com data e tipo, sintomas novos e que passaram, a maior intensidade), sem texto do paciente;
   - a opção "Anotar meus remédios e o que sinto" (`listsMedications`, desligada) só esconde a seção;
-  - área nova no aviso de privacidade (`2026-11.8`, `medications`), conhecida na API e atual só no PR
+  - área nova no aviso de privacidade (`2026-11.9`, `medications`), conhecida na API e atual só no PR
     das telas (DEC-115); dose, horário, notas, datas e a ligação entram no `SENSITIVE_KEYS` (regra 7).
 - **Motivo:** quem faz tratamento psiquiátrico precisa contar o que toma, o que mudou e o que sente
   entre consultas espaçadas, e separar o efeito do começo do efeito do uso contínuo. Guardar só o que o

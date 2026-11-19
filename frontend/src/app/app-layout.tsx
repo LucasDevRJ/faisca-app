@@ -16,7 +16,7 @@ export function AppLayout() {
   // "Meus registros" segue marcado nas telas de Pensamentos, Tensão, Ação, Consultas e Avisos, que são do
   // mesmo perfil; "Meus pacientes", no Mural.
   const { pathname } = useLocation();
-  const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/acao', '/consultas', '/avisos'].some(
+  const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/acao', '/consultas', '/avisos', '/comunidade'].some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 

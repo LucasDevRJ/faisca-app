@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Remédios e o que sinto (DEC-114, #171). Os números precisam ser iguais aos do CHECK da migration
-// 20261119180000_medications e aos do front.
+// 20261119200000_medications e aos do front.
 export const MEDICATION_NAME_MAX = 60;
 export const MEDICATION_DOSE_MAX = 40;
 export const MEDICATION_SCHEDULE_MAX = 40;

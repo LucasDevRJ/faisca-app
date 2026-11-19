@@ -20,6 +20,9 @@
 ## Passo a passo
 - Tela nova ou alterada: siga a skill `nova-tela` (quem vê, aceite, dados, visual,
   acessibilidade, celular, testes e conferência no navegador).
+- Comunidade (DEC-113): explique antes da entrada quem verá apelido e conteúdo, deixe explícito que
+  publicações e comentários aguardam revisão humana e que o histórico anterior fica visível. A saída
+  deve ser reversível por novo pedido; não exponha nome/e-mail da conta para outros pacientes.
 
 ## Tom
 - Por padrão, textos acolhedores: "Conta como foi?" em vez de "Tarefa pendente";

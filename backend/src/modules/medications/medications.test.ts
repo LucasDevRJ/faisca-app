@@ -9,7 +9,7 @@ import { MEDICATIONS_MAX } from './medications.schema.js';
 import { timelineError } from './medications.service.js';
 
 // Remédios e o que sinto (DEC-114, #171). Dados fictícios (regra 5): remédios e sintomas inventados.
-const VERSION = '2026-11.8';
+const VERSION = '2026-11.9';
 let app: ReturnType<typeof createApp>;
 let patientId: string;
 let otherId: string;
@@ -32,7 +32,7 @@ beforeEach(async () => {
     })
   ).id;
   await createConfirmedUser({ email: 'sem-vinculo@faisca.test', patient: false, therapist: true, privacyVersion: VERSION });
-  await createConfirmedUser({ email: 'sem-aceite@faisca.test', privacyVersion: '2026-11.7' });
+  await createConfirmedUser({ email: 'sem-aceite@faisca.test', privacyVersion: '2026-11.8' });
 });
 
 async function login(email = 'paciente@faisca.test') {
@@ -320,7 +320,7 @@ describe('autorização do paciente (regra 1)', () => {
     expect(await prisma.medication.count()).toBe(0);
   });
 
-  it('sem o aceite da 2026-11.8, 403 pedindo o aceite em todas as rotas', async () => {
+  it('sem o aceite da 2026-11.9, 403 pedindo o aceite em todas as rotas', async () => {
     for (const call of allRoutes(await login('sem-aceite@faisca.test'))) {
       const res = await call();
       expect(res.status).toBe(403);
@@ -410,7 +410,7 @@ describe('profissional: só leitura, só com a caixa liberada', () => {
     expect((await agent.get(`/therapist/patients/${otherId}/medications`)).status).toBe(403);
     expect((await agent.get('/therapist/patients/nao-e-uuid/medications')).status).toBe(403);
 
-    await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-11.7' } });
+    await prisma.user.update({ where: { id: therapistId }, data: { privacyVersion: '2026-11.8' } });
     const old = await agent.get(base());
     expect(old.status).toBe(403);
     expect(old.body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');

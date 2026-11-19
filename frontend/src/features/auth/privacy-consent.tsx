@@ -9,7 +9,7 @@ import { useAcceptPrivacy, useSession } from './use-session';
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
 export type PrivacyArea = keyof SessionUser['privacyAreas'];
-type Audience = 'patient' | 'therapist';
+type Audience = 'patient' | 'therapist' | 'moderator';
 
 const AREA_NAME: Record<PrivacyArea, string> = {
   thoughtRecords: 'o Registro de Pensamentos',
@@ -23,11 +23,13 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   tasks: 'as Tarefas',
   sleepMood: 'o Sono e humor',
   medication: 'o Remédio do dia',
+  community: 'a Comunidade',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
 // consente com o uso dos próprios dados; a terapeuta, com o acesso aos dos pacientes (DEC-041).
-const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope: string }>> = {
+type ConsentCopy = { intro: string; scope: string };
+const CONSENT_TEXT: Record<PrivacyArea, { patient: ConsentCopy; therapist: ConsentCopy; moderator?: ConsentCopy }> = {
   thoughtRecords: {
     patient: {
       intro: 'Para usar esta parte, leia o que mudou e confirme.',
@@ -146,6 +148,20 @@ const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope:
       scope: 'inclusive com o acesso a se meus pacientes tomaram o remédio como combinado como dado de saúde.',
     },
   },
+  community: {
+    patient: {
+      intro: 'Para participar da Comunidade, leia como seu apelido e conteúdo serão usados e quem poderá vê-los.',
+      scope: 'inclusive com o uso do meu apelido, das minhas publicações, comentários e denúncias na Comunidade, visíveis aos membros e à psicóloga responsável e revisados por uma pessoa moderadora.',
+    },
+    therapist: {
+      intro: 'Para criar e acompanhar a Comunidade, leia como o conteúdo dos participantes será usado.',
+      scope: 'inclusive com o acesso e a moderação das publicações e comentários feitos na Comunidade, sem acesso aos registros clínicos por esta área.',
+    },
+    moderator: {
+      intro: 'Para revisar conteúdo da Comunidade, leia o que poderá acessar e como será usado.',
+      scope: 'inclusive com o acesso às publicações, comentários e denúncias da Comunidade para revisão humana, sem acesso aos registros clínicos.',
+    },
+  },
 };
 
 // onCancel: o pedido está numa janela (Dialog), que já tem o título; sem o cartão e com "Agora não".
@@ -163,7 +179,7 @@ export function PrivacyConsentGate({ area, audience = 'patient', onCancel, onAcc
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const accept = useAcceptPrivacy();
-  const text = CONSENT_TEXT[area][audience];
+  const text = CONSENT_TEXT[area][audience] ?? CONSENT_TEXT[area].patient;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
