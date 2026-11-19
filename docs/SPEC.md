@@ -307,13 +307,44 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   opção em Conta, "Tomou o remédio como combinado?" (Sim, Esqueci algum ou Hoje não). A noite pertence
   ao dia em que a pessoa acordou.
 - O paciente registra e edita os últimos 7 dias. Sem cobrança, sem sequência e sem lembrete diário.
-- O Faísca não guarda nome, dose nem efeito de remédio.
+- O "tomou como combinado?" não guarda nome nem dose; os remédios ficam na seção abaixo (DEC-114).
 - Duas áreas no vínculo, "Sono e humor" e "Remédio", fechadas para todas as profissionais até o
   paciente liberar. A profissional só lê, sem "Lido". As duas entram no resumo do período, sem a
   palavra do dia.
 - **Telas (DEC-108):** o cartão "Sono e humor de hoje" em Meus registros; a aba "Sono e humor", com o
   gráfico das horas de sono e do humor e os dias; a caixa "Registrar se tomei o remédio" em Conta
   (desligar só esconde a pergunta). Na profissional, a aba "Sono e humor" e os blocos no resumo.
+
+## Remédios e o que sinto (DEC-114, #171)
+- Anotações do paciente, todas opcionais, em texto livre e sem catálogo, para quem liga "Anotar meus
+  remédios e o que sinto" em Conta (desligado por padrão; desligar só esconde).
+- **Meus remédios:** nome (até 60), dose e horário (até 40 cada) e a data de início. A dose muda por
+  uma **mudança com data**: começou, mudou a dose (com a dose nova) ou parou, com nota de até 200. A
+  linha do tempo precisa fazer sentido: começa com "começou", a dose muda e o remédio para só enquanto
+  está em uso, e só volta a começar depois de parar. Nome e horário mudam direto.
+- **O que tenho sentido:** o que é (até 80), desde quando, a intensidade de 0 a 10 (opcional), a
+  ligação opcional a um remédio ("começou depois de algum remédio ou mudança?"), observação de até 500
+  e "já passou", com data. **"Como está agora"** anota a intensidade num dia, uma por dia, entre o
+  começo e o fim do sintoma.
+- **"No começo" ou "com o uso contínuo"** é calculado na leitura: os dias entre a última mudança do
+  remédio ligado e o começo do sintoma ("5 dias depois de mudar a dose"), sem corte clínico.
+- Nada no futuro e nada antes de 1950. Tetos: 50 remédios, 100 mudanças por remédio, 300 sintomas e
+  400 dias de "como está" por sintoma. O paciente edita e apaga tudo; apagar um remédio mantém os
+  sintomas, sem a ligação.
+- O Faísca não avalia se é efeito do remédio, não sugere dose, troca, interação nem parada e não
+  avisa a profissional. Push e e-mail nunca falam de remédio nem de sintoma.
+- **Caixa própria no vínculo**, "Remédios e o que sinto" (`MEDICATIONS`), fechada para todas as
+  profissionais, inclusive nos vínculos que já existiam; a caixa "Remédio" continua só com a adesão. A
+  profissional (psiquiatra ou psicóloga) só lê, em `GET /therapist/patients/:patientId/medications`.
+- **Resumo do período:** remédios em uso no fim do período, as mudanças com data e tipo, sintomas novos
+  e os que passaram e a maior intensidade, sem o nome do remédio nem o texto do sintoma.
+- Aviso **2026-11.9** com a área `medications`, conhecido na API e atual no PR das telas (DEC-115).
+- Rotas do paciente: GET `/medications`, PUT `/medications/settings`, POST `/medications`,
+  PATCH/DELETE `/medications/:id`, POST `/medications/:id/changes`, PATCH/DELETE
+  `/medications/:id/changes/:changeId`, POST `/symptoms`, PATCH/DELETE `/symptoms/:id` e PUT/DELETE
+  `/symptoms/:id/checks/:date`.
+- **Para depois:** sintomas novos e mudanças no "Para ler" da profissional, depois da paginação do
+  "Para ler" (#216); as telas (DEC-115).
 
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados

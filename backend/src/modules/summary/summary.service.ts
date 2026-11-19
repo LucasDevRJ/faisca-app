@@ -3,6 +3,7 @@ import { addDays, dateOnlyToDate, dateToDateOnly, dateToTimeOnly, daysBetween } 
 import { prisma } from '../../lib/prisma.js';
 import { coversArea, type PrivacyArea } from '../auth/privacy.js';
 import { sleepMinutes } from '../daily-check-ins/daily-check-ins.service.js';
+import { medicationsStats } from '../medications/medications.service.js';
 import type { PeriodSummaryQuery } from './summary.schema.js';
 
 // Resumo do período em números (DEC-100, #172): só contagens e médias calculadas na hora, a partir
@@ -18,6 +19,7 @@ export const SUMMARY_AREAS = [
   'PLANS',
   'SLEEP_MOOD',
   'MEDICATION',
+  'MEDICATIONS',
 ] as const;
 export type SummaryArea = (typeof SUMMARY_AREAS)[number];
 
@@ -29,6 +31,7 @@ const PRIVACY_OF: Record<SummaryArea, PrivacyArea | null> = {
   PLANS: 'plans',
   SLEEP_MOOD: 'sleepMood',
   MEDICATION: 'medication',
+  MEDICATIONS: 'medications',
 };
 
 // O que quem pede pode ver: na profissional, a área liberada pelo paciente (DEC-097) e o aceite
@@ -247,7 +250,8 @@ export function createSummaryService() {
     const ranges = { current: { from: query.from, to: query.to }, previous: previousRange(query) };
     const days: DaySets = { current: new Set(), previous: new Set() };
     const sees = (area: SummaryArea) => areas.includes(area);
-    const [activities, thoughtRecords, tensionEpisodes, actions, plans, sleepMood, medication] = await Promise.all([
+    const [activities, thoughtRecords, tensionEpisodes, actions, plans, sleepMood, medication, medications] =
+      await Promise.all([
       compare(sees('ACTIVITIES'), activitiesStats, userId, ranges, days),
       compare(sees('THOUGHT_RECORDS'), thoughtRecordsStats, userId, ranges, days),
       compare(sees('TENSION_EPISODES'), tensionEpisodesStats, userId, ranges, days),
@@ -255,6 +259,7 @@ export function createSummaryService() {
       compare(sees('PLANS'), plansStats, userId, ranges, days),
       compare(sees('SLEEP_MOOD'), sleepMoodStats, userId, ranges, days),
       compare(sees('MEDICATION'), medicationStats, userId, ranges, days),
+      compare(sees('MEDICATIONS'), medicationsStats, userId, ranges, days),
     ]);
     return {
       period: ranges.current,
@@ -268,6 +273,7 @@ export function createSummaryService() {
       plans,
       sleepMood,
       medication,
+      medications,
     };
   }
 

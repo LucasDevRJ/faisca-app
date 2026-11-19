@@ -14,6 +14,7 @@ import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { AppError } from '../../errors/app-error.js';
 import { createAboutMeService } from '../about-me/about-me.service.js';
 import { createDailyCheckInsController } from '../daily-check-ins/daily-check-ins.controller.js';
+import { createMedicationsController } from '../medications/medications.controller.js';
 import { createRecordLinksController } from '../record-links/record-links.controller.js';
 import { createRecordLinksService } from '../record-links/record-links.service.js';
 import { createActionsController } from '../actions/actions.controller.js';
@@ -155,6 +156,13 @@ export function createTherapistRoutes() {
     `${PREFIX}/daily-check-ins`,
     requireAnySharedArea('SLEEP_MOOD', 'MEDICATION'),
     createDailyCheckInsController().patient,
+  );
+  // Remédios e o que sinto (DEC-114): caixa própria e o aceite da versão do aviso que os cita.
+  router.get(
+    `${PREFIX}/medications`,
+    requireSharedArea('MEDICATIONS'),
+    requirePrivacy('medications'),
+    createMedicationsController().patient,
   );
   router.get(`${PREFIX}/unread`, controller.unread);
   router.get(`${PREFIX}/record-links`, requireAnySharedArea(

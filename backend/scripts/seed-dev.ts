@@ -218,6 +218,61 @@ await prisma.$transaction(async (tx) => {
         medication: index % 9 === 4 ? ('ESQUECEU_ALGUM' as const) : ('TOMOU' as const),
       })),
   });
+  // Remédios e o que sinto (DEC-114): um remédio fictício com a dose mudada há 12 dias, um que parou
+  // e dois sintomas, um ligado à mudança e com a evolução, e outro que já passou.
+  await tx.symptom.deleteMany({ where: { userId: patient.id } });
+  await tx.medication.deleteMany({ where: { userId: patient.id } });
+  await tx.user.update({ where: { id: patient.id }, data: { listsMedications: true } });
+  const medicationA = await tx.medication.create({
+    data: {
+      userId: patient.id,
+      name: 'Remédio Fictício A',
+      schedule: 'de manhã',
+      changes: {
+        create: [
+          { kind: 'COMECOU', changeDate: dateOnlyToDate(addDays(today, -60)), dose: '50 mg' },
+          { kind: 'MUDOU_DOSE', changeDate: dateOnlyToDate(addDays(today, -12)), dose: '100 mg', note: 'Nota fictícia da mudança.' },
+        ],
+      },
+    },
+  });
+  await tx.medication.create({
+    data: {
+      userId: patient.id,
+      name: 'Remédio Fictício B',
+      schedule: 'à noite',
+      changes: {
+        create: [
+          { kind: 'COMECOU', changeDate: dateOnlyToDate(addDays(today, -90)), dose: '10 mg' },
+          { kind: 'PAROU', changeDate: dateOnlyToDate(addDays(today, -30)) },
+        ],
+      },
+    },
+  });
+  await tx.symptom.create({
+    data: {
+      userId: patient.id,
+      description: 'Sintoma fictício de manhã',
+      startedOn: dateOnlyToDate(addDays(today, -9)),
+      medicationId: medicationA.id,
+      checks: {
+        create: [
+          { checkedOn: dateOnlyToDate(addDays(today, -9)), intensity: 7 },
+          { checkedOn: dateOnlyToDate(addDays(today, -5)), intensity: 5 },
+          { checkedOn: dateOnlyToDate(addDays(today, -1)), intensity: 3 },
+        ],
+      },
+    },
+  });
+  await tx.symptom.create({
+    data: {
+      userId: patient.id,
+      description: 'Outro sintoma fictício',
+      startedOn: dateOnlyToDate(addDays(today, -40)),
+      endedOn: dateOnlyToDate(addDays(today, -32)),
+      checks: { create: [{ checkedOn: dateOnlyToDate(addDays(today, -40)), intensity: 4 }] },
+    },
+  });
   // Meus Planos (DEC-094): um plano com o modelo das 6 perguntas e dois registros, e um encerrado.
   await tx.homeworkTask.deleteMany({ where: { userId: patient.id } });
   await tx.homeworkTask.createMany({ data: [
