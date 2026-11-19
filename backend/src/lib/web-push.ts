@@ -66,13 +66,26 @@ export function isValidPushKeys(p256dh: string, auth: string): boolean {
   }
 }
 
+const P256_PRIVATE_KEY_BYTES = 32;
+
+// O Node devolve o escalar privado P-256 sem os zeros à esquerda: em cerca de 1 a cada 256 chaves
+// ele sai com 31 bytes (ou menos). O JWK (RFC 7518 §6.2.2.1) exige `d` com exatamente 32 bytes,
+// então completamos com zeros à esquerda. O número é o mesmo; só a representação muda.
+export function padP256PrivateKey(priv: Buffer): Buffer {
+  if (priv.length === 0 || priv.length > P256_PRIVATE_KEY_BYTES) {
+    throw new Error('Chaves VAPID em formato inválido');
+  }
+  if (priv.length === P256_PRIVATE_KEY_BYTES) return priv;
+  return Buffer.concat([Buffer.alloc(P256_PRIVATE_KEY_BYTES - priv.length), priv]);
+}
+
 // Gera um par de chaves VAPID P-256 no formato base64url (65 bytes pública, 32 bytes privada).
 export function generateVapidKeys(): { publicKey: string; privateKey: string } {
   const ecdh = createECDH('prime256v1');
   ecdh.generateKeys();
   return {
     publicKey: ecdh.getPublicKey().toString('base64url'),
-    privateKey: ecdh.getPrivateKey().toString('base64url'),
+    privateKey: padP256PrivateKey(ecdh.getPrivateKey()).toString('base64url'),
   };
 }
 
@@ -85,10 +98,12 @@ export function createVapidAuthorization(
   nowSeconds = Math.floor(Date.now() / 1000),
 ): string {
   const pub = Buffer.from(publicKeyBase64Url, 'base64url');
-  const priv = Buffer.from(privateKeyBase64Url, 'base64url');
-  if (pub.length !== 65 || pub[0] !== 0x04 || priv.length !== 32) {
+  if (pub.length !== 65 || pub[0] !== 0x04) {
     throw new Error('Chaves VAPID em formato inválido');
   }
+  // Aceita também a chave privada com menos de 32 bytes (gerada sem os zeros à esquerda), para
+  // não quebrar uma VAPID_PRIVATE_KEY que já esteja configurada assim.
+  const priv = padP256PrivateKey(Buffer.from(privateKeyBase64Url, 'base64url'));
   const x = pub.subarray(1, 33).toString('base64url');
   const y = pub.subarray(33, 65).toString('base64url');
   const d = priv.toString('base64url');
