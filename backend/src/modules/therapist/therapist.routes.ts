@@ -31,6 +31,7 @@ import { createTensionEpisodesService } from '../tension-episodes/tension-episod
 import { createThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { createTherapistController } from './therapist.controller.js';
 import { createTherapistService } from './therapist.service.js';
+import { createRecordSearchController } from '../record-search/record-search.controller.js';
 
 // Visão da terapeuta (SPEC, "Visão da terapeuta"; DEC-033). Tudo sob o mesmo prefixo, que
 // passa pela mesma cadeia: leitura (com a exceção POST de criação de plano) → sessão → perfil → vínculo.
@@ -64,6 +65,7 @@ export function createTherapistRoutes() {
   );
   const profile = createProfileController(createProfileService());
   const recordLinks = createRecordLinksController(createRecordLinksService());
+  const recordSearch = createRecordSearchController();
   const router = Router();
 
   // router.use com o prefixo pega também caminhos que não existem: um POST em qualquer
@@ -158,6 +160,11 @@ export function createTherapistRoutes() {
   router.get(`${PREFIX}/record-links`, requireAnySharedArea(
     'ACTIVITIES', 'THOUGHT_RECORDS', 'TENSION_EPISODES', 'ACTIONS', 'PLANS', 'TASKS', 'SLEEP_MOOD', 'MEDICATION',
   ), recordLinks.therapistList);
+  // Busca só de leitura: o POST mantém o termo fora da URL. O service limita cada resultado às
+  // áreas compartilhadas e aos aceites de privacidade das duas pessoas (Issue #152).
+  router.post(`${PREFIX}/records/search`, requireAnySharedArea(
+    'ACTIVITIES', 'THOUGHT_RECORDS', 'TENSION_EPISODES', 'ACTIONS', 'ABOUT_ME', 'PLANS', 'TASKS', 'SLEEP_MOOD', 'MEDICATION',
+  ), recordSearch.therapist);
 
   return router;
 }

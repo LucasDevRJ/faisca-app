@@ -45,6 +45,9 @@ export function RecordsPage() {
       <section className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold sm:text-4xl">Olá, {firstName}!</h1>
         <p className="text-muted sm:text-lg">Um espaço calmo para registrar suas atividades, no seu ritmo.</p>
+        <Link to="/buscar" className="inline-flex min-h-11 self-start items-center font-medium text-primary-text underline underline-offset-4">
+          Buscar nos registros
+        </Link>
       </section>
 
       <NewLinkNotice />

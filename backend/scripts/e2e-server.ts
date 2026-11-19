@@ -47,6 +47,8 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   { name: 'Pessoa Fictícia', email: 'dois-perfis@faisca.test', patient: true, therapist: true },
   // Só para os testes de atividades no navegador: não mistura dados com os testes de API.
   { name: 'Dora Fictícia', email: 'registros@faisca.test', patient: true, therapist: false },
+  // Só para a busca de registros no navegador (e2e/record-search.spec.ts).
+  { name: 'Bela Fictícia', email: 'busca-registros@faisca.test', patient: true, therapist: false },
   // Só para os testes de vínculo: um vínculo ativo não interfere nos outros testes.
   { name: 'Vera Fictícia', email: 'vinculo-paciente@faisca.test', patient: true, therapist: false },
   { name: 'Tina Fictícia', email: 'vinculo-terapeuta@faisca.test', patient: false, therapist: true },

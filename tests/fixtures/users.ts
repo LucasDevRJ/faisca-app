@@ -14,6 +14,8 @@ export const users = {
   bothProfiles: { email: 'dois-perfis@faisca.test', password: SEED_PASSWORD },
   // Usada só nos testes de atividades no navegador (e2e/activities.spec.ts).
   records: { email: 'registros@faisca.test', password: SEED_PASSWORD },
+  // Usada só no fluxo de busca de registros no navegador (e2e/record-search.spec.ts).
+  recordSearchPatient: { email: 'busca-registros@faisca.test', password: SEED_PASSWORD },
   // Usadas só nos testes de vínculo (api/links.spec.ts).
   linkPatient: { email: 'vinculo-paciente@faisca.test', password: SEED_PASSWORD },
   linkTherapist: { email: 'vinculo-terapeuta@faisca.test', password: SEED_PASSWORD },

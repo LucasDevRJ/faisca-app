@@ -2541,6 +2541,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   remover as associações na mesma transação. A API e a interface devem manter os tipos de registro
   sincronizados com as áreas liberadas.
 
+## DEC-112 — Busca privada nos registros (19/11/2026)
+- **Decisão (#152):** paciente pesquisa os próprios registros; a terapeuta pesquisa somente os de
+  paciente vinculado, conforme áreas compartilhadas e aceites de privacidade dos dois. Termo no
+  corpo do `POST`, nunca na URL; nenhuma busca fica salva no banco, no armazenamento do navegador ou
+  em histórico recente. A busca filtra em memória, depois de carregar apenas dados autorizados, para
+  seguir compatível com a criptografia planejada. Traz tipo, período de até 367 dias, emoção,
+  intensidade mínima, paginação de até 50 resultados e “só para ler” na visão profissional. A
+  comparação ignora caixa e acentos e aproxima flexões de gênero “a/o”, sem IA.
+- **Exceção limitada de método:** como o termo pode revelar dado de saúde, a rota da terapeuta usa
+  `POST` para transportar o corpo, embora seja estritamente de leitura. A mesma cadeia de sessão,
+  perfil, vínculo, áreas e aceites continua obrigatória; nenhum registro ou marca de leitura é
+  alterado.
+- **Motivo:** localizar registros antigos sem percorrer ciclos e semanas, reduzindo exposição do
+  termo na URL e preservando as regras de privacidade de cada área.
+- **Limite conhecido:** a busca textual roda em memória da API, com intervalo limitado a 367 dias;
+  flexões aproximadas se restringem a gênero final “a/o” e não cobrem sinônimos ou derivações gerais.
+  O filtro de não lidos só considera tipos com marca de leitura, e Tarefas respondidas.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

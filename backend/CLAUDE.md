@@ -10,9 +10,12 @@
 ## Autorização
 - Rotas de terapeuta ficam sob `/therapist/patients/:patientId/...` e passam por um middleware
   que responde 403 a qualquer método diferente de GET **antes** de tudo, e também quando não há
-  vínculo ativo com `:patientId`. A única exceção no prefixo é `POST .../plans`: a psicóloga cria
-  plano com vínculo ativo, PLANS liberada e aceites de privacidade de ambos (DEC-102). Qualquer
-  outra escrita continua 403 antes de tudo. Cada rota com dado de uma área pede também
+  vínculo ativo com `:patientId`. Exceções: `POST .../plans`, em que a psicóloga cria plano com
+  vínculo ativo, PLANS liberada e aceites de privacidade de ambos (DEC-102); e `POST
+  .../records/search` (Issue #152), que só pesquisa, recebe o termo sensível pelo corpo e não pode
+  gravar nem alterar dado. A busca continua exigindo vínculo e filtra cada resultado pelas áreas
+  compartilhadas e aceites válidos das duas pessoas. Qualquer outra escrita continua 403 antes de
+  tudo. Cada rota com dado de uma área pede também
   `requireSharedArea(...)`: a área precisa estar liberada pelo paciente no vínculo (DEC-097).
 - As escritas do lado da terapeuta são limitadas. Duas são os POSTs que criam o vínculo (`/links/redeem-code`
   e `/links/accept-invite`, DEC-031) e as marcas de leitura dela (`PUT`/`DELETE
