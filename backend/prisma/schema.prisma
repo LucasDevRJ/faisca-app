@@ -15,6 +15,8 @@ datasource db {
 model User {
   tasks               HomeworkTask[]
   dailyCheckIns       DailyCheckIn[]
+  medications         Medication[]
+  symptoms            Symptom[]
   id                  String            @id @default(uuid()) @db.Uuid
   name                String
   // Sempre em minúsculas e sem espaços nas pontas (normalizado no schema Zod).
@@ -55,6 +57,9 @@ model User {
   // Sono, humor e remédio (DEC-107): a pergunta "Tomou o remédio como combinado?" só aparece para
   // quem liga esta opção em Conta. Desligada por padrão.
   tracksMedication    Boolean           @default(false)
+  // Remédios e o que sinto (DEC-114, #171): a seção só aparece para quem liga "Anotar meus remédios e
+  // o que sinto" em Conta. Desligada por padrão; desligar só esconde, o que já foi anotado fica.
+  listsMedications    Boolean           @default(false)
   // Aviso de login novo por e-mail e push (DEC-091, issue #135): ligado por padrão.
   loginAlertEnabled   Boolean           @default(true)
   // Já entrou alguma vez? O primeiro login de todos não gera aviso de acesso novo (DEC-091).
@@ -482,6 +487,9 @@ enum SharedArea {
   // Sono e humor e o remédio do dia (DEC-107): caixas próprias, fechadas nos vínculos que já existiam.
   SLEEP_MOOD
   MEDICATION
+  // Remédios, mudanças e o que o paciente sente (DEC-114): caixa própria, fechada nos vínculos que já
+  // existiam. A caixa MEDICATION continua só com o "tomou como combinado?".
+  MEDICATIONS
 }
 
 // Registros que podem ser ligados entre si (DEC-111). Sono e Remédio são subtipos do mesmo
@@ -894,6 +902,84 @@ model DailyCheckIn {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, checkInDate])
+}
+
+// Remédios e o que sinto (DEC-114, #171). Tudo é anotação do paciente, em texto livre e sem catálogo:
+// o Faísca não avalia remédio nem sintoma. O paciente edita e apaga tudo (não são registros finais).
+enum MedicationChangeKind {
+  COMECOU
+  MUDOU_DOSE
+  PAROU
+}
+
+// Um remédio. A dose atual e se está em uso saem das mudanças (a última, pela data).
+model Medication {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  // Nome e horário em texto livre (texto do paciente: fora dos logs).
+  name      String
+  schedule  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  changes  MedicationChange[]
+  symptoms Symptom[]
+
+  @@index([userId])
+}
+
+// Linha do tempo do remédio: começou, mudou a dose ou parou, sempre com data. A primeira é um
+// COMECOU, criada junto com o remédio; depois de PAROU, só um novo COMECOU (voltou a tomar).
+model MedicationChange {
+  id           String               @id @default(uuid()) @db.Uuid
+  medicationId String               @db.Uuid
+  kind         MedicationChangeKind
+  changeDate   DateTime             @db.Date
+  // A dose a partir desta mudança (COMECOU e MUDOU_DOSE); vazia no PAROU.
+  dose         String?
+  note         String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  medication Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+
+  @@index([medicationId, changeDate])
+}
+
+// O que o paciente tem sentido. A ligação com um remédio é opcional ("começou depois de algum remédio
+// ou mudança?") e não afirma que o sintoma é dele.
+model Symptom {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  description  String
+  startedOn    DateTime  @db.Date
+  // "Já passou": vazio enquanto continua.
+  endedOn      DateTime? @db.Date
+  medicationId String?   @db.Uuid
+  note         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medication Medication?    @relation(fields: [medicationId], references: [id], onDelete: SetNull)
+  checks     SymptomCheck[]
+
+  @@index([userId])
+}
+
+// "Como está agora": a intensidade de 0 a 10 num dia, uma por dia, para ver a evolução do começo do
+// remédio para o uso contínuo.
+model SymptomCheck {
+  id        String   @id @default(uuid()) @db.Uuid
+  symptomId String   @db.Uuid
+  checkedOn DateTime @db.Date
+  intensity Int      @db.SmallInt
+  createdAt DateTime @default(now())
+
+  symptom Symptom @relation(fields: [symptomId], references: [id], onDelete: Cascade)
+
+  @@unique([symptomId, checkedOn])
 }
 
 // Ligação entre registros do mesmo paciente (DEC-111). Os ids são polimórficos; a API confere

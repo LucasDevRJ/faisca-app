@@ -15,6 +15,7 @@ const AREA_NAMES: Record<PrivacyArea, string> = {
   activityPhotos: 'as fotos das atividades',
   sleepMood: 'o Sono e humor',
   medication: 'o Remédio',
+  medications: 'os Remédios e o que sinto',
 };
 
 // Cada área de dado novo entrou no aviso de privacidade numa versão (DEC-039, DEC-042). Quem

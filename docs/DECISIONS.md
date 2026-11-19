@@ -2560,8 +2560,36 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   O filtro de não lidos só considera tipos com marca de leitura, e Tarefas respondidas.
 
 ## DEC-114 — Remédios, mudanças e o que o paciente sente (API)
-- **Decisão (#171):** em construção. Reserva também a versão `2026-11.8` do aviso de privacidade, a
-  novidade `2026-11-remedios` e a DEC-115 (telas).
+- **Decisão (#171, desenho aprovado pelo usuário em 19/11/2026, pela prática comum da psiquiatria):**
+  - **anotações do paciente, sem catálogo** (`Medication`, `MedicationChange`, `Symptom` e
+    `SymptomCheck`): o remédio tem nome e horário; a dose e o "em uso" saem da **linha do tempo** de
+    mudanças com data (`COMECOU`, `MUDOU_DOSE` com a dose nova, `PAROU` sem dose), que começa com um
+    `COMECOU` criado junto com o remédio e precisa fazer sentido (409 `MEDICATION_TIMELINE_INVALID`);
+  - **o que o paciente sente**: descrição curta, começo, "já passou" e observação, com a ligação
+    opcional a um remédio, que não afirma que o sintoma é dele. **"Como está agora"** guarda a
+    intensidade de 0 a 10 num dia (uma por dia, dentro do período do sintoma), para a evolução do começo
+    para o uso contínuo. O "começo ou uso contínuo" é só a conta dos dias desde a última mudança do
+    remédio ligado (`sinceChange`), feita na leitura, sem corte clínico;
+  - nada no futuro (400 `DATE_IN_FUTURE`) nem antes de 1950; tetos por conta (50 remédios, 100
+    mudanças por remédio, 300 sintomas, 400 dias por sintoma), com a conta travada na escrita; o
+    paciente edita e apaga tudo, porque não são registros finais;
+  - **caixa nova no vínculo** (`MEDICATIONS`), fechada para todas as profissionais, inclusive nos
+    vínculos que já existiam. A caixa `MEDICATION` continua só com o "tomou como combinado?": ampliá-la
+    mostraria o nome dos remédios a quem só liberou a adesão. A profissional (psiquiatra, ou psicóloga se
+    o paciente liberar para ela) só lê, em
+    `GET /therapist/patients/:patientId/medications`, com a caixa e o aceite dela;
+  - **resumo do período (DEC-100)**: o bloco Remédios só com números e datas (remédios em uso, mudanças
+    com data e tipo, sintomas novos e que passaram, a maior intensidade), sem texto do paciente;
+  - a opção "Anotar meus remédios e o que sinto" (`listsMedications`, desligada) só esconde a seção;
+  - área nova no aviso de privacidade (`2026-11.8`, `medications`), conhecida na API e atual só no PR
+    das telas (DEC-115); dose, horário, notas, datas e a ligação entram no `SENSITIVE_KEYS` (regra 7).
+- **Motivo:** quem faz tratamento psiquiátrico precisa contar o que toma, o que mudou e o que sente
+  entre consultas espaçadas, e separar o efeito do começo do efeito do uso contínuo. Guardar só o que o
+  paciente conta, sem avaliar nada, mantém o Faísca longe de conduta médica.
+- **Limite conhecido:** sem alerta para a profissional, de propósito. Os sintomas novos e as mudanças
+  no "Para ler" (aprovados) ficam para depois da paginação do "Para ler" (#216), que mexe nos mesmos
+  arquivos; as telas, o texto do aviso e a novidade `2026-11-remedios` vêm na DEC-115. As escritas
+  ainda não têm o limite por minuto do #216.
 
 ## DEC-115 — Remédios, mudanças e o que o paciente sente (telas)
 - **Decisão (#171):** em construção.
