@@ -2559,6 +2559,13 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   flexões aproximadas se restringem a gênero final “a/o” e não cobrem sinônimos ou derivações gerais.
   O filtro de não lidos só considera tipos com marca de leitura, e Tarefas respondidas.
 
+## DEC-114 — Remédios, mudanças e o que o paciente sente (API)
+- **Decisão (#171):** em construção. Reserva também a versão `2026-11.8` do aviso de privacidade, a
+  novidade `2026-11-remedios` e a DEC-115 (telas).
+
+## DEC-115 — Remédios, mudanças e o que o paciente sente (telas)
+- **Decisão (#171):** em construção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
