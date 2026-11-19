@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/ui/button';
 import { createRecordLink, deleteRecordLink, fetchRecordLinkCandidates, fetchRecordLinks, type LinkedRecordType, type RecordSummary } from './record-links-api';
+import { formatRecordDate, recordTitlePreview } from './record-links-format';
 
 const TYPE_LABEL: Record<LinkedRecordType, string> = {
   ACTIVITY: 'Atividade', THOUGHT_RECORD: 'Pensamento', TENSION_EPISODE: 'Episódio de tensão', ACTION: 'Ação',
@@ -43,12 +44,13 @@ export function RecordLinksPanel({ type, id, repetitionHref, patientId, readOnly
     catch { setError('Não foi possível remover a ligação.'); }
     finally { setBusy(false); }
   }
+  const selectedCandidate = candidates.find((item) => `${item.type}:${item.id}` === selected);
   return <section aria-label="Registros ligados" className="flex flex-col gap-2 border-t border-border pt-3">
     <h5 className="font-medium">Registros relacionados</h5>
     {links.map((link) => {
       const other = link.source.id === id && link.source.type === type ? link.target : link.source;
       return <div key={link.id} className="flex items-start justify-between gap-2 text-sm">
-        <p className="min-w-0 break-words"><span className="text-muted">{link.kind === 'REPETITION' ? 'Repetição · ' : ''}{TYPE_LABEL[other.type]} · {other.date}</span><br />{other.title}{other.measure && <span className="block text-muted">{other.measure}</span>}</p>
+        <p className="min-w-0 break-words"><span className="text-muted">{link.kind === 'REPETITION' ? 'Repetição · ' : ''}{TYPE_LABEL[other.type]} · {formatRecordDate(other.date)}</span><br />{other.title}{other.measure && <span className="block text-muted">{other.measure}</span>}</p>
         {!readOnly && <Button variant="ghost" className="px-2" disabled={busy} onClick={() => void remove(link.id)}>Desligar</Button>}
       </div>;
     })}
@@ -56,10 +58,11 @@ export function RecordLinksPanel({ type, id, repetitionHref, patientId, readOnly
     {!readOnly && (editing ? <div className="flex flex-col gap-2 sm:flex-row">
       <select aria-label="Registro para ligar" className="min-h-11 min-w-0 flex-1 rounded-md border border-border bg-bg px-3" value={selected} onChange={(event) => setSelected(event.target.value)}>
         <option value="">Escolha um registro</option>
-        {candidates.map((item) => <option key={`${item.type}:${item.id}`} value={`${item.type}:${item.id}`}>{TYPE_LABEL[item.type]} · {item.date} · {item.title}</option>)}
+        {candidates.map((item) => <option key={`${item.type}:${item.id}`} aria-label={`${TYPE_LABEL[item.type]} · ${formatRecordDate(item.date)} · ${item.title}`} value={`${item.type}:${item.id}`}>{TYPE_LABEL[item.type]} · {formatRecordDate(item.date)} · {recordTitlePreview(item.title)}</option>)}
       </select><Button variant="secondary" disabled={!selected || busy} onClick={() => void add()}>Ligar</Button>
       <Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>Cancelar</Button>
     </div> : <Button variant="secondary" className="self-start" disabled={busy} onClick={() => void start()}>Ligar a outro registro</Button>)}
+    {selectedCandidate && <p className="min-w-0 break-words text-sm text-muted"><span className="font-medium">Texto completo do registro:</span> {selectedCandidate.title}</p>}
     {!readOnly && editing && candidates.length === 0 && <p className="text-sm text-muted">Não encontramos registros nesse período.</p>}
     {!readOnly && editing && <div className="flex flex-col gap-2 rounded-md bg-bg p-3">
       <Button variant="ghost" className="self-start px-2" onClick={() => setExpandRange((value) => !value)}>

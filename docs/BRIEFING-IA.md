@@ -185,7 +185,8 @@ Na prática clínica tradicional:
 paciente poderá relacionar registros de diferentes áreas. A psicóloga só verá a ligação se as duas
 áreas estiverem compartilhadas e cobertas pelos aceites de privacidade. Pensamentos e episódios de
 tensão terão atalhos para criar uma nova ocorrência sem alterar a anterior; o histórico mostrará a
-evolução de crença, emoções e tensão. Ainda não publicado.
+evolução de crença, emoções e tensão. No seletor, as datas aparecerão no padrão brasileiro e os
+títulos longos terão uma prévia local, mantendo o texto integral acessível. Ainda não publicado.
 
 
 **Em desenvolvimento — Busca nos registros (#152):** paciente e psicóloga poderão localizar registros
