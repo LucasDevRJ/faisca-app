@@ -92,6 +92,7 @@ Gere quatro: a senha do `faisca_migrator`, a senha do `faisca_app`, o `JWT_SECRE
    | `EMAIL_FROM` | `Faísca <nao-responda@minhafaisca.com.br>` |
    | `TRUST_PROXY_HOPS` | `2` (Vercel + borda do Railway; confirmado no passo 7) |
    | `TWO_FACTOR_SECRET` | outro segredo do passo 1, diferente dos demais (verificação em duas etapas, DEC-092; sem ela, o 2FA fica indisponível). **Nunca troque:** os apps autenticadores e os códigos de recuperação deixariam de funcionar. Guarde no cofre de senhas |
+   | `COMMUNITY_MODERATOR_EMAILS` | lista separada por vírgulas dos e-mails das contas autorizadas a revisar conteúdo da comunidade (DEC-113). Cada conta precisa ter verificação em duas etapas ativa. Deixe vazia até escolher e configurar a pessoa moderadora. |
 
    - Sem o `PORT`, o Railway põe a API na 8080. O healthcheck passa, mas o domínio (3333) responde
      **502 "Application failed to respond"**. Foi o que aconteceu no primeiro deploy.

@@ -4,9 +4,8 @@ import { useSession } from '../features/auth/use-session';
 import { usePlans } from '../features/plans/use-plans';
 import { useAccessibility } from '../features/profile/use-profile';
 
-// No celular, as abas ficam em grade: 2×2 com quatro (DEC-052) e 3 colunas com cinco ou seis
-// (DEC-095); no computador, o nome nunca quebra: cada aba tem uma linha só e as sete cabem numa
-// fileira. Se não couberem (fonte grande), passam para a fileira de baixo em vez de esticar.
+// No celular, as abas ficam em grade de três colunas. No computador, o nome nunca quebra: cada aba
+// tem uma linha só e, se não couberem (fonte grande), passam para a fileira de baixo em vez de esticar.
 const tabClass = ({ isActive }: { isActive: boolean }) =>
   `flex min-h-11 items-center justify-center rounded-md px-2 text-center text-sm font-medium sm:flex-auto sm:whitespace-nowrap sm:px-3 ${
     isActive ? 'bg-primary text-on-primary' : 'border border-border bg-surface text-text hover:bg-bg'
@@ -21,6 +20,7 @@ const GATED: Record<string, PrivacyArea> = {
   '/acao': 'actions',
   '/tarefas': 'tasks',
   '/sono-humor': 'sleepMood',
+  '/comunidade': 'community',
 };
 
 function gatedAreaOf(pathname: string): PrivacyArea | undefined {
@@ -28,8 +28,8 @@ function gatedAreaOf(pathname: string): PrivacyArea | undefined {
   return GATED[pathname];
 }
 
-// Telas principais do paciente: Atividades, Pensamentos, Tensão, Ação e Meus Planos, em abas
-// (DEC-040, DEC-043, DEC-052, DEC-095). A faixa do aviso de privacidade aparece aqui enquanto falta
+// Telas principais do paciente em abas (DEC-040, DEC-043, DEC-052, DEC-095, DEC-106, DEC-107,
+// DEC-113). A faixa do aviso de privacidade aparece aqui enquanto falta
 // algum aceite.
 export function PatientTabsLayout() {
   const location = useLocation();
@@ -70,6 +70,7 @@ export function PatientTabsLayout() {
         <NavLink to={{ pathname: '/sono-humor', search }} end className={tabClass}>
           Sono e humor
         </NavLink>
+        <NavLink to="/comunidade" end className={tabClass}>Comunidade</NavLink>
         {showPlans && (
           // Sem `end`: a aba continua marcada nos registros de um plano (/planos/:id).
           <NavLink to="/planos" className={tabClass}>

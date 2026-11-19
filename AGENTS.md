@@ -54,6 +54,10 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057), os avisos do mural
    dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079) e **somente a
    psicóloga** criando um plano para o paciente (`POST /therapist/patients/:patientId/plans`, DEC-102).
+   As rotas específicas da Comunidade (DEC-113), fora de `/therapist/patients`, podem ler e alterar
+   apenas conteúdo publicado para o grupo e exigem aceite da área; a psicóloga responsável não ganha
+   acesso aos registros clínicos. A moderação fica restrita a conteúdo comunitário e exige e-mail
+   autorizado e 2FA ativo.
    Essa última rota exige vínculo ativo, área Meus Planos liberada e aceite da área pelo paciente e
    pela psicóloga; ela não pode editar planos nem criar registros. O plano pertence ao paciente, que
    continua podendo editar, encerrar ou apagar. Exceção de leitura: `POST

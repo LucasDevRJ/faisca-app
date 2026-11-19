@@ -46,6 +46,8 @@ const envSchema = z.object({
   // a do HMAC dos códigos. Opcional para a API subir antes de ela ser cadastrada no Railway; sem
   // ela (ou com o placeholder do .env.example), só o 2FA fica indisponível.
   TWO_FACTOR_SECRET: z.string().min(32).optional(),
+  // Issue #220 / DEC-113: contas autorizadas a moderar somente a comunidade; exige 2FA.
+  COMMUNITY_MODERATOR_EMAILS: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;
