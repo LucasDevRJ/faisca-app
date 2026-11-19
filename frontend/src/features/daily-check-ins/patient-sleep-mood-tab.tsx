@@ -5,24 +5,72 @@ import { formatDayHeading } from '../activities/week';
 import type { DateRange } from '../appointments/appointments-api';
 import { getApiError } from '../auth/auth-api';
 import { PrivacyConsentGate } from '../auth/privacy-consent';
+import { changeMarkers } from '../medications/medication-labels';
+import { PatientMedicationsView } from '../medications/patient-medications-view';
+import { usePatientMedications } from '../medications/use-medications';
 import { checkInSummary } from './check-in-labels';
 import { fetchPatientCheckIns } from './daily-check-ins-api';
 import { SleepMoodChart } from './sleep-mood-chart';
 
-// Aba "Sono e humor" na visão da profissional (DEC-108): só leitura, sem "Lido". A API já tira o que
-// a caixa fechada mostraria (o remédio só com a caixa Remédio, o sono e o humor só com a outra).
+// Aba "Sono e humor" na visão da profissional (DEC-108, DEC-115): só leitura, sem "Lido". Mostra o
+// sono, o humor e o remédio do dia com as caixas Sono e humor ou Remédio, e os remédios e o que o
+// paciente sente com a caixa "Remédios e o que sinto". A API já tira o que a caixa fechada mostraria.
 export function PatientSleepMoodTab({
   patientId,
   firstName,
   consented,
+  medicationsConsented,
+  showCheckIns,
+  showMedications,
   range,
   ready,
 }: {
   patientId: string;
   firstName: string;
   consented: boolean;
+  medicationsConsented: boolean;
+  showCheckIns: boolean;
+  showMedications: boolean;
   range: DateRange;
   ready: boolean;
+}) {
+  const medications = usePatientMedications(patientId, showMedications && medicationsConsented);
+  // As linhas das mudanças no gráfico só com as duas caixas: o sono e humor e os remédios.
+  const markers = showCheckIns && medications.isSuccess ? changeMarkers(medications.data.medications, range) : [];
+
+  return (
+    <div className="flex flex-col gap-6">
+      {showCheckIns && (
+        <CheckIns
+          patientId={patientId}
+          firstName={firstName}
+          consented={consented}
+          range={range}
+          ready={ready}
+          markers={markers}
+        />
+      )}
+      {showMedications && (
+        <PatientMedicationsView firstName={firstName} consented={medicationsConsented} query={medications} />
+      )}
+    </div>
+  );
+}
+
+function CheckIns({
+  patientId,
+  firstName,
+  consented,
+  range,
+  ready,
+  markers,
+}: {
+  patientId: string;
+  firstName: string;
+  consented: boolean;
+  range: DateRange;
+  ready: boolean;
+  markers: { date: string; label: string }[];
 }) {
   const query = useQuery({
     queryKey: ['therapist', patientId, 'daily-check-ins', range.from, range.to],
@@ -67,7 +115,7 @@ export function PatientSleepMoodTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-border bg-surface p-4 shadow-soft">
-        <SleepMoodChart points={checkIns} />
+        <SleepMoodChart points={checkIns} markers={markers} />
       </div>
       <ol className="flex flex-col gap-3">
         {[...checkIns].reverse().map((checkIn) => (

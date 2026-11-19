@@ -14,7 +14,8 @@ export type SummaryArea =
   | 'actions'
   | 'plans'
   | 'sleepMood'
-  | 'medication';
+  | 'medication'
+  | 'medications';
 
 export type SummaryBlock = { area: SummaryArea; title: string; lines: string[] };
 
@@ -26,6 +27,7 @@ export const AREA_TITLE: Record<SummaryArea, string> = {
   plans: 'Meus Planos',
   sleepMood: 'Sono e humor',
   medication: 'Remédio',
+  medications: 'Remédios e o que sinto',
 };
 
 // O "Ver registros" de cada bloco, com alvo de toque de 44 px.
@@ -209,8 +211,28 @@ export function summaryBlocks(summary: PeriodSummary): SummaryBlock[] {
     });
   }
 
+  // Remédios e o que sinto (DEC-115): só números e datas, sem o nome do remédio nem o texto do sintoma.
+  const medications = summary.medications;
+  if (medications) {
+    const { current: now } = medications;
+    const lines: string[] = [];
+    if (now.activeMedications > 0) lines.push(`Remédios em uso no fim do período: ${now.activeMedications}`);
+    if (now.changes.length > 0) {
+      lines.push(
+        `Mudanças: ${now.changes.map((change) => `${formatDayMonth(change.date)}, ${CHANGE_TEXT[change.kind]}`).join('; ')}`,
+      );
+    }
+    if (now.newSymptoms > 0 || now.endedSymptoms > 0) {
+      lines.push(`Sintomas novos: ${now.newSymptoms} · que passaram: ${now.endedSymptoms}`);
+    }
+    if (now.maxIntensity !== null) lines.push(`Maior intensidade anotada: ${now.maxIntensity} de 10`);
+    if (lines.length > 0) blocks.push({ area: 'medications', title: AREA_TITLE.medications, lines });
+  }
+
   return blocks;
 }
+
+const CHANGE_TEXT = { COMECOU: 'começou', MUDOU_DOSE: 'mudou a dose', PAROU: 'parou' } as const;
 
 // Alguma área chegou (liberada e com aceite)? Sem nenhuma, o cartão nem aparece.
 export function hasAnyArea(summary: PeriodSummary): boolean {
@@ -222,6 +244,7 @@ export function hasAnyArea(summary: PeriodSummary): boolean {
     summary.plans,
     summary.sleepMood,
     summary.medication,
+    summary.medications,
   ].some(
     (area) => area !== null,
   );

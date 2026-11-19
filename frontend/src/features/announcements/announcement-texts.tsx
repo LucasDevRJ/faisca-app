@@ -20,6 +20,26 @@ export type AnnouncementText = {
 export type Profiles = { patient: boolean; therapist: boolean };
 
 export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
+  '2026-11-remedios': {
+    title: 'Remédios e o que sinto',
+    icon: '💊',
+    date: '2026-11-19',
+    patient: (
+      <p>
+        Se quiser, anote em Sono e humor os remédios que toma, as mudanças de dose com data e o que tem sentido, para
+        levar à consulta. Ligue a opção em Conta, em Sono e humor. Você escolhe com quais profissionais compartilhar. O
+        Faísca não avalia remédios nem sintomas.
+      </p>
+    ),
+    therapist: (
+      <p>
+        Os pacientes podem anotar os remédios, as mudanças de dose e o que têm sentido, com a intensidade. Quando
+        liberarem a área “Remédios e o que sinto” para você, isso aparece na aba Sono e humor e no Resumo do período,
+        só para leitura.
+      </p>
+    ),
+    link: { to: '/sono-humor', label: 'Ver meus remédios' },
+  },
   '2026-11-comunidade': {
     title: 'Comunidade de apoio',
     icon: '💬',

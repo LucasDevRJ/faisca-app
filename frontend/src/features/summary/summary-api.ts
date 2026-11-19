@@ -57,6 +57,15 @@ export type SleepMoodStats = {
 
 export type MedicationStats = { days: number; taken: number; forgotSome: number; notTaken: number };
 
+// Remédios e o que sinto (DEC-114): só números e datas, sem o nome do remédio nem o texto do sintoma.
+export type MedicationsStats = {
+  activeMedications: number;
+  changes: { date: string; kind: 'COMECOU' | 'MUDOU_DOSE' | 'PAROU' }[];
+  newSymptoms: number;
+  endedSymptoms: number;
+  maxIntensity: number | null;
+};
+
 export type PeriodSummary = {
   period: DateRange;
   previousPeriod: DateRange;
@@ -68,6 +77,7 @@ export type PeriodSummary = {
   plans: Comparison<PlansStats> | null;
   sleepMood: Comparison<SleepMoodStats> | null;
   medication: Comparison<MedicationStats> | null;
+  medications: Comparison<MedicationsStats> | null;
 };
 
 // "Meu resumo": a API usa a sessão, o front nunca manda o id.

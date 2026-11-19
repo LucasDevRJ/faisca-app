@@ -106,7 +106,8 @@ Na prática clínica tradicional:
 
 - **Sono e humor (e o remédio do dia):**
   - Um cartão em Meus registros para registrar, em menos de um minuto, a hora em que deitou e acordou (o app calcula as horas de sono), uma nota de 0 a 10 para o sono e outra para o humor e, se quiser, uma palavra para o dia. Tudo opcional, sem sequência e sem cobrança por dia esquecido.
-  - Quem quiser liga em Conta a pergunta **"Tomou o remédio como combinado?"** (Sim, Esqueci algum, Hoje não). O Faísca **não guarda nome nem dose** de remédio.
+  - Quem quiser liga em Conta a pergunta **"Tomou o remédio como combinado?"** (Sim, Esqueci algum, Hoje não).
+  - **Remédios e o que sinto:** quem quiser liga em Conta "Anotar meus remédios e o que sinto". Na aba Sono e humor aparecem os remédios (nome, dose e horário, em texto livre), as mudanças com data (mudou a dose, parou, voltou a tomar) e o que a pessoa tem sentido, com a intensidade de 0 a 10, a evolução ("como está agora") e quando passou. O app mostra quantos dias depois da mudança do remédio o sintoma começou, para separar o começo do uso contínuo, e marca as mudanças no gráfico de sono e humor. O Faísca **não avalia** remédios nem sintomas e lembra que mudanças no remédio são só com quem receitou.
   - A aba **Sono e humor** mostra um gráfico das horas de sono e do humor no período. Dá para registrar e editar os últimos 7 dias.
 
 - **Lembretes de manhã e de noite:**
@@ -135,7 +136,7 @@ Na prática clínica tradicional:
   - A **psiquiatra** vê os mesmos registros por **1, 2 ou 3 meses** (começa em 3), com setas para voltar no tempo.
   - **Resumo do período em números:** no topo da página do paciente, um cartão com o essencial do período (dias com registro, atividades, as emoções mais presentes, a crença no pensamento e o efeito da explicação alternativa, tensão, Ação e Meus Planos), comparado com o **período anterior do mesmo tamanho** em formato neutro ("antes: 6,1"). Só números, sem interpretação e sem texto do paciente; só das áreas liberadas. Pensado para consultas espaçadas, como as da psiquiatra.
   - **Tarefas:** quando o paciente libera a área, a profissional lê as tarefas e as respostas, que entram em "Para ler".
-  - **Sono e humor:** quando o paciente libera (são duas áreas separadas, "Sono e humor" e "Remédio"), a profissional vê o gráfico das horas de sono e do humor, os dias registrados e, se liberado, se o paciente tomou o remédio como combinado. Os números também entram no Resumo do período.
+  - **Sono e humor:** quando o paciente libera (são três áreas separadas, "Sono e humor", "Remédio" e "Remédios e o que sinto"), a profissional vê o gráfico das horas de sono e do humor, os dias registrados, se o paciente tomou o remédio como combinado e, com a terceira área, os remédios, as mudanças e o que ele tem sentido, só para leitura. Os números também entram no Resumo do período.
   - No cadastro ou no convite, a profissional diz se é **psicóloga ou psiquiatra** e, em Conta, pode informar o número do conselho (CRP ou CRM), que aparece para os pacientes.
   - **Regra inviolável de arquitetura:** a terapeuta nunca altera nem apaga nenhum dado do paciente (bloqueado no backend com `403`).
 
@@ -204,7 +205,6 @@ Estes itens estão planejados no backlog e **ainda não estão no ar**:
 3. **Feedback sensorial suave ao salvar:** animação, som e vibração sutis ao concluir um registro, com opção de desligar.
 4. **Trava do app (#137) e entrar com passkey.**
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
-6. **Lista de remédios e efeitos percebidos (#171)**, para a psiquiatra: o registro diário de se tomou o remédio já está no ar; a lista com nomes, doses e mudanças ainda não.
 
 ---
 

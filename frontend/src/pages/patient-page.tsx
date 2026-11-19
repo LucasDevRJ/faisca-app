@@ -158,11 +158,11 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const anyReadConsented = consented || tensionConsented || actionsConsented || aboutConsented || plansConsented || tasksConsented;
   const requestedTab = parseTab(searchParams.get('aba'));
   // As abas que o paciente liberou. Uma aba fechada pedida na URL abre a primeira liberada.
-  // A aba Sono e humor aparece com qualquer uma das duas caixas (DEC-107): a API tira o resto.
+  // A aba Sono e humor aparece com qualquer uma das três caixas (DEC-107, DEC-115): a API tira o resto.
+  const showCheckIns = shared.has('SLEEP_MOOD') || shared.has('MEDICATION');
+  const showMedications = shared.has('MEDICATIONS');
   const allowedTabs = TAB_LABELS.map((item) => item.tab).filter((item) =>
-    item === 'sono-humor'
-      ? shared.has('SLEEP_MOOD') || shared.has('MEDICATION')
-      : shared.has(TAB_AREA[item ?? 'atividades']),
+    item === 'sono-humor' ? showCheckIns || showMedications : shared.has(TAB_AREA[item ?? 'atividades']),
   );
   const noAreas = allowedTabs.length === 0;
   // Sem aceite em nenhuma das três áreas, não há o que ler: um link salvo para "Para ler" abre o ciclo.
@@ -372,6 +372,9 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
                   patientId={patientId}
                   firstName={firstName ?? patient.name}
                   consented={Boolean(user?.privacyAreas.sleepMood)}
+                  medicationsConsented={Boolean(user?.privacyAreas.medications)}
+                  showCheckIns={showCheckIns}
+                  showMedications={showMedications}
                   range={range}
                   ready={ready}
                 />
@@ -522,6 +525,7 @@ const SUMMARY_TAB: Record<SummaryArea, RecordTab> = {
   plans: 'planos',
   sleepMood: 'sono-humor',
   medication: 'sono-humor',
+  medications: 'sono-humor',
 };
 
 const TAB_LABELS: { tab: RecordTab; label: string }[] = [
