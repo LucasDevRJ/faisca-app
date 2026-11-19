@@ -207,7 +207,10 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   A nova ocorrência continua aparecendo como não lida para a profissional. Ao apagar a raiz, a
   ocorrência sobrevivente mais antiga vira a nova raiz; apagar uma filha remove só sua ligação.
 - O seletor começa com registros próximos à data do registro aberto e permite ampliar o período.
-  Ligações funcionam com registros finais. Apagar qualquer registro também apaga suas ligações.
+  Mostra as datas no padrão brasileiro (DD/MM/AAAA) e uma prévia curta para títulos longos; o texto
+  integral continua acessível e é mostrado após selecionar o registro. A prévia é local e
+  determinística, sem serviço de IA. Ligações funcionam com registros finais. Apagar qualquer
+  registro também apaga suas ligações.
 
 ## Ação
 Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das atividades (DEC-051).
