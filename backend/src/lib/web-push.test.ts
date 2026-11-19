@@ -1,4 +1,4 @@
-import { createDecipheriv, createECDH, hkdfSync } from 'node:crypto';
+import { createDecipheriv, createECDH, createPublicKey, hkdfSync, verify } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
   createVapidAuthorization,
@@ -6,7 +6,21 @@ import {
   generateVapidKeys,
   isAllowedPushEndpoint,
   isValidPushKeys,
+  padP256PrivateKey,
 } from './web-push.js';
+
+// Chave privada fixa cujo primeiro byte é zero. Sem esse zero ela tem 31 bytes, como o Node
+// devolve em getPrivateKey() em cerca de 1 a cada 256 chaves: o caso que fazia o teste do VAPID
+// falhar de vez em quando. O vetor curto é montado à mão para não depender do Node.
+function shortPrivateKeyPair() {
+  const scalar = Buffer.concat([
+    Buffer.from([0x00]),
+    Buffer.from(Array.from({ length: 31 }, (_, i) => i + 1)),
+  ]);
+  const ecdh = createECDH('prime256v1');
+  ecdh.setPrivateKey(scalar);
+  return { ecdh, scalar, short: scalar.subarray(1) };
+}
 
 describe('web-push (VAPID, aes128gcm e validação de endpoint)', () => {
   it('aceita apenas endpoints HTTPS dos serviços oficiais de Web Push e barra SSRF', () => {
@@ -89,5 +103,65 @@ describe('web-push (VAPID, aes128gcm e validação de endpoint)', () => {
     expect(decryptedPadded[decryptedPadded.length - 1]).toBe(2);
     const decryptedText = decryptedPadded.subarray(0, decryptedPadded.length - 1).toString('utf8');
     expect(decryptedText).toBe(payload);
+  });
+
+  it('completa com zeros à esquerda a chave privada que o Node devolve com menos de 32 bytes', () => {
+    const { scalar, short } = shortPrivateKeyPair();
+    expect(short.length).toBe(31);
+
+    const padded = padP256PrivateKey(short);
+    expect(padded.length).toBe(32);
+    expect(padded.equals(scalar)).toBe(true);
+
+    expect(() => padP256PrivateKey(Buffer.alloc(0))).toThrow('Chaves VAPID em formato inválido');
+    expect(() => padP256PrivateKey(Buffer.alloc(33, 1))).toThrow('Chaves VAPID em formato inválido');
+  });
+
+  it('gera o cabeçalho VAPID com chave privada curta (já configurada sem os zeros) e a assinatura confere', () => {
+    const { ecdh, scalar, short } = shortPrivateKeyPair();
+    const publicKey = ecdh.getPublicKey().toString('base64url');
+    const shortPrivateKey = short.toString('base64url');
+    const paddedPrivateKey = scalar.toString('base64url');
+
+    for (const privateKey of [shortPrivateKey, paddedPrivateKey]) {
+      const header = createVapidAuthorization(
+        'https://fcm.googleapis.com',
+        'mailto:contato@minhafaisca.com.br',
+        publicKey,
+        privateKey,
+        1_700_000_000,
+      );
+      const match = /^vapid t=([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+), k=([A-Za-z0-9_-]+)$/.exec(header);
+      expect(match).not.toBeNull();
+      const [, signingInput = '', signature = '', k = ''] = match ?? [];
+      expect(k).toBe(publicKey);
+
+      const pub = Buffer.from(publicKey, 'base64url');
+      const verifier = createPublicKey({
+        key: {
+          kty: 'EC',
+          crv: 'P-256',
+          x: pub.subarray(1, 33).toString('base64url'),
+          y: pub.subarray(33, 65).toString('base64url'),
+        },
+        format: 'jwk',
+      });
+      const ok = verify(
+        'sha256',
+        Buffer.from(signingInput),
+        { key: verifier, dsaEncoding: 'ieee-p1363' },
+        Buffer.from(signature, 'base64url'),
+      );
+      expect(ok).toBe(true);
+    }
+  });
+
+  it('generateVapidKeys sempre devolve a chave privada com 32 bytes', () => {
+    // Com 2.000 chaves, a chance de não aparecer nenhuma curta é menor que 0,05%; o caso curto em
+    // si é coberto de forma determinística pelos testes acima.
+    for (let i = 0; i < 2000; i++) {
+      const { privateKey } = generateVapidKeys();
+      expect(Buffer.from(privateKey, 'base64url').length).toBe(32);
+    }
   });
 });
