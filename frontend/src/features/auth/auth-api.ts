@@ -13,6 +13,7 @@ export type SessionUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
+  professionalKind?: 'PSICOLOGIA' | 'PSIQUIATRIA' | null;
   // Aceitou a versão atual do aviso de privacidade? Serve para a faixa "o aviso mudou".
   privacyUpToDate: boolean;
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o Registro de Pensamentos e os
@@ -30,6 +31,10 @@ export type SessionUser = {
     activityPhotos: boolean;
     // Tarefas (DEC-106).
     tasks: boolean;
+    // Sono e humor e o Remédio do dia (DEC-107, DEC-108).
+    sleepMood: boolean;
+    medication: boolean;
+    community: boolean;
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;

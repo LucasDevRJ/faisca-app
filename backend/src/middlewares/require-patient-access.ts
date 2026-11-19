@@ -20,7 +20,9 @@ const READ_METHODS = new Set(['GET', 'HEAD']);
 // do paciente; as verificações de perfil, vínculo, área, aceite e tipo profissional vêm depois.
 export const onlyReads: RequestHandler = (req, _res, next) => {
   const createsPlan = req.method === 'POST' && (req.path === '/plans' || req.path === '/plans/');
-  if (!READ_METHODS.has(req.method) && !createsPlan) throw forbidden();
+  // Busca (Issue #152): POST apenas para manter o termo de saúde no corpo, sem alterar registros.
+  const searchesRecords = req.method === 'POST' && (req.path === '/records/search' || req.path === '/records/search/');
+  if (!READ_METHODS.has(req.method) && !createsPlan && !searchesRecords) throw forbidden();
   next();
 };
 

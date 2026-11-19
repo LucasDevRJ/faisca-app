@@ -2454,8 +2454,36 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** sem lembrete diário nesta entrega, para não virar cobrança. Os textos, o gráfico
   e a pergunta do remédio em Conta ficam para o PR das telas (DEC-108).
 
-## DEC-108 — Sono, humor e remédio (telas)
-- **Decisão (#188, #171):** em construção.
+## DEC-108 — Sono, humor e remédio (telas) e aviso de privacidade versão 14
+- **Decisão (#188 e parte da #171, sobre a API da DEC-107, desenho e textos aprovados pelo usuário):**
+  - **cartão "Sono e humor de hoje" em Meus registros**, o caminho rápido do dia a dia: sem registro,
+    "Quer registrar como dormiu e como está o dia? Leva menos de um minuto."; com registro, a linha curta
+    ("Dormiu 7h30 · sono 6 · humor 7 · remédio: como combinado") e "Editar". Sem cobrança, sem sequência
+    e sem "você não registrou ontem";
+  - **a janela do dia**: os dois horários (com "Dá 7h30 de sono." enquanto preenche), as notas do sono e
+    do humor (cada uma pode voltar a ficar em branco), a palavra do dia e, para quem ligou em Conta, "Tomou
+    o remédio como combinado?" (Sim, Esqueci algum, Hoje não), com "Mudanças no remédio, só com quem
+    receitou." e "Tudo bem preencher só uma parte.". Apagar o registro do dia pede confirmação;
+  - **aba "Sono e humor"**, depois de Tarefas: o mesmo período das outras abas, o gráfico e os dias, do
+    mais recente ao mais antigo. Aparecem os dias com registro e os que ainda aceitam registro (os
+    últimos 7); um dia antigo fica só para ver;
+  - **o gráfico**: horas de sono (eixo da esquerda) e humor de 0 a 10 (eixo da direita), na cor sálvia em
+    dois tons, com linha contínua e tracejada e a tabela "Ver os números", como o gráfico da tensão;
+  - **Conta → "Sono e humor"**: a caixa "Registrar se tomei o remédio". O texto diz que desligar só
+    esconde a pergunta, que o que já foi respondido continua guardado e que quem vê o remédio é decidido
+    na área Remédio de cada profissional (dúvida do `revisor-seguranca`, confirmada pelo usuário);
+  - **a profissional**: aba "Sono e humor" quando o paciente libera pelo menos uma das duas caixas, só
+    leitura, com o gráfico e o remédio em terceira pessoa ("remédio: esqueceu algum"). No "Resumo do
+    período" (DEC-101) entram os blocos Sono e humor (com o gráfico) e Remédio, nos textos aprovados;
+  - **Conta → "O que [nome] pode ver"**: as caixas "Sono e humor" e "Remédio (se tomou como combinado)";
+  - **aviso de privacidade versão 14** (`2026-11.7` vira a atual): cita o Sono e humor e o Remédio em "O
+    que guardamos", em "Para quê" e em "Quem vê", com "O Faísca não guarda o nome nem a dose de nenhum
+    remédio.";
+  - **novidade `2026-11-sono-humor`**, para pacientes e profissionais.
+- **Motivo:** fechar o pedido da psiquiatra (métricas entre consultas espaçadas) com a API da DEC-107, e
+  trocar a versão do aviso no mesmo PR que mostra o texto, para ninguém aceitar o que ainda não leu.
+- **Limite conhecido:** sem lembrete diário (para não virar cobrança). A lista de remédios, as mudanças de
+  dose e os efeitos colaterais continuam na #171, para depois.
 
 ## DEC-109 — Virada do ciclo na hora da consulta
 - **Decisão (#185, opção B):** revê a regra da DEC-049 e o cabeçalho da DEC-050:
@@ -2512,6 +2540,34 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o vínculo guarda IDs polimórficos, então toda rota de exclusão precisa
   remover as associações na mesma transação. A API e a interface devem manter os tipos de registro
   sincronizados com as áreas liberadas.
+
+## DEC-112 — Busca privada nos registros (19/11/2026)
+- **Decisão (#152):** paciente pesquisa os próprios registros; a terapeuta pesquisa somente os de
+  paciente vinculado, conforme áreas compartilhadas e aceites de privacidade dos dois. Termo no
+  corpo do `POST`, nunca na URL; nenhuma busca fica salva no banco, no armazenamento do navegador ou
+  em histórico recente. A busca filtra em memória, depois de carregar apenas dados autorizados, para
+  seguir compatível com a criptografia planejada. Traz tipo, período de até 367 dias, emoção,
+  intensidade mínima, paginação de até 50 resultados e “só para ler” na visão profissional. A
+  comparação ignora caixa e acentos e aproxima flexões de gênero “a/o”, sem IA.
+- **Exceção limitada de método:** como o termo pode revelar dado de saúde, a rota da terapeuta usa
+  `POST` para transportar o corpo, embora seja estritamente de leitura. A mesma cadeia de sessão,
+  perfil, vínculo, áreas e aceites continua obrigatória; nenhum registro ou marca de leitura é
+  alterado.
+- **Motivo:** localizar registros antigos sem percorrer ciclos e semanas, reduzindo exposição do
+  termo na URL e preservando as regras de privacidade de cada área.
+- **Limite conhecido:** a busca textual roda em memória da API, com intervalo limitado a 367 dias;
+  flexões aproximadas se restringem a gênero final “a/o” e não cobrem sinônimos ou derivações gerais.
+  O filtro de não lidos só considera tipos com marca de leitura, e Tarefas respondidas.
+
+## DEC-113 — Comunidade opcional de apoio (19/11/2026)
+- **Decisão:** reabrimos a ideia de comunidade entre pacientes, antes recusada na DEC-079, com limites explícitos. Cada psicóloga pode ter uma comunidade opcional; pacientes com vínculo ativo de psicologia podem solicitar entrada, e a psicóloga aprova ou recusa. Só maiores de 18 anos participam na primeira versão, por autoconfirmação; não coletamos data de nascimento. Cada pessoa escolhe um apelido, aceita regras e pode optar por aparecer num evento neutro de boas-vindas.
+- Membros ativos podem ler o histórico completo aprovado antes de entrarem. Sair bloqueia o acesso, mas a pessoa pode solicitar entrada de novo e, se voltar a ser aprovada, recupera o acesso ao histórico. O fim do vínculo de psicologia bloqueia o acesso imediatamente. A comunidade não integra nem concede acesso aos registros clínicos. A psicóloga pode criar, convidar, aprovar, publicar e comentar somente dentro da comunidade.
+- **Moderação:** toda publicação e comentário começa pendente e precisa de revisão humana antes de aparecer. Participantes podem denunciar; a autora ou o autor pode editar (reiniciando a revisão) ou apagar o próprio conteúdo. Rejeição e ocultação registram mensagem privada de motivo. Uma pessoa moderadora da plataforma é explicitamente autorizada por e-mail e precisa ter 2FA ativo; suas rotas só expõem conteúdo da comunidade e nunca perfil clínico ou registros. A psicóloga responsável também pode ler esse conteúdo para moderar seu grupo.
+- **Dados e exclusão:** nomes e e-mails da conta não aparecem aos outros pacientes. A exclusão da conta do paciente remove seu conteúdo. A exclusão da conta da psicóloga remove a comunidade e todo o conteúdo em cascata. O banco guarda a confirmação de maioridade e o aceite das regras, sem data de nascimento.
+- **Privacidade:** nova área `community`, com aceite da versão `2026-11.8`; aviso de privacidade explica conteúdo, apelido, visibilidade e revisão humana. O card de novidade é `2026-11-comunidade`.
+- **Regra de autorização:** nova exceção isolada para conteúdo comunitário, fora de `/therapist/patients`; não altera a proibição de escritas em dados clínicos. A moderação não é um perfil administrativo geral.
+- **Motivo:** oferecer apoio entre pessoas acompanhadas pela mesma profissional, preservando pseudonimato entre pacientes, entrada consentida, mediação antes da publicação e limites claros de acesso.
+- **Limite conhecido:** maiores de 18 anos é uma escolha conservadora para a primeira versão, não uma conclusão de que a lei proíbe a participação de adolescentes. A maioridade é autodeclarada, não verificada por documento. O evento de entrada aparece apenas no feed, sem push/e-mail; o funcionamento exige revisão humana ativa. O histórico completo é carregado sem paginação e pode ficar pesado se a comunidade crescer. Sem painel de gestão de denúncias fora da fila dedicada e sem moderação automatizada nesta etapa.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

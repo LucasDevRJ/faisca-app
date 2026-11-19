@@ -19,6 +19,9 @@ export const SHARED_AREAS = [
   'APPOINTMENTS',
   'PLANS',
   'TASKS',
+  // Sono e humor e o Remédio do dia (DEC-107): caixas separadas, como na API.
+  'SLEEP_MOOD',
+  'MEDICATION',
 ] as const;
 export type SharedArea = (typeof SHARED_AREAS)[number];
 

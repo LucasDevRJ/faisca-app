@@ -7,6 +7,8 @@ import { env } from '../config/env.js';
 // Revisar a lista quando novos models com dado sensível forem criados.
 // Não use 'code' genérico: apagaria o err.code (ex.: P2002 do Prisma).
 const SENSITIVE_KEYS = [
+  // Busca em registros (Issue #152): termos podem revelar informação sobre saúde e nunca ficam no log.
+  'term',
   // Sono, humor e remédio (DEC-107): a palavra do dia é texto do paciente, e as notas, os horários e
   // o remédio são dado de saúde (achado do revisor-regras).
   'moodWord',
@@ -82,6 +84,11 @@ const SENSITIVE_KEYS = [
   'expectation',
   // Mural da terapeuta (DEC-079): o texto do aviso.
   'body',
+  // Comunidade (DEC-113): publicações, comentários, motivos de denúncia e mensagem de moderação.
+  'moderationMessage',
+  'details',
+  'displayName',
+  'authorDisplayName',
   // Web Push (DEC-089): endereço e chaves da inscrição do aparelho.
   'endpoint',
   'p256dh',

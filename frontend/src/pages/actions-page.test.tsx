@@ -108,7 +108,7 @@ describe('/acao', () => {
     expect(asked).toBe(false);
   });
 
-  it('cinco abas, a meta do ciclo em espaços e o cartão com a expectativa ao lado do resultado', async () => {
+  it('sete abas, a meta do ciclo em espaços e o cartão com a expectativa ao lado do resultado', async () => {
     actionsApi([
       fakeAction({ name: 'Ouvir um disco', category: 'PRAZER', status: 'AVALIADA', expectation: 3, pleasure: 7, achievement: 6, actionDate: '2026-09-23' }),
       fakeAction({ name: 'Café com amiga', category: 'CONEXAO', status: 'NAO_REALIZADA', actionDate: '2026-09-22', observation: 'Ela desmarcou.' }),
@@ -116,7 +116,7 @@ describe('/acao', () => {
     renderRoute('/acao');
 
     const tabs = await screen.findByRole('navigation', { name: 'Registros' });
-    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas']);
+    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas', 'Sono e humor', 'Comunidade']);
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
 
     const goal = await screen.findByRole('region', { name: 'Neste ciclo' });
