@@ -36,6 +36,8 @@ const SEED_USERS: { name: string; email: string; patient: boolean; therapist: bo
   // Só Sono, humor e remédio (api/daily-check-ins.spec.ts, DEC-107), com a versão que cita a área.
   { name: 'Paciente Sono Fictícia', email: 'sono-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-11.7' },
   { name: 'Psiquiatra Sono Fictícia', email: 'sono-psiquiatra@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.7' },
+  // Só a tela do Sono e humor (e2e/sleep-mood.spec.ts): sem aceite, aceita no próprio cartão.
+  { name: 'Sono Tela Fictícia', email: 'sono-tela@faisca.test', patient: true, therapist: false },
   // Só Tarefas (api/tasks.spec.ts e e2e/tasks.spec.ts).
   { name: 'Paciente Tarefas Fictícia', email: 'tarefas-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-11.6' },
   { name: 'Profissional Tarefas Fictícia', email: 'tarefas-terapeuta@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.6' },

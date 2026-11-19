@@ -11,6 +11,7 @@
 // - 2026-11-meus-planos: Meus Planos (DEC-095), para paciente e terapeuta.
 // - 2026-11-fotos-atividades: fotos nas atividades (DEC-104), para paciente e terapeuta.
 // - 2026-11-tarefas: Tarefas e respostas do paciente (DEC-106), para paciente e terapeuta.
+// - 2026-11-sono-humor: Sono, humor e remédio do dia (DEC-108), para paciente e terapeuta.
 export const ANNOUNCEMENTS = [
   '2026-10-explicacao-alternativa',
   '2026-10-lido',
@@ -22,6 +23,7 @@ export const ANNOUNCEMENTS = [
   '2026-11-meus-planos',
   '2026-11-fotos-atividades',
   '2026-11-tarefas',
+  '2026-11-sono-humor',
 ] as const;
 
 export type Announcement = (typeof ANNOUNCEMENTS)[number];
@@ -40,6 +42,7 @@ const AUDIENCE: Record<Announcement, Audience> = {
   '2026-11-meus-planos': 'TODOS',
   '2026-11-fotos-atividades': 'TODOS',
   '2026-11-tarefas': 'TODOS',
+  '2026-11-sono-humor': 'TODOS',
 };
 
 export type Profiles = { patient: boolean; therapist: boolean };

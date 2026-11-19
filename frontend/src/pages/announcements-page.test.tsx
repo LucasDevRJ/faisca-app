@@ -55,6 +55,7 @@ describe('página "O que há de novo"', () => {
     const entries = screen.getAllByRole('article');
     expect(entries.map((entry) => within(entry).getByRole('heading').textContent)).toEqual([
       'Novidade fictícia mais nova',
+      'Sono e humor',
       'Novidade: fotos nas atividades',
       'Tarefas combinadas na consulta',
       'Novidade: Meus Planos',

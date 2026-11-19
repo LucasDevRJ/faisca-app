@@ -30,6 +30,9 @@ export type SessionUser = {
     activityPhotos: boolean;
     // Tarefas (DEC-106).
     tasks: boolean;
+    // Sono e humor e o Remédio do dia (DEC-107, DEC-108).
+    sleepMood: boolean;
+    medication: boolean;
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;

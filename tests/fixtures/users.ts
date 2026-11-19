@@ -5,6 +5,7 @@ export const users = {
   // Só Tarefas (API e telas), separados para não disputar dados.
   sleepPatient: { email: 'sono-paciente@faisca.test', password: SEED_PASSWORD },
   sleepTherapist: { email: 'sono-psiquiatra@faisca.test', password: SEED_PASSWORD },
+  sleepScreenPatient: { email: 'sono-tela@faisca.test', password: SEED_PASSWORD },
   taskPatient: { email: 'tarefas-paciente@faisca.test', password: SEED_PASSWORD },
   taskTherapist: { email: 'tarefas-terapeuta@faisca.test', password: SEED_PASSWORD },
   taskScreenPatient: { email: 'tarefas-tela@faisca.test', password: SEED_PASSWORD },

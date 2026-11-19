@@ -21,6 +21,8 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   plans: 'o Meus Planos',
   activityPhotos: 'as fotos das atividades',
   tasks: 'as Tarefas',
+  sleepMood: 'o Sono e humor',
+  medication: 'o Remédio do dia',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
@@ -120,6 +122,28 @@ const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope:
     therapist: {
       intro: 'Para ver o Meus Planos dos seus pacientes, leia o que mudou e confirme.',
       scope: 'inclusive com o acesso aos planos dos meus pacientes e ao que eles registrarem neles como dados de saúde.',
+    },
+  },
+  // Sono e humor (DEC-107, DEC-108): horários de deitar e acordar, notas do sono e do humor e a palavra do dia.
+  sleepMood: {
+    patient: {
+      intro: 'Para registrar o sono e o humor, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso do meu sono, do meu humor e, se eu ligar, de se tomei o remédio como dados de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver o sono e o humor dos seus pacientes, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso ao sono, ao humor e ao remédio do dia dos meus pacientes como dados de saúde.',
+    },
+  },
+  // Remédio do dia (DEC-107): só se tomou como combinado, sem nome nem dose.
+  medication: {
+    patient: {
+      intro: 'Para registrar se tomou o remédio, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso de se tomei o remédio como combinado como dado de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver se seus pacientes tomaram o remédio como combinado, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso a se meus pacientes tomaram o remédio como combinado como dado de saúde.',
     },
   },
 };

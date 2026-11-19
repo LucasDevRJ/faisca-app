@@ -20,6 +20,12 @@ export type AnnouncementText = {
 export type Profiles = { patient: boolean; therapist: boolean };
 
 export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
+  '2026-11-sono-humor': {
+    title: 'Sono e humor', date: '2026-11-18',
+    patient: <p>Registre como dormiu e como está o dia em menos de um minuto, no cartão de Meus registros. Se quiser, ligue em Conta a pergunta “Tomou o remédio como combinado?”. Você escolhe com quais profissionais compartilhar.</p>,
+    therapist: <p>Os pacientes podem registrar o sono, o humor e, se quiserem, se tomaram o remédio como combinado. Quando liberarem a área para você, aparece a aba Sono e humor, com o gráfico, e os números entram no Resumo do período.</p>,
+    link: { to: '/sono-humor', label: 'Ver meu sono e humor' },
+  },
   '2026-11-tarefas': {
     title: 'Tarefas combinadas na consulta', date: '2026-11-15',
     patient: <p>Anote o que você combinou na consulta e responda no seu tempo. Você escolhe com quais profissionais compartilhar a área Tarefas.</p>,

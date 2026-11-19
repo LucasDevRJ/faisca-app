@@ -309,6 +309,9 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - Duas áreas no vínculo, "Sono e humor" e "Remédio", fechadas para todas as profissionais até o
   paciente liberar. A profissional só lê, sem "Lido". As duas entram no resumo do período, sem a
   palavra do dia.
+- **Telas (DEC-108):** o cartão "Sono e humor de hoje" em Meus registros; a aba "Sono e humor", com o
+  gráfico das horas de sono e do humor e os dias; a caixa "Registrar se tomei o remédio" em Conta
+  (desligar só esconde a pergunta). Na profissional, a aba "Sono e humor" e os blocos no resumo.
 
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados

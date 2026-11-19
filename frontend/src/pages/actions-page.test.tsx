@@ -116,7 +116,7 @@ describe('/acao', () => {
     renderRoute('/acao');
 
     const tabs = await screen.findByRole('navigation', { name: 'Registros' });
-    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas']);
+    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas', 'Sono e humor']);
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
 
     const goal = await screen.findByRole('region', { name: 'Neste ciclo' });
