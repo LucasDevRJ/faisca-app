@@ -16,7 +16,7 @@ export const fakeUser: SessionUser = {
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
-  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true },
+  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true },
   pendingAnnouncement: null,
   palette: 'SALVIA',
   accessibility: DEFAULT_ACCESSIBILITY,
@@ -25,7 +25,7 @@ export const fakeUser: SessionUser = {
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
 export const outdatedPrivacy = {
   privacyUpToDate: false,
-  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false, sleepMood: false, medication: false },
+  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false, sleepMood: false, medication: false, community: false },
 } satisfies Partial<SessionUser>;
 
 // Sessão fictícia da agenda (DEC-045): recorrente e agendada, às 14:00, por padrão.

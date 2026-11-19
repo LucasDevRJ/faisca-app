@@ -24,6 +24,10 @@ em caso de dúvida, eles prevalecem sobre esta skill.
   `/therapist/read-marks` (DEC-057, `src/modules/read-marks/`), que não tocam no registro, e os avisos
   do mural dela em `/therapist/notices` (DEC-079, `src/modules/notices/`), que são conteúdo dela.
   Qualquer outra escrita exige decisão explícita e alteração desta regra.
+- Exceção isolada da Comunidade (DEC-113): rotas fora de `/therapist/patients` podem acessar ou
+  alterar apenas conteúdo publicado para aquela comunidade, nunca registros clínicos. A psicóloga
+  responsável gerencia a própria comunidade; a pessoa moderadora precisa estar na allowlist de e-mail
+  e ter 2FA ativo. Todas as rotas exigem o aceite de privacidade `community`.
 
 ## 2. Estrutura
 `src/modules/<modulo>/` com `schema`, `service`, `controller` e `routes` (backend/CLAUDE.md).

@@ -266,7 +266,7 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   plano; sem plano, um link discreto "Criar um plano" abaixo das abas. Na página da terapeuta, a aba
   também aparece enquanto falta o aceite para ela aceitar, e para a psicóloga com Meus Planos
   liberado, mesmo sem planos, para poder criar o primeiro. A psiquiatra continua vendo a aba só quando
-  existe plano. No celular, com 5 ou 6 abas, a grade passa a 3 colunas. O modelo das 6 perguntas entra
+  existe plano. No celular, a grade das abas usa 3 colunas. O modelo das 6 perguntas entra
   por um botão, e não já preenchido.
 
 ## Tarefas (DEC-106, #150)
@@ -283,9 +283,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   continua editável. Ao aparecer consulta, o prazo é congelado; antecipar encurta, apagar ou
   desmarcar não reabre um prazo congelado. Sem horário, a consulta fecha a edição no início do dia,
   como na explicação alternativa (DEC-054). Exatamente no prazo, a resposta fica final (409).
-- Aba **Tarefas** sempre disponível ao paciente. Cinco ou seis abas usam grade de três colunas no
-  celular; Meus Planos continua condicional. As tarefas são listadas de qualquer data, mais novas
-  primeiro; na profissional, essa lista não depende do período selecionado para as outras áreas.
+- Aba **Tarefas** sempre disponível ao paciente. As abas usam grade de três colunas no celular; o Meus Planos continua condicional. A Comunidade de apoio (DEC-113) também aparece como recurso opcional.
+- As tarefas são listadas de qualquer data, mais novas primeiro; na profissional, essa lista não depende do período selecionado para as outras áreas.
 - A profissional só lê com vínculo ativo, área **TASKS** liberada pelo paciente e aceite do aviso
   que cobre Tarefas. A área nova começa fechada, inclusive nos vínculos existentes. Nada muda na
   regra de escrita da profissional. "Combinada com" é omitido na visão profissional; o prazo da
@@ -449,12 +448,23 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   entrarem, o aviso novo gera um texto neutro ("Você tem um aviso novo no Faísca"), com
   liga/desliga.
 
+## Comunidade de apoio (DEC-113)
+- Uma psicóloga pode criar uma comunidade opcional. Só pacientes adultos com vínculo ativo de psicologia podem pedir entrada; a psicóloga aprova ou recusa. A pessoa confirma ter 18 anos ou mais e aceita as regras. A data de nascimento não é coletada.
+- Cada pessoa escolhe um apelido de até 40 caracteres. O nome e o e-mail da conta não aparecem para outros pacientes. A pessoa pode escolher se uma mensagem neutra com o apelido será mostrada no feed quando entrar.
+- Membros ativos veem o histórico completo de publicações e comentários aprovados, inclusive conteúdos anteriores à entrada. Ao sair, deixam de ver e participar, mas podem pedir entrada novamente; ao voltar, veem o histórico. O fim do vínculo suspende o acesso imediatamente. Nenhum conteúdo comunitário dá acesso a registros clínicos. A lista ainda não tem paginação.
+- Publicações e comentários ficam pendentes até revisão humana. A pessoa autora pode editar (o conteúdo volta à fila) e apagar seus próprios itens; o texto apagado vira uma indicação genérica para preservar respostas. Membros podem denunciar conteúdo. A pessoa autora recebe em privado o motivo de uma rejeição/ocultação.
+- A psicóloga responsável vê e publica conteúdo na comunidade, gerencia convites e pedidos e não ganha acesso aos registros do paciente. A moderação da plataforma acessa somente conteúdo comunitário e exige conta explicitamente autorizada e verificação em duas etapas ativa.
+- A exclusão da conta do paciente apaga seu conteúdo comunitário. A exclusão da conta da psicóloga apaga a comunidade, as participações, publicações, comentários, denúncias e eventos em cascata.
+- Novas entradas voluntárias podem gerar um evento neutro no feed. Não há push nem e-mail nesta versão.
+
 ## Autorização (regra inviolável)
 - No papel de terapeuta (psicóloga ou psiquiatra): somente requisições GET, apenas de pacientes com
   vínculo ativo e só das áreas que o paciente liberou para ela (DEC-097).
-  As exceções não alteram dado de paciente: os dois pedidos que criam o vínculo (digitar o código e
-  aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057) e os avisos do
-  mural dela, que são conteúdo dela (DEC-079).
+  As exceções não alteram registros clínicos: os dois pedidos que criam o vínculo (digitar o código e
+  aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057), os avisos do
+  mural dela (DEC-079) e as rotas próprias da Comunidade (DEC-113), que só leem ou alteram conteúdo
+  publicado para esse grupo, mediante aceite específico de privacidade. A moderação é isolada e não
+  concede acesso a perfil ou registros clínicos.
 - No papel de paciente: acesso somente aos próprios dados.
 - Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado, área não liberada ou dado de outra pessoa.
 - Tudo isso é garantido no backend, nunca só na interface.
@@ -472,7 +482,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Sair de um aparelho remove a inscrição de push daquela sessão; trocar a senha remove as dos outros aparelhos e mantém a do aparelho atual; "Sair de todos os aparelhos" remove todas (DEC-085, DEC-089).
 
 ## Privacidade (LGPD)
-- Tarefas exigem a versão `2026-11.6` (DEC-106), apresentada junto com o texto novo no app.
+- Tarefas exigem a versão `2026-11.6` (DEC-106), Sono e humor e Remédio exigem `2026-11.7` (DEC-107), e a Comunidade exige `2026-11.8` (DEC-113), apresentadas junto com o texto novo no app.
 - O sistema coleta nome, e-mail e senha (guardada só como hash), os registros e o que o aviso de privacidade descreve (preferências da conta, dados de segurança como os da verificação em duas etapas, vínculos e lembretes); nada além disso.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
