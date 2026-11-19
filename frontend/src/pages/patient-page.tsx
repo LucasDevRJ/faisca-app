@@ -59,6 +59,7 @@ import type { ThoughtRecord } from '../features/thought-records/thought-records-
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 import { AboutMeCard } from '../features/about-me/about-me-card';
 import { PatientTasksTab } from '../features/tasks/patient-tasks-tab';
+import { PatientSleepMoodTab } from '../features/daily-check-ins/patient-sleep-mood-tab';
 import { TaskCard } from '../features/tasks/task-card';
 import { PatientPlansTab } from '../features/plans/patient-plans-tab';
 import { PatientPeriodSummaryCard } from '../features/summary/period-summary-card';
@@ -70,7 +71,7 @@ import { avatarUrls } from '../features/profile/profile-api';
 // Aba na URL (?aba=pensamentos ou ?aba=tensao), junto com o período (DEC-040, DEC-043).
 // Sem ?aba, Atividades. ?aba=para-ler é a visão dos registros para ler, fora do ciclo (DEC-058).
 // ?aba=planos é o Meus Planos (DEC-095), com o plano escolhido em ?plano=.
-const TABS = ['pensamentos', 'tensao', 'acao', 'planos', 'tarefas', 'para-ler'] as const;
+const TABS = ['pensamentos', 'tensao', 'acao', 'planos', 'tarefas', 'sono-humor', 'para-ler'] as const;
 type RecordTab = (typeof TABS)[number] | null;
 
 function parseTab(value: string | null): RecordTab {
@@ -157,7 +158,12 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const anyReadConsented = consented || tensionConsented || actionsConsented || aboutConsented || plansConsented || tasksConsented;
   const requestedTab = parseTab(searchParams.get('aba'));
   // As abas que o paciente liberou. Uma aba fechada pedida na URL abre a primeira liberada.
-  const allowedTabs = TAB_LABELS.map((item) => item.tab).filter((item) => shared.has(TAB_AREA[item ?? 'atividades']));
+  // A aba Sono e humor aparece com qualquer uma das duas caixas (DEC-107): a API tira o resto.
+  const allowedTabs = TAB_LABELS.map((item) => item.tab).filter((item) =>
+    item === 'sono-humor'
+      ? shared.has('SLEEP_MOOD') || shared.has('MEDICATION')
+      : shared.has(TAB_AREA[item ?? 'atividades']),
+  );
   const noAreas = allowedTabs.length === 0;
   // Sem aceite em nenhuma das três áreas, não há o que ler: um link salvo para "Para ler" abre o ciclo.
   const tab: RecordTab =
@@ -356,7 +362,15 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
                 </p>
               )}
 
-              {tab === 'tarefas' ? <PatientTasksTab patientId={patientId} consented={tasksConsented} /> : tab === 'planos' ? (
+              {tab === 'sono-humor' ? (
+                <PatientSleepMoodTab
+                  patientId={patientId}
+                  firstName={firstName ?? patient.name}
+                  consented={Boolean(user?.privacyAreas.sleepMood)}
+                  range={range}
+                  ready={ready}
+                />
+              ) : tab === 'tarefas' ? <PatientTasksTab patientId={patientId} consented={tasksConsented} /> : tab === 'planos' ? (
                 <PatientPlansTab
                   patientId={patientId}
                   firstName={firstName ?? patient.name}
@@ -501,6 +515,8 @@ const SUMMARY_TAB: Record<SummaryArea, RecordTab> = {
   tensionEpisodes: 'tensao',
   actions: 'acao',
   plans: 'planos',
+  sleepMood: 'sono-humor',
+  medication: 'sono-humor',
 };
 
 const TAB_LABELS: { tab: RecordTab; label: string }[] = [
@@ -510,6 +526,7 @@ const TAB_LABELS: { tab: RecordTab; label: string }[] = [
   { tab: 'acao', label: 'Ação' },
   { tab: 'planos', label: 'Meus Planos' },
   { tab: 'tarefas', label: 'Tarefas' },
+  { tab: 'sono-humor', label: 'Sono e humor' },
 ];
 
 // A área de cada aba, para mostrar só as liberadas (DEC-097, DEC-099).
@@ -520,6 +537,7 @@ const TAB_AREA: Record<NonNullable<RecordTab> | 'atividades', SharedArea> = {
   acao: 'ACTIONS',
   planos: 'PLANS',
   tarefas: 'TASKS',
+  'sono-humor': 'SLEEP_MOOD',
   'para-ler': 'ACTIVITIES',
 };
 
@@ -680,7 +698,7 @@ function ToReadView({
     ...(tasks ?? []).map((task) => ({
       key: `task-${task.id}`, area: 'Tarefa', date: todayInAppZone(new Date(task.respondedAt ?? task.updatedAt)), createdAt: task.updatedAt,
       item: { type: 'TASK' as const, id: task.id },
-      card: <TaskCard task={task} footer={<ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} />} />,
+      card: <TaskCard task={task} readOnly patientId={patientId} footer={<ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} />} />,
     })),
     ...(thoughtRecords ?? []).map((record) => ({
       key: `t-${record.id}`,
@@ -752,6 +770,7 @@ function ToReadView({
         <PlanEntryCard
           entry={entry}
           readOnly
+          patientId={patientId}
           showPlan
           footer={<ReadControl patientId={patientId} type="PLAN_ENTRY" record={entry} label={entry.planTitle} />}
         />
@@ -881,6 +900,7 @@ function ThoughtsDay({ patientId, day, records, today }: ThoughtsDayProps) {
             key={record.id}
             record={record}
             readOnly
+            patientId={patientId}
             footer={
               <ReadControl patientId={patientId} type="THOUGHT_RECORD" record={record} label={record.situation} />
             }
@@ -981,6 +1001,7 @@ function TensionDay({ patientId, day, episodes, today }: TensionDayProps) {
             key={episode.id}
             episode={episode}
             readOnly
+            patientId={patientId}
             footer={
               <ReadControl patientId={patientId} type="TENSION_EPISODE" record={episode} label={episode.situation} />
             }

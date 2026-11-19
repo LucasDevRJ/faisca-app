@@ -13,6 +13,7 @@ import { inPeriod, type PeriodScope } from '../therapist/months-period';
 import { PlanForm } from './plan-form';
 import type { PlanInput } from './plans-api';
 import { PlanEntryCard } from './plan-entry-card';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
 
 type PatientPlansTabProps = {
   patientId: string;
@@ -125,6 +126,7 @@ export function PatientPlansTab({
           })}
         />
       )}
+      <RecordLinksPanel type="PLAN" id={selected.id} readOnly patientId={patientId} />
 
       {list.length > 1 && (
         <div role="group" aria-label="Plano" className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -219,6 +221,7 @@ export function PatientPlansTab({
                         key={entry.id}
                         entry={entry}
                         readOnly
+                        patientId={patientId}
                         footer={
                           <ReadControl patientId={patientId} type="PLAN_ENTRY" record={entry} label={entry.planTitle} />
                         }

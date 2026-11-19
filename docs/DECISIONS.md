@@ -2420,6 +2420,71 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   de uma consulta. A descrição não pode ser alterada depois da primeira resposta. Fotos, áudios,
   tipos ligados a registros e criação pela psicóloga ficam para etapas futuras.
 
+## DEC-107 — Sono, humor e remédio (API)
+- **Decisão (#188 e parte da #171, desenho e textos aprovados pelo usuário em 17/11/2026):**
+  - **um registro por dia, todo opcional** (`DailyCheckIn`): a hora em que deitou e a hora em que
+    acordou (vêm juntas; as horas de sono são calculadas na leitura), a nota do sono e a do humor, de 0
+    a 10, uma palavra para o dia (até 40 caracteres) e o remédio do dia. Precisa de ao menos uma
+    resposta. **A noite pertence ao dia em que a pessoa acordou** (23:30 → 07:00 = 7h30 nesse dia);
+  - **o remédio é só "tomou como combinado?"**: `TOMOU`, `ESQUECEU_ALGUM` ou `NAO_TOMOU`. O Faísca não
+    guarda nome, dose nem efeito de remédio; a lista de remédios e as mudanças continuam na #171, para
+    depois. A pergunta só aparece para quem liga "Registrar se tomei o remédio" (`tracksMedication` na
+    conta, desligado por padrão), guardado e trocado pelas rotas do próprio módulo;
+  - **o paciente registra e edita só os últimos 7 dias** (hoje e os 6 anteriores): dia futuro é 400
+    `CHECK_IN_FUTURE` e dia mais antigo, 409 `CHECK_IN_CLOSED`. É mais simples que o prazo da próxima
+    consulta e não depende da agenda (escolha do usuário);
+  - **rotas do paciente**: `GET /daily-check-ins?from&to` (até 92 dias, para o gráfico), `PUT` e
+    `DELETE /daily-check-ins/:date` e `PUT /daily-check-ins/settings`, sempre com o id da sessão;
+  - **duas caixas no vínculo** (`SLEEP_MOOD` e `MEDICATION`), fechadas para todas as profissionais,
+    inclusive nos vínculos que já existiam: assim o paciente pode liberar o remédio só para a
+    psiquiatra. A profissional lê em `GET /therapist/patients/:patientId/daily-check-ins`, que pede uma
+    das duas caixas (`requireAnySharedArea`) e tira o que a outra mostraria; um dia que fica vazio para
+    ela sai da lista. Sem "Lido" e fora do "Para ler": é um registro diário e encheria a lista dela;
+  - **área nova no aviso de privacidade** (`2026-11.7`, `sleepMood` e `medication`), conhecida na API e
+    atual só no PR das telas, que traz o texto (como na DEC-103 e na DEC-106);
+  - **no resumo do período (DEC-100)**: Sono e humor (noites, média das horas e da nota do sono, dias
+    com humor, média, a menor e a maior nota e a série do período para o gráfico) e Remédio (dias
+    registrados, tomou, esqueceu algum, não tomou), cada um só com a própria caixa. A palavra do dia
+    fica fora do resumo, que não leva texto do paciente;
+  - a palavra do dia entra no `SENSITIVE_KEYS` do logger (regra 7), e um CHECK no banco repete os
+    limites do Zod.
+- **Motivo:** a psiquiatra achou o app detalhado demais e precisa de métricas como o sono para consultas
+  espaçadas; sono, humor e a adesão ao remédio são o que a psiquiatria costuma acompanhar entre as
+  consultas. O usuário pediu para decidir pela prática comum, sem consultar a profissional.
+- **Limite conhecido:** sem lembrete diário nesta entrega, para não virar cobrança. Os textos, o gráfico
+  e a pergunta do remédio em Conta ficam para o PR das telas (DEC-108).
+
+## DEC-108 — Sono, humor e remédio (telas) e aviso de privacidade versão 14
+- **Decisão (#188 e parte da #171, sobre a API da DEC-107, desenho e textos aprovados pelo usuário):**
+  - **cartão "Sono e humor de hoje" em Meus registros**, o caminho rápido do dia a dia: sem registro,
+    "Quer registrar como dormiu e como está o dia? Leva menos de um minuto."; com registro, a linha curta
+    ("Dormiu 7h30 · sono 6 · humor 7 · remédio: como combinado") e "Editar". Sem cobrança, sem sequência
+    e sem "você não registrou ontem";
+  - **a janela do dia**: os dois horários (com "Dá 7h30 de sono." enquanto preenche), as notas do sono e
+    do humor (cada uma pode voltar a ficar em branco), a palavra do dia e, para quem ligou em Conta, "Tomou
+    o remédio como combinado?" (Sim, Esqueci algum, Hoje não), com "Mudanças no remédio, só com quem
+    receitou." e "Tudo bem preencher só uma parte.". Apagar o registro do dia pede confirmação;
+  - **aba "Sono e humor"**, depois de Tarefas: o mesmo período das outras abas, o gráfico e os dias, do
+    mais recente ao mais antigo. Aparecem os dias com registro e os que ainda aceitam registro (os
+    últimos 7); um dia antigo fica só para ver;
+  - **o gráfico**: horas de sono (eixo da esquerda) e humor de 0 a 10 (eixo da direita), na cor sálvia em
+    dois tons, com linha contínua e tracejada e a tabela "Ver os números", como o gráfico da tensão;
+  - **Conta → "Sono e humor"**: a caixa "Registrar se tomei o remédio". O texto diz que desligar só
+    esconde a pergunta, que o que já foi respondido continua guardado e que quem vê o remédio é decidido
+    na área Remédio de cada profissional (dúvida do `revisor-seguranca`, confirmada pelo usuário);
+  - **a profissional**: aba "Sono e humor" quando o paciente libera pelo menos uma das duas caixas, só
+    leitura, com o gráfico e o remédio em terceira pessoa ("remédio: esqueceu algum"). No "Resumo do
+    período" (DEC-101) entram os blocos Sono e humor (com o gráfico) e Remédio, nos textos aprovados;
+  - **Conta → "O que [nome] pode ver"**: as caixas "Sono e humor" e "Remédio (se tomou como combinado)";
+  - **aviso de privacidade versão 14** (`2026-11.7` vira a atual): cita o Sono e humor e o Remédio em "O
+    que guardamos", em "Para quê" e em "Quem vê", com "O Faísca não guarda o nome nem a dose de nenhum
+    remédio.";
+  - **novidade `2026-11-sono-humor`**, para pacientes e profissionais.
+- **Motivo:** fechar o pedido da psiquiatra (métricas entre consultas espaçadas) com a API da DEC-107, e
+  trocar a versão do aviso no mesmo PR que mostra o texto, para ninguém aceitar o que ainda não leu.
+- **Limite conhecido:** sem lembrete diário (para não virar cobrança). A lista de remédios, as mudanças de
+  dose e os efeitos colaterais continuam na #171, para depois.
+
 ## DEC-109 — Virada do ciclo na hora da consulta
 - **Decisão (#185, opção B):** revê a regra da DEC-049 e o cabeçalho da DEC-050:
   - cada sessão fecha um ciclo e inicia o seguinte no mesmo dia; esse dia aparece nos dois períodos;
@@ -2440,6 +2505,41 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   antes do horário, paciente e psicóloga precisam continuar vendo o material que será discutido.
 - **Limite conhecido:** registros do dia compartilhado aparecem nos dois ciclos, inclusive no resumo
   e na meta de Ação. A agenda tem resolução de minuto, então a virada ocorre no minuto marcado.
+
+## DEC-110 — Um banco de testes e um par de portas por agente
+- **Decisão (pedido do usuário, 17/11/2026):** o nome do banco de testes vem de `FAISCA_TEST_DB`
+  (padrão `faisca_test`, o de sempre e o do CI), e as portas do Playwright de `E2E_API_PORT` e
+  `E2E_WEB_PORT` (já existiam, padrão 3334 e 5174). Cada agente tem os seus (tabela no AGENTS.md:
+  Claude `faisca_test_claude`, Codex `faisca_test_codex`, Antigravity `faisca_test_antigravity`); o
+  Claude já os define no `env` do `.claude/settings.json`. O nome só é aceito se começar com
+  `faisca_test` e tiver só `[a-z0-9_]`, para nunca apontar para o banco de dev ou de produção e entrar
+  no `CREATE DATABASE` sem risco. O banco é criado sozinho na primeira vez, como o `faisca_test`.
+- **Motivo:** o usuário trabalha com mais de um agente ao mesmo tempo. Com um banco só, a suíte de um
+  apagava os dados do outro no meio dos testes (em 17/11, a suíte do backend e o Playwright falharam em
+  áreas que o PR nem tocava). A regra "não rode ao mesmo tempo" dependia de um agente saber o que o
+  outro fazia. Uma trava em arquivo resolveria, mas deixaria um agente parado esperando.
+- **Limite conhecido:** dentro do mesmo agente, a suíte do backend e o Playwright continuam sem rodar
+  juntos (mesmo banco). Duas sessões do Claude ao mesmo tempo dividem o `faisca_test_claude`; se
+  acontecer, uma delas troca a variável no `.claude/settings.local.json`. Os bancos de teste antigos
+  podem ficar no Postgres de dev; apagar é seguro, porque são recriados.
+
+## DEC-111 — Ligações entre registros e repetição (18/11/2026)
+- **Decisão:** ligações bidirecionais pertencem ao paciente e podem conectar registros das áreas
+  Atividades, Pensamentos, Tensão, Ação, Meus Planos, Tarefas, Sono e humor e Remédio do dia. O
+  paciente cria e remove; a profissional só lê. O backend confirma dono, vínculo, áreas e aceite
+  de privacidade para as duas pontas; se uma ponta não estiver visível, não revela a associação.
+- **Repetição:** RPD e Tensão usam o mesmo modelo de ligação (`REPETITION`) das associações manuais.
+  No RPD, a nova ocorrência copia pensamento, crença, emoções, comportamento e consequência,
+  deixa situação em branco e mostra a alternativa anterior só como lembrete. Na Tensão, copia só a
+  situação. Novos registros são independentes e não alteram a origem.
+- **Família:** a repetição aponta da raiz para cada nova ocorrência. Se a raiz for apagada, a
+  ocorrência sobrevivente mais antiga vira a raiz. Apagar uma ocorrência remove apenas sua aresta;
+  apagar registros remove suas associações. Ligações podem envolver registros finais.
+- **Motivo:** relacionar eventos sem expor áreas privadas e observar a recorrência sem sobrescrever
+  o histórico nem transformar a relação em interpretação clínica.
+- **Limite conhecido:** o vínculo guarda IDs polimórficos, então toda rota de exclusão precisa
+  remover as associações na mesma transação. A API e a interface devem manter os tipos de registro
+  sincronizados com as áreas liberadas.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

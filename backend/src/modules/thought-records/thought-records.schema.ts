@@ -81,7 +81,7 @@ const NEEDS_ALTERNATIVE = {
 // Todos os campos são obrigatórios (SPEC), menos a explicação alternativa (DEC-054). Objetos
 // estritos: campo a mais é 400.
 export const createThoughtRecordSchema = z
-  .strictObject({ ...fields, alternativeExplanation: fields.alternativeExplanation.optional() })
+  .strictObject({ ...fields, alternativeExplanation: fields.alternativeExplanation.optional(), repeatFromId: z.uuid().optional() })
   .refine(
     (data) => data.alternativeExplanation !== undefined || data.emotions.every((e) => e.intensityAfter === undefined),
     NEEDS_ALTERNATIVE,

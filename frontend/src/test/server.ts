@@ -16,7 +16,7 @@ export const fakeUser: SessionUser = {
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
-  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true },
+  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true },
   pendingAnnouncement: null,
   palette: 'SALVIA',
   accessibility: DEFAULT_ACCESSIBILITY,
@@ -25,7 +25,7 @@ export const fakeUser: SessionUser = {
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
 export const outdatedPrivacy = {
   privacyUpToDate: false,
-  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false },
+  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false, sleepMood: false, medication: false },
 } satisfies Partial<SessionUser>;
 
 // Sessão fictícia da agenda (DEC-045): recorrente e agendada, às 14:00, por padrão.
@@ -137,6 +137,8 @@ export function fakePeriodSummary(overrides: Partial<PeriodSummary> = {}): Perio
     tensionEpisodes: null,
     actions: null,
     plans: null,
+    sleepMood: null,
+    medication: null,
     ...overrides,
   };
 }
@@ -193,6 +195,12 @@ export const handlers = [
   http.get('*/api/period-summary', () => HttpResponse.json(fakePeriodSummary())),
   http.get('*/api/therapist/patients/:patientId/period-summary', () => HttpResponse.json(fakePeriodSummary())),
   http.get('*/api/tasks', () => HttpResponse.json({ tasks: [] })),
+  // Sono e humor (DEC-107): nenhum dia registrado e a pergunta do remédio desligada, por padrão.
+  http.get('*/api/daily-check-ins', () => HttpResponse.json({ checkIns: [], tracksMedication: false })),
+  http.get('*/api/therapist/patients/:patientId/daily-check-ins', () => HttpResponse.json({ checkIns: [] })),
+  http.get('*/api/record-links', () => HttpResponse.json({ links: [] })),
+  http.get('*/api/record-links/candidates', () => HttpResponse.json({ records: [] })),
+  http.get('*/api/therapist/patients/:patientId/record-links', () => HttpResponse.json({ links: [] })),
   // Nenhum plano, por padrão (DEC-094, DEC-095): a aba Meus Planos fica escondida.
   http.get('*/api/plans', () => HttpResponse.json({ plans: [] })),
   http.get('*/api/therapist/patients/:patientId/plans', () => HttpResponse.json({ plans: [] })),

@@ -13,12 +13,13 @@ import {
   formatAlternativeDeadline,
 } from './thought-record-labels';
 import type { EmotionEntry, ThoughtRecord } from './thought-records-api';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
 
 // readOnly: visão da terapeuta. Sem botões e sempre com a hora do registro (a SPEC mostra à
 // terapeuta as duas datas; a da situação vem no título do dia).
 type ThoughtRecordCardProps =
   | { record: ThoughtRecord; onDelete: (record: ThoughtRecord) => void; readOnly?: false }
-  | { record: ThoughtRecord; readOnly: true; footer?: ReactNode };
+  | { record: ThoughtRecord; readOnly: true; footer?: ReactNode; patientId?: string };
 
 // Editar e excluir só no dia em que foi registrado (DEC-039). Depois disso, o registro fica
 // fixo e o backend responderia 409: esconder os botões é conforto, não segurança.
@@ -27,6 +28,7 @@ export function ThoughtRecordCard(props: ThoughtRecordCardProps) {
   const { noTimePressure } = useAccessibility();
   const titleId = useId();
   const canChange = !props.readOnly && record.editable;
+  const linkPatientId = props.readOnly ? props.patientId : undefined;
   // Depois do dia, sem alternativa: o botão de adicionar até a consulta, ou o convite para agendar.
   // Com o prazo encerrado, nada: o cartão não fala de prazo perdido (DEC-055).
   const missingAlternative = !props.readOnly && !record.editable && record.alternativeExplanation === null;
@@ -106,6 +108,10 @@ export function ThoughtRecordCard(props: ThoughtRecordCardProps) {
           </Button>
         </div>
       )}
+      {!props.readOnly && <Link to={`/pensamentos/novo?repetir=${record.id}`} className={buttonClasses('secondary', 'self-start')}>
+        Tive esse pensamento de novo
+      </Link>}
+      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="THOUGHT_RECORD" id={record.id} readOnly={props.readOnly} patientId={linkPatientId} />}
     </article>
   );
 }

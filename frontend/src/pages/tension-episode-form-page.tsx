@@ -57,6 +57,8 @@ export function NewTensionEpisodePage() {
   const today = todayInAppZone();
   const day = searchParams.get('dia');
   const initialDate = isValidDateOnly(day) && day <= today ? day : today;
+  const repeatFromId = searchParams.get('repetir') ?? '';
+  const repeated = useTensionEpisode(repeatFromId, Boolean(repeatFromId));
 
   if (!user?.privacyAreas.tensionEpisodes || (create.isError && needsPrivacyConsent(create.error))) {
     return (
@@ -68,14 +70,18 @@ export function NewTensionEpisodePage() {
 
   return (
     <Frame title="Novo episódio">
-      <TensionEpisodeForm
+      {repeatFromId && repeated.isPending && <p aria-busy="true" className="text-muted">Carregando o episódio anterior…</p>}
+      {repeatFromId && repeated.isError && <Alert tone="attention">Não foi possível carregar o episódio anterior. Volte e tente de novo.</Alert>}
+      {(!repeatFromId || repeated.data) && <TensionEpisodeForm
+        key={repeatFromId || 'new-tension'}
+        initialSituation={repeated.data?.situation}
         initialDate={initialDate}
         submitLabel="Salvar episódio"
         pending={create.isPending}
         apiError={formError(create.error)}
         cancelTo="/tensao"
-        onSubmit={(input) => create.mutate(input, { onSuccess: (episode) => backToWeek(episode, 'Registro salvo.') })}
-      />
+        onSubmit={(input) => create.mutate({ ...input, ...(repeatFromId && { repeatFromId }) }, { onSuccess: (episode) => backToWeek(episode, 'Registro salvo.') })}
+      />}
     </Frame>
   );
 }

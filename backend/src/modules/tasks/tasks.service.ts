@@ -2,6 +2,7 @@ import { AppError } from '../../errors/app-error.js';
 import type { HomeworkTask, Prisma, SharedArea } from '../../generated/prisma/client.js';
 import { todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
+import { removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import { loadAgenda } from '../appointments/appointments.service.js';
 import { scheduledSessionsFrom, type Session } from '../appointments/sessions.js';
 import { deadlineFor, deadlineInstant, effectiveDeadline } from '../thought-records/thought-records.service.js';
@@ -106,6 +107,7 @@ export function createTasksService() {
     await change(userId, id, async (tx, task) => {
       if (task.respondedAt) throw answered();
       await tx.homeworkTask.delete({ where: { id, userId } });
+      await removeRecordLinks(tx, userId, 'TASK', id);
     });
   }
   async function respond(userId: string, id: string, input: TaskResponseInput) {

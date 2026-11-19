@@ -149,7 +149,7 @@ describe('RecordsPage: ações por estado', () => {
     expect(within(card).getByRole('button', { name: 'Editar' })).toBeInTheDocument();
   });
 
-  it.each(['CONCLUIDA', 'NAO_REALIZADA'] as const)('%s é só leitura: nenhum botão', async (status) => {
+  it.each(['CONCLUIDA', 'NAO_REALIZADA'] as const)('%s não pode ser editada nem excluída', async (status) => {
     weekHandler([
       fakeActivity({
         name: 'Registro final',
@@ -157,14 +157,14 @@ describe('RecordsPage: ações por estado', () => {
         wantBefore: 3,
         ...(status === 'CONCLUIDA' ? { pleasure: 7, achievement: 8 } : {}),
         observation: 'Choveu um pouco.',
-        // Fora do prazo das fotos (DEC-104): sem nenhum botão. Com o prazo aberto, só os das fotos.
+        // Fora do prazo das fotos (DEC-104): sem ação de foto; a ligação continua disponível.
         photosOpen: false,
       }),
     ]);
     renderRoute('/registros');
 
     const card = await findCard('Registro final');
-    expect(within(card).queryAllByRole('button')).toHaveLength(0);
+    expect(within(card).getAllByRole('button').map((button) => button.textContent)).toEqual(['Ligar a outro registro']);
     expect(within(card).getByText('Choveu um pouco.')).toBeInTheDocument();
   });
 

@@ -18,6 +18,8 @@ export const AREA_LABEL: Record<SharedArea, string> = {
   APPOINTMENTS: 'Agenda de consultas (com os motivos)',
   PLANS: 'Meus Planos',
   TASKS: 'Tarefas',
+  SLEEP_MOOD: 'Sono e humor',
+  MEDICATION: 'Remédio (se tomou como combinado)',
 };
 
 // O primeiro nome, para os textos curtos ("O que Ana pode ver").

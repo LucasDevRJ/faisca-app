@@ -5,9 +5,10 @@ import { usePlans } from '../features/plans/use-plans';
 import { useAccessibility } from '../features/profile/use-profile';
 
 // No celular, as abas ficam em grade: 2×2 com quatro (DEC-052) e 3 colunas com cinco ou seis
-// (DEC-095); no computador, uma linha só. Texto menor no celular.
+// (DEC-095); no computador, o nome nunca quebra: cada aba tem uma linha só e as sete cabem numa
+// fileira. Se não couberem (fonte grande), passam para a fileira de baixo em vez de esticar.
 const tabClass = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-11 items-center justify-center rounded-md px-2 text-center text-sm font-medium sm:px-4 sm:text-base ${
+  `flex min-h-11 items-center justify-center rounded-md px-2 text-center text-sm font-medium sm:flex-auto sm:whitespace-nowrap sm:px-3 ${
     isActive ? 'bg-primary text-on-primary' : 'border border-border bg-surface text-text hover:bg-bg'
   }`;
 
@@ -19,6 +20,7 @@ const GATED: Record<string, PrivacyArea> = {
   '/tensao': 'tensionEpisodes',
   '/acao': 'actions',
   '/tarefas': 'tasks',
+  '/sono-humor': 'sleepMood',
 };
 
 function gatedAreaOf(pathname: string): PrivacyArea | undefined {
@@ -51,7 +53,7 @@ export function PatientTabsLayout() {
   const search = kept.size ? `?${kept}` : '';
   return (
     <>
-      <nav aria-label="Registros" className={`grid grid-cols-3 gap-2 sm:flex`}>
+      <nav aria-label="Registros" className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
         <NavLink to={{ pathname: '/registros', search }} className={tabClass}>
           Atividades
         </NavLink>
@@ -65,6 +67,9 @@ export function PatientTabsLayout() {
           Ação
         </NavLink>
         <NavLink to="/tarefas" end className={tabClass}>Tarefas</NavLink>
+        <NavLink to={{ pathname: '/sono-humor', search }} end className={tabClass}>
+          Sono e humor
+        </NavLink>
         {showPlans && (
           // Sem `end`: a aba continua marcada nos registros de um plano (/planos/:id).
           <NavLink to="/planos" className={tabClass}>

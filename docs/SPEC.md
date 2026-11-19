@@ -189,6 +189,26 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   de vocalizar ao longo da semana, com os dias de consulta marcados.
 - Usar os episódios exige ter aceitado uma versão do aviso de privacidade que os cite.
 
+## Ligações entre registros e repetições (DEC-111; #207 e #166)
+- O paciente pode ligar dois registros próprios de qualquer área: Atividades, Pensamentos, Tensão,
+  Ação, Meus Planos (plano ou registro), Tarefas, Sono e humor ou Remédio do dia. Agenda, perfil,
+  fotos e textos do mural não são registros ligáveis. A ligação não pede justificativa.
+- A ligação é bidirecional e pode ser removida pelo paciente; não altera nenhum dos registros.
+  Identificadores de registros de pacientes diferentes nunca podem ser ligados.
+- A psicóloga só lê uma ligação quando o vínculo está ativo, as duas áreas estão compartilhadas e
+  paciente e psicóloga aceitaram as versões de privacidade que cobrem as duas áreas. Se uma ponta
+  estiver oculta, a ligação inteira não aparece. Profissionais não criam, editam nem removem ligações.
+- “Tive esse pensamento de novo” cria um novo RPD com a data de hoje, situação em branco e cópia do
+  pensamento automático, crença, emoções, comportamento e consequência. A explicação alternativa
+  anterior aparece apenas como lembrete. “Isso aconteceu de novo” cria novo episódio de tensão com a
+  situação anterior preenchida. Nenhum registro anterior é alterado.
+- Repetições de RPD e Tensão pertencem à mesma família e usam a mesma estrutura de ligações. A
+  evolução mostra crença e intensidades das emoções no RPD e intensidade da tensão em cada episódio.
+  A nova ocorrência continua aparecendo como não lida para a profissional. Ao apagar a raiz, a
+  ocorrência sobrevivente mais antiga vira a nova raiz; apagar uma filha remove só sua ligação.
+- O seletor começa com registros próximos à data do registro aberto e permite ampliar o período.
+  Ligações funcionam com registros finais. Apagar qualquer registro também apaga suas ligações.
+
 ## Ação
 Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das atividades (DEC-051).
 - **Tipo** (obrigatório, um só): **Prazer** (algo que se gosta de fazer), **Conexão** (aproximar-se
@@ -278,6 +298,20 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - Aviso **2026-11.6** com área `tasks`, texto e aceite para paciente e profissional.
   Não bloqueia áreas cujo aviso já foi aceito. Textos e status de resposta fora dos logs; sem
   notificação nesta entrega. Fotos e ligação a outras áreas continuam na #151.
+
+## Sono, humor e remédio (DEC-107, #188 e #171)
+- Um registro por dia, todo opcional: a hora em que deitou e a hora em que acordou (as horas de sono
+  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra para o dia e, para quem liga a
+  opção em Conta, "Tomou o remédio como combinado?" (Sim, Esqueci algum ou Hoje não). A noite pertence
+  ao dia em que a pessoa acordou.
+- O paciente registra e edita os últimos 7 dias. Sem cobrança, sem sequência e sem lembrete diário.
+- O Faísca não guarda nome, dose nem efeito de remédio.
+- Duas áreas no vínculo, "Sono e humor" e "Remédio", fechadas para todas as profissionais até o
+  paciente liberar. A profissional só lê, sem "Lido". As duas entram no resumo do período, sem a
+  palavra do dia.
+- **Telas (DEC-108):** o cartão "Sono e humor de hoje" em Meus registros; a aba "Sono e humor", com o
+  gráfico das horas de sono e do humor e os dias; a caixa "Registrar se tomei o remédio" em Conta
+  (desligar só esconde a pergunta). Na profissional, a aba "Sono e humor" e os blocos no resumo.
 
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados

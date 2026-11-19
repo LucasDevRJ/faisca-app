@@ -87,6 +87,7 @@ describe('/tensao', () => {
       'Tensão',
       'Ação',
       'Tarefas',
+      'Sono e humor',
     ]);
     expect(within(tabs).getByRole('link', { name: 'Tensão' })).toHaveAttribute('aria-current', 'page');
     expect(await screen.findByRole('article', { name: 'Episódio: Fila do mercado' })).toBeInTheDocument();
@@ -193,7 +194,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
     expect(banner).toHaveTextContent(
-      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades e as Tarefas. Você só precisa aceitar a nova versão para usar essas partes.',
+      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor e o Remédio do dia. Você só precisa aceitar a nova versão para usar essas partes.',
     );
   });
 
@@ -202,7 +203,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     renderRoute('/registros');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades e as Tarefas');
+    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor e o Remédio do dia');
     expect(banner).toHaveTextContent('essas partes');
   });
 

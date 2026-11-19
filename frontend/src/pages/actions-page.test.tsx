@@ -116,7 +116,7 @@ describe('/acao', () => {
     renderRoute('/acao');
 
     const tabs = await screen.findByRole('navigation', { name: 'Registros' });
-    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas']);
+    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas', 'Sono e humor']);
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
 
     const goal = await screen.findByRole('region', { name: 'Neste ciclo' });
@@ -128,7 +128,7 @@ describe('/acao', () => {
     const done = screen.getByRole('article', { name: 'Ouvir um disco' });
     expect(done).toHaveTextContent('Esperava3');
     expect(done).toHaveTextContent('Prazer7');
-    expect(within(done).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(done).getByRole('button', { name: 'Ligar a outro registro' })).toBeInTheDocument();
     const notDone = screen.getByRole('article', { name: 'Café com amiga' });
     expect(notDone).toHaveTextContent('Não deu desta vez');
     expect(notDone).toHaveTextContent('Ela desmarcou.');

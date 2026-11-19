@@ -43,6 +43,20 @@ export type ActionsStats = {
 
 export type PlansStats = { entries: number; plans: number };
 
+// Sono e humor (DEC-107): a série vai para o gráfico, sem a palavra do dia.
+export type SleepMoodStats = {
+  nights: number;
+  avgSleepMinutes: number | null;
+  avgSleepQuality: number | null;
+  moodDays: number;
+  avgMood: number | null;
+  minMood: number | null;
+  maxMood: number | null;
+  series: { date: string; sleepMinutes: number | null; sleepQuality: number | null; mood: number | null }[];
+};
+
+export type MedicationStats = { days: number; taken: number; forgotSome: number; notTaken: number };
+
 export type PeriodSummary = {
   period: DateRange;
   previousPeriod: DateRange;
@@ -52,6 +66,8 @@ export type PeriodSummary = {
   tensionEpisodes: Comparison<TensionEpisodesStats> | null;
   actions: Comparison<ActionsStats> | null;
   plans: Comparison<PlansStats> | null;
+  sleepMood: Comparison<SleepMoodStats> | null;
+  medication: Comparison<MedicationStats> | null;
 };
 
 // "Meu resumo": a API usa a sessão, o front nunca manda o id.
