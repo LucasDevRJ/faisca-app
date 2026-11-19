@@ -334,6 +334,30 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - Mostra a lista de atividades e um gráfico comparando vontade × prazer × realização.
 - As notas usam uma única cor que varia de intensidade (sem vermelho/verde).
 
+## Buscar nos registros (DEC-112, #152)
+- Paciente busca nos próprios registros; a terapeuta só pesquisa os registros de um paciente com
+  vínculo ativo e nas áreas liberadas pelo paciente, com os aceites de privacidade válidos para
+  ambas as contas. A busca nunca marca o registro como lido.
+- Tipos atuais: Atividades, Pensamentos, Tensão, Ação, Sobre mim, registros do Meus Planos, Tarefas,
+  Sono e humor e Remédio do dia. Cada área respeita suas caixas de compartilhamento e aceites; uma
+  busca conjunta não pode revelar resultado de uma área fechada.
+- O termo é obrigatório (até 120 caracteres) e vai no corpo de `POST`, nunca na URL. A busca não é
+  gravada em banco, `localStorage`, `sessionStorage` nem no histórico da URL; o app não mantém
+  buscas recentes. A API carrega apenas os campos necessários, procura em memória e não faz busca
+  textual no SQL, mantendo compatibilidade com futura criptografia dos registros.
+- Sem período informado, busca os últimos 90 dias. É possível escolher um intervalo de até 367 dias
+  e filtrar por tipo, emoção e intensidade mínima (quando o registro tem esse campo). Resultados são
+  paginados, 20 por página (máximo 50), do mais novo ao mais antigo; a interface mostra um trecho
+  com a correspondência destacada e permite expandir o registro completo no contexto da busca.
+- A comparação ignora caixa e acentos. Também aproxima flexões comuns de gênero terminadas em “a”
+  ou “o” (por exemplo, “ansiosa” encontra “ansioso”), sem IA nem envio a serviço externo.
+- A terapeuta pode filtrar os registros para ler. Esse filtro cobre apenas registros que entram no
+  Para ler e que ainda não foram lidos ou foram atualizados depois da leitura; tarefas só entram
+  nessa lista depois de respondidas. Atividades e dados diários não têm marca de leitura.
+- A busca da terapeuta usa um `POST` estritamente de leitura para manter o termo fora da URL. Ele
+  passa pela cadeia de sessão, perfil e vínculo ativo e só devolve registros filtrados pelas áreas
+  e aceites; nenhuma outra escrita de terapeuta é permitida.
+
 ## Visão da terapeuta
 - Lista de pacientes com vínculo ativo. Os dados do paciente (nome etc.) vêm da conta dele, nada é digitado pela terapeuta.
 - Por paciente, **só as áreas que ele liberou para ela** (DEC-097, DEC-099); sem nenhuma, a página

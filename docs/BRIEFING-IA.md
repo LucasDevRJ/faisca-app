@@ -188,6 +188,10 @@ tensão terão atalhos para criar uma nova ocorrência sem alterar a anterior; o
 evolução de crença, emoções e tensão. Ainda não publicado.
 
 
+**Em desenvolvimento — Busca nos registros (#152):** paciente e psicóloga poderão localizar registros
+por texto, período e filtros. Para a psicóloga, os resultados respeitam vínculo, áreas compartilhadas
+e aceites de privacidade; o termo não é guardado no histórico nem enviado pela URL. Ainda não publicado.
+
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.

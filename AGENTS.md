@@ -56,7 +56,9 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    psicóloga** criando um plano para o paciente (`POST /therapist/patients/:patientId/plans`, DEC-102).
    Essa última rota exige vínculo ativo, área Meus Planos liberada e aceite da área pelo paciente e
    pela psicóloga; ela não pode editar planos nem criar registros. O plano pertence ao paciente, que
-   continua podendo editar, encerrar ou apagar.
+   continua podendo editar, encerrar ou apagar. Exceção de leitura: `POST
+   /therapist/patients/:patientId/records/search` apenas pesquisa com termo no corpo, sem gravar ou
+   alterar registros, e mantém as mesmas verificações de vínculo, área e aceite de cada resultado.
    No contexto de paciente, só os próprios dados.
    Toda rota nova com dado de paciente precisa de teste de autorização (caso permitido e negado).
 2. **Registros finais são imutáveis.** Editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA retorna 409.

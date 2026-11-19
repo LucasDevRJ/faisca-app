@@ -21,6 +21,7 @@ import { EditPlanEntryPage, NewPlanEntryPage } from '../pages/plan-entry-form-pa
 import { EditPlanPage, NewPlanPage } from '../pages/plan-form-page';
 import { PlanPage } from '../pages/plan-page';
 import { TasksPage } from '../pages/tasks-page';
+import { RecordSearchPage } from '../pages/record-search-page';
 import { SleepMoodPage } from '../pages/sleep-mood-page';
 import { PlansPage } from '../pages/plans-page';
 import { RecordsPage } from '../pages/records-page';
@@ -57,6 +58,7 @@ export const routes = [
                     element: <PatientTabsLayout />,
                     children: [
                       { path: 'registros', element: <RecordsPage /> },
+                      { path: 'buscar', element: <RecordSearchPage /> },
                       { path: 'pensamentos', element: <ThoughtsPage /> },
                       { path: 'tensao', element: <TensionPage /> },
                       { path: 'acao', element: <ActionsPage /> },
@@ -87,6 +89,7 @@ export const routes = [
                 children: [
                   { path: 'pacientes', element: <PatientsPage /> },
                   { path: 'pacientes/:patientId', element: <PatientPage /> },
+                  { path: 'pacientes/:patientId/buscar', element: <RecordSearchPage audience="therapist" /> },
                   // Mural de avisos da terapeuta (DEC-079, DEC-080).
                   { path: 'mural', element: <MuralPage /> },
                 ],

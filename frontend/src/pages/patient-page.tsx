@@ -259,6 +259,11 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
           <p className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</p>
         </div>
       </section>
+      {shared.size > 0 && (
+        <Link to={`/pacientes/${patientId}/buscar`} className={buttonClasses('secondary', 'self-start')}>
+          Buscar nos registros
+        </Link>
+      )}
 
       {shared.has('ABOUT_ME') && (
         <PatientAboutMe patientId={patientId} firstName={firstName ?? patient.name} consented={aboutConsented} />
