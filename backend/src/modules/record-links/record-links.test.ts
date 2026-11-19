@@ -53,6 +53,8 @@ describe('ligações entre registros', () => {
   });
 
   it('não expõe ligações de áreas sem aceite de privacidade', async () => {
+    // Versão anterior à que cita sono, humor e remédio (2026-11.7, DEC-108): sem esse aceite.
+    await prisma.user.update({ where: { id: patientId }, data: { privacyVersion: '2026-11.6' } });
     const patient = await login('ligacoes@faisca.test');
     const checkIn = await prisma.dailyCheckIn.create({ data: {
       userId: patientId, checkInDate: dateOnlyToDate(todayInAppZone()), sleepQuality: 4, mood: 3,
