@@ -37,6 +37,7 @@ export type PublicUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
+  professionalKind: User['professionalKind'];
   // Aceitou a versão atual do aviso? Serve para a faixa "o aviso mudou" no app.
   privacyUpToDate: boolean;
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o RPD e os episódios de tensão
@@ -60,6 +61,7 @@ export function toPublicUser(
     | 'email'
     | 'hasPatientProfile'
     | 'hasTherapistProfile'
+    | 'professionalKind'
     | 'privacyVersion'
     | 'seenAnnouncement'
     | 'palette'
@@ -76,6 +78,7 @@ export function toPublicUser(
     name: user.name,
     email: user.email,
     profiles: { patient: user.hasPatientProfile, therapist: user.hasTherapistProfile },
+    professionalKind: user.professionalKind,
     privacyUpToDate: user.privacyVersion === PRIVACY_VERSION,
     privacyAreas: privacyAreas(user.privacyVersion),
     pendingAnnouncement: pendingAnnouncement(user.seenAnnouncement, {

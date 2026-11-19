@@ -72,7 +72,7 @@ function recordWrites(responses: Partial<Record<string, (body: unknown) => Respo
 }
 
 describe('/tensao', () => {
-  it('cinco abas; a semana mostra só os dias com episódio', async () => {
+  it('sete abas; a semana mostra só os dias com episódio', async () => {
     const calls = weekHandler([
       fakeTensionEpisode({ situation: 'Fila do mercado', episodeDate: '2026-09-22' }),
       fakeTensionEpisode({ situation: 'Reunião', episodeDate: '2026-09-24' }),
@@ -88,6 +88,7 @@ describe('/tensao', () => {
       'Ação',
       'Tarefas',
       'Sono e humor',
+      'Comunidade',
     ]);
     expect(within(tabs).getByRole('link', { name: 'Tensão' })).toHaveAttribute('aria-current', 'page');
     expect(await screen.findByRole('article', { name: 'Episódio: Fila do mercado' })).toBeInTheDocument();
@@ -194,7 +195,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
     expect(banner).toHaveTextContent(
-      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor e o Remédio do dia. Você só precisa aceitar a nova versão para usar essas partes.',
+      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor, o Remédio do dia e a Comunidade. Você só precisa aceitar a nova versão para usar essas partes.',
     );
   });
 
@@ -203,7 +204,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     renderRoute('/registros');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor e o Remédio do dia');
+    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor, o Remédio do dia e a Comunidade');
     expect(banner).toHaveTextContent('essas partes');
   });
 

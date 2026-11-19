@@ -20,6 +20,14 @@ export type AnnouncementText = {
 export type Profiles = { patient: boolean; therapist: boolean };
 
 export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
+  '2026-11-comunidade': {
+    title: 'Comunidade de apoio',
+    icon: '💬',
+    date: '2026-11-19',
+    patient: <p>Você pode participar da comunidade opcional da sua psicóloga com um apelido. As publicações e os comentários passam por revisão humana antes de aparecer. Você escolhe se quer avisar o grupo quando entrar.</p>,
+    therapist: <p>Agora você pode criar uma comunidade opcional para pacientes adultos com vínculo ativo. A entrada depende de aprovação, e as publicações e os comentários passam por revisão humana antes de aparecer.</p>,
+    link: { to: '/comunidade', label: 'Abrir comunidade' },
+  },
   '2026-11-sono-humor': {
     title: 'Sono e humor', date: '2026-11-18',
     patient: <p>Registre como dormiu e como está o dia em menos de um minuto, no cartão de Meus registros. Se quiser, ligue em Conta a pergunta “Tomou o remédio como combinado?”. Você escolhe com quais profissionais compartilhar.</p>,
