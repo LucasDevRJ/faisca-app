@@ -7,7 +7,7 @@ import { useAccessibility } from '../features/profile/use-profile';
 // No celular, as abas ficam em grade de três colunas. No computador, o nome nunca quebra: cada aba
 // tem uma linha só e, se não couberem (fonte grande), passam para a fileira de baixo em vez de esticar.
 const tabClass = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-11 items-center justify-center rounded-md px-2 text-center text-sm font-medium sm:flex-auto sm:whitespace-nowrap sm:px-3 ${
+  `flex min-h-11 items-center justify-center rounded-md px-2 text-center text-sm font-medium sm:flex-none sm:whitespace-nowrap sm:px-3 ${
     isActive ? 'bg-primary text-on-primary' : 'border border-border bg-surface text-text hover:bg-bg'
   }`;
 
