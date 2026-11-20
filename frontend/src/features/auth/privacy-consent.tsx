@@ -24,6 +24,7 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   sleepMood: 'o Sono e humor',
   medication: 'o Remédio do dia',
   community: 'a Comunidade',
+  medications: 'os Remédios e o que sinto',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
@@ -146,6 +147,17 @@ const CONSENT_TEXT: Record<PrivacyArea, { patient: ConsentCopy; therapist: Conse
     therapist: {
       intro: 'Para ver se seus pacientes tomaram o remédio como combinado, leia o que mudou e confirme.',
       scope: 'inclusive com o acesso a se meus pacientes tomaram o remédio como combinado como dado de saúde.',
+    },
+  },
+  // Remédios e o que sinto (DEC-114, DEC-115): nome, dose e horário, as mudanças e o que a pessoa sente.
+  medications: {
+    patient: {
+      intro: 'Para anotar seus remédios e o que tem sentido, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso dos meus remédios, das mudanças e do que eu anotar que sinto como dados de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver os remédios e o que seus pacientes têm sentido, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso aos remédios, às mudanças e ao que meus pacientes anotarem que sentem como dados de saúde.',
     },
   },
   community: {

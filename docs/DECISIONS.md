@@ -2601,8 +2601,38 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   arquivos; as telas, o texto do aviso e a novidade `2026-11-remedios` vêm na DEC-115. As escritas
   ainda não têm o limite por minuto do #216.
 
-## DEC-115 — Remédios, mudanças e o que o paciente sente (telas)
-- **Decisão (#171):** em construção.
+## DEC-115 — Remédios, mudanças e o que o paciente sente (telas) e aviso de privacidade versão 16
+- **Decisão (#171, sobre a API da DEC-114, desenho e textos aprovados pelo usuário em 19/11/2026):**
+  - **na aba Sono e humor**, sem aba nova (as abas do paciente já estão no limite): as seções **"Meus
+    remédios"** e **"O que tenho sentido"**, só para quem liga "Anotar meus remédios e o que sinto" em
+    Conta → Sono e humor (desligado; desligar só esconde). Os remédios que pararam ficam recolhidos em
+    "Remédios que já tomei";
+  - **as janelas**: anotar e editar remédio (a dose muda só por "Registrar mudança", para a data ficar
+    anotada), registrar e editar mudança ("Mudou a dose" e "Parei"; num remédio parado, só "Voltei a
+    tomar"), anotar e editar o que sente (com "Começou depois de algum remédio ou mudança?", com "Não
+    sei, ou nenhum"), "Como está agora?" (a intensidade num dia) e "Já passou". Todas lembram
+    "Mudanças no remédio, só com quem receitou." e as do que se sente trazem o texto de cuidado ("não
+    avalia remédios nem sintomas", "Em emergência, ligue 192 (SAMU)");
+  - **no cartão**: "Desde 10/11 · 5 dias depois de mudar a dose de X" e a evolução "7 → 5 → 3", com as
+    datas. Nada de "efeito colateral", alerta ou cobrança;
+  - **no gráfico de sono e humor**: uma linha pontilhada no dia de cada mudança do período, com o texto
+    ao tocar e na tabela "Ver os números"; na profissional, só com as duas caixas;
+  - **o cartão "Sono e humor de hoje"** ganha "Anotar o que estou sentindo", para quem ligou a opção;
+  - **a profissional**: a aba Sono e humor aparece com qualquer uma das três caixas; com "Remédios e o
+    que sinto", a seção "Remédios e o que sente", só leitura, em terceira pessoa ("Anotações de [nome],
+    sem avaliação do Faísca."). No Resumo do período, o bloco "Remédios e o que sinto" só com números e
+    datas;
+  - **Conta → "O que [nome] pode ver"**: a caixa "Remédios e o que sinto (nome, dose, mudanças e o que
+    sente)";
+  - **aviso de privacidade versão 16** (`2026-11.9` vira a atual): cita os remédios, as mudanças e o que
+    a pessoa sente em "O que guardamos", em "Para quê" e em "Quem vê"; sai "O Faísca não guarda o nome
+    nem a dose de nenhum remédio.";
+  - **novidade `2026-11-remedios`**, para pacientes e profissionais.
+- **Motivo:** fechar a #171 sobre a API da DEC-114 e trocar a versão do aviso no mesmo PR que mostra o
+  texto, para ninguém aceitar o que ainda não leu.
+- **Limite conhecido:** os sintomas novos e as mudanças no "Para ler" continuam esperando a paginação
+  do "Para ler" (#216). Nos minutos em que o front novo já está no ar e a API ainda não, o aceite da
+  versão 16 responde que o aviso mudou, até a API subir (como nas versões anteriores, DEC-056).
 
 ## DEC-116 — Override da `effect` na CLI do Prisma (19/11/2026)
 - **Decisão:** `overrides` no `backend/package.json` também para `effect` (^3.22.5), no mesmo padrão da

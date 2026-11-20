@@ -13,6 +13,7 @@
 // - 2026-11-tarefas: Tarefas e respostas do paciente (DEC-106), para paciente e terapeuta.
 // - 2026-11-sono-humor: Sono, humor e remédio do dia (DEC-108), para paciente e terapeuta.
 // - 2026-11-comunidade: comunidade de apoio entre pacientes (DEC-113), para paciente e psicóloga.
+// - 2026-11-remedios: Remédios e o que sinto (DEC-115), para paciente e terapeuta.
 export const ANNOUNCEMENTS = [
   '2026-10-explicacao-alternativa',
   '2026-10-lido',
@@ -26,6 +27,7 @@ export const ANNOUNCEMENTS = [
   '2026-11-tarefas',
   '2026-11-sono-humor',
   '2026-11-comunidade',
+  '2026-11-remedios',
 ] as const;
 
 export type Announcement = (typeof ANNOUNCEMENTS)[number];
@@ -46,6 +48,7 @@ const AUDIENCE: Record<Announcement, Audience> = {
   '2026-11-tarefas': 'TODOS',
   '2026-11-sono-humor': 'TODOS',
   '2026-11-comunidade': 'TODOS',
+  '2026-11-remedios': 'TODOS',
 };
 
 export type Profiles = { patient: boolean; therapist: boolean };

@@ -245,6 +245,7 @@ const AREA_PATH: Record<SummaryArea, string | null> = {
   plans: '/planos',
   sleepMood: '/sono-humor',
   medication: '/sono-humor',
+  medications: '/sono-humor',
 };
 
 function AreaLink({ area, search }: { area: SummaryArea; search: string }) {

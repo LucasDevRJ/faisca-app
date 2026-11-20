@@ -8,6 +8,8 @@ import { checkInSummary } from './check-in-labels';
 import { CheckInDialog } from './check-in-dialog';
 import { needsPrivacyConsent } from '../thought-records/use-thought-records';
 import { useCheckIns } from './use-daily-check-ins';
+import { SymptomDialog } from '../medications/medication-dialogs';
+import { useMedications } from '../medications/use-medications';
 
 // "Sono e humor de hoje" em Meus registros (DEC-108): o caminho rápido do dia a dia. Os outros dias
 // e o gráfico ficam na aba Sono e humor. Sem cobrança: nada de "você não registrou ontem".
@@ -17,6 +19,9 @@ export function TodayCheckInCard({ today }: { today: string }) {
   const query = useCheckIns({ from: today, to: today }, consented);
   const [open, setOpen] = useState(false);
   const [notice, setNotice] = useState('');
+  // "Anotar o que estou sentindo" (DEC-115), para quem ligou os remédios em Conta.
+  const medications = useMedications(Boolean(user?.privacyAreas.medications));
+  const [symptomOpen, setSymptomOpen] = useState(false);
   const checkIn = query.data?.checkIns.find((item) => item.date === today) ?? null;
 
   return (
@@ -60,6 +65,18 @@ export function TodayCheckInCard({ today }: { today: string }) {
         >
           Ver os outros dias
         </Link>
+        {medications.data?.listsMedications && (
+          <Button
+            variant="ghost"
+            className="px-0 underline"
+            onClick={() => {
+              setNotice('');
+              setSymptomOpen(true);
+            }}
+          >
+            Anotar o que estou sentindo
+          </Button>
+        )}
       </div>
 
       {open && !consented && (
@@ -75,6 +92,16 @@ export function TodayCheckInCard({ today }: { today: string }) {
           onClose={() => setOpen(false)}
           onDone={(message) => {
             setOpen(false);
+            setNotice(message);
+          }}
+        />
+      )}
+      {symptomOpen && medications.data && (
+        <SymptomDialog
+          medications={medications.data.medications}
+          onClose={() => setSymptomOpen(false)}
+          onDone={(message) => {
+            setSymptomOpen(false);
             setNotice(message);
           }}
         />

@@ -55,6 +55,7 @@ describe('página "O que há de novo"', () => {
     const entries = screen.getAllByRole('article');
     expect(entries.map((entry) => within(entry).getByRole('heading').textContent)).toEqual([
       'Novidade fictícia mais nova',
+      'Remédios e o que sinto',
       'Comunidade de apoio',
       'Sono e humor',
       'Novidade: fotos nas atividades',
@@ -70,7 +71,8 @@ describe('página "O que há de novo"', () => {
     expect(within(entries[0]!).getByText('30 de novembro de 2026')).toBeInTheDocument();
     expect(within(entries[0]!).getByText('Texto fictício para pacientes.')).toBeInTheDocument();
     expect(within(entries[0]!).queryByText('Texto fictício para terapeutas.')).not.toBeInTheDocument();
-    expect(within(entries[1]!).getByText(/As publicações e os comentários passam por revisão humana/)).toBeInTheDocument();
+    expect(within(entries[1]!).getByText(/O Faísca não avalia remédios nem sintomas/)).toBeInTheDocument();
+    expect(within(entries[2]!).getByText(/As publicações e os comentários passam por revisão humana/)).toBeInTheDocument();
     expect(within(entries.at(-1)!).getByRole('link', { name: 'Ver meus pensamentos' })).toHaveAttribute(
       'href',
       '/pensamentos',

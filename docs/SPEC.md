@@ -338,13 +338,17 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   profissional (psiquiatra ou psicóloga) só lê, em `GET /therapist/patients/:patientId/medications`.
 - **Resumo do período:** remédios em uso no fim do período, as mudanças com data e tipo, sintomas novos
   e os que passaram e a maior intensidade, sem o nome do remédio nem o texto do sintoma.
-- Aviso **2026-11.9** com a área `medications`, conhecido na API e atual no PR das telas (DEC-115).
+- Aviso **2026-11.9** (versão 16) com a área `medications`, atual desde as telas (DEC-115).
 - Rotas do paciente: GET `/medications`, PUT `/medications/settings`, POST `/medications`,
   PATCH/DELETE `/medications/:id`, POST `/medications/:id/changes`, PATCH/DELETE
   `/medications/:id/changes/:changeId`, POST `/symptoms`, PATCH/DELETE `/symptoms/:id` e PUT/DELETE
   `/symptoms/:id/checks/:date`.
+- **Telas (DEC-115):** na aba Sono e humor, "Meus remédios" e "O que tenho sentido", para quem liga a
+  opção em Conta; as mudanças do período viram linhas no gráfico; "Anotar o que estou sentindo" no
+  cartão de hoje. Na profissional, a aba Sono e humor aparece com qualquer uma das três caixas, com a
+  seção "Remédios e o que sente" só para leitura e o bloco no Resumo do período.
 - **Para depois:** sintomas novos e mudanças no "Para ler" da profissional, depois da paginação do
-  "Para ler" (#216); as telas (DEC-115).
+  "Para ler" (#216).
 
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados

@@ -1,4 +1,4 @@
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatDayHeading, formatDayMonth } from '../activities/week';
 import { prefersReducedMotion } from '../profile/accessibility';
 import { useAccessibility } from '../profile/use-profile';
@@ -8,20 +8,41 @@ import { formatSleep } from './check-in-labels';
 // resumo. Uma cor só (sálvia) em dois tons, como o gráfico da tensão: a leitura não depende só da
 // cor (linha contínua × tracejada, legenda) e há uma tabela com os mesmos números.
 export type SleepMoodPoint = { date: string; sleepMinutes: number | null; mood: number | null };
+// Mudança no remédio (DEC-115): uma linha tracejada no dia, com o texto ao tocar e na tabela.
+export type ChartMarker = { date: string; label: string };
 
 const SLEEP_COLOR = 'var(--color-score-10)';
 const MOOD_COLOR = 'var(--color-score-6)';
 
-export function SleepMoodChart({ points, title = 'Horas de sono e humor' }: { points: SleepMoodPoint[]; title?: string }) {
+export function SleepMoodChart({
+  points,
+  title = 'Horas de sono e humor',
+  markers = [],
+}: {
+  points: SleepMoodPoint[];
+  title?: string;
+  markers?: ChartMarker[];
+}) {
   const { reducedMotion } = useAccessibility();
   const withData = points.filter((point) => point.sleepMinutes !== null || point.mood !== null);
   if (withData.length === 0) return null;
 
-  const data = withData.map((point) => ({
+  const pointData = withData.map((point) => ({
     date: point.date,
     hours: point.sleepMinutes === null ? null : Math.round((point.sleepMinutes / 60) * 10) / 10,
     mood: point.mood,
   }));
+  // O dia de uma mudança sem sono nem humor entra vazio, para a linha da mudança ter onde ficar.
+  const known = new Set(pointData.map((point) => point.date));
+  const data = [
+    ...pointData,
+    ...markers.filter((marker) => !known.has(marker.date)).map((marker) => ({ date: marker.date, hours: null, mood: null })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
+  const markerText = (date: string) =>
+    markers
+      .filter((marker) => marker.date === date)
+      .map((marker) => marker.label)
+      .join('; ');
   const maxHours = Math.max(12, ...data.map((point) => Math.ceil(point.hours ?? 0)));
   const animate = !prefersReducedMotion(reducedMotion);
 
@@ -29,7 +50,10 @@ export function SleepMoodChart({ points, title = 'Horas de sono e humor' }: { po
     <figure className="flex flex-col gap-3">
       <figcaption>
         <h3 className="font-semibold">{title}</h3>
-        <p className="text-sm text-muted">Horas de sono à esquerda e humor, de 0 a 10, à direita.</p>
+        <p className="text-sm text-muted">
+          Horas de sono à esquerda e humor, de 0 a 10, à direita.
+          {markers.length > 0 && ' A linha pontilhada marca uma mudança no remédio.'}
+        </p>
       </figcaption>
 
       <div className="h-56" aria-hidden="true">
@@ -61,7 +85,10 @@ export function SleepMoodChart({ points, title = 'Horas de sono e humor' }: { po
               width={28}
             />
             <Tooltip
-              labelFormatter={(value) => formatDayHeading(String(value))}
+              labelFormatter={(value) => {
+                const extra = markerText(String(value));
+                return `${formatDayHeading(String(value))}${extra ? ` · ${extra}` : ''}`;
+              }}
               formatter={(value, name) =>
                 name === 'Horas de sono' ? [formatSleep(Math.round(Number(value) * 60)), name] : [value, name]
               }
@@ -78,6 +105,16 @@ export function SleepMoodChart({ points, title = 'Horas de sono e humor' }: { po
               wrapperStyle={{ fontSize: 13 }}
               formatter={(value) => <span style={{ color: 'var(--color-text)' }}>{value}</span>}
             />
+            {[...new Set(markers.map((marker) => marker.date))].map((date) => (
+              <ReferenceLine
+                key={date}
+                yAxisId="hours"
+                x={date}
+                stroke="var(--color-muted)"
+                strokeDasharray="2 3"
+                ifOverflow="extendDomain"
+              />
+            ))}
             <Line
               yAxisId="hours"
               type="linear"
@@ -138,6 +175,18 @@ export function SleepMoodChart({ points, title = 'Horas de sono e humor' }: { po
             ))}
           </tbody>
         </table>
+        {markers.length > 0 && (
+          <div className="mt-3 flex flex-col gap-1">
+            <h4 className="font-medium">Mudanças no remédio</h4>
+            <ul className="flex flex-col gap-0.5">
+              {markers.map((marker) => (
+                <li key={`${marker.date}-${marker.label}`}>
+                  {formatDayMonth(marker.date)}: {marker.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </details>
     </figure>
   );

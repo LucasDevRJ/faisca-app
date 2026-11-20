@@ -12,11 +12,16 @@ import { CheckInDialog } from '../features/daily-check-ins/check-in-dialog';
 import type { CheckIn } from '../features/daily-check-ins/daily-check-ins-api';
 import { SleepMoodChart } from '../features/daily-check-ins/sleep-mood-chart';
 import { useCheckIns } from '../features/daily-check-ins/use-daily-check-ins';
+import { changeMarkers } from '../features/medications/medication-labels';
+import { MedicationsSection } from '../features/medications/medications-section';
+import { useMedications } from '../features/medications/use-medications';
 import { daysInRange } from '../features/therapist/period';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 // "Sono e humor" (DEC-107, DEC-108): o gráfico do período e os dias. Registrar e editar vale para os
 // últimos 7 dias; os mais antigos ficam só para ver. O período segue o ciclo ou a semana (DEC-050).
+// Com "Anotar meus remédios e o que sinto" ligado, entram os remédios e o que sinto (DEC-115), e as
+// mudanças do período viram linhas no gráfico.
 export function SleepMoodPage() {
   const { data: user } = useSession();
   const consented = Boolean(user?.privacyAreas.sleepMood);
@@ -26,6 +31,9 @@ export function SleepMoodPage() {
   const range = period ?? { from: today, to: today };
   const query = useCheckIns(range, consented && period !== null);
   const [editing, setEditing] = useState<{ date: string; checkIn: CheckIn | null } | null>(null);
+  const medications = useMedications(Boolean(user?.privacyAreas.medications));
+  const markers =
+    medications.data?.listsMedications && period ? changeMarkers(medications.data.medications, period) : [];
   const [notice, setNotice] = useState('');
 
   const checkIns = query.data?.checkIns ?? [];
@@ -111,10 +119,17 @@ export function SleepMoodPage() {
               </p>
             ) : (
               <div className="rounded-lg border border-border bg-surface p-4 shadow-soft">
-                <SleepMoodChart points={checkIns} />
+                <SleepMoodChart points={checkIns} markers={markers} />
               </div>
             )}
+          </>
+        )}
 
+        {/* Os remédios têm consulta própria: não somem se a do sono falhar (revisor-telas). */}
+        <MedicationsSection />
+
+        {query.isSuccess && (
+          <>
             <ol className="flex flex-col gap-3">
               {days.map((day) => {
                 const checkIn = byDate.get(day) ?? null;

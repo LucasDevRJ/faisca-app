@@ -20,6 +20,7 @@ export const AREA_LABEL: Record<SharedArea, string> = {
   TASKS: 'Tarefas',
   SLEEP_MOOD: 'Sono e humor',
   MEDICATION: 'Remédio (se tomou como combinado)',
+  MEDICATIONS: 'Remédios e o que sinto (nome, dose, mudanças e o que sente)',
 };
 
 // O primeiro nome, para os textos curtos ("O que Ana pode ver").

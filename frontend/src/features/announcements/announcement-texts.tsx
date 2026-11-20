@@ -28,6 +28,26 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     therapist: <p>Agora você pode criar uma comunidade opcional para pacientes adultos com vínculo ativo. A entrada depende de aprovação, e as publicações e os comentários passam por revisão humana antes de aparecer.</p>,
     link: { to: '/comunidade', label: 'Abrir comunidade' },
   },
+  '2026-11-remedios': {
+    title: 'Remédios e o que sinto',
+    icon: '💊',
+    date: '2026-11-19',
+    patient: (
+      <p>
+        Se quiser, anote em Sono e humor os remédios que toma, as mudanças de dose com data e o que tem sentido, para
+        levar à consulta. Ligue a opção em Conta, em Sono e humor. Você escolhe com quais profissionais compartilhar. O
+        Faísca não avalia remédios nem sintomas.
+      </p>
+    ),
+    therapist: (
+      <p>
+        Os pacientes podem anotar os remédios, as mudanças de dose e o que têm sentido, com a intensidade. Quando
+        liberarem a área “Remédios e o que sinto” para você, isso aparece na aba Sono e humor e no Resumo do período,
+        só para leitura.
+      </p>
+    ),
+    link: { to: '/sono-humor', label: 'Ver meus remédios' },
+  },
   '2026-11-sono-humor': {
     title: 'Sono e humor', date: '2026-11-18',
     patient: <p>Registre como dormiu e como está o dia em menos de um minuto, no cartão de Meus registros. Se quiser, ligue em Conta a pergunta “Tomou o remédio como combinado?”. Você escolhe com quais profissionais compartilhar.</p>,
