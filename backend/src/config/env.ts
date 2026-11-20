@@ -26,6 +26,8 @@ const envSchema = z.object({
     .min(32)
     .refine((value) => !value.startsWith('CHANGE_ME')),
   RESEND_API_KEY: z.string().min(1),
+  // IDs separados por vírgula; só liberar cada novidade depois de ela estar disponível no front.
+  ANNOUNCEMENT_EMAIL_RELEASES: z.string().default(''),
   // O domínio de exemplo nunca é aceito pelo Resend: melhor falhar ao subir do que no primeiro cadastro.
   EMAIL_FROM: z
     .string()

@@ -172,3 +172,25 @@ export function passwordResetEmail(to: string, name: string, token: string): Ema
     text: `Olá, ${name}!\n\nPara criar uma nova senha no Faísca, acesse: ${url}\n\nO link vale por 1 hora. Se não foi você que pediu, pode ignorar: sua senha continua a mesma.`,
   };
 }
+
+// Avisos de novidades importantes (DEC-119): textos cadastrados no código, nunca montados com
+// dados de conta ou conteúdo do paciente. Não há pixel de abertura nem lista de destinatários.
+export function announcementEmail(
+  to: string,
+  subject: string,
+  title: string,
+  summary: string,
+): EmailMessage {
+  const url = new URL('/conta#novidades-email', env.FRONTEND_URL).toString();
+  const paragraphs = [
+    escapeHtml(title),
+    escapeHtml(summary),
+    'Você também pode ver a novidade e o histórico dentro do Faísca. Para parar estes avisos, altere a preferência em Conta.',
+  ];
+  return {
+    to,
+    subject,
+    html: layout(paragraphs, { label: 'Abrir o Faísca', url }),
+    text: `${title}\n\n${summary}\n\nVocê também pode ver a novidade e o histórico dentro do Faísca. Para parar estes avisos, altere a preferência em Conta: ${url}`,
+  };
+}

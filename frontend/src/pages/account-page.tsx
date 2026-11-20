@@ -13,6 +13,7 @@ import { ProfileSection } from '../features/profile/profile-section';
 import { RemindersSection } from '../features/reminders/reminders-section';
 import { MedicationSettingSection } from '../features/daily-check-ins/medication-setting-section';
 import { ProfessionalSection } from '../features/profile/professional-section';
+import { AnnouncementEmailSetting } from '../features/announcements/announcement-email-setting';
 
 const profileInfo = {
   patient: {
@@ -51,6 +52,8 @@ export function AccountPage() {
       <ProfileSection />
 
       <AccessibilitySection />
+
+      <AnnouncementEmailSetting />
 
       {/* Lembretes de manhã e de noite (DEC-089, DEC-090): só para quem é paciente. */}
       {user.profiles.patient && <RemindersSection />}

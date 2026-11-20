@@ -6,6 +6,7 @@ import { createResendMailer } from './lib/mailer.js';
 import { prisma } from './lib/prisma.js';
 import { createWebPushSender } from './lib/web-push.js';
 import { scheduleDeletedAccountsPrune } from './modules/auth/deleted-accounts.js';
+import { createAnnouncementEmailsService, scheduleAnnouncementEmailsJob } from './modules/auth/announcement-emails.service.js';
 import { createRemindersService, scheduleRemindersJob } from './modules/reminders/reminders.service.js';
 
 const mailer = createResendMailer();
@@ -19,12 +20,18 @@ const server = createApp({ mailer, pushSender }).listen(env.PORT, () => {
 const stopPrune = scheduleDeletedAccountsPrune();
 // Agendador dos lembretes a cada 5 minutos (DEC-006, DEC-089).
 const stopReminders = scheduleRemindersJob(createRemindersService(mailer, pushSender));
+// IDs de campanhas só são habilitados depois de a novidade estar disponível no front.
+const releasedAnnouncements = env.ANNOUNCEMENT_EMAIL_RELEASES.split(',').map((id) => id.trim()).filter(Boolean);
+const stopAnnouncementEmails = scheduleAnnouncementEmailsJob(
+  createAnnouncementEmailsService(mailer, undefined, releasedAnnouncements),
+);
 
 // Encerramento gracioso: o Railway manda SIGTERM a cada deploy.
 function shutdown(signal: string) {
   logger.info({ signal }, 'Encerrando a API');
   stopPrune();
   stopReminders();
+  stopAnnouncementEmails();
   server.close(async () => {
     // E-mails que ainda estão saindo depois da resposta (DEC-073): espera um pouco por eles.
     await detachedRunner.idle(5000);

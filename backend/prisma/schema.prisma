@@ -12,71 +12,82 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AnnouncementEmailStatus {
+  PENDING
+  SENDING
+  SENT
+  SKIPPED
+  FAILED
+}
+
 model User {
-  tasks               HomeworkTask[]
-  dailyCheckIns       DailyCheckIn[]
-  medications         Medication[]
-  symptoms            Symptom[]
-  id                  String            @id @default(uuid()) @db.Uuid
-  name                String
+  tasks                       HomeworkTask[]
+  dailyCheckIns               DailyCheckIn[]
+  medications                 Medication[]
+  symptoms                    Symptom[]
+  id                          String            @id @default(uuid()) @db.Uuid
+  name                        String
   // Sempre em minúsculas e sem espaços nas pontas (normalizado no schema Zod).
-  email               String            @unique
-  passwordHash        String
+  email                       String            @unique
+  passwordHash                String
   // Pelo menos um dos dois é true: garantido por CHECK na migration (DEC-013).
-  hasPatientProfile   Boolean           @default(false)
-  hasTherapistProfile Boolean           @default(false)
+  hasPatientProfile           Boolean           @default(false)
+  hasTherapistProfile         Boolean           @default(false)
   // Tipo de profissional (DEC-097): obrigatório com o perfil de terapeuta (CHECK na migration).
   // Quem já era terapeuta virou psicóloga. Muda só sem vínculo ativo.
-  professionalKind    ProfessionalKind?
+  professionalKind            ProfessionalKind?
   // CRP ou CRM, opcional, só para mostrar ao paciente (1 a 30 caracteres, CHECK na migration).
-  councilNumber       String?
+  councilNumber               String?
   // null = e-mail ainda não confirmado; o login é recusado até confirmar.
-  emailConfirmedAt    DateTime?
+  emailConfirmedAt            DateTime?
   // Vai dentro do JWT. Ao redefinir a senha, sobe e derruba as sessões abertas (DEC-025).
-  sessionVersion      Int               @default(0)
+  sessionVersion              Int               @default(0)
   // Consentimento com o aviso de privacidade (LGPD, dado de saúde; DEC-036): quando e qual versão.
   // null só em contas criadas antes do aviso existir.
-  privacyAcceptedAt   DateTime?
-  privacyVersion      String?
+  privacyAcceptedAt           DateTime?
+  privacyVersion              String?
   // A última novidade do app que a pessoa já viu (card de Novidades, DEC-054). Fica no banco, e
   // não no aparelho: no iPhone, o Safari e o app instalado não dividem o armazenamento.
-  seenAnnouncement    String?
+  seenAnnouncement            String?
   // Perfil básico (DEC-061): o nome completo, opcional. O `name` é o "Como podemos te chamar?",
   // que continua sendo o nome mostrado no app.
-  fullName            String?
+  fullName                    String?
   // Paleta de cores escolhida (DEC-063); null = Sálvia, a padrão. Combina com o tema claro/escuro,
   // que continua no aparelho.
-  palette             Palette?
+  palette                     Palette?
   // Ajustes de acessibilidade (DEC-076, issue #87): abertos a todos, desligados por padrão. Ficam
   // na conta para valer em qualquer aparelho.
-  directLanguage      Boolean           @default(false)
-  oneThingAtATime     Boolean           @default(false)
-  comfortableReading  Boolean           @default(false)
-  noTimePressure      Boolean           @default(false)
-  reducedMotion       Boolean           @default(false)
+  directLanguage              Boolean           @default(false)
+  oneThingAtATime             Boolean           @default(false)
+  comfortableReading          Boolean           @default(false)
+  noTimePressure              Boolean           @default(false)
+  reducedMotion               Boolean           @default(false)
   // Sono, humor e remédio (DEC-107): a pergunta "Tomou o remédio como combinado?" só aparece para
   // quem liga esta opção em Conta. Desligada por padrão.
-  tracksMedication    Boolean           @default(false)
+  tracksMedication            Boolean           @default(false)
   // Remédios e o que sinto (DEC-114, #171): a seção só aparece para quem liga "Anotar meus remédios e
   // o que sinto" em Conta. Desligada por padrão; desligar só esconde, o que já foi anotado fica.
-  listsMedications    Boolean           @default(false)
+  listsMedications            Boolean           @default(false)
   // Aviso de login novo por e-mail e push (DEC-091, issue #135): ligado por padrão.
-  loginAlertEnabled   Boolean           @default(true)
+  loginAlertEnabled           Boolean           @default(true)
+  // Avisos de novidades importantes por e-mail (DEC-119), separados dos avisos de conta.
+  announcementEmailsEnabled   Boolean           @default(true)
+  announcementEmailsEnabledAt DateTime?         @default(now())
   // Já entrou alguma vez? O primeiro login de todos não gera aviso de acesso novo (DEC-091).
-  hasLoggedIn         Boolean           @default(false)
+  hasLoggedIn                 Boolean           @default(false)
   // Verificação em duas etapas (DEC-092). Código por e-mail ligado?
-  twoFactorEmail      Boolean           @default(false)
+  twoFactorEmail              Boolean           @default(false)
   // App autenticador: segredo cifrado (AES-256-GCM, chave fora do banco), quando ligou e o último
   // passo de 30 s aceito, para o mesmo código não valer duas vezes. O "pendente" é o da configuração,
   // até a pessoa provar que o app funciona.
-  totpSecret          String?
-  totpEnabledAt       DateTime?
-  totpLastStep        Int?
-  totpPendingSecret   String?
+  totpSecret                  String?
+  totpEnabledAt               DateTime?
+  totpLastStep                Int?
+  totpPendingSecret           String?
   // Último método usado no login ("EMAIL" ou "TOTP"): a tela "Confirme que é você" abre nele.
-  twoFactorLastMethod String?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  twoFactorLastMethod         String?
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
 
   authTokens      AuthToken[]
   activities      Activity[]
@@ -119,11 +130,12 @@ model User {
 
   // Lembretes e notificações (DEC-004, DEC-006, DEC-089): configuração, inscrições de Web Push e
   // registro de envio para idempotência.
-  reminderSettings    ReminderSettings?
-  pushSubscriptions   PushSubscription[]
-  recoveryCodes       RecoveryCode[]
-  twoFactorChallenges TwoFactorChallenge[]
-  notificationLogs    NotificationLog[]
+  reminderSettings            ReminderSettings?
+  pushSubscriptions           PushSubscription[]
+  recoveryCodes               RecoveryCode[]
+  twoFactorChallenges         TwoFactorChallenge[]
+  notificationLogs            NotificationLog[]
+  announcementEmailDeliveries AnnouncementEmailDelivery[]
 
   // Foto de perfil (DEC-061), opcional.
   avatar UserAvatar?
@@ -986,6 +998,36 @@ model NotificationLog {
 
   @@unique([userId, type, referenceDate])
   @@index([referenceDate])
+}
+
+// Um envio por pessoa e novidade. A chave única e a chave de idempotência do Resend permitem
+// retomar tentativas sem repetir a mensagem (DEC-119).
+model AnnouncementEmailDelivery {
+  id             String                  @id @default(uuid()) @db.Uuid
+  userId         String                  @db.Uuid
+  announcementId String
+  status         AnnouncementEmailStatus @default(PENDING)
+  attempts       Int                     @default(0)
+  nextAttemptAt  DateTime                @default(now())
+  lockedUntil    DateTime?
+  firstAttemptAt DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement AnnouncementRelease @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, announcementId])
+  @@index([status, nextAttemptAt])
+}
+
+// Data em que a novidade entrou no ar. Criada no primeiro início da API após o front publicar o
+// mesmo id (DEC-056), exclui contas criadas depois e evita avisos retroativos (DEC-119).
+model AnnouncementRelease {
+  id          String                      @id
+  publishedAt DateTime                    @default(now())
+  deliveries  AnnouncementEmailDelivery[]
 }
 
 // Códigos de recuperação do 2FA (DEC-092): 10 por vez, cada um vale uma vez. Só o HMAC é guardado.

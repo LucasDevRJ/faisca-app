@@ -90,6 +90,7 @@ Gere quatro: a senha do `faisca_migrator`, a senha do `faisca_app`, o `JWT_SECRE
    | `LINK_CODE_SECRET` | outro segredo do passo 1 |
    | `RESEND_API_KEY` | chave de produção do passo 4 |
    | `EMAIL_FROM` | `Faísca <nao-responda@minhafaisca.com.br>` |
+   | `ANNOUNCEMENT_EMAIL_RELEASES` | IDs de novidades com e-mail liberado, separados por vírgula. Deixe vazia até o front publicar a novidade; depois inclua o ID, por exemplo `2026-11-novidades-email` (DEC-119). |
    | `TRUST_PROXY_HOPS` | `2` (Vercel + borda do Railway; confirmado no passo 7) |
    | `TWO_FACTOR_SECRET` | outro segredo do passo 1, diferente dos demais (verificação em duas etapas, DEC-092; sem ela, o 2FA fica indisponível). **Nunca troque:** os apps autenticadores e os códigos de recuperação deixariam de funcionar. Guarde no cofre de senhas |
    | `COMMUNITY_MODERATOR_EMAILS` | lista separada por vírgulas dos e-mails das contas autorizadas a revisar conteúdo da comunidade (DEC-113). Cada conta precisa ter verificação em duas etapas ativa. Deixe vazia até escolher e configurar a pessoa moderadora. |
