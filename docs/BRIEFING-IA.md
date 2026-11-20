@@ -65,6 +65,7 @@ Na prática clínica tradicional:
   - Se não conseguiu fazer, marca **"Não aconteceu"** (`NAO_REALIZADA`) com o diálogo acolhedor *"Tudo bem, quer contar o que aconteceu?"* e observação opcional.
   - Também permite criar registro retroativo de algo já feito.
   - **Fotos das atividades:** o paciente pode adicionar **até 10 fotos** a uma atividade, como lembrança do que fez: enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta. Numa atividade que não aconteceu, dá para tirar as fotos que já estavam lá. Elas aparecem só para a profissional a quem o paciente liberar.
+  - **Retorno calmo ao concluir:** ao contar como foi uma atividade (ou avaliar uma Ação), o cartão assenta e um ✓ se desenha uma vez num círculo verde-sálvia; o leitor de tela ouve *"Registro guardado."*. É reconhecimento do esforço, sem confete, "parabéns" ou pontos. Com **Menos movimento** ligado, o ✓ aparece pronto, sem animação.
   - Exibe um **gráfico comparativo** (*Vontade antes × Prazer × Realização*) em barras horizontais no celular e colunas lado a lado no tablet/computador, usando uma única cor em três intensidades (nunca vermelho/verde).
 
 - **Registro de Pensamentos (RPD):**
@@ -205,7 +206,7 @@ antes de aparecer. A comunidade não dá acesso aos registros clínicos.
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.
-3. **Feedback sensorial suave ao salvar:** animação, som e vibração sutis ao concluir um registro, com opção de desligar.
+3. **Feedback sensorial suave ao salvar:** som e vibração sutis e a animação também nos outros registros (Pensamentos, Tensão), com opção de desligar. A animação ao concluir uma atividade ou avaliar uma Ação já está no ar.
 4. **Trava do app (#137) e entrar com passkey.**
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
 
