@@ -19,7 +19,8 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
   funcionalidade entra no ar) e IDEIAS-TCC (técnicas da TCC planejadas). A APRESENTACAO só aponta
   para o BRIEFING-IA.
 - `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-tela`, `nova-migration`,
-  `nova-decisao`, `finalizar-mudanca` e `deploy-checklist`).
+  `nova-decisao`, `diagnosticar-defeito-front`, `corrigir-defeito-front`, `finalizar-mudanca` e
+  `deploy-checklist`).
 - `.claude/agents/`: subagentes do projeto (`revisor-regras` para as regras invioláveis,
   `revisor-telas` para tom, cores, contraste, acessibilidade e celular, e `revisor-seguranca`
   para falhas de segurança e dependências, por área ou pelo diff).
