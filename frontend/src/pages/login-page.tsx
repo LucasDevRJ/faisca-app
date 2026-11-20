@@ -11,6 +11,7 @@ import { readLoggedOutEverywhere } from '../features/auth/logged-out-everywhere'
 import { readSessionEnded } from '../features/auth/session-ended';
 import type { TwoFactorLoginStep } from '../features/auth/two-factor-api';
 import { TwoFactorLogin } from '../features/auth/two-factor-login';
+import { WhyFaisca } from '../features/auth/why-faisca';
 import { SESSION_ENDED_KEY, safeNextPath, useLogin } from '../features/auth/use-session';
 import { validateEmail } from '../features/auth/validation';
 import { inviteState, readInviteToken } from '../features/links/invite-state';
@@ -175,6 +176,7 @@ export function LoginPage() {
         <Link to="/privacidade" className={`${linkClass} self-start`}>
           Aviso de privacidade
         </Link>
+        <WhyFaisca />
       </div>
     </AuthLayout>
   );
