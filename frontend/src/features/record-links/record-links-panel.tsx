@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
+import { LongText } from '../../components/ui/long-text';
 import { createRecordLink, deleteRecordLink, fetchRecordLinkCandidates, fetchRecordLinks, type LinkedRecordType, type RecordSummary } from './record-links-api';
-import { formatRecordDate, recordTitlePreview } from './record-links-format';
+import { formatRecordDate, recordLinkHref, recordTitlePreview } from './record-links-format';
 
 const TYPE_LABEL: Record<LinkedRecordType, string> = {
   ACTIVITY: 'Atividade', THOUGHT_RECORD: 'Pensamento', TENSION_EPISODE: 'Episódio de tensão', ACTION: 'Ação',
@@ -49,8 +51,17 @@ export function RecordLinksPanel({ type, id, repetitionHref, patientId, readOnly
     <h5 className="font-medium">Registros relacionados</h5>
     {links.map((link) => {
       const other = link.source.id === id && link.source.type === type ? link.target : link.source;
+      const current = link.source.id === id && link.source.type === type ? link.source : link.target;
+      const observation = other.observation ?? (current.type === 'ACTIVITY' ? current.observation : undefined);
       return <div key={link.id} className="flex items-start justify-between gap-2 text-sm">
-        <p className="min-w-0 break-words"><span className="text-muted">{link.kind === 'REPETITION' ? 'Repetição · ' : ''}{TYPE_LABEL[other.type]} · {formatRecordDate(other.date)}</span><br />{other.title}{other.measure && <span className="block text-muted">{other.measure}</span>}</p>
+        <div className="min-w-0 break-words">
+          <Link to={recordLinkHref(other, patientId)} className="block min-h-11 rounded-sm underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text">
+            <span className="block text-muted">{link.kind === 'REPETITION' ? 'Repetição · ' : ''}{TYPE_LABEL[other.type]} · {formatRecordDate(other.date)}</span>
+            <span className="block font-medium text-primary-text">{other.title}</span>
+            {other.measure && <span className="block text-muted">{other.measure}</span>}
+          </Link>
+          {observation && <div className="mt-1 text-muted"><span className="font-medium">Anotação:</span> <LongText text={observation} /></div>}
+        </div>
         {!readOnly && <Button variant="ghost" className="px-2" disabled={busy} onClick={() => void remove(link.id)}>Desligar</Button>}
       </div>;
     })}

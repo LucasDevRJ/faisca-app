@@ -209,8 +209,11 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
 - O seletor começa com registros próximos à data do registro aberto e permite ampliar o período.
   Mostra as datas no padrão brasileiro (DD/MM/AAAA) e uma prévia curta para títulos longos; o texto
   integral continua acessível e é mostrado após selecionar o registro. A prévia é local e
-  determinística, sem serviço de IA. Ligações funcionam com registros finais. Apagar qualquer
-  registro também apaga suas ligações.
+  determinística, sem serviço de IA. Na ligação com uma Atividade, o campo opcional “Quer anotar
+  algo?” também aparece quando preenchido. O título do registro ligado é um link interno que abre a
+  área e o período correspondentes e leva ao próprio registro. Na visão da profissional, essa
+  navegação mantém as abas e períodos sujeitos às permissões e áreas já compartilhadas. Ligações
+  funcionam com registros finais. Apagar qualquer registro também apaga suas ligações.
 
 ## Ação
 Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das atividades (DEC-051).

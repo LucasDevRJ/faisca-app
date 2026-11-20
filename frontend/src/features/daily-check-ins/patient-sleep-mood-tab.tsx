@@ -11,6 +11,7 @@ import { usePatientMedications } from '../medications/use-medications';
 import { checkInSummary } from './check-in-labels';
 import { fetchPatientCheckIns } from './daily-check-ins-api';
 import { SleepMoodChart } from './sleep-mood-chart';
+import { dayRecordAnchorId } from '../record-links/record-links-format';
 
 // Aba "Sono e humor" na visão da profissional (DEC-108, DEC-115): só leitura, sem "Lido". Mostra o
 // sono, o humor e o remédio do dia com as caixas Sono e humor ou Remédio, e os remédios e o que o
@@ -119,7 +120,7 @@ function CheckIns({
       </div>
       <ol className="flex flex-col gap-3">
         {[...checkIns].reverse().map((checkIn) => (
-          <li key={checkIn.date} className="flex flex-col gap-0.5 rounded-lg border border-border bg-surface p-4 shadow-soft">
+          <li id={dayRecordAnchorId(checkIn.date)} tabIndex={-1} key={checkIn.date} className="flex flex-col gap-0.5 rounded-lg border border-border bg-surface p-4 shadow-soft">
             <h3 className="font-semibold first-letter:uppercase">{formatDayHeading(checkIn.date)}</h3>
             <p className="break-words text-muted">{checkInSummary(checkIn, 'therapist')}</p>
             {checkIn.moodWord && <p className="break-words">“{checkIn.moodWord}”</p>}

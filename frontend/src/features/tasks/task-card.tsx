@@ -3,8 +3,9 @@ import { LongText } from '../../components/ui/long-text';
 import { RESPONSE_LABELS } from './task-labels';
 import type { Task } from './tasks-api';
 import { RecordLinksPanel } from '../record-links/record-links-panel';
+import { recordAnchorId } from '../record-links/record-links-format';
 export function TaskCard({ task, children, footer, patientId, readOnly = false }: { task: Task; children?: ReactNode; footer?: ReactNode; patientId?: string; readOnly?: boolean }) {
-  return <article aria-labelledby={`task-${task.id}`} className="flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft">
+  return <article id={recordAnchorId(task.id)} tabIndex={-1} aria-labelledby={`task-${task.id}`} className="flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft">
     <h2 id={`task-${task.id}`} className="text-lg font-semibold break-words">{task.title ?? 'Tarefa'}</h2>
     <LongText text={task.description} />
     {task.agreedWith && <p className="text-sm text-muted break-words">Combinada com {task.agreedWith.name}</p>}

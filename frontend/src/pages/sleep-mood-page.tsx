@@ -17,6 +17,7 @@ import { MedicationsSection } from '../features/medications/medications-section'
 import { useMedications } from '../features/medications/use-medications';
 import { daysInRange } from '../features/therapist/period';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
+import { dayRecordAnchorId } from '../features/record-links/record-links-format';
 
 // "Sono e humor" (DEC-107, DEC-108): o gráfico do período e os dias. Registrar e editar vale para os
 // últimos 7 dias; os mais antigos ficam só para ver. O período segue o ciclo ou a semana (DEC-050).
@@ -137,6 +138,8 @@ export function SleepMoodPage() {
                 return (
                   <li
                     key={day}
+                    id={checkIn ? dayRecordAnchorId(day) : undefined}
+                    tabIndex={checkIn ? -1 : undefined}
                     className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex min-w-0 flex-col gap-0.5">

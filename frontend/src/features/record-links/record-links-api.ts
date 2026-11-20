@@ -1,7 +1,7 @@
 import { api } from '../../lib/api';
 
 export type LinkedRecordType = 'ACTIVITY' | 'THOUGHT_RECORD' | 'TENSION_EPISODE' | 'ACTION' | 'PLAN' | 'PLAN_ENTRY' | 'TASK' | 'SLEEP_MOOD' | 'MEDICATION';
-export type RecordSummary = { type: LinkedRecordType; id: string; date: string; title: string; measure?: string };
+export type RecordSummary = { type: LinkedRecordType; id: string; date: string; title: string; measure?: string; observation?: string; parentId?: string };
 export type RecordLink = { id: string; kind: 'RELATED' | 'REPETITION'; source: RecordSummary; target: RecordSummary };
 export async function fetchRecordLinks(type: LinkedRecordType, id: string, patientId?: string) {
   const path = patientId ? `/therapist/patients/${patientId}/record-links` : '/record-links';

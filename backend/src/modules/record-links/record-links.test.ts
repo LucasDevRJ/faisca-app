@@ -20,7 +20,7 @@ beforeEach(async () => {
   otherPatientId = (await createConfirmedUser({ email: 'outra-ligacoes@faisca.test' })).id;
   therapistId = (await createConfirmedUser({ email: 'profissional-ligacoes@faisca.test', patient: false, therapist: true })).id;
   records = await Promise.all([patientId, patientId, otherPatientId].map((userId, index) => prisma.activity.create({
-    data: { userId, name: `Atividade fictícia ${index}`, activityDate: dateOnlyToDate(todayInAppZone()), status: 'PLANEJADA' },
+    data: { userId, name: `Atividade fictícia ${index}`, activityDate: dateOnlyToDate(todayInAppZone()), status: 'PLANEJADA', ...(index === 0 && { observation: 'Anotação opcional fictícia.' }) },
     select: { id: true },
   })));
 });
@@ -117,6 +117,9 @@ describe('ligações entre registros', () => {
     expect(response.body.links).toHaveLength(1);
     expect(response.body.links[0]).not.toHaveProperty('userId');
     expect(response.body.links[0].target).toMatchObject({ type: 'THOUGHT_RECORD', id: thought.id });
+    const activitySummary = [response.body.links[0].source, response.body.links[0].target]
+      .find((summary: { id: string }) => summary.id === records[0]!.id);
+    expect(activitySummary).toMatchObject({ observation: 'Anotação opcional fictícia.' });
   });
 
   it('cria repetições independentes em RPD e Tensão e mantém a ligação com a raiz', async () => {
