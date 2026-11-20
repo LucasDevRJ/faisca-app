@@ -336,6 +336,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - Nada no futuro e nada antes de 1950. Tetos: 50 remédios, 100 mudanças por remédio, 300 sintomas e
   400 dias de "como está" por sintoma. O paciente edita e apaga tudo; apagar um remédio mantém os
   sintomas, sem a ligação.
+- Nas listas e janelas de remédios e do que sente, as datas aparecem com o ano (DD/MM/AAAA), porque
+  o histórico atravessa anos; o gráfico do sono e humor, que mostra uma semana, segue com dd/mm.
 - O Faísca não avalia se é efeito do remédio, não sugere dose, troca, interação nem parada e não
   avisa a profissional. Push e e-mail nunca falam de remédio nem de sintoma.
 - **Caixa própria no vínculo**, "Remédios e o que sinto" (`MEDICATIONS`), fechada para todas as

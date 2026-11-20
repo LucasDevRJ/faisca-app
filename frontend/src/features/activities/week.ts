@@ -92,6 +92,13 @@ export function formatDayMonth(value: string): string {
   return dayMonthNumeric.format(toUtcDate(value));
 }
 
+const fullDateNumeric = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+// "15/09/2026": para histórico que atravessa o ano, como remédios e o que a pessoa sente.
+export function formatFullDate(value: string): string {
+  return fullDateNumeric.format(toUtcDate(value));
+}
+
 // Quantos dias de `from` até `to` (negativo se `to` vem antes).
 export function daysBetween(from: string, to: string): number {
   return Math.round((toUtcDate(to).getTime() - toUtcDate(from).getTime()) / DAY_MS);
