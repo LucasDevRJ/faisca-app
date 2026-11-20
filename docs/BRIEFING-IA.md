@@ -20,6 +20,7 @@ dado de paciente ou segredo aqui.
 ## 1. Quem é o autor e o que é o Faísca
 
 - **Nome do projeto:** Faísca
+- **Por que Faísca:** uma faísca é pequena, mas consegue acender um fogo. Na ativação comportamental, que faz parte da Terapia Cognitivo-Comportamental, a ideia é parecida: começar por algo pequeno, mesmo sem vontade, e notar o que muda depois. O nome lembra que um passo pequeno já conta. (Mesmo texto do "Por que Faísca?" das telas de entrar e de cadastro; em conteúdos, evite prometer que o humor melhora: "notar o que muda", não "ficar bem".)
 - **Endereço oficial:** https://minhafaisca.com.br
 - **Autor:** Lucas Pereira de Lima (contato do projeto: `suporte@minhafaisca.com.br`)
 - **O que é:** produto digital independente criado para digitalizar e acolher atividades essenciais da **Terapia Cognitivo-Comportamental (TCC)** no dia a dia entre as sessões. O Faísca **entrou em produção em 30/09/2026**, está em **uso real e contínuo por paciente e psicóloga**, e tem **cadastro aberto e gratuito**, sem anúncios e sem pedir documentos pessoais.

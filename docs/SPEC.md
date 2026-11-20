@@ -17,6 +17,8 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - Quem tem os dois perfis alterna entre "Meus registros" e "Meus pacientes".
   Quem tem um perfil só nunca vê telas do outro.
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.
+- As telas de entrar e de cadastro têm "Por que Faísca?", fechado por padrão, que explica o nome
+  pela ativação comportamental (o mesmo texto do `docs/BRIEFING-IA.md`).
 - Recuperação de senha por e-mail.
 - **Sair de todos os aparelhos**, em Conta: confirmado com a senha, encerra todas as sessões da
   própria conta, inclusive a do aparelho em uso (DEC-085). Os outros aparelhos percebem na
