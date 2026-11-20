@@ -19,6 +19,7 @@ import { PeriodNav } from '../features/cycle/period-nav';
 import { cycleQuery } from '../features/cycle/use-cycle';
 import { usePeriod } from '../features/cycle/use-period';
 import { daysInRange } from '../features/therapist/period';
+import { SavedFeedback } from '../components/ui/saved-feedback';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 // Aviso vindo de outra página (ex.: "Ação salva."), por navigate(..., { state }).
@@ -91,6 +92,8 @@ export function ActionsPage() {
   const location = useLocation();
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [notice, setNotice] = useState<string | null>((location.state as ActionsPageState)?.notice ?? null);
+  // Ação que a pessoa acabou de avaliar: o cartão dela ganha o retorno calmo (issue #93).
+  const [savedId, setSavedId] = useState<string | null>(null);
 
   const consented = Boolean(user?.privacyAreas.actions);
   const today = todayInAppZone();
@@ -215,15 +218,17 @@ export function ActionsPage() {
                   {actions
                     .filter((a) => a.actionDate === day)
                     .map((action) => (
-                      <ActionCard
-                        key={action.id}
-                        action={action}
-                        today={today}
-                        onAction={(kind, a) => {
-                          setNotice(null);
-                          setDialog({ kind, action: a });
-                        }}
-                      />
+                      <SavedFeedback key={action.id} saved={savedId === action.id}>
+                        <ActionCard
+                          action={action}
+                          today={today}
+                          onAction={(kind, a) => {
+                            setNotice(null);
+                            setSavedId(null);
+                            setDialog({ kind, action: a });
+                          }}
+                        />
+                      </SavedFeedback>
                     ))}
                 </div>
               </li>
@@ -238,7 +243,14 @@ export function ActionsPage() {
       </section>
 
       {dialog?.kind === 'evaluate' && (
-        <EvaluateActionDialog action={dialog.action} onClose={() => setDialog(null)} onDone={done} />
+        <EvaluateActionDialog
+          action={dialog.action}
+          onClose={() => setDialog(null)}
+          onDone={(message) => {
+            done(message);
+            if (!message) setSavedId(dialog.action.id);
+          }}
+        />
       )}
       {dialog?.kind === 'notDone' && (
         <NotDoneActionDialog action={dialog.action} onClose={() => setDialog(null)} onDone={done} />

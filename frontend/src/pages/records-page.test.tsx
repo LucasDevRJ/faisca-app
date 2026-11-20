@@ -390,6 +390,54 @@ describe('RecordsPage: transições', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  // Retorno calmo ao concluir (issue #93): ✓ no cartão e "Registro guardado." para o leitor de tela.
+  async function completeCaminhada() {
+    weekHandler([fakeActivity({ name: 'Caminhada', status: 'PENDENTE', wantBefore: 4 })]);
+    recordWrites();
+    const user = userEvent.setup();
+    renderRoute('/registros');
+    await user.click(within(await findCard('Caminhada')).getByRole('button', { name: 'Conta como foi?' }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Prazer'), { target: { value: '6' } });
+    fireEvent.change(within(dialog).getByLabelText('Realização'), { target: { value: '9' } });
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    return user;
+  }
+
+  function checkOf(card: HTMLElement) {
+    return card.parentElement!.querySelector('[data-saved-check]');
+  }
+
+  it('ao concluir, o cartão ganha o ✓ e o leitor de tela ouve "Registro guardado."', async () => {
+    const user = await completeCaminhada();
+
+    const card = await findCard('Caminhada');
+    expect(await screen.findByText('Registro guardado.')).toHaveAttribute('role', 'status');
+    expect(checkOf(card)).toHaveAttribute('aria-hidden', 'true');
+    expect(card.parentElement).toHaveClass('saved-settle');
+    // Sem confete nem parabéns: o retorno é só o ✓ e a frase neutra.
+    expect(screen.queryByText(/parabéns/i)).not.toBeInTheDocument();
+
+    // Abrir outra ação no cartão tira o retorno.
+    await user.click(within(card).getByRole('button', { name: /excluir/i }));
+    expect(checkOf(card)).toBeNull();
+  });
+
+  it('com "Menos movimento", a marcação do ✓ já é a do estado final (o CSS só zera a duração)', async () => {
+    document.documentElement.dataset.reducedMotion = 'true';
+    try {
+      await completeCaminhada();
+      const check = checkOf(await findCard('Caminhada'));
+      expect(check).not.toBeNull();
+      // O traço em repouso é o final (inteiro): com a duração zerada pelo CSS, nada se move.
+      expect(check!.querySelector('path')).toHaveAttribute('pathLength', '1');
+      expect(screen.getByText('Registro guardado.')).toBeInTheDocument();
+    } finally {
+      delete document.documentElement.dataset.reducedMotion;
+    }
+  });
+
   it('se só o primeiro passo gravar, fecha o formulário e avisa na tela', async () => {
     weekHandler([fakeActivity({ name: 'Caminhada', status: 'PLANEJADA' })]);
     recordWrites({ 'POST /activities/:id/complete': () => new HttpResponse(null, { status: 500 }) });
@@ -411,6 +459,9 @@ describe('RecordsPage: transições', () => {
       await screen.findByText('Salvamos a vontade, mas não deu para concluir. Tente de novo pelo card.'),
     ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // Só parte gravou: sem o retorno de concluído.
+    expect(document.querySelector('[data-saved-check]')).toBeNull();
+    expect(screen.queryByText('Registro guardado.')).not.toBeInTheDocument();
   });
 
   it('registra a vontade de uma PLANEJADA', async () => {
