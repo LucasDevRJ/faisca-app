@@ -16,6 +16,7 @@ import {
   logoutAllSchema,
   changePasswordSchema,
   loginAlertSchema,
+  announcementEmailsSchema,
   emailOnlySchema,
   loginSchema,
   resetPasswordSchema,
@@ -146,6 +147,12 @@ export function createAuthController(
     res.status(200).json({ user: toPublicUser(user) });
   };
 
+  const announcementEmails: RequestHandler = async (req, res) => {
+    const { enabled } = announcementEmailsSchema.parse(req.body);
+    const user = await service.setAnnouncementEmails(getAuthUser(req).id, enabled);
+    res.status(200).json({ user: toPublicUser(user) });
+  };
+
   const forgotPassword: RequestHandler = async (req, res) => {
     const { email } = emailOnlySchema.parse(req.body);
     await runAfterResponse('forgot-password', () => service.forgotPassword(email));
@@ -172,6 +179,7 @@ export function createAuthController(
     logoutAll,
     changePassword,
     loginAlert,
+    announcementEmails,
     forgotPassword,
     resetPassword,
   };

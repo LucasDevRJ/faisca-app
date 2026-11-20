@@ -14,6 +14,7 @@ const valid = {
 describe('parseEnv', () => {
   it('aceita uma configuração válida', () => {
     expect(parseEnv(valid).EMAIL_FROM).toBe('Faísca <onboarding@resend.dev>');
+    expect(parseEnv(valid).ANNOUNCEMENT_EMAIL_RELEASES).toBe('');
   });
 
   it('recusa o JWT_SECRET de exemplo do .env.example', () => {

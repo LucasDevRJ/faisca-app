@@ -41,14 +41,15 @@ const TASKS = '2026-11-tarefas';
 const SLEEP = '2026-11-sono-humor';
 const COMMUNITY = '2026-11-comunidade';
 const MEDICATIONS = '2026-11-remedios';
+const EMAIL_UPDATES = '2026-11-novidades-email';
 
 describe('card de Novidades (DEC-054, DEC-058)', () => {
   it('a paciente vê a novidade que é para ela até tocar em "Entendi"; fica no banco', async () => {
     const agent = await loginAgent();
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(MEDICATIONS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(EMAIL_UPDATES);
 
-    const seen = await agent.post('/auth/announcement-seen').send({ announcement: MEDICATIONS });
+    const seen = await agent.post('/auth/announcement-seen').send({ announcement: EMAIL_UPDATES });
     expect(seen.status).toBe(200);
     expect(seen.body.user.pendingAnnouncement).toBeNull();
     expect((await request.agent(app).post('/auth/login').send({ email: PATIENT, password: PASSWORD })).body.user
@@ -59,10 +60,10 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     await createConfirmedUser({ email: 'terapeuta@faisca.test', patient: false, therapist: true });
     const agent = await loginAgent('terapeuta@faisca.test');
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(MEDICATIONS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(EMAIL_UPDATES);
     // A anterior não pode ser marcada no lugar da que está aparecendo.
     expect((await agent.post('/auth/announcement-seen').send({ announcement: MURAL })).status).toBe(400);
-    expect((await agent.post('/auth/announcement-seen').send({ announcement: MEDICATIONS })).status).toBe(200);
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: EMAIL_UPDATES })).status).toBe(200);
   });
 
   it('conta nova não recebe como novidade o que já existia no cadastro', async () => {
@@ -94,25 +95,26 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     const therapist = { patient: false, therapist: true };
     const both = { patient: true, therapist: true };
 
-    expect(pendingAnnouncement(null, patient)).toBe(MEDICATIONS);
+    expect(pendingAnnouncement(null, patient)).toBe(EMAIL_UPDATES);
     // O Meus Planos é para os dois perfis (DEC-095): a terapeuta também o recebe.
-    expect(pendingAnnouncement(null, therapist)).toBe(MEDICATIONS);
+    expect(pendingAnnouncement(null, therapist)).toBe(EMAIL_UPDATES);
     // O "Sobre mim" e os lembretes são só de quem é paciente (DEC-082, DEC-090): a terapeuta que já viu
     // o mural não tem nada entre ele e o Meus Planos.
-    expect(pendingAnnouncement(MURAL, therapist)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(READ_MARKS, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(PHOTOS, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(BACKUPS, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(REMINDERS, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(REMINDERS, therapist)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(PLANS, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(ACTIVITY_PHOTOS, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(TASKS, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(SLEEP, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(COMMUNITY, both)).toBe(MEDICATIONS);
-    expect(pendingAnnouncement(MEDICATIONS, both)).toBeNull();
-    expect(pendingAnnouncement('desconhecida', patient)).toBe(MEDICATIONS);
+    expect(pendingAnnouncement(MURAL, therapist)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(READ_MARKS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(PHOTOS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(BACKUPS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(REMINDERS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(REMINDERS, therapist)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(PLANS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(ACTIVITY_PHOTOS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(TASKS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(SLEEP, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(COMMUNITY, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(MEDICATIONS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(EMAIL_UPDATES, both)).toBeNull();
+    expect(pendingAnnouncement('desconhecida', patient)).toBe(EMAIL_UPDATES);
   });
 });

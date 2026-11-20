@@ -72,6 +72,7 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
   router.post('/auth/logout-all', requireAuth, ...passwordCheckLimits, controller.logoutAll);
   router.post('/auth/change-password', requireAuth, ...passwordCheckLimits, controller.changePassword);
   router.put('/auth/login-alert', requireAuth, controller.loginAlert);
+  router.put('/auth/announcement-emails', requireAuth, controller.announcementEmails);
 
   // Verificação em duas etapas (DEC-092). Ativar, gerar códigos e desligar pedem a senha e entram
   // nos mesmos limites de erro de senha; confirmar um código também.

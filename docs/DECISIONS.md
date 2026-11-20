@@ -2697,6 +2697,44 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 ## DEC-118 — Paciente vê quando a profissional leu (telas)
 - **Decisão (#130):** em construção.
 
+## DEC-119 — Avisos por e-mail de novidades importantes (20/11/2026)
+- **Decisão (#231):**
+  - reutilizar os mesmos IDs e públicos do card e do histórico (DEC-054, DEC-058, DEC-060). A
+    campanha entra no código da API, mas só é liberada por `ANNOUNCEMENT_EMAIL_RELEASES` depois de
+    o front estar no ar. A API grava a data real da liberação uma vez, e o agendador verifica os
+    envios a cada cinco minutos;
+  - somente novidades importantes cadastradas com texto próprio de e-mail são enviadas. Correções
+    pequenas, conteúdo técnico e novidades antigas continuam apenas dentro do app. A mensagem sai
+    individualmente, em até cinco minutos da publicação; não há digest, cópia para outros
+    destinatários nem rastreamento de abertura;
+  - só recebe quem tinha conta antes da publicação, confirmou o e-mail, tem perfil dentro do público
+    da novidade e estava com a preferência ativa na data da publicação. Contas criadas depois não
+    recebem mensagens anteriores. Novidades antigas não são convertidas em campanhas quando o
+    recurso é ligado;
+  - `User.announcementEmailsEnabled` começa `true`, conforme a decisão do usuário de começar todos
+    os avisos ligados, e `Conta → Novidades por e-mail` permite desligar ou reativar. A preferência
+    é separada de lembretes, alertas de acesso e mensagens transacionais de conta; desligá-la nunca
+    bloqueia esses e-mails necessários;
+  - `AnnouncementRelease` registra a publicação e `AnnouncementEmailDelivery` registra o estado por
+    pessoa e novidade, com chave única, tentativas e reserva de envio. O Resend recebe a mesma chave
+    de idempotência em cada repetição. Há até 10 tentativas, espaçadas em cinco minutos, antes de
+    23 horas da primeira tentativa; depois disso o envio fica `FAILED`, sem risco de repetir uma
+    mensagem após a expiração da chave do provedor;
+  - assunto e texto são fixos no código e neutros; não interpolam nome, e-mail, papel, vínculo ou
+    conteúdo do paciente. A mensagem leva à preferência em Conta. Falha deixa o card e o histórico
+    dentro do app disponíveis;
+  - **sem nova versão do aviso de privacidade:** a preferência usa o endereço já cadastrado e o
+    texto de produto não trata de dados de saúde. A tela explica o conteúdo, a finalidade e como
+    desligar antes da escolha.
+- **Motivo:** alcançar quem não abre o app, mantendo as novidades no mesmo cadastro e separando os
+  avisos de produto dos e-mails necessários à conta. O passo explícito de liberação evita que uma
+  publicação antecipada da API dispare e-mails antes de a novidade aparecer no front.
+- **Limite conhecido:** a campanha só começa quando alguém libera seu ID no Railway após confirmar
+  que o front está no ar. Se a API ficar fora por mais de 23 horas após uma tentativa, o e-mail não
+  é repetido automaticamente; a novidade continua disponível dentro do app. Como o envio ao
+  provedor é externo ao banco, um opt-out feito depois da última checagem e durante a chamada pode
+  deixar uma mensagem já em trânsito.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

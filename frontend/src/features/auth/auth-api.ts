@@ -46,6 +46,8 @@ export type SessionUser = {
   accessibility?: AccessibilitySettings;
   // Aviso de login novo por e-mail e push (DEC-091); ligado por padrão.
   loginAlert?: boolean;
+  // Avisos de novidades importantes por e-mail (DEC-119); separado dos avisos de conta.
+  announcementEmails?: boolean;
 };
 
 export type SignupInput = {
@@ -170,6 +172,11 @@ export async function acceptPrivacy(): Promise<SessionUser> {
 // Card de Novidades: a pessoa tocou em "Entendi" (DEC-054). A resposta traz a sessão atualizada.
 export async function markAnnouncementSeen(announcement: string): Promise<SessionUser> {
   const { data } = await api.post<{ user: SessionUser }>('/auth/announcement-seen', { announcement });
+  return data.user;
+}
+
+export async function setAnnouncementEmails(enabled: boolean): Promise<SessionUser> {
+  const { data } = await api.put<{ user: SessionUser }>('/auth/announcement-emails', { enabled });
   return data.user;
 }
 
