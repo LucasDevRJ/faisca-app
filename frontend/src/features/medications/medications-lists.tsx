@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '../../components/ui/button';
 import { LongText } from '../../components/ui/long-text';
-import { formatDayMonth } from '../activities/week';
+import { formatFullDate } from '../activities/week';
 import { changeLine, intensityTrail, medicationLine, symptomEnded, symptomSince } from './medication-labels';
 import type { Medication, MedicationChange, Symptom } from './medications-api';
 
@@ -49,8 +49,8 @@ function MedicationCard({
       <CardTitle level={level}>{medicationLine(medication)}</CardTitle>
       <p className="text-sm text-muted">
         {medication.active
-          ? medication.startedOn && `Em uso desde ${formatDayMonth(medication.startedOn)}`
-          : medication.stoppedOn && `Parou em ${formatDayMonth(medication.stoppedOn)}`}
+          ? medication.startedOn && `Em uso desde ${formatFullDate(medication.startedOn)}`
+          : medication.stoppedOn && `Parou em ${formatFullDate(medication.stoppedOn)}`}
       </p>
       {medication.changes.length > 0 && (
         <ol className="flex flex-col gap-1 text-sm" aria-label={`Mudanças de ${medication.name}`}>
@@ -63,7 +63,7 @@ function MedicationCard({
                   className="min-h-11 px-0 text-sm underline"
                   onClick={() => actions.onEditChange(medication, change)}
                 >
-                  Editar<span className="sr-only"> a mudança de {formatDayMonth(change.changeDate)}</span>
+                  Editar<span className="sr-only"> a mudança de {formatFullDate(change.changeDate)}</span>
                 </Button>
               )}
               {change.note && <p className="w-full break-words text-muted">{change.note}</p>}
@@ -109,7 +109,7 @@ function SymptomCard({
             Intensidade: <span className="tabular-nums">{trail}</span>
           </p>
           <p className="text-muted">
-            {symptom.checks.map((check) => `${formatDayMonth(check.date)}: ${check.intensity}`).join(' · ')}
+            {symptom.checks.map((check) => `${formatFullDate(check.date)}: ${check.intensity}`).join(' · ')}
           </p>
         </div>
       )}

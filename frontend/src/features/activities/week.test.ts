@@ -4,6 +4,7 @@ import {
   daysBetween,
   formatDayHeading,
   formatDayMonth,
+  formatFullDate,
   formatRelativeDay,
   formatShortDay,
   formatWeekRange,
@@ -55,6 +56,8 @@ describe('week', () => {
   it('formata o título do dia', () => {
     expect(formatDayHeading('2026-09-21')).toBe('segunda-feira, 21/09');
     expect(formatDayMonth('2026-10-05')).toBe('05/10');
+    expect(formatFullDate('2026-10-05')).toBe('05/10/2026');
+    expect(formatFullDate('2025-12-31')).toBe('31/12/2025');
     expect(formatShortDay('2026-09-28')).toBe('seg, 28/09');
     expect(formatShortDay('2026-10-04')).toBe('dom, 04/10');
   });
