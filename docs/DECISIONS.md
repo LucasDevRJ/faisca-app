@@ -2634,6 +2634,19 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   do "Para ler" (#216). Nos minutos em que o front novo já está no ar e a API ainda não, o aceite da
   versão 16 responde que o aviso mudou, até a API subir (como nas versões anteriores, DEC-056).
 
+## DEC-116 — Override da `effect` na CLI do Prisma (19/11/2026)
+- **Decisão:** `overrides` no `backend/package.json` também para `effect` (^3.22.5), no mesmo padrão da
+  DEC-038. O alerta GHSA-7589-6fvf-x4pw (ReDoS em `Schema.TemplateLiteral`, `effect` até 3.22.0) chega
+  pelo `@prisma/config` do Prisma 7.10, que fixa a 3.20.0 (inclusive na 7.10.1, a mais nova), e fazia
+  o CI `audit (backend)` falhar em todo PR. O conserto sugerido pelo npm era voltar para o Prisma 6.
+- **Motivo:** destravar o CI sem trocar o Prisma. O alerta não era alcançável pelo app: a `effect` só
+  serve para a CLI ler o `prisma.config.ts` (no build, no `postinstall` e no pre-deploy), o runtime
+  não a carrega e o `@prisma/config` não usa `TemplateLiteral`. Validar, gerar o client e aplicar as
+  migrations continuam funcionando (revisor-seguranca).
+- **Limite conhecido:** a versão forçada não é a que o Prisma testou. Remover o override quando o
+  `@prisma/config` pedir `effect` 3.22.1 ou mais nova (conferir com `npm ls effect` a cada
+  atualização do Prisma), e olhar o primeiro pre-deploy no Railway depois do merge.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
