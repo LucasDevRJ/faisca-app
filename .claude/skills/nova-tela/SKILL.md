@@ -61,6 +61,11 @@ eles prevalecem sobre esta skill.
 
 ## 7. Celular
 - Confira em 375 px: sem rolagem lateral, `break-words` em nome e texto do usuário.
+- Nas grades de abas/botões, teste o rótulo mais comprido junto com contador ou badge. Se faltou
+  espaço, dê `min-w-0` ao item de grade/flex e separe o contador em outra linha no celular ou permita
+  a quebra controlada do rótulo; nunca deixe o contador escapar, cubra o texto ou corte o nome sem
+  uma alternativa acessível. Veja também a skill `diagnosticar-defeito-front` para procurar causas e
+  `corrigir-defeito-front` para o roteiro de correção.
 - Vários botões: grade de 2 colunas no celular (o `DialogFooter` já faz).
 
 ## 8. Testes de tela (Vitest)
