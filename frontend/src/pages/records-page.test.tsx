@@ -238,8 +238,8 @@ describe('RecordsPage: seletor de registros ligados', () => {
 
     const card = await findCard('Academia');
     const linksPanel = within(card).getByRole('region', { name: 'Registros ligados' });
-    expect(within(linksPanel).getByText(observation)).toBeInTheDocument();
-    const related = within(card).getByRole('link', { name: /Pensamento relacionado fictício/ });
+    expect(await within(linksPanel).findByText(observation)).toBeInTheDocument();
+    const related = await within(card).findByRole('link', { name: /Pensamento relacionado fictício/ });
     expect(related).toHaveAttribute('href', `/pensamentos?semana=2026-09-21#registro-${thought.id}`);
 
     await user.click(related);
