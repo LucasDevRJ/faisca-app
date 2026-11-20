@@ -2697,6 +2697,9 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 ## DEC-118 — Paciente vê quando a profissional leu (telas)
 - **Decisão (#130):** em construção.
 
+## DEC-120 — Datas com o ano quando são de outro ano
+- **Decisão:** em construção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
