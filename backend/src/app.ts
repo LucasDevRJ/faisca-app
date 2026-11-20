@@ -23,6 +23,7 @@ import { createActionsRoutes } from './modules/actions/actions.routes.js';
 import { createTherapistRoutes } from './modules/therapist/therapist.routes.js';
 import { createNoticesRoutes } from './modules/notices/notices.routes.js';
 import { createReadMarksRoutes } from './modules/read-marks/read-marks.routes.js';
+import { createReadReceiptsRoutes } from './modules/read-receipts/read-receipts.routes.js';
 import { createThoughtRecordsRoutes } from './modules/thought-records/thought-records.routes.js';
 import { createTasksRoutes } from './modules/tasks/tasks.routes.js';
 import { createDailyCheckInsRoutes } from './modules/daily-check-ins/daily-check-ins.routes.js';
@@ -98,6 +99,7 @@ export function createApp({
   app.use(createTherapistRoutes());
   // Marcas de leitura da terapeuta (DEC-057), num prefixo próprio, fora do só leitura.
   app.use(createReadMarksRoutes());
+  app.use(createReadReceiptsRoutes());
   // Mural de avisos (DEC-079): escritas da terapeuta só no próprio aviso, fora de /therapist/patients.
   app.use(createNoticesRoutes());
 

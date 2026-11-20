@@ -20,12 +20,16 @@
 - As escritas do lado da terapeuta são limitadas. Duas são os POSTs que criam o vínculo (`/links/redeem-code`
   e `/links/accept-invite`, DEC-031) e as marcas de leitura dela (`PUT`/`DELETE
   /therapist/read-marks/:patientId`, DEC-057), num prefixo próprio, com sessão, perfil e vínculo
-  ativo, e que só gravam na tabela `ReadMark`, nunca no registro do paciente. A terceira são os
+  ativo, e que só gravam na tabela `ReadMark`, nunca no registro do paciente. Junto delas, a
+  resposta ao pedido do paciente para ver essas marcas (`PUT /therapist/read-receipts/:patientId`,
+  DEC-117), com a mesma cadeia e o aceite da área `readReceipts`, que só grava a preferência dela
+  nas colunas `readReceipts*` do vínculo. A terceira são os
   avisos do mural dela (`POST`/`PATCH`/`DELETE /therapist/notices`, DEC-079), com sessão e perfil
   de terapeuta: só gravam o próprio aviso (`TherapistNotice`), sem dado de paciente. A exceção em
   `/therapist/patients` só cria um `Plan` sob o paciente e não permite editar planos existentes ou
   criar registros. Nada fora de
-  `/therapist/patients/...` devolve dado de paciente além de nome, e-mail, o número de não lidos e
+  `/therapist/patients/...` devolve dado de paciente além de nome, e-mail, o número de não lidos, o estado do pedido do
+  "Lido" (DEC-117) e
   a versão da foto (só se ela existe e quando mudou, DEC-061) dos vinculados (`GET /links/patients`).
   A foto em si fica em `/therapist/patients/:patientId/avatar`.
 - Rotas de paciente usam sempre o id do usuário autenticado. Nunca aceite `patientId` vindo do

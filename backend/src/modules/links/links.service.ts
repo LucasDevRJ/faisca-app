@@ -6,9 +6,16 @@ import type { EmailMessage, Mailer } from '../../lib/mailer.js';
 import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
 import { countUnread } from '../read-marks/read-marks.service.js';
+import {
+  patientReadReceipts,
+  professionalReadReceipts,
+  type PatientReadReceipts,
+  type ProfessionalReadReceipts,
+} from '../read-receipts/read-receipts.service.js';
 import { inviteEmail, linkCreatedEmail } from './links.emails.js';
 import type { CreateInviteInput } from './links.schema.js';
 import { avatarVersion } from '../profile/profile.service.js';
+import { coversArea } from '../auth/privacy.js';
 
 const MINUTE_MS = 60 * 1000;
 const CODE_TTL_MS = 24 * 60 * MINUTE_MS;
@@ -27,6 +34,8 @@ export type PatientLink = {
   // O tipo da profissional e as áreas que o paciente liberou para ela (DEC-097).
   kind: ProfessionalKind;
   sharedAreas: SharedArea[];
+  // O pedido para ver quando ela leu (DEC-117): desligado, pedido enviado ou ativo. Nunca a recusa.
+  readReceipts: PatientReadReceipts;
   // avatarVersion: se a profissional tem foto e quando mudou (DEC-061); a imagem vem de
   // /link/:linkId/avatar. O conselho (CRP ou CRM) é opcional.
   therapist: { name: string; email: string; avatarVersion: string | null; councilNumber: string | null };
@@ -46,7 +55,8 @@ export type PatientLinkStatus = {
 export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string; avatarVersion: string | null };
 // Na lista de pacientes: quantos Pensamentos, Episódios e Ações a terapeuta ainda não leu
 // (DEC-057), só nas áreas cujo aviso ela aceitou.
-export type ListedPatient = LinkedPatient & { unreadCount: number };
+// readReceipts (DEC-117): se o paciente pediu para ver quando ela lê, e o que ela respondeu.
+export type ListedPatient = LinkedPatient & { unreadCount: number; readReceipts: ProfessionalReadReceipts };
 
 // Já há uma profissional de cada tipo (DEC-097): não sobra vaga para um vínculo novo.
 function alreadyLinked() {
@@ -171,6 +181,7 @@ function toPatientLink(link: LinkWithTherapist): PatientLink {
     seen: link.seenByPatientAt !== null,
     kind: link.kind,
     sharedAreas: link.sharedAreas,
+    readReceipts: patientReadReceipts(link),
     therapist: {
       name: link.therapist.name,
       email: link.therapist.email,
@@ -443,11 +454,13 @@ export function createLinksService(mailer: Mailer) {
         links.map((link) => ({ id: link.patient.id, sharedAreas: link.sharedAreas })),
         privacyVersion,
       );
-      return links.map(({ patient: { avatar, ...patient }, createdAt }) => ({
+      return links.map(({ patient: { avatar, ...patient }, createdAt, ...link }) => ({
         ...patient,
         linkedAt: createdAt.toISOString(),
         avatarVersion: avatarVersion(avatar),
         unreadCount: unread.get(patient.id) ?? 0,
+        // Sem o aceite do aviso que cita o recurso, ela não fica sabendo do pedido (DEC-117).
+        readReceipts: coversArea(privacyVersion, 'readReceipts') ? professionalReadReceipts(link) : 'OFF',
       }));
     },
   };

@@ -2647,6 +2647,56 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   `@prisma/config` pedir `effect` 3.22.1 ou mais nova (conferir com `npm ls effect` a cada
   atualização do Prisma), e olhar o primeiro pre-deploy no Railway depois do merge.
 
+## DEC-117 — Paciente vê quando a profissional leu (API)
+- **Decisão (#130):**
+  - o "Lido" continua sendo da profissional (DEC-057), mas ela pode **mostrar ao paciente** quando os
+    dois ligam, cada um no seu lado. A escolha é **por vínculo**: a psicóloga e a psiquiatra
+    respondem cada uma ao pedido que é para ela;
+  - três colunas novas em `TherapistLink`: `readReceiptsRequestedAt` (o paciente pediu),
+    `readReceiptsSharedAt` (ela ativou) e `readReceiptsNotNowAt` (ela respondeu "Agora não"). Um
+    CHECK garante que ela só responde a um pedido e nunca ativa e recusa ao mesmo tempo. Vínculo novo
+    começa desligado; desfeito, tudo para de valer;
+  - **paciente** (`requireAuth`, `requirePatient`, aceite da área `readReceipts`):
+    `PUT /link/:linkId/read-receipts` com `{ requested }` liga ou desliga o pedido (vínculo de outra
+    pessoa ou desfeito → 404). Desligar zera os três campos, então um pedido novo volta a esperar a
+    resposta dela. `GET /read-receipts` devolve `{ receipts: [{ type, id, readAt, kind }] }`;
+  - **profissional**: `PUT /therapist/read-receipts/:patientId` com `{ shared }`, num prefixo próprio
+    como as marcas (sessão → perfil → vínculo ativo → aceite da área). `true` ativa; `false` é o
+    "Agora não" ou o desligar. Sem pedido do paciente → 409 `READ_RECEIPTS_NOT_REQUESTED`. É **mais
+    uma exceção estreita da regra 1**: grava só a preferência dela no vínculo, nunca dado do
+    paciente; `/therapist/patients/...` continua com o `onlyReads` antes de tudo;
+  - o paciente só recebe a leitura quando: os dois lados estão ligados; o aceite dela cobre o recurso
+    e a área; ele libera hoje a área para ela; e a marca está **em dia** (LIDO). Um registro que mudou
+    depois da leitura (ATUALIZADO) não mostra nada até ela ler de novo, para "Lido em 12/11" não
+    parecer que ela leu a versão nova. A resposta traz o tipo da profissional (`kind`), nunca quem é,
+    e nunca o que falta ler. Desmarcar como lido tira a data da tela do paciente na hora. Só contam as
+    leituras do vínculo atual (`readAt` a partir do `createdAt` do vínculo): desfeito e refeito com a
+    mesma profissional, começa sem leituras visíveis;
+  - o paciente **nunca vê a recusa**: `GET /link` traz `readReceipts` como `OFF`, `REQUESTED` ou `ON`,
+    e "Agora não" continua `REQUESTED`. `GET /links/patients` traz para ela `OFF`, `PENDING`,
+    `NOT_NOW` ou `ON`, para o aviso do pedido e o botão na página do paciente, e `OFF` enquanto o
+    aceite dela não cobre o recurso (revisor-regras e revisor-seguranca);
+  - nova versão `2026-11.10` do aviso de privacidade, com a área `readReceipts`: conhecida na API e
+    atual só no PR das telas (DEC-118), como nas DEC-064/065. Sem a área, as rotas respondem 403
+    `PRIVACY_CONSENT_REQUIRED`;
+  - sem notificação do pedido por e-mail ou push: o pedido aparece só no app, até a #82/#32;
+  - o módulo `read-receipts` só importa `READ_TYPES` e `readStatusOf` do `read-marks`, com o mapa das
+    áreas repetido, para não colidir com o #216, que reescreve o `read-marks.service`.
+- **Motivo:** o paciente pediu para saber se a psicóloga viu o que ele escreveu, mas o "visto" pode
+  pesar dos dois lados: a ansiedade do "ainda não leu" na semana difícil e a pressão sobre quem lê na
+  véspera da consulta. Por isso as duas pessoas precisam querer, o paciente só vê o que já foi lido,
+  sem contagem do que falta, e a resposta dela fica invisível para ele. A marca é um dado de trabalho
+  dela (DEC-057); mostrá-la é uma escolha dela, por paciente.
+- **Limite conhecido:** `GET /read-receipts` lê todas as marcas de cada profissional ativa e filtra na
+  memória, como o contador da DEC-057; com poucos registros por paciente, é suficiente por ora. O
+  mapa das áreas está repetido em `read-receipts.service.ts`: depois do #216, juntar com o do
+  `read-marks.service`. O paciente pode desligar e ligar o pedido sem limite, e cada pedido novo volta
+  a aparecer para ela: sem notificação é só o aviso no app, mas, se o pedido um dia gerar e-mail ou
+  push (#82, #32), precisa de limite de tentativas.
+
+## DEC-118 — Paciente vê quando a profissional leu (telas)
+- **Decisão (#130):** em construção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

@@ -417,8 +417,20 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   a contar, como **atualizado**. A visão **Para ler** junta as áreas liberadas fora do ciclo, do mais
   antigo ao mais novo, e a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
   algo para ler no topo, e o total de todos ("12 registros para ler, de 2 pacientes"). As marcas são da
-  terapeuta: o paciente não as vê, e uma terapeuta nova começa sem nenhuma. Nas telas, o texto
-  fala em **"para ler"** (DEC-058).
+  terapeuta: o paciente não as vê, salvo o "Lido para o paciente" abaixo, e uma terapeuta nova começa
+  sem nenhuma. Nas telas, o texto fala em **"para ler"** (DEC-058).
+- **Lido para o paciente** (DEC-117, #130): opcional e **dos dois lados**, por vínculo (psicóloga e
+  psiquiatra separadas). O paciente pede, em Conta, para ver quando cada profissional lê os registros
+  dele; ela recebe o pedido no app e escolhe **ativar** ou **"Agora não"**. Só com os dois ligados o
+  paciente vê a data em que ela leu cada registro, e só:
+  - das marcas em dia (LIDO): registro mudado depois da leitura não mostra nada até ela ler de novo;
+  - das áreas que ele libera hoje para ela e que o aceite dela cobre;
+  - com o tipo da profissional, nunca "não lido" nem contagem do que falta.
+  O paciente nunca vê a recusa: "Agora não" continua "Pedido enviado" para ele. Qualquer um desliga
+  quando quiser; desligar do lado do paciente zera os dois lados, e um pedido novo volta a esperar a
+  resposta dela. Desmarcar como lido também tira a data da tela do paciente. As duas contas precisam
+  do aceite do aviso que cita o recurso (`2026-11.10`). Sem notificação do pedido por e-mail ou push
+  por ora (#82, #32).
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta
@@ -502,7 +514,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - No papel de terapeuta (psicóloga ou psiquiatra): somente requisições GET, apenas de pacientes com
   vínculo ativo e só das áreas que o paciente liberou para ela (DEC-097).
   As exceções não alteram registros clínicos: os dois pedidos que criam o vínculo (digitar o código e
-  aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057), os avisos do
+  aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057), a resposta dela
+  ao pedido do "Lido para o paciente", que grava só a preferência dela no vínculo (DEC-117), os avisos do
   mural dela (DEC-079) e as rotas próprias da Comunidade (DEC-113), que só leem ou alteram conteúdo
   publicado para esse grupo, mediante aceite específico de privacidade. A moderação é isolada e não
   concede acesso a perfil ou registros clínicos.

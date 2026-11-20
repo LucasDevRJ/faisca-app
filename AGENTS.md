@@ -52,7 +52,9 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    só GET, só de pacientes com vínculo ativo e só das **áreas que o paciente liberou para ela**
    (DEC-097); qualquer outro caso retorna 403. Exceções: os POSTs que criam o vínculo
    (`/links/redeem-code`, `/links/accept-invite`, DEC-031), as marcas de leitura da própria terapeuta
-   (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057), os avisos do mural
+   (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057), a resposta dela ao
+   pedido do paciente para ver essas marcas (`PUT /therapist/read-receipts/:patientId`, com vínculo
+   ativo; grava só a preferência dela no vínculo, DEC-117), os avisos do mural
    dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079) e **somente a
    psicóloga** criando um plano para o paciente (`POST /therapist/patients/:patientId/plans`, DEC-102).
    As rotas específicas da Comunidade (DEC-113), fora de `/therapist/patients`, podem ler e alterar

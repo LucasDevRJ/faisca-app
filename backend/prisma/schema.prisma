@@ -560,20 +560,26 @@ enum CommunityReportStatus {
 // Escritos à mão na migration: no máximo um vínculo ativo por paciente e tipo (índice único parcial, DEC-097)
 // e ninguém se vincula a si mesmo (CHECK).
 model TherapistLink {
-  agreedTasks     HomeworkTask[]
-  id              String           @id @default(uuid()) @db.Uuid
-  patientId       String           @db.Uuid
-  therapistId     String           @db.Uuid
-  method          LinkMethod
-  createdAt       DateTime         @default(now())
-  revokedAt       DateTime?
+  agreedTasks             HomeworkTask[]
+  id                      String           @id @default(uuid()) @db.Uuid
+  patientId               String           @db.Uuid
+  therapistId             String           @db.Uuid
+  method                  LinkMethod
+  createdAt               DateTime         @default(now())
+  revokedAt               DateTime?
   // O tipo da profissional no momento do vínculo (DEC-097): o índice único parcial usa ele.
-  kind            ProfessionalKind
+  kind                    ProfessionalKind
   // O que o paciente liberou para esta profissional. Vínculo novo começa sem nada; os que já
   // existiam ganharam todas as áreas na migration, para nada mudar para quem já usava.
-  sharedAreas     SharedArea[]     @default([])
+  sharedAreas             SharedArea[]     @default([])
   // null = o paciente ainda não viu o aviso de novo vínculo no app.
-  seenByPatientAt DateTime?
+  seenByPatientAt         DateTime?
+  // "Lido" para o paciente (DEC-117): só aparece com os dois lados ligados. O paciente pede
+  // (requestedAt) e a profissional ativa (sharedAt) ou responde "Agora não" (notNowAt), que só
+  // esconde o aviso dela. O paciente nunca vê a recusa. Desligar do lado do paciente zera os três.
+  readReceiptsRequestedAt DateTime?
+  readReceiptsSharedAt    DateTime?
+  readReceiptsNotNowAt    DateTime?
 
   patient   User @relation("LinkPatient", fields: [patientId], references: [id], onDelete: Cascade)
   therapist User @relation("LinkTherapist", fields: [therapistId], references: [id], onDelete: Cascade)
