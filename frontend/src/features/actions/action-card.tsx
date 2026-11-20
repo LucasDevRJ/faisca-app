@@ -8,6 +8,7 @@ import { ActionPhotos } from './action-photos';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action } from './actions-api';
 import { RecordLinksPanel } from '../record-links/record-links-panel';
+import { recordAnchorId } from '../record-links/record-links-format';
 
 const STATUS_LABEL: Record<Action['status'], string> = {
   PLANEJADA: 'Planejada',
@@ -40,6 +41,8 @@ export function ActionCard(props: ActionCardProps) {
 
   return (
     <article
+      id={recordAnchorId(action.id)}
+      tabIndex={-1}
       aria-labelledby={titleId}
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4"
     >

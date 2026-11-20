@@ -26,7 +26,7 @@ const ACCESS: Record<LinkedRecordType, { shared: SharedArea; privacy?: PrivacyAr
   MEDICATION: { shared: 'MEDICATION', privacy: 'medication' },
 };
 
-type RecordSummary = { type: LinkedRecordType; id: string; date: string; title: string; measure?: string };
+type RecordSummary = { type: LinkedRecordType; id: string; date: string; title: string; measure?: string; observation?: string; parentId?: string };
 type Delegate = { findFirst(args: object): Promise<Record<string, unknown> | null>; findMany(args: object): Promise<Record<string, unknown>[]> };
 function delegate(type: LinkedRecordType): Delegate {
   return (prisma as unknown as Record<string, Delegate>)[MODEL[type][0]]!;
@@ -45,7 +45,9 @@ function summary(type: LinkedRecordType, row: Record<string, unknown>): RecordSu
   const measure = type === 'THOUGHT_RECORD'
     ? `Crença ${String(row.beliefLevel ?? '—')}/10${Array.isArray(row.emotions) ? ` · ${row.emotions.map((emotion) => `${String(emotion.emotion)} ${String(emotion.intensity)}/10`).join(', ')}` : ''}`
     : type === 'TENSION_EPISODE' ? `Tensão ${String(row.tensionLevel ?? '—')}/10` : undefined;
-  return { type, id, date, title, ...(measure && { measure }) };
+  const observation = type === 'ACTIVITY' && typeof row.observation === 'string' ? row.observation : undefined;
+  const parentId = type === 'PLAN_ENTRY' && typeof row.planId === 'string' ? row.planId : undefined;
+  return { type, id, date, title, ...(measure && { measure }), ...(observation && { observation }), ...(parentId && { parentId }) };
 }
 
 export function createRecordLinksService() {

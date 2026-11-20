@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Activity } from '../features/activities/activities-api';
 import { renderRoute } from '../test/render';
-import { apiError, fakeActivity, loggedIn, server } from '../test/server';
+import { apiError, fakeActivity, fakeThoughtRecord, loggedIn, server } from '../test/server';
 
 // "Hoje" fixo: quinta, 24/09/2026, 15h em São Paulo. Só o relógio é simulado; os timers
 // continuam reais para o MSW e o userEvent.
@@ -213,6 +213,40 @@ describe('RecordsPage: seletor de registros ligados', () => {
     await user.selectOptions(selector, `THOUGHT_RECORD:${targetId}`);
     expect(within(card).getByText('Texto completo do registro:')).toBeInTheDocument();
     expect(within(card).getByText(title)).toBeInTheDocument();
+  });
+
+  it('mostra a anotação da atividade na ligação e abre o pensamento relacionado', async () => {
+    const observation = 'Foi bom perceber que consegui aproveitar a atividade.';
+    const activity = fakeActivity({ name: 'Academia', observation });
+    const thought = fakeThoughtRecord({
+      id: '00000000-0000-4000-9000-000000000099',
+      situationDate: '2026-09-24',
+      automaticThought: 'Pensamento relacionado fictício',
+    });
+    weekHandler([activity]);
+    server.use(
+      http.get('*/api/record-links', () => HttpResponse.json({ links: [{
+        id: '00000000-0000-4000-9000-000000000098',
+        kind: 'RELATED',
+        source: { type: 'ACTIVITY', id: activity.id, date: activity.activityDate, title: activity.name, observation },
+        target: { type: 'THOUGHT_RECORD', id: thought.id, date: thought.situationDate, title: thought.automaticThought },
+      }] })),
+      http.get('*/api/thought-records', () => HttpResponse.json({ thoughtRecords: [thought] })),
+    );
+    const user = userEvent.setup();
+    const { router } = renderRoute('/registros');
+
+    const card = await findCard('Academia');
+    const linksPanel = within(card).getByRole('region', { name: 'Registros ligados' });
+    expect(await within(linksPanel).findByText(observation)).toBeInTheDocument();
+    const related = await within(card).findByRole('link', { name: /Pensamento relacionado fictício/ });
+    expect(related).toHaveAttribute('href', `/pensamentos?semana=2026-09-21#registro-${thought.id}`);
+
+    await user.click(related);
+    expect(await screen.findByRole('heading', { name: 'Registro de Pensamentos' })).toBeInTheDocument();
+    expect(await screen.findByText('Pensamento relacionado fictício')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/pensamentos');
+    expect(router.state.location.hash).toBe(`#registro-${thought.id}`);
   });
 });
 

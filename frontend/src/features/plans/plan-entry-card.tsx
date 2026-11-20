@@ -7,6 +7,7 @@ import { formatDateTime } from '../links/link-format';
 import { formatEntryTime } from './plan-labels';
 import type { PlanEntry } from './plans-api';
 import { RecordLinksPanel } from '../record-links/record-links-panel';
+import { recordAnchorId } from '../record-links/record-links-format';
 
 // readOnly: visão da terapeuta. Sem botões e sempre com a hora do registro. showPlan: na visão
 // "Para ler", que junta registros de vários planos, o nome do plano vem no topo.
@@ -24,6 +25,8 @@ export function PlanEntryCard(props: PlanEntryCardProps) {
 
   return (
     <article
+      id={recordAnchorId(entry.id)}
+      tabIndex={-1}
       aria-labelledby={titleId}
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4"
     >

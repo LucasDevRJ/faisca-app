@@ -86,7 +86,7 @@ export function PlanPage() {
     <>
       {back}
       <section className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold break-words sm:text-4xl">{current.title}</h1>
+        <h1 id={`registro-${current.id}`} tabIndex={-1} className="text-3xl font-bold break-words focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-text sm:text-4xl">{current.title}</h1>
         <details>
           <summary className="min-h-11 cursor-pointer content-center font-medium text-primary-text">
             Perguntas do plano
