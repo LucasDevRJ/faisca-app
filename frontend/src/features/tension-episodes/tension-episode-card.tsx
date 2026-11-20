@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { buttonClasses } from '../../components/ui/button-styles';
@@ -46,6 +47,8 @@ export function TensionEpisodeCard(props: TensionEpisodeCardProps) {
       )}
 
       {props.readOnly && props.footer}
+      {/* Só na visão do paciente, e só se a profissional ativou (DEC-118). */}
+      {!props.readOnly && <ReadReceiptLine type="TENSION_EPISODE" id={props.episode.id} />}
 
       {canChange && (
         <div className="flex gap-1">

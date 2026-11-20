@@ -10,11 +10,14 @@ import {
   markLinkSeen,
   redeemLinkCode,
   revokeLink,
+  setReadReceiptsRequested,
+  setReadReceiptsShared,
   setSharedAreas,
   type SharedArea,
 } from './links-api';
 
 const LINK_KEY = ['link'] as const;
+export const READ_RECEIPTS_KEY = ['read-receipts'] as const;
 // Exportada para a tela do paciente recarregar a lista quando o vínculo cai (403).
 export const PATIENTS_KEY = ['linked-patients'] as const;
 
@@ -45,13 +48,33 @@ export function useCancelInvite() {
   return usePatientLinkMutation(() => cancelInvite());
 }
 
+// Desfazer o vínculo e mudar as áreas também mudam as leituras que o paciente vê (DEC-118): sem
+// recarregar, um "Lido" de uma área fechada ficaria na tela até a próxima busca.
+function useLinkAndReceiptsMutation<TInput, TResult>(mutationFn: (input: TInput) => Promise<TResult>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: LINK_KEY });
+      await queryClient.invalidateQueries({ queryKey: READ_RECEIPTS_KEY });
+    },
+  });
+}
+
 export function useRevokeLink() {
-  return usePatientLinkMutation((linkId: string) => revokeLink(linkId));
+  return useLinkAndReceiptsMutation((linkId: string) => revokeLink(linkId));
 }
 
 export function useSetSharedAreas() {
-  return usePatientLinkMutation(({ linkId, areas }: { linkId: string; areas: SharedArea[] }) =>
+  return useLinkAndReceiptsMutation(({ linkId, areas }: { linkId: string; areas: SharedArea[] }) =>
     setSharedAreas(linkId, areas),
+  );
+}
+
+// Ligar ou desligar o pedido muda também o que aparece nos cartões (DEC-118).
+export function useSetReadReceiptsRequested() {
+  return useLinkAndReceiptsMutation(({ linkId, requested }: { linkId: string; requested: boolean }) =>
+    setReadReceiptsRequested(linkId, requested),
   );
 }
 
@@ -82,5 +105,13 @@ export function useAcceptInvite() {
       await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
       await queryClient.invalidateQueries({ queryKey: PATIENTS_KEY });
     },
+  });
+}
+
+export function useSetReadReceiptsShared(patientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (shared: boolean) => setReadReceiptsShared(patientId, shared),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: PATIENTS_KEY }),
   });
 }

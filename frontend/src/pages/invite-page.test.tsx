@@ -161,6 +161,7 @@ describe('aviso de novo vínculo em /registros', () => {
     seen: false,
     kind: 'PSIQUIATRIA' as const,
     sharedAreas: [],
+    readReceipts: 'OFF' as const,
     therapist: { name: 'Tereza Fictícia', email: 'tereza@faisca.test', avatarVersion: null, councilNumber: null },
   };
   const linked: LinkStatus = { links: [newLink], link: newLink, invite: null, code: null };

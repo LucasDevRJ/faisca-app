@@ -13,6 +13,7 @@ import { toReadLabel } from '../features/therapist/read-format';
 import { Avatar } from '../features/profile/avatar';
 import { avatarUrls } from '../features/profile/profile-api';
 import { useSession } from '../features/auth/use-session';
+import { PendingReadReceiptsRequests } from '../features/read-receipts/read-receipts-request';
 
 // Selo da agenda (DEC-045): "em pausa", "encerrada" ou "sem agenda". Vem do resumo de cada
 // paciente, que já passa pela checagem de vínculo; se não carregar, o item só fica sem selo.
@@ -95,6 +96,8 @@ export function PatientsPage() {
       <h1 className="text-4xl font-bold">Meus pacientes</h1>
       <PrivacyUpdateBanner />
       {patients.data && <ToReadTotal patients={patients.data} />}
+      {/* Pedidos para ver quando ela lê (DEC-118), um por paciente, até ela responder. */}
+      {patients.data && <PendingReadReceiptsRequests patients={patients.data} />}
 
       <RedeemCodeForm />
 

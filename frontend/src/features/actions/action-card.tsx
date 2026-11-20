@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { LongText } from '../../components/ui/long-text';
@@ -78,6 +79,8 @@ export function ActionCard(props: ActionCardProps) {
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(action.createdAt)}</p>}
       {props.readOnly && props.footer}
+      {/* Só na visão do paciente, e só se a profissional ativou (DEC-118). */}
+      {!props.readOnly && <ReadReceiptLine type="ACTION" id={props.action.id} />}
 
       {!props.readOnly && planned && (
         <div className="flex flex-col gap-2">

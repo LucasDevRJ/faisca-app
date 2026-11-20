@@ -427,7 +427,9 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   quando quiser; desligar do lado do paciente zera os dois lados, e um pedido novo volta a esperar a
   resposta dela. Desmarcar como lido também tira a data da tela do paciente. As duas contas precisam
   do aceite do aviso que cita o recurso (`2026-11.10`). Sem notificação do pedido por e-mail ou push
-  por ora (#82, #32).
+  por ora (#82, #32). Telas (DEC-118): a caixa "Quero ver quando [nome] ler os meus registros" no
+  cartão de cada profissional em Conta; "Lido pela sua psicóloga em 12/11" no fim do cartão do registro;
+  o pedido em "Meus pacientes" e na página do paciente, com "Ativar para [nome]" e "Agora não".
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta

@@ -182,6 +182,13 @@ Na prática clínica tradicional:
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
 
+**Em desenvolvimento — Ver quando a profissional leu (#130):** opcional e dos dois lados. O paciente
+pede em Conta para ver quando a psicóloga ou a psiquiatra lê os registros dele; cada profissional
+escolhe, por paciente, se ativa ou responde "Agora não", e o paciente nunca fica sabendo da recusa.
+Com os dois ligados, aparece no registro só "Lido pela sua psicóloga em 12/11": nunca "não lido" nem
+o que falta ler. Qualquer um desliga quando quiser. Ainda não publicado: ao entrar no ar, o "Cuidado
+clínico" da seção 4.2 passa a dizer que o paciente só vê a leitura quando os dois ligam.
+
 **Em desenvolvimento — Ligações entre registros (#207) e repetição de pensamentos (#166):** o
 paciente poderá relacionar registros de diferentes áreas. A psicóloga só verá a ligação se as duas
 áreas estiverem compartilhadas e cobertas pelos aceites de privacidade. Pensamentos e episódios de

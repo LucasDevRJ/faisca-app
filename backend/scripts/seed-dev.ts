@@ -377,6 +377,12 @@ await prisma.$transaction(async (tx) => {
       },
     });
   }
+  // "Lido" para o paciente (DEC-118): a paciente dev pediu, e o pedido espera a resposta da terapeuta
+  // dev, para ver o aviso em "Meus pacientes". Ativar mostra as leituras abaixo nos cartões dela.
+  await tx.therapistLink.updateMany({
+    where: { patientId: patient.id, therapistId: therapist.id, revokedAt: null },
+    data: { readReceiptsRequestedAt: new Date(), readReceiptsSharedAt: null, readReceiptsNotNowAt: null },
+  });
 
   // Marcas de leitura da terapeuta dev (DEC-057, DEC-058), para ver os três estados na tela: os
   // pensamentos mais antigos lidos, um lido antes de mudar (atualizado) e o resto para ler.

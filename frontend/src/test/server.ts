@@ -16,7 +16,7 @@ export const fakeUser: SessionUser = {
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
-  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true },
+  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true, readReceipts: true },
   pendingAnnouncement: null,
   palette: 'SALVIA',
   accessibility: DEFAULT_ACCESSIBILITY,
@@ -25,7 +25,7 @@ export const fakeUser: SessionUser = {
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
 export const outdatedPrivacy = {
   privacyUpToDate: false,
-  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false, sleepMood: false, medication: false, community: false, medications: false },
+  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false, sleepMood: false, medication: false, community: false, medications: false, readReceipts: false },
 } satisfies Partial<SessionUser>;
 
 // Sessão fictícia da agenda (DEC-045): recorrente e agendada, às 14:00, por padrão.
@@ -178,6 +178,8 @@ export const handlers = [
   // Sem vínculo e sem pacientes, por padrão.
   http.get('*/api/link', () => HttpResponse.json({ links: [], link: null, invite: null, code: null })),
   http.get('*/api/links/patients', () => HttpResponse.json({ patients: [] })),
+  // "Lido" para o paciente (DEC-118): nenhuma leitura visível, por padrão.
+  http.get('*/api/read-receipts', () => HttpResponse.json({ receipts: [] })),
   // Mural de avisos (DEC-080): nenhum aviso, por padrão.
   http.get('*/api/notices', () => HttpResponse.json({ notices: [], unseenCount: 0 })),
   http.get('*/api/therapist/notices', () => HttpResponse.json({ notices: [] })),
