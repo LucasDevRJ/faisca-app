@@ -20,7 +20,13 @@ beforeEach(async () => {
   otherPatientId = (await createConfirmedUser({ email: 'outra-ligacoes@faisca.test' })).id;
   therapistId = (await createConfirmedUser({ email: 'profissional-ligacoes@faisca.test', patient: false, therapist: true })).id;
   records = await Promise.all([patientId, patientId, otherPatientId].map((userId, index) => prisma.activity.create({
-    data: { userId, name: `Atividade fictícia ${index}`, activityDate: dateOnlyToDate(todayInAppZone()), status: 'PLANEJADA', ...(index === 0 && { observation: 'Anotação opcional fictícia.' }) },
+    data: {
+      userId,
+      name: `Atividade fictícia ${index}`,
+      activityDate: dateOnlyToDate(todayInAppZone()),
+      status: index === 0 ? 'CONCLUIDA' : 'PLANEJADA',
+      ...(index === 0 && { wantBefore: 5, pleasure: 6, achievement: 7, observation: 'Anotação opcional fictícia.' }),
+    },
     select: { id: true },
   })));
 });
