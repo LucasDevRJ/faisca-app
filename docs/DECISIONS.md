@@ -2647,6 +2647,13 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   `@prisma/config` pedir `effect` 3.22.1 ou mais nova (conferir com `npm ls effect` a cada
   atualização do Prisma), e olhar o primeiro pre-deploy no Railway depois do merge.
 
+## DEC-117 — Paciente vê quando a profissional leu (API)
+- **Decisão (#130):** em construção. Reserva também a versão `2026-11.10` do aviso de privacidade, a
+  novidade `2026-11-lido-paciente` e a DEC-118 (telas).
+
+## DEC-118 — Paciente vê quando a profissional leu (telas)
+- **Decisão (#130):** em construção.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
