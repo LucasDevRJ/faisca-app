@@ -577,7 +577,7 @@ function RecordTabs({ tab, onSelect, counts, showPlans, allowed }: RecordTabsPro
     <div
       role="group"
       aria-label="Tipo de registro"
-      className={`grid ${labels.length > 4 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}
+      className={`grid min-w-0 ${labels.length > 4 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}
     >
       {labels.map((item) => {
         const key = item.tab ? TAB_COUNT[item.tab] : undefined;
@@ -587,15 +587,17 @@ function RecordTabs({ tab, onSelect, counts, showPlans, allowed }: RecordTabsPro
             key={item.label}
             variant={tab === item.tab ? 'primary' : 'secondary'}
             aria-pressed={tab === item.tab}
-            className="px-2 text-sm sm:px-5 sm:text-base"
+            className={`min-w-0 px-2 text-sm leading-tight sm:px-5 sm:text-base ${
+              labels.length > 4 ? 'flex-col gap-y-0.5 sm:flex-row sm:gap-y-0' : ''
+            }`}
             onClick={() => onSelect(item.tab)}
           >
-            {item.label}
+            <span className="min-w-0 max-w-full break-words text-center">{item.label}</span>
             {count ? (
               <>
                 <span
                   aria-hidden="true"
-                  className="rounded-full bg-bg px-1.5 text-xs font-semibold text-text tabular-nums"
+                  className="shrink-0 rounded-full bg-bg px-1.5 text-xs font-semibold text-text tabular-nums"
                 >
                   {count}
                 </span>

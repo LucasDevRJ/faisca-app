@@ -17,6 +17,8 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - Quem tem os dois perfis alterna entre "Meus registros" e "Meus pacientes".
   Quem tem um perfil só nunca vê telas do outro.
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.
+- As telas de entrar e de cadastro têm "Por que Faísca?", fechado por padrão, que explica o nome
+  pela ativação comportamental (o mesmo texto do `docs/BRIEFING-IA.md`).
 - Recuperação de senha por e-mail.
 - **Sair de todos os aparelhos**, em Conta: confirmado com a senha, encerra todas as sessões da
   própria conta, inclusive a do aparelho em uso (DEC-085). Os outros aparelhos percebem na
@@ -209,8 +211,11 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
 - O seletor começa com registros próximos à data do registro aberto e permite ampliar o período.
   Mostra as datas no padrão brasileiro (DD/MM/AAAA) e uma prévia curta para títulos longos; o texto
   integral continua acessível e é mostrado após selecionar o registro. A prévia é local e
-  determinística, sem serviço de IA. Ligações funcionam com registros finais. Apagar qualquer
-  registro também apaga suas ligações.
+  determinística, sem serviço de IA. Na ligação com uma Atividade, o campo opcional “Quer anotar
+  algo?” também aparece quando preenchido. O título do registro ligado é um link interno que abre a
+  área e o período correspondentes e leva ao próprio registro. Na visão da profissional, essa
+  navegação mantém as abas e períodos sujeitos às permissões e áreas já compartilhadas. Ligações
+  funcionam com registros finais. Apagar qualquer registro também apaga suas ligações.
 
 ## Ação
 Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das atividades (DEC-051).
@@ -331,6 +336,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - Nada no futuro e nada antes de 1950. Tetos: 50 remédios, 100 mudanças por remédio, 300 sintomas e
   400 dias de "como está" por sintoma. O paciente edita e apaga tudo; apagar um remédio mantém os
   sintomas, sem a ligação.
+- Nas listas e janelas de remédios e do que sente, as datas aparecem com o ano (DD/MM/AAAA), porque
+  o histórico atravessa anos; o gráfico do sono e humor, que mostra uma semana, segue com dd/mm.
 - O Faísca não avalia se é efeito do remédio, não sugere dose, troca, interação nem parada e não
   avisa a profissional. Push e e-mail nunca falam de remédio nem de sintoma.
 - **Caixa própria no vínculo**, "Remédios e o que sinto" (`MEDICATIONS`), fechada para todas as
@@ -552,6 +559,12 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 ## Tom e interface
 - Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
 - Textos acolhedores ("Conta como foi?") por padrão, ou literais e objetivos com **Linguagem direta** ligada ("Avaliar atividade", DEC-087); nos dois modos, sem gamificação nem mensagens que gerem culpa.
+- **Retorno ao concluir ou avaliar** (issue #93): quando o paciente conclui uma atividade pelo "Conta
+  como foi?" ou avalia uma Ação, o cartão assenta (~300 ms) e um ✓ se desenha uma vez num círculo
+  verde-sálvia no canto dele; o leitor de tela ouve "Registro guardado.". É reconhecimento calmo, sem
+  confete, "parabéns", contador ou movimento contínuo. O ✓ some ao abrir outra ação ou sair da tela.
+  Com **Menos movimento** (conta ou sistema), nada se move e o ✓ aparece pronto. Só no contexto do
+  paciente; "Não aconteceu" e o registro direto em "Já fiz" não ganham o retorno.
 - PWA instalável; usar o app exige conexão.
 - **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
   tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra

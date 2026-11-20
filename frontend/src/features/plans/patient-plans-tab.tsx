@@ -146,11 +146,11 @@ export function PatientPlansTab({
       )}
 
       <section
-        aria-labelledby="plan-title"
+        aria-labelledby={`registro-${selected.id}`}
         className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-soft"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <h3 id="plan-title" className="text-lg font-semibold break-words">
+          <h3 id={`registro-${selected.id}`} tabIndex={-1} className="text-lg font-semibold break-words focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-text">
             {selected.title}
           </h3>
           {selected.archived && (

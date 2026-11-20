@@ -1,4 +1,4 @@
-import { daysBetween, formatDayMonth } from '../activities/week';
+import { daysBetween, formatFullDate } from '../activities/week';
 import type { ChangeKind, Medication, MedicationChange, Symptom } from './medications-api';
 
 // Textos de Remédios e o que sinto (DEC-115), aprovados pelo usuário. O Faísca guarda o que a pessoa
@@ -24,9 +24,9 @@ export function medicationLine(medication: Pick<Medication, 'name' | 'dose' | 's
   return [medication.name, medication.dose, medication.schedule].filter(Boolean).join(' · ');
 }
 
-// "12/11: mudou a dose para 100 mg"; um segundo COMECOU é "voltou a tomar".
+// "12/11/2026: mudou a dose para 100 mg"; um segundo COMECOU é "voltou a tomar".
 export function changeLine(change: MedicationChange, index: number): string {
-  const date = formatDayMonth(change.changeDate);
+  const date = formatFullDate(change.changeDate);
   if (change.kind === 'COMECOU') {
     const verb = index === 0 ? 'começou' : 'voltou a tomar';
     return `${date}: ${verb}${change.dose ? `, ${change.dose}` : ''}`;
@@ -52,17 +52,17 @@ export function sinceChangeText(symptom: Symptom, medications: Medication[]): st
   return `${since.days === 1 ? '1 dia' : `${since.days} dias`} depois de ${action.after} ${name}`;
 }
 
-// "Desde 10/11 · 5 dias depois de mudar a dose de Remédio A".
+// "Desde 10/11/2026 · 5 dias depois de mudar a dose de Remédio A".
 export function symptomSince(symptom: Symptom, medications: Medication[]): string {
   const since = sinceChangeText(symptom, medications);
-  return [`Desde ${formatDayMonth(symptom.startedOn)}`, since].filter(Boolean).join(' · ');
+  return [`Desde ${formatFullDate(symptom.startedOn)}`, since].filter(Boolean).join(' · ');
 }
 
-// "Passou em 18/11 (durou 9 dias)". Um sintoma que começou e passou no mesmo dia durou 1 dia.
+// "Passou em 18/11/2026 (durou 9 dias)". Um sintoma que começou e passou no mesmo dia durou 1 dia.
 export function symptomEnded(symptom: Symptom): string | null {
   if (!symptom.endedOn) return null;
   const days = daysBetween(symptom.startedOn, symptom.endedOn) + 1;
-  return `Passou em ${formatDayMonth(symptom.endedOn)} (durou ${days === 1 ? '1 dia' : `${days} dias`})`;
+  return `Passou em ${formatFullDate(symptom.endedOn)} (durou ${days === 1 ? '1 dia' : `${days} dias`})`;
 }
 
 // "7 → 5 → 3": a evolução da intensidade, para ler de relance.

@@ -170,13 +170,13 @@ describe('paciente: Meus remédios e O que tenho sentido', () => {
     renderRoute('/sono-humor?semana=2026-11-09');
 
     const card = (await screen.findByRole('heading', { name: 'Remédio Fictício A · 100 mg · de manhã' })).closest('li')!;
-    expect(within(card).getByText('Em uso desde 20/09')).toBeInTheDocument();
-    expect(within(card).getByText('20/09: começou, 50 mg')).toBeInTheDocument();
-    expect(within(card).getByText('05/11: mudou a dose para 100 mg')).toBeInTheDocument();
+    expect(within(card).getByText('Em uso desde 20/09/2026')).toBeInTheDocument();
+    expect(within(card).getByText('20/09/2026: começou, 50 mg')).toBeInTheDocument();
+    expect(within(card).getByText('05/11/2026: mudou a dose para 100 mg')).toBeInTheDocument();
     expect(within(card).getByText('Nota fictícia da mudança.')).toBeInTheDocument();
 
     const felt = screen.getByRole('heading', { name: 'enjoo de manhã' }).closest('li')!;
-    expect(within(felt).getByText('Desde 10/11 · 5 dias depois de mudar a dose de Remédio Fictício A')).toBeInTheDocument();
+    expect(within(felt).getByText('Desde 10/11/2026 · 5 dias depois de mudar a dose de Remédio Fictício A')).toBeInTheDocument();
     expect(within(felt).getByText('7 → 5')).toBeInTheDocument();
     // A mudança de 05/11 fica fora da semana mostrada: não vira linha no gráfico.
     expect(screen.queryByText('Mudanças no remédio')).not.toBeInTheDocument();
@@ -235,7 +235,7 @@ describe('paciente: Meus remédios e O que tenho sentido', () => {
     renderRoute('/sono-humor?semana=2026-11-09');
 
     await user.click(await screen.findByText(/Remédios que já tomei \(1\)/));
-    expect(screen.getByText('Parou em 20/10')).toBeInTheDocument();
+    expect(screen.getByText('Parou em 20/10/2026')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Registrar mudança/ }));
     const dialog = await screen.findByRole('dialog', { name: /Registrar mudança/ });
     expect(within(dialog).getAllByRole('radio').map((radio) => radio.closest('label')?.textContent)).toEqual(['Voltei a tomar']);
@@ -426,7 +426,7 @@ describe('profissional: Remédios e o que sente', () => {
     expect(await screen.findByRole('heading', { name: 'Remédios e o que sente' })).toBeInTheDocument();
     expect(screen.getByText('Anotações de Paula, sem avaliação do Faísca.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Remédio Fictício A · 100 mg · de manhã' })).toBeInTheDocument();
-    expect(screen.getByText('Desde 10/11 · 5 dias depois de mudar a dose de Remédio Fictício A')).toBeInTheDocument();
+    expect(screen.getByText('Desde 10/11/2026 · 5 dias depois de mudar a dose de Remédio Fictício A')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Registrar mudança|Editar|Como está agora|Já passou/ })).not.toBeInTheDocument();
     expect(checkInsRequested).toEqual([]);
   });

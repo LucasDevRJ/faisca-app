@@ -20,6 +20,7 @@ dado de paciente ou segredo aqui.
 ## 1. Quem é o autor e o que é o Faísca
 
 - **Nome do projeto:** Faísca
+- **Por que Faísca:** uma faísca é pequena, mas consegue acender um fogo. Na ativação comportamental, que faz parte da Terapia Cognitivo-Comportamental, a ideia é parecida: começar por algo pequeno, mesmo sem vontade, e notar o que muda depois. O nome lembra que um passo pequeno já conta. (Mesmo texto do "Por que Faísca?" das telas de entrar e de cadastro; em conteúdos, evite prometer que o humor melhora: "notar o que muda", não "ficar bem".)
 - **Endereço oficial:** https://minhafaisca.com.br
 - **Autor:** Lucas Pereira de Lima (contato do projeto: `suporte@minhafaisca.com.br`)
 - **O que é:** produto digital independente criado para digitalizar e acolher atividades essenciais da **Terapia Cognitivo-Comportamental (TCC)** no dia a dia entre as sessões. O Faísca **entrou em produção em 30/09/2026**, está em **uso real e contínuo por paciente e psicóloga**, e tem **cadastro aberto e gratuito**, sem anúncios e sem pedir documentos pessoais.
@@ -64,6 +65,7 @@ Na prática clínica tradicional:
   - Se não conseguiu fazer, marca **"Não aconteceu"** (`NAO_REALIZADA`) com o diálogo acolhedor *"Tudo bem, quer contar o que aconteceu?"* e observação opcional.
   - Também permite criar registro retroativo de algo já feito.
   - **Fotos das atividades:** o paciente pode adicionar **até 10 fotos** a uma atividade, como lembrança do que fez: enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta. Numa atividade que não aconteceu, dá para tirar as fotos que já estavam lá. Elas aparecem só para a profissional a quem o paciente liberar.
+  - **Retorno calmo ao concluir:** ao contar como foi uma atividade (ou avaliar uma Ação), o cartão assenta e um ✓ se desenha uma vez num círculo verde-sálvia; o leitor de tela ouve *"Registro guardado."*. É reconhecimento do esforço, sem confete, "parabéns" ou pontos. Com **Menos movimento** ligado, o ✓ aparece pronto, sem animação.
   - Exibe um **gráfico comparativo** (*Vontade antes × Prazer × Realização*) em barras horizontais no celular e colunas lado a lado no tablet/computador, usando uma única cor em três intensidades (nunca vermelho/verde).
 
 - **Registro de Pensamentos (RPD):**
@@ -194,7 +196,9 @@ paciente poderá relacionar registros de diferentes áreas. A psicóloga só ver
 áreas estiverem compartilhadas e cobertas pelos aceites de privacidade. Pensamentos e episódios de
 tensão terão atalhos para criar uma nova ocorrência sem alterar a anterior; o histórico mostrará a
 evolução de crença, emoções e tensão. No seletor, as datas aparecerão no padrão brasileiro e os
-títulos longos terão uma prévia local, mantendo o texto integral acessível. Ainda não publicado.
+títulos longos terão uma prévia local, mantendo o texto integral acessível. A ligação também mostrará
+a anotação opcional da Atividade, quando existir, e permitirá abrir diretamente o registro relacionado.
+Ainda não publicado.
 
 
 **Em desenvolvimento — Busca nos registros (#152):** paciente e psicóloga poderão localizar registros
@@ -209,7 +213,7 @@ antes de aparecer. A comunidade não dá acesso aos registros clínicos.
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.
-3. **Feedback sensorial suave ao salvar:** animação, som e vibração sutis ao concluir um registro, com opção de desligar.
+3. **Feedback sensorial suave ao salvar:** som e vibração sutis e a animação também nos outros registros (Pensamentos, Tensão), com opção de desligar. A animação ao concluir uma atividade ou avaliar uma Ação já está no ar.
 4. **Trava do app (#137) e entrar com passkey.**
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
 

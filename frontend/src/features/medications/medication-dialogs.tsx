@@ -4,7 +4,7 @@ import { Dialog, DialogActions, DialogFooter, DialogForm } from '../../component
 import { choiceCardClasses, fieldClasses } from '../../components/ui/field-styles';
 import { ScoreField } from '../../components/ui/score-field';
 import { TextAreaField, TextField } from '../../components/ui/text-field';
-import { formatDayMonth, todayInAppZone } from '../activities/week';
+import { formatFullDate, todayInAppZone } from '../activities/week';
 import { getApiError } from '../auth/auth-api';
 import {
   CHANGE_NOTE_MAX,
@@ -554,7 +554,7 @@ export function SymptomCheckDialog({ symptom, onClose, onDone }: { symptom: Symp
               remove.mutate({ id: symptom.id, date }, { onSuccess: () => onDone('Anotação do dia apagada.') })
             }
           >
-            Apagar a anotação de {formatDayMonth(date)}
+            Apagar a anotação de {formatFullDate(date)}
           </Button>
         )}
         <Hint>{SAFETY_TEXT}</Hint>
@@ -577,7 +577,7 @@ export function EndSymptomDialog({ symptom, onClose, onDone }: { symptom: Sympto
     const found =
       dateError(endedOn, today) ??
       (endedOn < symptom.startedOn ? 'O fim precisa ser depois do começo.' : undefined) ??
-      (endedOn < lastCheck ? `Há anotação de “como está” em ${formatDayMonth(lastCheck)}: escolha esse dia ou depois.` : undefined);
+      (endedOn < lastCheck ? `Há anotação de “como está” em ${formatFullDate(lastCheck)}: escolha esse dia ou depois.` : undefined);
     setError(found);
     if (found) return;
     update.mutate({ id: symptom.id, input: { endedOn } }, { onSuccess: () => onDone('Anotado que já passou.') });

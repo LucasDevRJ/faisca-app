@@ -8,6 +8,7 @@ import { formatDateTime } from '../links/link-format';
 import { FIELD_TEXT, formatEpisodeTime } from './tension-episode-labels';
 import type { TensionEpisode } from './tension-episodes-api';
 import { RecordLinksPanel } from '../record-links/record-links-panel';
+import { recordAnchorId } from '../record-links/record-links-format';
 
 // readOnly: visão da terapeuta. Sem botões e sempre com a hora do registro (a SPEC mostra à
 // terapeuta as duas datas; a do episódio vem no título do dia).
@@ -25,6 +26,8 @@ export function TensionEpisodeCard(props: TensionEpisodeCardProps) {
 
   return (
     <article
+      id={recordAnchorId(episode.id)}
+      tabIndex={-1}
       aria-labelledby={titleId}
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4"
     >

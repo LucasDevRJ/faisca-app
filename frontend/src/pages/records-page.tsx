@@ -29,6 +29,7 @@ import { usePeriod, type Period } from '../features/cycle/use-period';
 import { daysInRange } from '../features/therapist/period';
 import { MyPeriodSummaryCard } from '../features/summary/period-summary-card';
 import { AREA_TITLE, summaryLinkClass, type SummaryArea } from '../features/summary/summary-format';
+import { SavedFeedback } from '../components/ui/saved-feedback';
 
 type OpenDialog = { kind: 'create'; date: string } | { kind: ActivityAction; activity: Activity } | null;
 
@@ -86,6 +87,8 @@ type PeriodRecordsProps = {
 function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: PeriodRecordsProps) {
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Atividade que a pessoa acabou de concluir: o cartão dela ganha o retorno calmo (issue #93).
+  const [savedId, setSavedId] = useState<string | null>(null);
   const days = daysInRange(period);
   const inCycle = period.mode === 'cycle';
   const here = inCycle ? 'neste ciclo' : 'nesta semana';
@@ -204,15 +207,17 @@ function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: Period
                     {ofDay.length > 0 && (
                       <div className="flex flex-col gap-3">
                         {ofDay.map((activity) => (
-                          <ActivityCard
-                            key={activity.id}
-                            activity={activity}
-                            today={today}
-                            onAction={(kind, a) => {
-                              setNotice(null);
-                              setDialog({ kind, activity: a });
-                            }}
-                          />
+                          <SavedFeedback key={activity.id} saved={savedId === activity.id}>
+                            <ActivityCard
+                              activity={activity}
+                              today={today}
+                              onAction={(kind, a) => {
+                                setNotice(null);
+                                setSavedId(null);
+                                setDialog({ kind, activity: a });
+                              }}
+                            />
+                          </SavedFeedback>
                         ))}
                       </div>
                     )}
@@ -228,7 +233,15 @@ function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: Period
       {dialog?.kind === 'edit' && <EditActivityDialog activity={dialog.activity} onClose={close} onDone={done} />}
       {dialog?.kind === 'start' && <StartActivityDialog activity={dialog.activity} onClose={close} onDone={done} />}
       {dialog?.kind === 'complete' && (
-        <CompleteActivityDialog activity={dialog.activity} onClose={close} onDone={done} />
+        <CompleteActivityDialog
+          activity={dialog.activity}
+          onClose={close}
+          onDone={(message) => {
+            done(message);
+            // Com aviso, só parte gravou (DEC-029): sem o retorno de concluído.
+            if (!message) setSavedId(dialog.activity.id);
+          }}
+        />
       )}
       {dialog?.kind === 'notDone' && <NotDoneDialog activity={dialog.activity} onClose={close} onDone={done} />}
       {dialog?.kind === 'delete' && <DeleteActivityDialog activity={dialog.activity} onClose={close} onDone={done} />}

@@ -1,6 +1,6 @@
 ---
 name: revisor-telas
-description: Revisor independente e só de leitura das telas do Faísca. Confere o diff do frontend/ contra o frontend/CLAUDE.md — tom acolhedor e sem culpa, cores e contraste nos dois temas, acessibilidade, celular, segurança e privacidade no front e testes de tela — e também o tom dos e-mails do backend quando eles mudam. Devolve um relatório sem alterar arquivos. Use antes de abrir PR que toque em frontend/src ou nos textos de e-mail, ou quando pedirem para "revisar as telas", "conferir o tom", "ver a acessibilidade" ou "revisar o visual".
+description: Revisor independente e só de leitura das telas do Faísca. Confere o diff do frontend/ contra o frontend/CLAUDE.md — tom acolhedor e sem culpa, cores e contraste nos dois temas, acessibilidade, celular, estouros de layout com textos e contadores, segurança e privacidade no front e testes de tela — e também o tom dos e-mails do backend quando eles mudam. Devolve um relatório sem alterar arquivos. Use antes de abrir PR que toque em frontend/src ou nos textos de e-mail, ou quando pedirem para "revisar as telas", "conferir o tom", "ver a acessibilidade" ou "revisar o visual".
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -23,7 +23,10 @@ escreveu este código: revise o que está no diff, não o que se pretendia fazer
    `frontend/src/styles/index.css`.
 3. Para cada componente alterado, leia o suficiente ao redor para entender como ele aparece na
    tela (quem o usa, em que estado) e não só as linhas do diff.
-4. Confira cada área abaixo. Só aponte problema que você consiga mostrar com `arquivo:linha`.
+4. Para transbordo, colisão, corte ou espaço responsivo estranho, siga também o roteiro
+   `.claude/skills/diagnosticar-defeito-front/SKILL.md`: identifique o tamanho de tela e a combinação
+   concreta de conteúdo, sem editar o código.
+5. Confira cada área abaixo. Só aponte problema que você consiga mostrar com `arquivo:linha`.
 
 ## As 7 áreas
 1. **Tom** (telas e e-mails)
@@ -63,6 +66,9 @@ escreveu este código: revise o que está no diff, não o que se pretendia fazer
    - Texto livre com `break-words` (nomes e textos de até 5000 caracteres); texto longo
      recolhido (`LongText`).
    - Linhas de botões ou chips que quebram (`flex-wrap`, grade), sem estourar a largura.
+   - Em grades de abas e chips, combine os rótulos mais longos com contadores/badges. O texto e o
+     número permanecem dentro do botão em 320, 375 e 390 px; o badge não alarga a coluna nem cobre o
+     rótulo. Verifique `min-width`, `shrink`, quebra e alinhamento do item, além da largura da grade.
    - O botão flutuante de "Novo registro" não cobre conteúdo nem ações do fim da página.
 6. **Segurança e privacidade no front**
    - Nada de token, sessão ou dado de saúde em `localStorage`, `sessionStorage` ou na URL. O

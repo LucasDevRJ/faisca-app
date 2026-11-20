@@ -157,6 +157,27 @@ describe('/acao', () => {
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0]!.path).toBe(`/actions/${action.id}/evaluate`);
     expect(writes[0]!.body).toEqual({ pleasure: 7, achievement: 6 });
+
+    // Retorno calmo ao avaliar (issue #93).
+    expect(await screen.findByText('Registro guardado.')).toHaveAttribute('role', 'status');
+    const evaluated = await screen.findByRole('article', { name: 'Caminhar' });
+    expect(evaluated.parentElement!.querySelector('[data-saved-check]')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('"Não deu desta vez" não ganha o retorno de avaliada', async () => {
+    const action = fakeAction({ name: 'Pintar' });
+    actionsApi([action]);
+    recordWrites();
+    const user = userEvent.setup();
+    renderRoute('/acao');
+
+    const card = await screen.findByRole('article', { name: 'Pintar' });
+    await user.click(within(card).getByRole('button', { name: 'Não deu desta vez' }));
+    const dialog = screen.getByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(document.querySelector('[data-saved-check]')).toBeNull();
+    expect(screen.queryByText('Registro guardado.')).not.toBeInTheDocument();
   });
 
   it('observação longa (DEC-067): 1500 caracteres passam; acima de 5000, aviso sem enviar', async () => {
