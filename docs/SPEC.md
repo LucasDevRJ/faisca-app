@@ -540,6 +540,12 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 ## Tom e interface
 - Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
 - Textos acolhedores ("Conta como foi?") por padrão, ou literais e objetivos com **Linguagem direta** ligada ("Avaliar atividade", DEC-087); nos dois modos, sem gamificação nem mensagens que gerem culpa.
+- **Retorno ao concluir ou avaliar** (issue #93): quando o paciente conclui uma atividade pelo "Conta
+  como foi?" ou avalia uma Ação, o cartão assenta (~300 ms) e um ✓ se desenha uma vez num círculo
+  verde-sálvia no canto dele; o leitor de tela ouve "Registro guardado.". É reconhecimento calmo, sem
+  confete, "parabéns", contador ou movimento contínuo. O ✓ some ao abrir outra ação ou sair da tela.
+  Com **Menos movimento** (conta ou sistema), nada se move e o ✓ aparece pronto. Só no contexto do
+  paciente; "Não aconteceu" e o registro direto em "Já fiz" não ganham o retorno.
 - PWA instalável; usar o app exige conexão.
 - **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
   tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra
