@@ -82,7 +82,7 @@ export function TensionChart({ episodes, range, appointmentDays, period }: Tensi
               dataKey="x"
               domain={[0, days]}
               ticks={ticks}
-              tickFormatter={(value: number) => formatDayMonth(addDays(range.from, Math.floor(value)))}
+              tickFormatter={(value: number) => formatDayMonth(addDays(range.from, Math.floor(value)), { year: false })}
               tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
               stroke="var(--color-border)"
             />

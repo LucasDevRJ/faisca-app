@@ -54,6 +54,7 @@ export function weekDays(monday: string): string[] {
 }
 
 const dayMonth = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: 'numeric', month: 'short' });
+const dayMonthYear = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' });
 const dayOnly = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: 'numeric' });
 const weekdayLong = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'long' });
 const dayMonthNumeric = new Intl.DateTimeFormat('pt-BR', {
@@ -61,42 +62,68 @@ const dayMonthNumeric = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
   month: '2-digit',
 });
+const fullDateNumeric = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'UTC',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
 
-// "21 a 27 de set." ou, virando o mês, "29 de set. a 5 de out."
-export function formatWeekRange(monday: string): string {
+// DEC-120: a data ganha o ano quando é de outro ano que não o atual (no fuso do app), para o passado
+// e para o futuro. `{ year: false }` é só para os rótulos do eixo dos gráficos, que mostram uma
+// semana e já têm o período no título.
+export type YearOption = { year?: boolean; today?: string };
+
+function showsYear(value: string, options: YearOption = {}): boolean {
+  if (options.year === false) return false;
+  return value.slice(0, 4) !== (options.today ?? todayInAppZone()).slice(0, 4);
+}
+
+function numeric(value: string, options?: YearOption): string {
+  return (showsYear(value, options) ? fullDateNumeric : dayMonthNumeric).format(toUtcDate(value));
+}
+
+// "21 a 27 de set." ou, virando o mês, "29 de set. a 5 de out."; de outro ano, "21 a 27 de set. de 2025".
+export function formatWeekRange(monday: string, options?: YearOption): string {
   const sunday = addDays(monday, 6);
   const start = toUtcDate(monday);
   const end = toUtcDate(sunday);
+  const startYear = showsYear(monday, options);
+  const endFormat = (showsYear(sunday, options) ? dayMonthYear : dayMonth).format(end);
   if (start.getUTCMonth() === end.getUTCMonth()) {
-    return `${dayOnly.format(start)} a ${dayMonth.format(end)}`;
+    return `${dayOnly.format(start)} a ${endFormat}`;
   }
-  return `${dayMonth.format(start)} a ${dayMonth.format(end)}`;
+  const sameYear = start.getUTCFullYear() === end.getUTCFullYear();
+  return `${(startYear && !sameYear ? dayMonthYear : dayMonth).format(start)} a ${endFormat}`;
 }
 
-// "segunda-feira, 21/09"
-export function formatDayHeading(value: string): string {
-  const date = toUtcDate(value);
-  return `${weekdayLong.format(date)}, ${dayMonthNumeric.format(date)}`;
+// "segunda-feira, 21/09"; de outro ano, "segunda-feira, 21/09/2025".
+export function formatDayHeading(value: string, options?: YearOption): string {
+  return `${weekdayLong.format(toUtcDate(value))}, ${numeric(value, options)}`;
 }
 
 const weekdayShort = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'short' });
 
-// "seg, 21/09": cabe ao lado de um nome sem ocupar uma linha inteira.
-export function formatShortDay(value: string): string {
-  const date = toUtcDate(value);
-  return `${weekdayShort.format(date).replace('.', '')}, ${dayMonthNumeric.format(date)}`;
+// "seg, 21/09": cabe ao lado de um nome sem ocupar uma linha inteira. De outro ano, "seg, 21/09/2025".
+export function formatShortDay(value: string, options?: YearOption): string {
+  return `${weekdayShort.format(toUtcDate(value)).replace('.', '')}, ${numeric(value, options)}`;
 }
 
-// "21/09"
-export function formatDayMonth(value: string): string {
-  return dayMonthNumeric.format(toUtcDate(value));
+// "21/09"; de outro ano, "21/09/2025".
+export function formatDayMonth(value: string, options?: YearOption): string {
+  return numeric(value, options);
 }
 
-const fullDateNumeric = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' });
-
-// "15/09/2026": para histórico que atravessa o ano, como remédios e o que a pessoa sente.
+// "15/09/2026", sempre com o ano: para o histórico de remédios e do que a pessoa sente (#241).
 export function formatFullDate(value: string): string {
   return fullDateNumeric.format(toUtcDate(value));
+}
+
+// Anos completos de `value` até `today` (0 se ainda não fez um ano ou se é no futuro).
+export function yearsSince(value: string, today: string = todayInAppZone()): number {
+  if (value >= today) return 0;
+  const years = Number(today.slice(0, 4)) - Number(value.slice(0, 4));
+  return today.slice(5) >= value.slice(5) ? years : years - 1;
 }
 
 // Quantos dias de `from` até `to` (negativo se `to` vem antes).

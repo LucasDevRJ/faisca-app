@@ -11,6 +11,7 @@ import {
   isValidDateOnly,
   startOfWeek,
   todayInAppZone,
+  yearsSince,
   weekDays,
 } from './week';
 
@@ -70,5 +71,35 @@ describe('dias relativos', () => {
     expect(formatRelativeDay('2026-09-28', '2026-09-27')).toBe('amanhã');
     expect(formatRelativeDay('2026-10-04', '2026-09-27')).toBe('em 7 dias');
     expect(formatRelativeDay('2026-09-24', '2026-09-27')).toBe('há 3 dias');
+  });
+});
+
+describe('ano nas datas de outro ano (DEC-120)', () => {
+  const today = '2026-01-05';
+
+  it('mostra o ano só quando a data é de outro ano, no passado e no futuro', () => {
+    expect(formatDayMonth('2026-01-02', { today })).toBe('02/01');
+    expect(formatDayMonth('2025-12-30', { today })).toBe('30/12/2025');
+    expect(formatDayMonth('2027-01-05', { today })).toBe('05/01/2027');
+    expect(formatDayHeading('2025-12-30', { today })).toBe('terça-feira, 30/12/2025');
+    expect(formatShortDay('2025-12-30', { today })).toBe('ter, 30/12/2025');
+  });
+
+  it('nos eixos dos gráficos, sem o ano', () => {
+    expect(formatDayMonth('2025-12-30', { today, year: false })).toBe('30/12');
+  });
+
+  it('semana de outro ano e semana da virada', () => {
+    expect(formatWeekRange('2025-09-15', { today })).toBe('15 a 21 de set. de 2025');
+    expect(formatWeekRange('2025-12-29', { today })).toBe('29 de dez. de 2025 a 4 de jan.');
+    expect(formatWeekRange('2025-12-29', { today: '2025-12-31' })).toBe('29 de dez. a 4 de jan. de 2026');
+    expect(formatWeekRange('2026-01-05', { today })).toBe('5 a 11 de jan.');
+  });
+
+  it('conta os anos completos', () => {
+    expect(yearsSince('2025-01-06', today)).toBe(0);
+    expect(yearsSince('2025-01-05', today)).toBe(1);
+    expect(yearsSince('2023-06-10', today)).toBe(2);
+    expect(yearsSince('2027-01-05', today)).toBe(0);
   });
 });

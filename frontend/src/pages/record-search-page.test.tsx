@@ -36,6 +36,29 @@ describe('buscar nos registros', () => {
     expect(bodies[0]).toMatchObject({ url: 'http://localhost:3000/api/records/search', body: { term: 'ansiosa', page: 1 } });
   });
 
+  it('com resultados de mais de um ano, separa por ano; de um ano só, sem título de ano (DEC-120)', async () => {
+    const older = { ...searchResult, id: '00000000-0000-4000-9000-000000000002', date: '2025-12-30' };
+    let results = [searchResult, older];
+    server.use(http.post('*/api/records/search', () =>
+      HttpResponse.json({ results, page: 1, pageSize: 20, total: results.length, hasMore: false })));
+    const user = userEvent.setup();
+    renderRoute('/buscar');
+
+    await user.type(await screen.findByRole('textbox', { name: 'O que você quer encontrar?' }), 'ansiosa');
+    await user.click(screen.getByRole('button', { name: 'Buscar' }));
+    const year2026 = await screen.findByRole('heading', { name: '2026' });
+    const year2025 = screen.getByRole('heading', { name: '2025' });
+    expect(year2026.compareDocumentPosition(year2025) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText('30/12/2025')).toBeInTheDocument();
+    expect(year2026).toHaveProperty('tagName', 'H3');
+    expect(screen.getAllByRole('heading', { level: 4 })).toHaveLength(2);
+
+    results = [searchResult];
+    await user.click(screen.getByRole('button', { name: 'Buscar' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: '2025' })).not.toBeInTheDocument());
+    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
+  });
+
   it('carrega páginas seguintes sem colocar a busca na URL', async () => {
     const pages: number[] = [];
     server.use(http.post('*/api/records/search', async ({ request }) => {

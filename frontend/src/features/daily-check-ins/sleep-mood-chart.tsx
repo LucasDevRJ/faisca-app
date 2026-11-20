@@ -62,7 +62,7 @@ export function SleepMoodChart({
             <CartesianGrid vertical={false} stroke="var(--color-border)" />
             <XAxis
               dataKey="date"
-              tickFormatter={(value: string) => formatDayMonth(value)}
+              tickFormatter={(value: string) => formatDayMonth(value, { year: false })}
               tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
               stroke="var(--color-border)"
               minTickGap={16}
