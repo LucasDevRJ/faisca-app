@@ -55,7 +55,7 @@ export function RecordLinksPanel({ type, id, repetitionHref, patientId, readOnly
       const observation = other.observation ?? (current.type === 'ACTIVITY' ? current.observation : undefined);
       return <div key={link.id} className="flex items-start justify-between gap-2 text-sm">
         <div className="min-w-0 break-words">
-          <Link to={recordLinkHref(other, patientId)} className="block min-h-11 rounded-sm underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text">
+          <Link to={recordLinkHref(other, patientId)} className="block min-h-11 cursor-pointer rounded-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text">
             <span className="block text-muted">{link.kind === 'REPETITION' ? 'Repetição · ' : ''}{TYPE_LABEL[other.type]} · {formatRecordDate(other.date)}</span>
             <span className="block font-medium text-primary-text">{other.title}</span>
             {other.measure && <span className="block text-muted">{other.measure}</span>}
