@@ -37,6 +37,8 @@ export type SessionUser = {
     community: boolean;
     // Remédios e o que sinto (DEC-114, DEC-115).
     medications: boolean;
+    // Ver quando a profissional leu (DEC-117, DEC-118).
+    readReceipts: boolean;
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;

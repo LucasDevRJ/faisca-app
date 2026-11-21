@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { buttonClasses } from '../../components/ui/button-styles';
@@ -56,6 +57,8 @@ export function PlanEntryCard(props: PlanEntryCardProps) {
       )}
 
       {props.readOnly && props.footer}
+      {/* Só na visão do paciente, e só se a profissional ativou (DEC-118). */}
+      {!props.readOnly && <ReadReceiptLine type="PLAN_ENTRY" id={props.entry.id} />}
 
       {canChange && (
         <div className="flex gap-1">
