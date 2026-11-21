@@ -53,7 +53,7 @@ export function CheckInDialog({
     if (Boolean(bedTime) !== Boolean(wakeTime)) found.times = 'Informe a hora em que deitou e a hora em que acordou.';
     else if (bedTime && bedTime === wakeTime) found.times = 'A hora de deitar e a de acordar são iguais.';
     if (moodWord.trim().length > MOOD_WORD_MAX) {
-      found.moodWord = `A palavra do dia pode ter até ${MOOD_WORD_MAX} caracteres.`;
+      found.moodWord = `A palavra ou frase do dia pode ter até ${MOOD_WORD_MAX} caracteres.`;
     }
     const answered = bedTime || sleepQuality !== null || mood !== null || moodWord.trim() || medication;
     if (!answered && !found.times) found.form = 'Preencha ao menos uma resposta.';
@@ -143,8 +143,9 @@ export function CheckInDialog({
           <legend className="mb-1 font-semibold">Humor</legend>
           <ClearableScore text={SCORE_TEXT.mood} value={mood} onChange={setMood} />
           <TextField
-            label="Uma palavra para o dia (opcional)"
+            label="Uma palavra ou frase para o dia (opcional)"
             placeholder="Ex.: cansado, tranquilo"
+            hint={`Até ${MOOD_WORD_MAX} caracteres.`}
             value={moodWord}
             onChange={(event) => setMoodWord(event.target.value)}
             error={errors.moodWord}

@@ -308,7 +308,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 
 ## Sono, humor e remédio (DEC-107, #188 e #171)
 - Um registro por dia, todo opcional: a hora em que deitou e a hora em que acordou (as horas de sono
-  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra para o dia e, para quem liga a
+  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra ou frase para o dia (até 120
+  caracteres) e, para quem liga a
   opção em Conta, "Tomou o remédio como combinado?" (Sim, Esqueci algum ou Hoje não). A noite pertence
   ao dia em que a pessoa acordou.
 - O paciente registra e edita os últimos 7 dias. Sem cobrança, sem sequência e sem lembrete diário.

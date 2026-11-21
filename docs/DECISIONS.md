@@ -2750,6 +2750,16 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** o "Para ler" da profissional segue com a regra das datas, mas sem título por
   ano, para não colidir com a paginação do PR #216. O resumo do período segue dd/mm, com a regra.
 
+## DEC-121 — Aumenta o limite da palavra do dia (21/11/2026)
+- **Decisão:** `moodWord` passa de 40 para até 120 caracteres. O campo continua opcional e com texto
+  livre; pode guardar uma palavra ou uma frase curta. O limite fica alinhado na interface, API e
+  restrição do banco. A migration altera a constraint com uma migration nova, sem editar a DEC-107
+  nem a migration já aplicada.
+- **Motivo:** 40 caracteres não comportavam frases curtas que descrevem melhor o humor do dia, como
+  a que o usuário tentou registrar.
+- **Limite conhecido:** segue sendo um campo breve, não um espaço para relato longo; o resumo do
+  período continua sem exibir a palavra ou frase.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

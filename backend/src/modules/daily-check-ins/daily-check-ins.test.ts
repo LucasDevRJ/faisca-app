@@ -125,7 +125,7 @@ describe('paciente: registrar o dia', () => {
       { mood: 11 },
       { sleepQuality: -1 },
       { mood: 6.5 },
-      { moodWord: 'x'.repeat(41) },
+      { moodWord: 'x'.repeat(121) },
       { moodWord: 'a\u0000' },
       { moodWord: 'linha\nquebrada' },
       { medication: 'TALVEZ' },
@@ -137,7 +137,7 @@ describe('paciente: registrar o dia', () => {
     }
     // Palavra só com espaços vira vazia, e sozinha não conta como resposta.
     expect((await agent.put(`/daily-check-ins/${today}`).send({ moodWord: '   ' })).status).toBe(400);
-    expect((await agent.put(`/daily-check-ins/${today}`).send({ moodWord: 'x'.repeat(40) })).status).toBe(200);
+    expect((await agent.put(`/daily-check-ins/${today}`).send({ moodWord: 'x'.repeat(120) })).status).toBe(200);
     expect(await prisma.dailyCheckIn.count({ where: { userId: otherId } })).toBe(0);
   });
 
@@ -162,7 +162,7 @@ describe('paciente: registrar o dia', () => {
     await expect(seed(patientId, today, { mood: 11 })).rejects.toThrow();
     await expect(seed(patientId, today, { bed: '23:00' })).rejects.toThrow();
     await expect(seed(patientId, today, { bed: '23:00', wake: '23:00' })).rejects.toThrow();
-    await expect(seed(patientId, today, { moodWord: 'x'.repeat(41) })).rejects.toThrow();
+    await expect(seed(patientId, today, { moodWord: 'x'.repeat(121) })).rejects.toThrow();
   });
 });
 

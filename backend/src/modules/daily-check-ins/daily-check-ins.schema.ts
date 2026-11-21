@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { listQuerySchema, THERAPIST_LIST_MAX_DAYS } from '../activities/activities.schema.js';
 
 // Sono, humor e remédio (DEC-107). Os números do CHECK da migration e do front precisam ser iguais.
-export const MOOD_WORD_MAX = 40;
+export const MOOD_WORD_MAX = 120;
 // O paciente registra e edita os últimos 7 dias (hoje e os 6 anteriores).
 export const CHECK_IN_WINDOW_DAYS = 7;
 // Lista do paciente: até 92 dias, para o gráfico do período (os 3 meses da psiquiatra, DEC-099).
@@ -32,7 +32,7 @@ export const checkInSchema = z
     moodWord: z
       .string()
       .trim()
-      .max(MOOD_WORD_MAX, { error: `A palavra do dia pode ter até ${MOOD_WORD_MAX} caracteres.` })
+      .max(MOOD_WORD_MAX, { error: `A palavra ou frase do dia pode ter até ${MOOD_WORD_MAX} caracteres.` })
       // Sem caracteres de controle: o nulo (\u0000) virava erro 500 no Postgres (revisor-seguranca).
       .regex(/^[^\p{Cc}]*$/u, { error: 'Use só letras, números e pontuação na palavra do dia.' })
       .transform((value) => (value === '' ? null : value))
