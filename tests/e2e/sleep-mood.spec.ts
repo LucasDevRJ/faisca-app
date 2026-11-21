@@ -18,7 +18,7 @@ test('aceita o aviso, registra o sono e o humor de hoje e vê o resumo no cartã
   await dialog.getByLabel('Que horas você deitou?').fill('23:30');
   await dialog.getByLabel('Que horas acordou?').fill('07:00');
   await expect(dialog.getByText('Dá 7h30 de sono.')).toBeVisible();
-  await dialog.getByLabel('Uma palavra para o dia (opcional)').fill('fictícia');
+  await dialog.getByLabel('Uma palavra ou frase para o dia (opcional)').fill('fictícia');
   await dialog.getByRole('button', { name: 'Salvar' }).click();
 
   await expect(card.getByText('Dormiu 7h30')).toBeVisible();
