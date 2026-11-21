@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
-import { addDays, formatDayMonth, formatWeekRange } from '../activities/week';
+import { addDays, formatDayMonth, formatWeekRange, yearsSince } from '../activities/week';
 import { useAccessibility } from '../profile/use-profile';
 import { countdown, CYCLE_MAX_DAYS, type Audience } from './cycle-format';
 import type { Period } from './use-period';
@@ -29,12 +29,15 @@ export function PeriodNav({ period, today, audience, onCycle, onWeek, currentMon
   let title: string;
   let subtitle: string | null = null;
   if (inCycle) {
-    title = cycle.session ? `Consulta de ${formatDayMonth(cycle.session.date)}` : 'Desde a última consulta';
-    const end = !cycle.session && cycle.to === today ? 'hoje' : formatDayMonth(cycle.to);
-    subtitle = `${formatDayMonth(cycle.from)} a ${end}`;
+    title = cycle.session ? `Consulta de ${formatDayMonth(cycle.session.date, { today })}` : 'Desde a última consulta';
+    const end = !cycle.session && cycle.to === today ? 'hoje' : formatDayMonth(cycle.to, { today });
+    subtitle = `${formatDayMonth(cycle.from, { today })} a ${end}`;
   } else {
-    title = formatWeekRange(monday!);
+    title = formatWeekRange(monday!, { today });
   }
+  // DEC-120: ao voltar a um período de 1 ano atrás ou mais, uma orientação neutra embaixo do título.
+  const years = yearsSince(inCycle ? cycle.to : addDays(monday!, 6), today);
+  const ago = years >= 1 ? `há ${years === 1 ? '1 ano' : `${years} anos`}` : null;
   const note =
     !noTimePressure && inCycle && (cycle.session || cycle.completedSessionToday)
       ? countdown(cycle.session, today, audience, cycle.completedSessionToday)
@@ -73,6 +76,7 @@ export function PeriodNav({ period, today, audience, onCycle, onWeek, currentMon
               {title}
             </h2>
             {subtitle && <p className="text-muted">{subtitle}</p>}
+            {ago && <p className="text-sm text-muted">{ago}</p>}
           </div>
           <Button
             variant="ghost"

@@ -2697,6 +2697,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 ## DEC-118 — Paciente vê quando a profissional leu (telas)
 - **Decisão (#130):** em construção.
 
+## DEC-120 — Datas com o ano quando são de outro ano (20/11/2026)
+- **Decisão:** as datas curtas do app (dd/mm, o dia por extenso, o dia curto, a semana e a data e
+  hora do vínculo) ganham o ano quando a data é de outro ano que não o atual, no fuso do app, para o
+  passado e para o futuro. Os rótulos dos eixos dos gráficos ficam sem o ano. A regra fica nas
+  funções de `features/activities/week.ts` e `features/links/link-format.ts`, e não em cada tela. Os
+  remédios e o que a pessoa sente continuam com o ano sempre (#241). Duas peças acompanham: na busca
+  nos registros, um título com o ano separa os resultados quando são de mais de um ano; no cabeçalho
+  do período, ao voltar 1 ano ou mais, uma linha "há 1 ano"/"há N anos".
+- **Motivo:** o Faísca guarda os registros até a pessoa apagar, então o histórico atravessa anos e
+  "15/09" passa a ser ambíguo. O gatilho é o ano diferente, e não "completar um ano", para a virada
+  já ficar clara (um registro de 20/12 visto em janeiro). Os eixos mostram uma semana e já têm o
+  período no título; o ano neles só apertaria o gráfico no celular. O "há N anos" é só orientação:
+  num app de saúde mental, não trazemos registros antigos de volta sem a pessoa pedir.
+  Por ser orientação sobre um período passado, e não distância até uma consulta, ele aparece também
+  com **Sem pressão de tempo** ligado, de propósito.
+- **Limite conhecido:** o "Para ler" da profissional segue com a regra das datas, mas sem título por
+  ano, para não colidir com a paginação do PR #216. O resumo do período segue dd/mm, com a regra.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

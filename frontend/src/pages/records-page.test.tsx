@@ -119,6 +119,27 @@ describe('RecordsPage: semana', () => {
     expect(await screen.findByRole('heading', { name: '21 a 27 de set.' })).toBeInTheDocument();
   });
 
+  it('semana de outro ano mostra o ano e, de 1 ano atrás ou mais, "há 1 ano" (DEC-120)', async () => {
+    weekHandler([fakeActivity({ activityDate: '2025-09-17', name: 'Caminhada fictícia' })]);
+    renderRoute('/registros?semana=2025-09-17');
+
+    expect(await screen.findByRole('heading', { name: '15 a 21 de set. de 2025' })).toBeInTheDocument();
+    expect(screen.getByText('há 1 ano')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^quarta-feira, 17\/09\/2025/ })).toBeInTheDocument();
+  });
+
+  it('de 2 anos atrás, "há 2 anos"', async () => {
+    renderRoute('/registros?semana=2024-03-06');
+    expect(await screen.findByRole('heading', { name: '4 a 10 de mar. de 2024' })).toBeInTheDocument();
+    expect(screen.getByText('há 2 anos')).toBeInTheDocument();
+  });
+
+  it('semana deste ano não mostra o ano nem "há"', async () => {
+    renderRoute('/registros?semana=2026-01-07');
+    expect(await screen.findByRole('heading', { name: '5 a 11 de jan.' })).toBeInTheDocument();
+    expect(screen.queryByText(/^há /)).not.toBeInTheDocument();
+  });
+
   it('avisa com calma quando a semana não carrega', async () => {
     server.use(http.get('*/api/activities', () => new HttpResponse(null, { status: 500 })));
     renderRoute('/registros');

@@ -377,6 +377,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - A semana vai de segunda a domingo.
 - Mostra a lista de atividades e um gráfico comparando vontade × prazer × realização.
 - As notas usam uma única cor que varia de intensidade (sem vermelho/verde).
+- Ao voltar a uma semana ou ciclo de 1 ano atrás ou mais, uma linha neutra embaixo do título diz
+  "há 1 ano" ou "há N anos" (DEC-120). Só orientação: nada antigo é trazido de volta sozinho.
 
 ## Buscar nos registros (DEC-112, #152)
 - Paciente busca nos próprios registros; a terapeuta só pesquisa os registros de um paciente com
@@ -393,6 +395,7 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   e filtrar por tipo, emoção e intensidade mínima (quando o registro tem esse campo). Resultados são
   paginados, 20 por página (máximo 50), do mais novo ao mais antigo; a interface mostra um trecho
   com a correspondência destacada e permite expandir o registro completo no contexto da busca.
+  Quando os resultados são de mais de um ano, um título com o ano separa cada grupo (DEC-120).
 - A comparação ignora caixa e acentos. Também aproxima flexões comuns de gênero terminadas em “a”
   ou “o” (por exemplo, “ansiosa” encontra “ansioso”), sem IA nem envio a serviço externo.
 - A terapeuta pode filtrar os registros para ler. Esse filtro cobre apenas registros que entram no
@@ -563,6 +566,10 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   confete, "parabéns", contador ou movimento contínuo. O ✓ some ao abrir outra ação ou sair da tela.
   Com **Menos movimento** (conta ou sistema), nada se move e o ✓ aparece pronto. Só no contexto do
   paciente; "Não aconteceu" e o registro direto em "Já fiz" não ganham o retorno.
+- **Datas com o ano quando são de outro ano** (DEC-120): no app inteiro, uma data deste ano aparece
+  como "15/09" ou "segunda-feira, 21/09"; de outro ano, no passado ou no futuro, ganha o ano
+  ("15/09/2025", "21 a 27 de set. de 2025"). Os rótulos dos eixos dos gráficos ficam sem o ano. Os
+  remédios e o que a pessoa sente mostram sempre o ano (#241).
 - PWA instalável; usar o app exige conexão.
 - **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
   tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra
