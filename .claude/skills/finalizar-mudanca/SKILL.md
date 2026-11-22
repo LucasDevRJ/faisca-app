@@ -96,6 +96,7 @@ que ficaram desatualizados, no mesmo PR. Procure também o texto antigo que a mu
 | `docs/IDEIAS-TCC.md` | uma ideia começa ou entra no ar, ou a estrutura de abas e telas que ela cita muda |
 | `docs/DEPLOY.md` | variável de ambiente, serviço, DNS, segredo ou passo de produção novo |
 | `AGENTS.md`, `CLAUDE.md` e os das pastas | muda a estrutura, um comando, uma regra ou uma skill |
+| Página pública **Como funciona** (`/como-funciona`) | sempre que uma mudança alterar áreas, fluxo de vínculo, compartilhamento, privacidade, segurança, instalação, telas ou dúvidas frequentes descritas nela; mantenha o conteúdo fiel ao comportamento atual no mesmo PR |
 
 Ferramenta de desenvolvimento (skill, hook, script) não precisa de DEC. No relatório, diga quais
 documentos mudaram e quais foram conferidos sem precisar de mudança.

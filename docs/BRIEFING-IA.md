@@ -215,6 +215,11 @@ receber uma mensagem individual quando uma funcionalidade importante entrar no a
 será separada dos e-mails de conta e poderá ser desligada em Conta; correções pequenas continuarão
 aparecendo apenas dentro do app. Ainda não publicado.
 
+**Em desenvolvimento — Página pública “Como funciona” (#140):** um guia com as áreas do Faísca,
+o vínculo e as permissões, as ferramentas para profissionais, a instalação no celular e respostas
+sobre privacidade e segurança. Inclui capturas de tela identificadas com a data em que foram feitas.
+Ainda não publicado.
+
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.

@@ -189,6 +189,9 @@ export function SignupPage() {
           Entrar
         </Link>
       </p>
+      <Link to="/como-funciona" className="inline-flex min-h-11 items-center self-start text-sm font-medium text-primary-text underline underline-offset-4">
+        Como funciona o Faísca
+      </Link>
       <WhyFaisca />
     </AuthLayout>
   );

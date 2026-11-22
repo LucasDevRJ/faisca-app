@@ -2842,6 +2842,29 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   limitadas pela janela de até 92 dias (DEC-033), sem cursor próprio.
 
 
+## DEC-124 — Guia público “Como funciona” (#140) (22/11/2026)
+- **Decisão:**
+  - publicar uma página acessível sem login em `/como-funciona`, com links em Entrar, Cadastro,
+    Conta e no rodapé, mais um link “Ajuda” no cabeçalho das telas autenticadas para encontrá-la
+    durante o uso do app. As seções têm âncoras navegáveis e o foco acompanha a seção aberta;
+  - explicar o vínculo e as permissões, as áreas do paciente, as ferramentas para profissionais,
+    a instalação do PWA, segurança e privacidade, o ditado do teclado e dúvidas frequentes, sem
+    oferecer orientação clínica;
+  - incluir capturas de telas com dados fictícios e a data da captura. O passo a passo em texto é
+    a referência quando a interface mudar;
+  - cada seção clínica termina com “Na dúvida, converse com a sua psicóloga”. Uma psicóloga deve
+    revisar essas descrições antes da página entrar em produção;
+  - publicar `suporte@minhafaisca.com.br` como contato e manter o mesmo endereço em
+    `/.well-known/security.txt` para comunicação de possíveis falhas de segurança;
+  - revisar esta página no mesmo PR sempre que uma mudança alterar áreas, vínculo, permissões,
+    compartilhamento, privacidade, segurança, instalação, telas ou dúvidas frequentes descritas.
+- **Motivo:** explicar o produto e o compartilhamento de forma acessível antes do cadastro, reduzir
+  dúvidas sobre o vínculo e tornar visíveis as práticas de privacidade e segurança sem substituir o
+  aviso de privacidade formal nem o acompanhamento profissional.
+- **Limite conhecido:** as capturas podem ficar desatualizadas e os nomes ou a posição das opções de
+  instalação variam por aparelho e navegador. O texto não é orientação clínica; a página só deve
+  entrar em produção depois da revisão profissional das descrições clínicas.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
