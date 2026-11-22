@@ -25,6 +25,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-11.7 (DEC-107, DEC-108): entram o Sono e humor e o Remédio do dia, com novo aceite.
 // Versão 2026-11.8 (DEC-113): entra a Comunidade de apoio, com novo aceite.
 // Versão 2026-11.9 (DEC-114, DEC-115): entram os Remédios e o que sinto, com novo aceite.
+// Versão 2026-11.10 (DEC-117, DEC-118): a marca de leitura pode aparecer para o paciente, se ele pedir
+// e a profissional ativar, com novo aceite. Ela deixa de ser "só dela" nesse caso, como prometia a DEC-058.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -36,7 +38,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
 // e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
 // "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
-const VERSION_LABEL = 'versão 16, de novembro de 2026';
+const VERSION_LABEL = 'versão 17, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -160,6 +162,10 @@ export function PrivacyPage() {
               o endereço técnico que o navegador gera para entregá-la.
             </li>
             <li>
+              Se você pedir para ver quando uma profissional lê os seus registros: o pedido e a resposta dela, em
+              cada vínculo. Se você é profissional, a sua resposta a esse pedido.
+            </li>
+            <li>
               No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro, a paleta de cores e os
               ajustes de leitura confortável e de menos movimento.
             </li>
@@ -197,8 +203,11 @@ export function PrivacyPage() {
               humor, Remédio e Remédios e o que sinto. Uma profissional nova começa sem ver
               nada. Ela só lê, sem alterar nada, enquanto o vínculo existir. Você muda o que cada uma vê, ou
               desfaz o vínculo, a qualquer momento em <strong>Conta</strong>, e vale na hora. Cada profissional
-              pode marcar os seus registros como lidos, para se organizar. Essa marca é só dela: você e a outra
-              profissional não a veem.
+              pode marcar os seus registros como lidos, para se organizar. Essa marca é dela: a outra profissional
+              nunca a vê. Se você pedir em <strong>Conta</strong> e ela ativar, você vê a data em que ela leu cada
+              registro, só das áreas que você libera para ela, e nunca o que falta ler. Ela pode não ativar, e
+              qualquer um dos dois desliga quando quiser. Se você é profissional, só os pacientes para quem você
+              ativar veem quando você marcou os registros deles como lidos.
             </li>
             <li>
               Se você é terapeuta, o seu nome, o seu e-mail e a sua foto de perfil, se tiver, aparecem para os

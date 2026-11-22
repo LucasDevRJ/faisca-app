@@ -28,6 +28,19 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     therapist: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta e pode ser alterada quando quiser.</p>,
     link: { to: '/conta#novidades-email', label: 'Ver preferência' },
   },
+  '2026-11-lido-paciente': {
+    title: 'Ver quando a profissional leu',
+    icon: '👀',
+    date: '2026-11-20',
+    patient: (
+      <p>
+        Se quiser, peça em Conta para ver quando a sua psicóloga ou a sua psiquiatra ler os seus registros. Quando ela
+        ativar, aparece em cada registro a data em que ela leu. Nunca aparece o que falta ler, e você pode desligar
+        quando quiser.
+      </p>
+    ),
+    link: { to: '/conta', label: 'Abrir Conta' },
+  },
   '2026-11-comunidade': {
     title: 'Comunidade de apoio',
     icon: '💬',

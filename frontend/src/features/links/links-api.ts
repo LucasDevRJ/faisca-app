@@ -36,9 +36,16 @@ export type PatientLink = {
   kind: ProfessionalKind;
   // O que o paciente liberou para esta profissional; vínculo novo começa vazio (DEC-097).
   sharedAreas: SharedArea[];
+  // O pedido para ver quando ela leu (DEC-117, DEC-118): desligado, pedido enviado ou ativo. A recusa
+  // dela nunca chega aqui: "Agora não" continua como pedido enviado.
+  readReceipts: PatientReadReceipts;
   // avatarVersion: quando a foto dela mudou, ou null sem foto (DEC-061). Conselho opcional.
   therapist: { name: string; email: string; avatarVersion: string | null; councilNumber: string | null };
 };
+
+export type PatientReadReceipts = 'OFF' | 'REQUESTED' | 'ON';
+// Do lado dela: sem pedido, pedido esperando resposta, "Agora não" ou ativo (DEC-117).
+export type ProfessionalReadReceipts = 'OFF' | 'PENDING' | 'NOT_NOW' | 'ON';
 
 export type LinkStatus = {
   // Todos os vínculos ativos, a psicóloga primeiro (DEC-097).
@@ -54,7 +61,8 @@ export type GeneratedCode = { code: string; expiresAt: string };
 
 export type LinkedPatient = { id: string; name: string; email: string; linkedAt: string; avatarVersion: string | null };
 // Na lista de pacientes: quantos registros a terapeuta ainda tem para ler (DEC-057).
-export type ListedPatient = LinkedPatient & { unreadCount: number };
+// readReceipts: se o paciente pediu para ver quando ela lê, e o que ela respondeu (DEC-117).
+export type ListedPatient = LinkedPatient & { unreadCount: number; readReceipts: ProfessionalReadReceipts };
 
 export async function fetchLinkStatus(): Promise<LinkStatus> {
   const { data } = await api.get<LinkStatus>('/link');
@@ -84,6 +92,12 @@ export async function setSharedAreas(linkId: string, areas: SharedArea[]): Promi
   return data.link;
 }
 
+// "Quero ver quando [nome] ler os meus registros" (DEC-117): o pedido, por profissional.
+export async function setReadReceiptsRequested(linkId: string, requested: boolean): Promise<PatientReadReceipts> {
+  const { data } = await api.put<{ readReceipts: PatientReadReceipts }>(`/link/${linkId}/read-receipts`, { requested });
+  return data.readReceipts;
+}
+
 export async function markLinkSeen(): Promise<void> {
   await api.post('/link/seen');
 }
@@ -108,4 +122,12 @@ export async function acceptInvite({
 export async function fetchLinkedPatients(): Promise<ListedPatient[]> {
   const { data } = await api.get<{ patients: ListedPatient[] }>('/links/patients');
   return data.patients;
+}
+
+// A resposta da profissional ao pedido (DEC-117): true ativa; false é o "Agora não" ou o desligar.
+export async function setReadReceiptsShared(patientId: string, shared: boolean): Promise<ProfessionalReadReceipts> {
+  const { data } = await api.put<{ readReceipts: ProfessionalReadReceipts }>(`/therapist/read-receipts/${patientId}`, {
+    shared,
+  });
+  return data.readReceipts;
 }

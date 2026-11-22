@@ -195,7 +195,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
     expect(banner).toHaveTextContent(
-      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor, o Remédio do dia, a Comunidade e os Remédios e o que sinto. Você só precisa aceitar a nova versão para usar essas partes.',
+      'para incluir os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor, o Remédio do dia, a Comunidade, os Remédios e o que sinto e a opção de ver quando a profissional lê os registros. Você só precisa aceitar a nova versão para usar essas partes.',
     );
   });
 
@@ -204,7 +204,7 @@ describe('aviso de privacidade por área (DEC-042)', () => {
     renderRoute('/registros');
 
     const banner = await screen.findByText(/Atualizamos o aviso de privacidade/);
-    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor, o Remédio do dia, a Comunidade e os Remédios e o que sinto');
+    expect(banner).toHaveTextContent('o Registro de Pensamentos, os Episódios de tensão, a agenda de consultas, a Ação, as fotos da Ação, o “Sobre mim”, o Meus Planos, as fotos das atividades, as Tarefas, o Sono e humor, o Remédio do dia, a Comunidade, os Remédios e o que sinto e a opção de ver quando a profissional lê os registros');
     expect(banner).toHaveTextContent('essas partes');
   });
 

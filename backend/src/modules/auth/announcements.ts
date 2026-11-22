@@ -14,6 +14,9 @@
 // - 2026-11-sono-humor: Sono, humor e remédio do dia (DEC-108), para paciente e terapeuta.
 // - 2026-11-comunidade: comunidade de apoio entre pacientes (DEC-113), para paciente e psicóloga.
 // - 2026-11-remedios: Remédios e o que sinto (DEC-115), para paciente e terapeuta.
+// - 2026-11-novidades-email: avisos de novidades importantes por e-mail (DEC-119), para todos.
+// - 2026-11-lido-paciente: ver quando a profissional leu (DEC-118), só para paciente: é ele quem pede,
+//   e a profissional fica sabendo pelo aviso do pedido.
 export const ANNOUNCEMENTS = [
   '2026-10-explicacao-alternativa',
   '2026-10-lido',
@@ -29,6 +32,7 @@ export const ANNOUNCEMENTS = [
   '2026-11-comunidade',
   '2026-11-remedios',
   '2026-11-novidades-email',
+  '2026-11-lido-paciente',
 ] as const;
 
 export type Announcement = (typeof ANNOUNCEMENTS)[number];
@@ -51,6 +55,7 @@ const AUDIENCE: Record<Announcement, Audience> = {
   '2026-11-comunidade': 'TODOS',
   '2026-11-remedios': 'TODOS',
   '2026-11-novidades-email': 'TODOS',
+  '2026-11-lido-paciente': 'PACIENTE',
 };
 
 // Só novidades importantes recebem e-mail. Correções pequenas e mudanças internas continuam

@@ -127,6 +127,7 @@ Na prática clínica tradicional:
   - **O paciente escolhe o que cada uma vê** ("O que [nome] pode ver"): atividades e as fotos delas, pensamentos, tensão, Ação e as fotos dela, "Sobre mim", agenda e Meus Planos. Uma profissional nova **começa sem ver nada**, e mudar vale na hora.
   - O paciente pode **desfazer cada vínculo a qualquer momento** em Conta, e o acesso daquela profissional cessa imediatamente.
   - Quando a psicóloga publica um comunicado no mural dela, o paciente vê um cartão discreto no topo de *Meus registros* com o selo `"Novo"` e a página `/avisos`.
+  - **Ver quando a profissional leu (opcional, dos dois lados):** no cartão de cada profissional, o paciente pode marcar *"Quero ver quando [nome] ler os meus registros"*. Enquanto ela não ativa, a tela diz *"Pedido enviado"*. Com os dois ligados, aparece discretamente no fim do registro *"Lido pela sua psicóloga em 12/11"*, só nos registros já lidos e só das áreas liberadas para ela. **Nunca** aparece "não lido" nem o que falta ler, e o paciente nunca fica sabendo se ela preferiu não ativar. Qualquer um desliga quando quiser.
 
 ### 4.2. Para a Psicóloga e a Psiquiatra
 
@@ -147,7 +148,8 @@ Na prática clínica tradicional:
   - Se o paciente editar um registro do dia, adicionar uma explicação alternativa depois ou enviar uma foto nova na Ação, o cartão passa a mostrar o selo **"Atualizado depois que você leu"**.
   - A visão **"Para ler"** reúne tudo o que ainda não foi lido (ou foi atualizado), de qualquer data, do mais antigo para o mais recente — garantindo que um registro feito num ciclo anterior nunca passe despercebido.
   - Em *Meus pacientes*, um card no topo resume o total (`"12 registros para ler, de 2 pacientes"`) e ordena no topo os pacientes com itens pendentes.
-  - **Cuidado clínico:** essa marcação é uma ferramenta de organização exclusiva da psicóloga — **o paciente não vê** se um registro foi marcado como lido ou não, evitando ansiedade de *"será que ela leu o que eu escrevi?"*.
+  - **Cuidado clínico:** essa marcação é uma ferramenta de organização da profissional. Por padrão, **o paciente não vê** se um registro foi marcado como lido, evitando a ansiedade de *"será que ela leu o que eu escrevi?"*.
+  - **Mostrar a leitura ao paciente (opcional, por paciente):** se o paciente pedir, a profissional recebe no app o aviso *"[nome] gostaria de ver quando você lê os registros"* e escolhe **"Ativar"** ou **"Agora não"**. Ativado, o paciente vê só a data em que ela marcou cada registro como lido, nunca o que falta ler. O "Agora não" não chega ao paciente, e ela pode mudar de ideia depois na página dele. Assim ninguém é pressionado: nem o paciente pela espera, nem a psicóloga que prefere ler na véspera da consulta.
 
 - **Mural de avisos (`/mural`):**
   - Permite publicar avisos de até 2.000 caracteres para **todos os pacientes vinculados de uma só vez** (ex.: recesso de fim de ano, feriado, mudança na agenda).

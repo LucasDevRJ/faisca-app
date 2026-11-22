@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { PatientReadReceipts } from '../features/read-receipts/read-receipts-request';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
@@ -259,6 +260,8 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
           <p className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</p>
         </div>
       </section>
+      {/* O pedido para ver quando ela lê, ou a opção para mudar de ideia (DEC-118). */}
+      <PatientReadReceipts patientId={patientId} />
       {shared.size > 0 && (
         <Link to={`/pacientes/${patientId}/buscar`} className={buttonClasses('secondary', 'self-start')}>
           Buscar nos registros

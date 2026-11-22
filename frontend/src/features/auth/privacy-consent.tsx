@@ -25,6 +25,7 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   medication: 'o Remédio do dia',
   community: 'a Comunidade',
   medications: 'os Remédios e o que sinto',
+  readReceipts: 'a opção de ver quando a profissional lê os registros',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
@@ -158,6 +159,17 @@ const CONSENT_TEXT: Record<PrivacyArea, { patient: ConsentCopy; therapist: Conse
     therapist: {
       intro: 'Para ver os remédios e o que seus pacientes têm sentido, leia o que mudou e confirme.',
       scope: 'inclusive com o acesso aos remédios, às mudanças e ao que meus pacientes anotarem que sentem como dados de saúde.',
+    },
+  },
+  // "Lido" para o paciente (DEC-117, DEC-118): a data em que a profissional leu, se os dois ligarem.
+  readReceipts: {
+    patient: {
+      intro: 'Para pedir para ver quando a profissional lê os seus registros, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso do meu pedido e das datas em que cada profissional que ativar leu os meus registros.',
+    },
+    therapist: {
+      intro: 'Para responder aos pedidos dos pacientes que querem ver quando você lê os registros, leia o que mudou e confirme.',
+      scope: 'inclusive com mostrar aos pacientes, quando eu ativar, as datas em que marquei os registros como lidos.',
     },
   },
   community: {

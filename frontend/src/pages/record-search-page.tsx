@@ -58,13 +58,43 @@ function fieldLabel(key: string) {
   return labels[key] ?? key;
 }
 
-function ResultCard({ result }: { result: SearchResult }) {
+// Os resultados vêm do mais novo para o mais antigo. Quando são de mais de um ano, um título com o
+// ano separa cada grupo (DEC-120); de um ano só, a lista segue sem título.
+function ResultsByYear({ results }: { results: SearchResult[] }) {
+  const groups: { year: string; items: SearchResult[] }[] = [];
+  for (const result of results) {
+    const year = result.date.slice(0, 4);
+    const last = groups.at(-1);
+    if (last?.year === year) last.items.push(result);
+    else groups.push({ year, items: [result] });
+  }
+  const grouped = groups.length > 1;
+  // Com o título do ano (h3), o título de cada cartão desce para h4, para a ordem dos títulos fazer sentido.
+  const cards = (items: SearchResult[]) =>
+    items.map((result) => <ResultCard key={`${result.type}:${result.id}`} result={result} nested={grouped} />);
+  if (!grouped) return <>{cards(results)}</>;
+  return (
+    <>
+      {groups.map((group) => (
+        <section key={group.year} aria-labelledby={`search-year-${group.year}`} className="flex flex-col gap-3">
+          <h3 id={`search-year-${group.year}`} className="border-b border-border pb-1 pt-2 text-lg font-semibold">
+            {group.year}
+          </h3>
+          {cards(group.items)}
+        </section>
+      ))}
+    </>
+  );
+}
+
+function ResultCard({ result, nested = false }: { result: SearchResult; nested?: boolean }) {
+  const Heading = nested ? 'h4' : 'h2';
   const start = Math.max(0, Math.min(result.matchStart, result.excerpt.length));
   const end = Math.max(start, Math.min(start + result.matchLength, result.excerpt.length));
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <h2 className="font-semibold">{TITLES[result.type]}</h2>
+        <Heading className="font-semibold">{TITLES[result.type]}</Heading>
         <span className="text-sm text-muted">{dateLabel(result.date)}</span>
         {result.unread && <span className="rounded-full border border-border px-2 py-0.5 text-sm text-primary-text">Para ler</span>}
       </div>
@@ -174,7 +204,7 @@ export function RecordSearchPage({ audience = 'patient' }: { audience?: 'patient
       {results.length > 0 && <section aria-labelledby="search-results-title" className="flex flex-col gap-3">
         <h2 id="search-results-title" className="text-xl font-semibold">Resultados</h2>
         <p className="text-sm text-muted">{total} {total === 1 ? 'registro encontrado' : 'registros encontrados'}</p>
-        {results.map((result) => <ResultCard key={`${result.type}:${result.id}`} result={result} />)}
+        <ResultsByYear results={results} />
         {hasMore && <Button variant="secondary" disabled={pending} onClick={() => lastInput && void runSearch({ ...lastInput, page: lastInput.page + 1 }, true)}>Carregar mais</Button>}
       </section>}
       {results.length === 0 && lastInput && !pending && !error && <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">Nenhum registro encontrado com esses critérios.</p>}

@@ -308,7 +308,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 
 ## Sono, humor e remédio (DEC-107, #188 e #171)
 - Um registro por dia, todo opcional: a hora em que deitou e a hora em que acordou (as horas de sono
-  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra para o dia e, para quem liga a
+  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra ou frase para o dia (até 120
+  caracteres) e, para quem liga a
   opção em Conta, "Tomou o remédio como combinado?" (Sim, Esqueci algum ou Hoje não). A noite pertence
   ao dia em que a pessoa acordou.
 - O paciente registra e edita os últimos 7 dias. Sem cobrança, sem sequência e sem lembrete diário.
@@ -336,6 +337,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - Nada no futuro e nada antes de 1950. Tetos: 50 remédios, 100 mudanças por remédio, 300 sintomas e
   400 dias de "como está" por sintoma. O paciente edita e apaga tudo; apagar um remédio mantém os
   sintomas, sem a ligação.
+- Nas listas e janelas de remédios e do que sente, as datas aparecem com o ano (DD/MM/AAAA), porque
+  o histórico atravessa anos; o gráfico do sono e humor, que mostra uma semana, segue com dd/mm.
 - O Faísca não avalia se é efeito do remédio, não sugere dose, troca, interação nem parada e não
   avisa a profissional. Push e e-mail nunca falam de remédio nem de sintoma.
 - **Caixa própria no vínculo**, "Remédios e o que sinto" (`MEDICATIONS`), fechada para todas as
@@ -375,6 +378,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - A semana vai de segunda a domingo.
 - Mostra a lista de atividades e um gráfico comparando vontade × prazer × realização.
 - As notas usam uma única cor que varia de intensidade (sem vermelho/verde).
+- Ao voltar a uma semana ou ciclo de 1 ano atrás ou mais, uma linha neutra embaixo do título diz
+  "há 1 ano" ou "há N anos" (DEC-120). Só orientação: nada antigo é trazido de volta sozinho.
 
 ## Buscar nos registros (DEC-112, #152)
 - Paciente busca nos próprios registros; a terapeuta só pesquisa os registros de um paciente com
@@ -391,6 +396,7 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   e filtrar por tipo, emoção e intensidade mínima (quando o registro tem esse campo). Resultados são
   paginados, 20 por página (máximo 50), do mais novo ao mais antigo; a interface mostra um trecho
   com a correspondência destacada e permite expandir o registro completo no contexto da busca.
+  Quando os resultados são de mais de um ano, um título com o ano separa cada grupo (DEC-120).
 - A comparação ignora caixa e acentos. Também aproxima flexões comuns de gênero terminadas em “a”
   ou “o” (por exemplo, “ansiosa” encontra “ansioso”), sem IA nem envio a serviço externo.
 - A terapeuta pode filtrar os registros para ler. Esse filtro cobre apenas registros que entram no
@@ -432,7 +438,9 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   quando quiser; desligar do lado do paciente zera os dois lados, e um pedido novo volta a esperar a
   resposta dela. Desmarcar como lido também tira a data da tela do paciente. As duas contas precisam
   do aceite do aviso que cita o recurso (`2026-11.10`). Sem notificação do pedido por e-mail ou push
-  por ora (#82, #32).
+  por ora (#82, #32). Telas (DEC-118): a caixa "Quero ver quando [nome] ler os meus registros" no
+  cartão de cada profissional em Conta; "Lido pela sua psicóloga em 12/11" no fim do cartão do registro;
+  o pedido em "Meus pacientes" e na página do paciente, com "Ativar para [nome]" e "Agora não".
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta
@@ -561,6 +569,10 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   confete, "parabéns", contador ou movimento contínuo. O ✓ some ao abrir outra ação ou sair da tela.
   Com **Menos movimento** (conta ou sistema), nada se move e o ✓ aparece pronto. Só no contexto do
   paciente; "Não aconteceu" e o registro direto em "Já fiz" não ganham o retorno.
+- **Datas com o ano quando são de outro ano** (DEC-120): no app inteiro, uma data deste ano aparece
+  como "15/09" ou "segunda-feira, 21/09"; de outro ano, no passado ou no futuro, ganha o ano
+  ("15/09/2025", "21 a 27 de set. de 2025"). Os rótulos dos eixos dos gráficos ficam sem o ano. Os
+  remédios e o que a pessoa sente mostram sempre o ano (#241).
 - PWA instalável; usar o app exige conexão.
 - **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
   tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra

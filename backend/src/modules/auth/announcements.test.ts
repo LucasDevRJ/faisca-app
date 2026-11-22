@@ -42,14 +42,15 @@ const SLEEP = '2026-11-sono-humor';
 const COMMUNITY = '2026-11-comunidade';
 const MEDICATIONS = '2026-11-remedios';
 const EMAIL_UPDATES = '2026-11-novidades-email';
+const READ_RECEIPTS = '2026-11-lido-paciente';
 
 describe('card de Novidades (DEC-054, DEC-058)', () => {
   it('a paciente vê a novidade que é para ela até tocar em "Entendi"; fica no banco', async () => {
     const agent = await loginAgent();
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(EMAIL_UPDATES);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(READ_RECEIPTS);
 
-    const seen = await agent.post('/auth/announcement-seen').send({ announcement: EMAIL_UPDATES });
+    const seen = await agent.post('/auth/announcement-seen').send({ announcement: READ_RECEIPTS });
     expect(seen.status).toBe(200);
     expect(seen.body.user.pendingAnnouncement).toBeNull();
     expect((await request.agent(app).post('/auth/login').send({ email: PATIENT, password: PASSWORD })).body.user
@@ -95,26 +96,28 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     const therapist = { patient: false, therapist: true };
     const both = { patient: true, therapist: true };
 
-    expect(pendingAnnouncement(null, patient)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(null, patient)).toBe(READ_RECEIPTS);
     // O Meus Planos é para os dois perfis (DEC-095): a terapeuta também o recebe.
     expect(pendingAnnouncement(null, therapist)).toBe(EMAIL_UPDATES);
-    // O "Sobre mim" e os lembretes são só de quem é paciente (DEC-082, DEC-090): a terapeuta que já viu
-    // o mural não tem nada entre ele e o Meus Planos.
+    // A novidade por e-mail vale para os dois perfis; o "Lido" é só para paciente.
     expect(pendingAnnouncement(MURAL, therapist)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(READ_MARKS, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(PHOTOS, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(BACKUPS, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(REMINDERS, both)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(READ_MARKS, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(PHOTOS, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(BACKUPS, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(ABOUT_ME, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(REMINDERS, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(REMINDERS, therapist)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(PLANS, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(ACTIVITY_PHOTOS, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(TASKS, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(SLEEP, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(COMMUNITY, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(MEDICATIONS, both)).toBe(EMAIL_UPDATES);
-    expect(pendingAnnouncement(EMAIL_UPDATES, both)).toBeNull();
-    expect(pendingAnnouncement('desconhecida', patient)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(PLANS, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(ACTIVITY_PHOTOS, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(TASKS, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(SLEEP, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(COMMUNITY, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(MEDICATIONS, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(MEDICATIONS, therapist)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(EMAIL_UPDATES, therapist)).toBeNull();
+    expect(pendingAnnouncement(EMAIL_UPDATES, both)).toBe(READ_RECEIPTS);
+    expect(pendingAnnouncement(READ_RECEIPTS, both)).toBeNull();
+    expect(pendingAnnouncement('desconhecida', patient)).toBe(READ_RECEIPTS);
   });
 });

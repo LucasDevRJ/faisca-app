@@ -2694,8 +2694,71 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   a aparecer para ela: sem notificação é só o aviso no app, mas, se o pedido um dia gerar e-mail ou
   push (#82, #32), precisa de limite de tentativas.
 
-## DEC-118 — Paciente vê quando a profissional leu (telas)
-- **Decisão (#130):** em construção.
+## DEC-118 — Paciente vê quando a profissional leu (telas) e aviso de privacidade versão 17
+- **Decisão (#130):**
+  - **paciente, em Conta**, no cartão de cada profissional, abaixo do que ela pode ver: a caixa
+    **"Quero ver quando [nome] ler os meus registros"**, com o estado logo abaixo, numa região viva:
+    desligado ("Se [nome] também ativar, você vê nos seus registros a data em que cada um foi lido.
+    Nunca aparece o que falta ler."), **"Pedido enviado. Quando [nome] ativar, você passa a ver."** e
+    **"Ativo. Nos seus registros, aparece a data em que [nome] leu cada um."**. A dica fica fora do
+    `<label>`, para não entrar no nome da caixa. Sem o aceite da versão nova, o cartão pede "Ler e
+    aceitar", com o aceite da área;
+  - **paciente, nos registros**: uma linha discreta no fim do cartão de Pensamentos, Tensão, Ação,
+    registros de Meus Planos, Tarefas respondidas e no "Sobre mim": **"Lido pela sua psicóloga em
+    12/11"**, ou "Lido pela sua psicóloga em 12/11 e pela sua psiquiatra em 13/11". Texto muted, sem
+    ícone nem cor. Sem leitura, o cartão não diz nada: nunca "não lido". Um só pedido
+    (`GET /read-receipts`) para a tela inteira, e nem isso sem o aceite. Desfazer o vínculo, mudar as
+    áreas ou o pedido recarregam as leituras na hora (revisor-seguranca);
+  - **profissional, em "Meus pacientes"**: um cartão por pedido esperando resposta, **"[nome] gostaria
+    de ver quando você lê os registros"**, com o que acontece se ativar, a garantia de que o paciente
+    não fica sabendo do "Agora não", e os botões **"Ativar para [nome]"** e **"Agora não"**. Some
+    depois da resposta, e o foco vai para uma confirmação sempre montada (região viva), e não para o
+    começo da página. Sem o aceite da versão nova, "Ler e aceitar" no lugar dos botões. O texto usa o
+    nome, e não "dele" ou "dela": o gênero do paciente não é informado;
+  - **profissional, na página do paciente**, abaixo do cabeçalho: o mesmo pedido enquanto espera; ativo,
+    "[nome] vê a data em que você marca um registro como lido." e **"Parar de mostrar para [nome]"**;
+    depois do "Agora não", a lembrança do pedido e "Ativar para [nome]";
+  - **aviso de privacidade versão 17** (`2026-11.10`), agora a atual: em "O que guardamos", o pedido e a
+    resposta; em "Quem vê", a marca deixa de ser "só dela" e passa a "dela: a outra profissional nunca
+    a vê", com quando o paciente vê a data e que qualquer um desliga. Novo aceite, com a área
+    `readReceipts` ("a opção de ver quando a profissional lê os registros");
+  - **novidade `2026-11-lido-paciente`, só para paciente**: é ele quem pede, e a profissional fica
+    sabendo pelo cartão do pedido. Atalho para Conta;
+  - `db:seed-dev`: a paciente dev pede, e o pedido espera a resposta da terapeuta dev.
+- **Motivo:** o paciente decide em Conta, onde já escolhe o que cada profissional vê; a profissional
+  responde onde já trabalha. A linha nos cartões é pequena de propósito: informa sem virar cobrança, e
+  some quando o registro muda, até ela ler de novo (DEC-117).
+- **Limite conhecido:** sem notificação do pedido (#82, #32): a profissional só vê o pedido ao abrir o
+  app. O nome vem do primeiro nome da conta, então duas pessoas com o mesmo primeiro nome aparecem
+  iguais no cartão do pedido; o cartão de cada paciente na lista logo abaixo desfaz a dúvida.
+
+## DEC-120 — Datas com o ano quando são de outro ano (20/11/2026)
+- **Decisão:** as datas curtas do app (dd/mm, o dia por extenso, o dia curto, a semana e a data e
+  hora do vínculo) ganham o ano quando a data é de outro ano que não o atual, no fuso do app, para o
+  passado e para o futuro. Os rótulos dos eixos dos gráficos ficam sem o ano. A regra fica nas
+  funções de `features/activities/week.ts` e `features/links/link-format.ts`, e não em cada tela. Os
+  remédios e o que a pessoa sente continuam com o ano sempre (#241). Duas peças acompanham: na busca
+  nos registros, um título com o ano separa os resultados quando são de mais de um ano; no cabeçalho
+  do período, ao voltar 1 ano ou mais, uma linha "há 1 ano"/"há N anos".
+- **Motivo:** o Faísca guarda os registros até a pessoa apagar, então o histórico atravessa anos e
+  "15/09" passa a ser ambíguo. O gatilho é o ano diferente, e não "completar um ano", para a virada
+  já ficar clara (um registro de 20/12 visto em janeiro). Os eixos mostram uma semana e já têm o
+  período no título; o ano neles só apertaria o gráfico no celular. O "há N anos" é só orientação:
+  num app de saúde mental, não trazemos registros antigos de volta sem a pessoa pedir.
+  Por ser orientação sobre um período passado, e não distância até uma consulta, ele aparece também
+  com **Sem pressão de tempo** ligado, de propósito.
+- **Limite conhecido:** o "Para ler" da profissional segue com a regra das datas, mas sem título por
+  ano, para não colidir com a paginação do PR #216. O resumo do período segue dd/mm, com a regra.
+
+## DEC-121 — Aumenta o limite da palavra do dia (21/11/2026)
+- **Decisão:** `moodWord` passa de 40 para até 120 caracteres. O campo continua opcional e com texto
+  livre; pode guardar uma palavra ou uma frase curta. O limite fica alinhado na interface, API e
+  restrição do banco. A migration altera a constraint com uma migration nova, sem editar a DEC-107
+  nem a migration já aplicada.
+- **Motivo:** 40 caracteres não comportavam frases curtas que descrevem melhor o humor do dia, como
+  a que o usuário tentou registrar.
+- **Limite conhecido:** segue sendo um campo breve, não um espaço para relato longo; o resumo do
+  período continua sem exibir a palavra ou frase.
 
 ## DEC-119 — Avisos por e-mail de novidades importantes (20/11/2026)
 - **Decisão (#231):**

@@ -15,6 +15,7 @@ import {
   type SaveAboutMeInput,
 } from './about-me-api';
 import { useAboutMe, useSaveAboutMe } from './use-about-me';
+import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 
 // "Sobre mim", em Conta, só para quem é paciente (DEC-081, DEC-082). Tudo opcional, sem cobrança:
 // nada de "perfil completo". A psicóloga vinculada lê o que a pessoa escrever.
@@ -49,7 +50,11 @@ export function AboutMeSection() {
       ) : query.isError ? (
         <Alert tone="attention">{getApiError(query.error).message}</Alert>
       ) : (
-        <AboutMeForm initial={query.data} />
+        <>
+          <AboutMeForm initial={query.data} />
+          {/* Se a profissional ativou, a data em que ela leu (DEC-118). */}
+          {query.data && <ReadReceiptLine type="ABOUT_ME" id={query.data.id} />}
+        </>
       )}
     </section>
   );
