@@ -61,6 +61,9 @@ export function AccountPage() {
       <AccessibilitySection />
 
       <AnnouncementEmailSetting />
+      <Link to="/mensagens/avisos" className={buttonClasses('secondary', 'self-start')}>
+        Configurar avisos de mensagens
+      </Link>
 
       {/* Lembretes de manhã e de noite (DEC-089, DEC-090): só para quem é paciente. */}
       {user.profiles.patient && <RemindersSection />}

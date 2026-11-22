@@ -60,9 +60,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // sinto, DEC-114) foi conhecida na API antes e virou a atual no PR das telas, com o texto (DEC-115).
 // A 2026-11.10 ("Lido" para o paciente, DEC-117) seguiu o mesmo fluxo: virou a atual no PR das telas,
 // com o texto (DEC-118).
-// A API conhece a versão de Mensagens antes da publicação das telas (DEC-056, DEC-125).
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.10';
 export const MESSAGES_PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
+export const PRIVACY_VERSION: PrivacyVersion = MESSAGES_PRIVACY_VERSION;
 
 export function privacyUpToDate(acceptedVersion: string | null): boolean {
   return PRIVACY_VERSIONS.indexOf(acceptedVersion as PrivacyVersion) >= PRIVACY_VERSIONS.indexOf(PRIVACY_VERSION);

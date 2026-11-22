@@ -19,6 +19,7 @@ const sections = [
   ['sobre-mim', 'Sobre mim'],
   ['avisos', 'Avisos'],
   ['buscar-ligar', 'Buscar e ligar registros'],
+  ['mensagens', 'Mensagens privadas'],
   ['profissionais', 'Para psicólogas e psiquiatras'],
   ['comunidade', 'Comunidade'],
   ['instalar', 'Instalar no celular'],
@@ -202,6 +203,11 @@ export function HowItWorksPage() {
           <p>Busque seus registros por palavra, período e alguns filtros. Você também pode ligar dois registros seus para encontrar o contexto relacionado depois.</p>
           <p><strong>Quem vê:</strong> a busca é privada. A profissional só vê uma ligação quando as duas áreas estão liberadas para ela.</p>
         </RecordGuide>
+      </Section>
+
+      <Section id="mensagens" title="Mensagens privadas">
+        <p>Abra Mensagens no topo para combinar detalhes da consulta ou tirar dúvidas breves com a profissional vinculada. Combine com ela os horários de contato. Para urgências, procure atendimento de urgência.</p>
+        <p><strong>Quem vê:</strong> só as duas pessoas do vínculo ativo, depois que ambas aceitarem o aviso de privacidade. Em Conta, você pode escolher se quer receber avisos de mensagens.</p>
       </Section>
 
       <Section id="profissionais" title="Para psicólogas e psiquiatras">

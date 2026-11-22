@@ -2,6 +2,8 @@
 export const SEED_PASSWORD = 'senha-ficticia-123';
 
 export const users = {
+  messagesPatient: { email: 'mensagens-paciente@faisca.test', password: SEED_PASSWORD },
+  messagesProfessional: { email: 'mensagens-profissional@faisca.test', password: SEED_PASSWORD },
   // Só Tarefas (API e telas), separados para não disputar dados.
   sleepPatient: { email: 'sono-paciente@faisca.test', password: SEED_PASSWORD },
   sleepTherapist: { email: 'sono-psiquiatra@faisca.test', password: SEED_PASSWORD },

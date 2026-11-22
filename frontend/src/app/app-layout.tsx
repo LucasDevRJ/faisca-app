@@ -55,6 +55,9 @@ export function AppLayout() {
           <span className="font-heading text-2xl font-bold">Faísca</span>
         </Link>
         <div className="ml-auto flex items-center gap-1">
+          <NavLink to="/mensagens" className={(state) => `inline-flex min-h-11 items-center ${navLinkClass(state)}`}>
+            Mensagens
+          </NavLink>
           <Link
             to="/como-funciona"
             aria-label="Ajuda: Como funciona o Faísca"
