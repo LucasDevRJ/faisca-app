@@ -49,6 +49,13 @@ export function AccountPage() {
         </p>
       </div>
 
+      <section aria-label="Ajuda para usar o Faísca" className="rounded-lg border border-border bg-surface p-4">
+        <p className="text-muted">Quer conhecer os recursos e como funciona o compartilhamento?</p>
+        <Link to="/como-funciona#vinculo" className="mt-2 inline-flex min-h-11 items-center font-medium text-primary-text underline underline-offset-4">
+          Abrir o guia Como funciona
+        </Link>
+      </section>
+
       <ProfileSection />
 
       <AccessibilitySection />

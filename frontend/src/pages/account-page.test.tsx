@@ -21,6 +21,16 @@ beforeEach(() => {
 });
 
 describe('/conta: quem me acompanha', () => {
+  it('mostra o guia Como funciona na Conta e no rodapé', async () => {
+    renderRoute('/conta');
+
+    expect(await screen.findByRole('link', { name: 'Abrir o guia Como funciona' })).toHaveAttribute(
+      'href',
+      '/como-funciona#vinculo',
+    );
+    expect(screen.getByRole('link', { name: /^Como funciona$/ })).toHaveAttribute('href', '/como-funciona');
+  });
+
   it('o link "Conta" no topo leva para a tela', async () => {
     const user = userEvent.setup();
     renderRoute('/registros');

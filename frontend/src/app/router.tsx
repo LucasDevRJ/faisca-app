@@ -16,6 +16,7 @@ import { NotFoundPage } from '../pages/not-found-page';
 import { NoticesPage } from '../pages/notices-page';
 import { PatientPage } from '../pages/patient-page';
 import { PrivacyPage } from '../pages/privacy-page';
+import { HowItWorksPage } from '../pages/how-it-works-page';
 import { CommunityPage } from '../pages/community-page';
 import { CommunityModerationPage } from '../pages/community-moderation-page';
 import { TherapistCommunityPage } from '../pages/therapist-community-page';
@@ -121,6 +122,8 @@ export const routes = [
       { path: 'convite', element: <InvitePage /> },
       // Pública: o cadastro linka para cá antes de existir conta (DEC-036).
       { path: 'privacidade', element: <PrivacyPage /> },
+      // Página pública de orientação inicial (#140).
+      { path: 'como-funciona', element: <HowItWorksPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

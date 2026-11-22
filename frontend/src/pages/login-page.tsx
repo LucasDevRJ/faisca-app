@@ -176,6 +176,9 @@ export function LoginPage() {
         <Link to="/privacidade" className={`${linkClass} self-start`}>
           Aviso de privacidade
         </Link>
+        <Link to="/como-funciona" className={`${linkClass} inline-flex min-h-11 items-center self-start`}>
+          Como funciona o Faísca
+        </Link>
         <WhyFaisca />
       </div>
     </AuthLayout>

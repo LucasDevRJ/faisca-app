@@ -570,6 +570,24 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - A pessoa pode excluir a própria conta, o que apaga todos os seus dados e vínculos do app na hora. Nas cópias de segurança, eles expiram em até 5 semanas; se uma cópia for restaurada, as contas excluídas depois dela são apagadas de novo (DEC-077). A exclusão é confirmada com a senha, derruba todas as sessões abertas e gera um e-mail neutro avisando que a conta foi excluída e o prazo das cópias. A janela de excluir lembra ao paciente com vínculo ativo que, para só dar um tempo, basta desfazer o vínculo.
 - Nenhum dado real em seeds, fixtures ou testes.
 
+## Página pública “Como funciona” (DEC-124)
+- A página `/como-funciona` é acessível sem sessão e pode ser aberta por links em Entrar, Cadastro,
+  Conta e no rodapé. Ela explica, em linguagem acolhedora e curta, a criação da conta, o vínculo e
+  as permissões, cada área disponível, os recursos para profissionais, a instalação do PWA,
+  segurança e privacidade, o ditado por voz e dúvidas frequentes.
+- A página explica o que cada área faz e quem pode ver seus dados, sem orientar a execução de
+  técnicas clínicas nem substituir a psicóloga. Cada seção clínica termina com “Na dúvida,
+  converse com a sua psicóloga”. As descrições clínicas precisam ser revisadas por uma psicóloga
+  antes de a página entrar em produção.
+- Capturas de tela devem mostrar apenas dados fictícios e informar a data em que foram feitas. O
+  texto escrito é a referência quando a interface mudar; a página deve ser revisada sempre que
+  mudar um fluxo, uma área, as permissões, a privacidade, a segurança, a instalação ou uma dúvida
+  frequente descrita nela.
+- A página informa `suporte@minhafaisca.com.br` para dúvidas e comunicação de possíveis falhas de
+  segurança. `/.well-known/security.txt` publica esse contato e a validade da política.
+- Links para âncoras levam o foco à seção correspondente, para navegação por teclado e leitores de
+  tela.
+
 ## Tom e interface
 - Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
 - Textos acolhedores ("Conta como foi?") por padrão, ou literais e objetivos com **Linguagem direta** ligada ("Avaliar atividade", DEC-087); nos dois modos, sem gamificação nem mensagens que gerem culpa.
