@@ -60,7 +60,12 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // sinto, DEC-114) foi conhecida na API antes e virou a atual no PR das telas, com o texto (DEC-115).
 // A 2026-11.10 ("Lido" para o paciente, DEC-117) seguiu o mesmo fluxo: virou a atual no PR das telas,
 // com o texto (DEC-118).
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
+export const MESSAGES_PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
+export const PRIVACY_VERSION: PrivacyVersion = MESSAGES_PRIVACY_VERSION;
+
+export function privacyUpToDate(acceptedVersion: string | null): boolean {
+  return PRIVACY_VERSIONS.indexOf(acceptedVersion as PrivacyVersion) >= PRIVACY_VERSIONS.indexOf(PRIVACY_VERSION);
+}
 
 // Qual versão gravar no aceite (DEC-105). O app manda a versão que mostrou; o servidor só grava a que
 // a pessoa leu. Sem versão é um app de antes dessa regra (instalado e ainda não atualizado, ou nos
@@ -71,9 +76,13 @@ export const LEGACY_SHOWN_VERSION: PrivacyVersion = '2026-11.4';
 // current: a versão que a conta já tem. O aceite de um app antigo nunca rebaixa um aceite mais novo
 // (achado do revisor-seguranca): a pessoa que aceitou a atual noutro aparelho continua com ela.
 export function versionToRecord(shownVersion: string | undefined, current: string | null = null): PrivacyVersion {
-  if (shownVersion === undefined) {
+  const shown = shownVersion ?? LEGACY_SHOWN_VERSION;
+  // A Vercel e o Railway publicam separadamente. Preserve o aceite mais novo e grave
+  // apenas a versão enviada pelo app, inclusive quando o PWA ainda mostra a anterior.
+  if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION) {
     const kept = PRIVACY_VERSIONS.indexOf(current as PrivacyVersion);
-    return kept > PRIVACY_VERSIONS.indexOf(LEGACY_SHOWN_VERSION) ? PRIVACY_VERSIONS[kept]! : LEGACY_SHOWN_VERSION;
+    const displayed = PRIVACY_VERSIONS.indexOf(shown as PrivacyVersion);
+    return PRIVACY_VERSIONS[Math.max(kept, displayed)]!;
   }
   if (shownVersion === PRIVACY_VERSION) return PRIVACY_VERSION;
   throw new AppError(
@@ -113,7 +122,7 @@ export const PRIVACY_AREAS = {
   medications: '2026-11.9',
   // "Lido" para o paciente (DEC-117): a data em que a profissional leu, se os dois ligarem.
   readReceipts: '2026-11.10',
-  messages: '2026-11.11',
+  messages: MESSAGES_PRIVACY_VERSION,
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;

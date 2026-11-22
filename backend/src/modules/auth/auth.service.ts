@@ -22,7 +22,7 @@ import {
 } from './auth.emails.js';
 import type { AddProfileInput, ChangePasswordInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 import { CURRENT_ANNOUNCEMENT, pendingAnnouncement, type Announcement } from './announcements.js';
-import { PRIVACY_VERSION, privacyAreas, versionToRecord, type PrivacyArea, type PrivacyVersion } from './privacy.js';
+import { PRIVACY_VERSION, privacyAreas, privacyUpToDate, versionToRecord, type PrivacyArea, type PrivacyVersion } from './privacy.js';
 
 // A versão atual do aviso e as áreas que dependem dele ficam em ./privacy.ts (DEC-042).
 export { PRIVACY_VERSION };
@@ -83,7 +83,7 @@ export function toPublicUser(
     email: user.email,
     profiles: { patient: user.hasPatientProfile, therapist: user.hasTherapistProfile },
     professionalKind: user.professionalKind,
-    privacyUpToDate: user.privacyVersion === PRIVACY_VERSION,
+    privacyUpToDate: privacyUpToDate(user.privacyVersion),
     privacyAreas: privacyAreas(user.privacyVersion),
     pendingAnnouncement: pendingAnnouncement(user.seenAnnouncement, {
       patient: user.hasPatientProfile,

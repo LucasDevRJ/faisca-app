@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import { FakePushSender } from '../../test/fake-push-sender.js';
+import { MESSAGES_PRIVACY_VERSION } from '../auth/privacy.js';
 
 const patientEmail = 'mensagens-paciente@faisca.test';
 const professionalEmail = 'mensagens-profissional@faisca.test';
@@ -25,12 +26,13 @@ beforeEach(async () => {
   mailer = new FakeMailer();
   pushSender = new FakePushSender();
   app = createApp({ mailer, pushSender, runAfterResponse: runInline });
-  const patient = await createConfirmedUser({ email: patientEmail });
+  const patient = await createConfirmedUser({ email: patientEmail, privacyVersion: MESSAGES_PRIVACY_VERSION });
   const professional = await createConfirmedUser({
     email: professionalEmail, patient: false, therapist: true, professionalKind: 'PSIQUIATRIA',
+    privacyVersion: MESSAGES_PRIVACY_VERSION,
   });
   professionalId = professional.id;
-  await createConfirmedUser({ email: strangerEmail, patient: false, therapist: true });
+  await createConfirmedUser({ email: strangerEmail, patient: false, therapist: true, privacyVersion: MESSAGES_PRIVACY_VERSION });
   const link = await createTestLink({
     patientId: patient.id, therapistId: professional.id, kind: 'PSIQUIATRIA', sharedAreas: [],
   });
