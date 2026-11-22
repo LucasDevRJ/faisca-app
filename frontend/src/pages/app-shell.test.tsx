@@ -29,6 +29,18 @@ describe('telas de quem entrou', () => {
     expect(screen.queryByRole('navigation', { name: 'Perfis' })).not.toBeInTheDocument();
   });
 
+  it('pessoa logada abre Como funciona pelo link de Ajuda', async () => {
+    server.use(loggedIn);
+    const user = userEvent.setup();
+    const { router } = renderRoute('/');
+
+    expect(await screen.findByRole('heading', { name: 'Olá, Ana!' })).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Ajuda: Como funciona o Faísca' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Como funciona o Faísca' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/como-funciona');
+  });
+
   it('só terapeuta: o início leva aos pacientes, e os registros não abrem', async () => {
     server.use(
       http.get('*/api/auth/me', () =>

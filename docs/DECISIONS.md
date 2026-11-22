@@ -2845,7 +2845,8 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 ## DEC-124 — Guia público “Como funciona” (#140) (22/11/2026)
 - **Decisão:**
   - publicar uma página acessível sem login em `/como-funciona`, com links em Entrar, Cadastro,
-    Conta e no rodapé. As seções têm âncoras navegáveis e o foco acompanha a seção aberta;
+    Conta e no rodapé, mais um link “Ajuda” no cabeçalho das telas autenticadas para encontrá-la
+    durante o uso do app. As seções têm âncoras navegáveis e o foco acompanha a seção aberta;
   - explicar o vínculo e as permissões, as áreas do paciente, as ferramentas para profissionais,
     a instalação do PWA, segurança e privacidade, o ditado do teclado e dúvidas frequentes, sem
     oferecer orientação clínica;

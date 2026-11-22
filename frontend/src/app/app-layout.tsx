@@ -48,13 +48,20 @@ export function AppLayout() {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-12">
-      <header className="flex items-center justify-between gap-4">
+      <header className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
         {/* A marca leva ao início, que escolhe a tela do perfil: sempre há um caminho de volta. */}
         <Link to="/" aria-label="Faísca, ir para o início" className="flex items-center gap-3 rounded-md">
           <img src="/icon.svg" alt="" className="size-10" />
           <span className="font-heading text-2xl font-bold">Faísca</span>
         </Link>
-        <div className="flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1">
+          <Link
+            to="/como-funciona"
+            aria-label="Ajuda: Como funciona o Faísca"
+            className="inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-primary-text underline underline-offset-4 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Ajuda
+          </Link>
           <NavLink to="/conta" className={navLinkClass}>
             Conta
           </NavLink>

@@ -572,9 +572,10 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 
 ## Página pública “Como funciona” (DEC-124)
 - A página `/como-funciona` é acessível sem sessão e pode ser aberta por links em Entrar, Cadastro,
-  Conta e no rodapé. Ela explica, em linguagem acolhedora e curta, a criação da conta, o vínculo e
-  as permissões, cada área disponível, os recursos para profissionais, a instalação do PWA,
-  segurança e privacidade, o ditado por voz e dúvidas frequentes.
+  Conta e no rodapé; depois de entrar, o link **Ajuda** no cabeçalho também permite consultá-la sem
+  sair da conta. Ela explica, em linguagem acolhedora e curta, a criação da conta, o vínculo e as
+  permissões, cada área disponível, os recursos para profissionais, a instalação do PWA, segurança
+  e privacidade, o ditado por voz e dúvidas frequentes.
 - A página explica o que cada área faz e quem pode ver seus dados, sem orientar a execução de
   técnicas clínicas nem substituir a psicóloga. Cada seção clínica termina com “Na dúvida,
   converse com a sua psicóloga”. As descrições clínicas precisam ser revisadas por uma psicóloga
