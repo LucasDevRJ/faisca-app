@@ -200,10 +200,15 @@ Ainda não publicado.
 por texto, período e filtros. Para a psicóloga, os resultados respeitam vínculo, áreas compartilhadas
 e aceites de privacidade; o termo não é guardado no histórico nem enviado pela URL. Ainda não publicado.
 
-**Em desenvolvimento — Comunidade de apoio (#220):** espaço opcional da psicóloga para pacientes
-adultos com vínculo ativo. A entrada depende de aprovação; cada pessoa escolhe um apelido e pode
-optar por uma mensagem de boas-vindas no feed. Publicações e comentários passam por revisão humana
-antes de aparecer. A comunidade não dá acesso aos registros clínicos.
+**Comunidade de apoio (#220):** espaço opcional da psicóloga para pacientes adultos com vínculo ativo.
+A entrada depende de aprovação; cada pessoa escolhe um apelido e pode optar por uma mensagem de
+boas-vindas no feed. Publicações e comentários passam por revisão humana antes de aparecer. A
+comunidade não dá acesso aos registros clínicos.
+
+**Em desenvolvimento — Revisão pela psicóloga na comunidade (#251):** se quiser, a psicóloga poderá
+revisar conteúdo de pacientes da própria comunidade, com verificação em duas etapas ativa. A equipe
+da plataforma continua como retaguarda e revisa conteúdo escrito pela própria psicóloga. Os membros
+veem quem revisa e recebem um aviso no feed quando essa pessoa muda.
 
 **Em desenvolvimento — Avisos por e-mail de novidades importantes (#231):** quem quiser poderá
 receber uma mensagem individual quando uma funcionalidade importante entrar no ar. A preferência

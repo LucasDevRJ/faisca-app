@@ -74,6 +74,28 @@ async function ownerCommunity(therapistId: string) {
   return prisma.community.findUnique({ where: { therapistId } });
 }
 
+async function therapistHasActiveTwoFactor(therapistId: string) {
+  const account = await prisma.user.findUnique({
+    where: { id: therapistId },
+    select: { twoFactorEmail: true, totpEnabledAt: true },
+  });
+  return Boolean(account && (account.twoFactorEmail || account.totpEnabledAt !== null));
+}
+
+async function therapistModerationCommunity(therapistId: string) {
+  const community = await ownerCommunity(therapistId);
+  if (!community || !community.therapistModerationEnabled || !(await therapistHasActiveTwoFactor(therapistId))) {
+    throw new AppError(403, 'COMMUNITY_MODERATION_UNAVAILABLE', 'Ative a moderação da sua comunidade e mantenha a verificação em duas etapas ligada para revisar conteúdo.');
+  }
+  return community;
+}
+
+function moderationStatus(decision: CommunityModerationDecision['decision']) {
+  return decision === 'APPROVE' || decision === 'KEEP'
+    ? 'PUBLISHED'
+    : decision === 'REJECT' ? 'REJECTED' : 'HIDDEN';
+}
+
 async function requireActiveMembership(patientId: string, communityId: string) {
   const membership = await prisma.communityMembership.findUnique({
     where: { communityId_patientId: { communityId, patientId } },
@@ -89,6 +111,12 @@ async function addJoinEvent(communityId: string, membership: { status: string; a
   await prisma.communityEvent.create({
     data: { communityId, body: `${membership.displayName} chegou à comunidade.` },
   });
+}
+
+function moderatorChangeMessage(reviewer: 'PLATFORM' | 'THERAPIST') {
+  return reviewer === 'THERAPIST'
+    ? 'A revisão das publicações e dos comentários passou a ser feita pela psicóloga responsável.'
+    : 'A revisão das publicações e dos comentários passou para a equipe da plataforma.';
 }
 
 async function feedFor(communityId: string) {
@@ -131,7 +159,20 @@ export function createCommunityService() {
       const membership = await prisma.communityMembership.findUnique({
         where: { communityId_patientId: { communityId: community.id, patientId } },
       });
-      if (!membership) return { available: true, community: { id: community.id }, membership: null, feed: null, myContent: [] };
+      // Se a profissional desligar o 2FA, a equipe da plataforma assume imediatamente a revisão.
+      const therapistCanModerate = community.therapistModerationEnabled && await therapistHasActiveTwoFactor(community.therapistId);
+      const moderationReviewer = therapistCanModerate ? 'THERAPIST' as const : 'PLATFORM' as const;
+      if (membership?.status === 'ACTIVE' && community.announcedModerator !== moderationReviewer) {
+        await prisma.$transaction(async (tx) => {
+          const { count } = await tx.community.updateMany({
+            where: { id: community.id, announcedModerator: community.announcedModerator },
+            data: { announcedModerator: moderationReviewer },
+          });
+          if (count > 0) await tx.communityEvent.create({ data: { communityId: community.id, body: moderatorChangeMessage(moderationReviewer) } });
+        });
+      }
+      const communityState = { id: community.id, moderationReviewer };
+      if (!membership) return { available: true, community: communityState, membership: null, feed: null, myContent: [] };
 
       const active = membership.status === 'ACTIVE';
       const [feed, posts, comments] = await Promise.all([
@@ -141,7 +182,7 @@ export function createCommunityService() {
       ]);
       return {
         available: true,
-        community: { id: community.id },
+        community: communityState,
         membership: {
           id: membership.id,
           status: membership.status,
@@ -331,7 +372,8 @@ export function createCommunityService() {
 
     async therapistState(therapistId: string) {
       const community = await ownerCommunity(therapistId);
-      if (!community) return { community: null, requests: [], invitations: [], members: [] };
+      const twoFactorEnabled = await therapistHasActiveTwoFactor(therapistId);
+      if (!community) return { community: null, twoFactorEnabled, requests: [], invitations: [], members: [] };
       const memberships = await prisma.communityMembership.findMany({
         where: { communityId: community.id, status: { in: ['REQUESTED', 'INVITED', 'ACTIVE', 'SUSPENDED'] } },
         orderBy: { createdAt: 'asc' },
@@ -346,7 +388,8 @@ export function createCommunityService() {
         requestedAt: membership.requestedAt?.toISOString() ?? null,
       }));
       return {
-        community: { id: community.id },
+        community: { id: community.id, moderationEnabled: community.therapistModerationEnabled },
+        twoFactorEnabled,
         requests: mapped.filter((item) => item.status === 'REQUESTED'),
         invitations: mapped.filter((item) => item.status === 'INVITED'),
         members: mapped.filter((item) => ['ACTIVE', 'SUSPENDED'].includes(item.status)),
@@ -399,6 +442,92 @@ export function createCommunityService() {
       return { status: updated.status };
     },
 
+    async setTherapistModeration(therapistId: string, enabled: boolean) {
+      const community = await ownerCommunity(therapistId);
+      if (!community) throw notFound();
+      const twoFactorEnabled = await therapistHasActiveTwoFactor(therapistId);
+      if (enabled && !twoFactorEnabled) {
+        throw new AppError(403, 'COMMUNITY_MODERATION_2FA_REQUIRED', 'Ative a verificação em duas etapas em Conta antes de revisar sua comunidade.');
+      }
+      const nextReviewer = enabled ? 'THERAPIST' as const : 'PLATFORM' as const;
+      return prisma.$transaction(async (tx) => {
+        const { count } = await tx.community.updateMany({
+          where: { id: community.id, therapistModerationEnabled: community.therapistModerationEnabled },
+          data: { therapistModerationEnabled: enabled, announcedModerator: nextReviewer },
+        });
+        if (count > 0 && community.announcedModerator !== nextReviewer) {
+          await tx.communityEvent.create({ data: { communityId: community.id, body: moderatorChangeMessage(nextReviewer) } });
+        }
+        const updated = await tx.community.findUniqueOrThrow({ where: { id: community.id } });
+        return { enabled: updated.therapistModerationEnabled };
+      });
+    },
+
+    async therapistModerationQueue(therapistId: string) {
+      const community = await therapistModerationCommunity(therapistId);
+      const [posts, comments, allReports] = await Promise.all([
+        prisma.communityPost.findMany({ where: { communityId: community.id, authorKind: 'PATIENT', status: 'PENDING' }, orderBy: { createdAt: 'asc' }, take: 100 }),
+        prisma.communityComment.findMany({ where: { post: { communityId: community.id }, authorKind: 'PATIENT', status: 'PENDING' }, orderBy: { createdAt: 'asc' }, take: 100 }),
+        prisma.communityReport.findMany({ where: { communityId: community.id, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, take: 100, include: { post: true, comment: true } }),
+      ]);
+      // Denúncias de conteúdo escrito pela psicóloga ficam exclusivamente com a plataforma.
+      const reports = allReports.filter((report) => report.post?.authorKind === 'PATIENT' || report.comment?.authorKind === 'PATIENT');
+      return {
+        posts: posts.map(toPublicPost),
+        comments: comments.map(toPublicComment),
+        reports: reports.map((report) => toPublicReport(report as typeof report & { post: CommunityPost | null; comment: CommunityComment | null })),
+      };
+    },
+
+    async moderateTherapistPost(therapistId: string, postId: string, input: CommunityModerationDecision) {
+      const community = await therapistModerationCommunity(therapistId);
+      const post = await prisma.communityPost.findUnique({ where: { id: postId } });
+      if (!post || post.communityId !== community.id || post.authorKind !== 'PATIENT' || post.status === 'DELETED') throw forbidden();
+      const updated = await prisma.communityPost.update({
+        where: { id: postId },
+        data: {
+          status: moderationStatus(input.decision),
+          moderationMessage: ['REJECT', 'HIDE'].includes(input.decision) ? input.message ?? null : null,
+          reviewedAt: new Date(),
+          moderatorId: therapistId,
+        },
+      });
+      logger.info({ communityId: community.id, postId, therapistId, decision: input.decision }, 'Publicação moderada pela psicóloga');
+      return { post: toPublicPost(updated) };
+    },
+
+    async moderateTherapistComment(therapistId: string, commentId: string, input: CommunityModerationDecision) {
+      const community = await therapistModerationCommunity(therapistId);
+      const comment = await prisma.communityComment.findUnique({ where: { id: commentId }, include: { post: true } });
+      if (!comment || comment.post.communityId !== community.id || comment.authorKind !== 'PATIENT' || comment.status === 'DELETED') throw forbidden();
+      const updated = await prisma.communityComment.update({
+        where: { id: commentId },
+        data: {
+          status: moderationStatus(input.decision),
+          moderationMessage: ['REJECT', 'HIDE'].includes(input.decision) ? input.message ?? null : null,
+          reviewedAt: new Date(),
+          moderatorId: therapistId,
+        },
+      });
+      logger.info({ communityId: community.id, commentId, therapistId, decision: input.decision }, 'Comentário moderado pela psicóloga');
+      return { comment: toPublicComment(updated) };
+    },
+
+    async reviewTherapistReport(therapistId: string, reportId: string, decision: 'REVIEWED' | 'HIDE') {
+      const community = await therapistModerationCommunity(therapistId);
+      const report = await prisma.communityReport.findUnique({ where: { id: reportId }, include: { post: true, comment: true } });
+      const patientAuthored = report?.post?.authorKind === 'PATIENT' || report?.comment?.authorKind === 'PATIENT';
+      if (!report || report.communityId !== community.id || report.status !== 'OPEN' || !patientAuthored) throw forbidden();
+      const now = new Date();
+      if (decision === 'HIDE') {
+        if (report.postId) await prisma.communityPost.update({ where: { id: report.postId }, data: { status: 'HIDDEN', moderationMessage: 'A psicóloga responsável ocultou este conteúdo após uma denúncia.', reviewedAt: now, moderatorId: therapistId } });
+        if (report.commentId) await prisma.communityComment.update({ where: { id: report.commentId }, data: { status: 'HIDDEN', moderationMessage: 'A psicóloga responsável ocultou este conteúdo após uma denúncia.', reviewedAt: now, moderatorId: therapistId } });
+      }
+      await prisma.communityReport.update({ where: { id: reportId }, data: { status: 'REVIEWED', reviewedAt: now, moderatorId: therapistId } });
+      logger.info({ communityId: community.id, reportId, therapistId, decision }, 'Denúncia revisada pela psicóloga');
+      return { reviewed: true };
+    },
+
     // ——— Moderação da plataforma: conteúdo comunitário pendente ou denunciado, sem perfil clínico ———
 
     async moderationQueue() {
@@ -422,9 +551,7 @@ export function createCommunityService() {
     async moderatePost(moderatorId: string, postId: string, input: CommunityModerationDecision) {
       const post = await prisma.communityPost.findUnique({ where: { id: postId } });
       if (!post || post.status === 'DELETED') throw notFound();
-      const status = input.decision === 'APPROVE' || input.decision === 'KEEP'
-        ? 'PUBLISHED'
-        : input.decision === 'REJECT' ? 'REJECTED' : 'HIDDEN';
+      const status = moderationStatus(input.decision);
       const updated = await prisma.communityPost.update({
         where: { id: postId },
         data: {
@@ -441,9 +568,7 @@ export function createCommunityService() {
     async moderateComment(moderatorId: string, commentId: string, input: CommunityModerationDecision) {
       const comment = await prisma.communityComment.findUnique({ where: { id: commentId } });
       if (!comment || comment.status === 'DELETED') throw notFound();
-      const status = input.decision === 'APPROVE' || input.decision === 'KEEP'
-        ? 'PUBLISHED'
-        : input.decision === 'REJECT' ? 'REJECTED' : 'HIDDEN';
+      const status = moderationStatus(input.decision);
       const updated = await prisma.communityComment.update({
         where: { id: commentId },
         data: {

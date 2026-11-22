@@ -13,7 +13,7 @@ describe('/comunidade', () => {
       loggedIn,
       http.get('*/api/community', () => HttpResponse.json({
         available: true,
-        community: { id: '00000000-0000-4000-8000-000000000040' },
+        community: { id: '00000000-0000-4000-8000-000000000040', moderationReviewer: 'THERAPIST' },
         membership: null,
         feed: null,
         myContent: [],
@@ -26,6 +26,8 @@ describe('/comunidade', () => {
     renderRoute('/comunidade');
 
     expect(await screen.findByRole('button', { name: 'Enviar pedido' })).toBeDisabled();
+    expect(screen.getAllByText(/A psicóloga responsável revisará cada publicação e comentário/).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('listitem')[3]).toHaveTextContent('A equipe da plataforma continua disponível como apoio.');
     await user.type(await screen.findByLabelText('Apelido na comunidade'), 'Sol Fictícia');
     await user.click(screen.getByRole('checkbox', { name: 'Confirmo que tenho 18 anos ou mais.' }));
     await user.click(screen.getByRole('checkbox', { name: 'Li e aceito as regras da comunidade.' }));

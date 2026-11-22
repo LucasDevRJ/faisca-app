@@ -34,10 +34,12 @@
   A foto em si fica em `/therapist/patients/:patientId/avatar`.
 - Rotas de paciente usam sempre o id do usuário autenticado. Nunca aceite `patientId` vindo do
   body ou da query nessas rotas.
-- Comunidade (DEC-113) usa prefixos próprios, fora de `/therapist/patients`: a psicóloga só lê ou
-  altera conteúdo da comunidade que possui; a pessoa moderadora só acessa a fila de conteúdo
-  comunitário com e-mail explicitamente autorizado e 2FA ativo. Essas permissões nunca incluem
-  perfil clínico ou registros dos pacientes. Todas as rotas exigem o aceite da área `community`.
+- Comunidade (DEC-113/122) usa prefixos próprios, fora de `/therapist/patients`: a psicóloga só lê ou
+  altera conteúdo da comunidade que possui; com 2FA ativo, pode moderar conteúdo escrito por pacientes
+  dessa comunidade. Conteúdo escrito pela psicóloga e denúncias correspondentes ficam com a plataforma.
+  A pessoa moderadora da plataforma só acessa a fila de conteúdo comunitário com e-mail explicitamente
+  autorizado e 2FA ativo. Essas permissões nunca incluem perfil clínico ou registros dos pacientes.
+  Todas as rotas exigem o aceite da área `community`.
 
 ## Regras de domínio
 - Transições de estado da atividade ficam centralizadas no service de atividades. Nenhum outro

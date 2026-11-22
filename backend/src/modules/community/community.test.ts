@@ -10,6 +10,7 @@ const PATIENT = 'paciente-comunidade@faisca.test';
 const OTHER_PATIENT = 'outra-comunidade@faisca.test';
 const THERAPIST = 'psicologa-comunidade@faisca.test';
 const PSYCHIATRIST = 'psiquiatra-comunidade@faisca.test';
+const OTHER_THERAPIST = 'outra-psicologa-comunidade@faisca.test';
 const MODERATOR = 'moderador@faisca.test';
 const NO_2FA_MODERATOR = 'moderador-sem-2fa@faisca.test';
 
@@ -177,6 +178,123 @@ describe('comunidade (Issue #220, DEC-113)', () => {
     expect((await patient.get('/community')).body.membership.status).toBe('LEFT');
     expect((await patient.delete(`/community/posts/${created.body.post.id}`)).status).toBe(204);
     expect((await prisma.communityPost.findUniqueOrThrow({ where: { id: created.body.post.id } })).body).toContain('apagada pela pessoa autora');
+  });
+
+  it('a psicóloga pode moderar só a própria comunidade com 2FA, enquanto a plataforma continua como retaguarda', async () => {
+    const patient = await login(PATIENT);
+    await join(patient);
+    await approve();
+    const pending = await patient.post('/community/posts').send({ body: 'Relato fictício aguardando revisão.' });
+    const therapist = await login(THERAPIST);
+
+    expect((await therapist.get('/therapist/community')).body).toMatchObject({ community: { moderationEnabled: false }, twoFactorEnabled: false });
+    expect((await therapist.get('/therapist/community/moderation')).status).toBe(403);
+    expect((await therapist.patch('/therapist/community/moderation').send({ enabled: true })).status).toBe(403);
+
+    await prisma.user.update({ where: { id: therapistId }, data: { twoFactorEmail: true } });
+    expect((await therapist.patch('/therapist/community/moderation').send({ enabled: true })).body.enabled).toBe(true);
+    expect((await therapist.get('/therapist/community/moderation')).body.posts).toEqual([
+      expect.objectContaining({ id: pending.body.post.id, body: 'Relato fictício aguardando revisão.' }),
+    ]);
+    expect((await therapist.patch(`/therapist/community/moderation/posts/${pending.body.post.id}`).send({
+      decision: 'REJECT',
+      message: 'Vamos manter este espaço acolhedor e sem detalhes que identifiquem outras pessoas.',
+    })).body.post.status).toBe('REJECTED');
+    expect((await patient.get('/community')).body.community.moderationReviewer).toBe('THERAPIST');
+    expect((await patient.get('/community')).body.feed.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ body: 'A revisão das publicações e dos comentários passou a ser feita pela psicóloga responsável.' }),
+    ]));
+    expect((await patient.get('/community')).body.myContent[0].moderationMessage).toContain('acolhedor');
+
+    const therapistPost = await therapist.post('/therapist/community/posts').send({ body: 'Mensagem fictícia da psicóloga.' });
+    const moderator = await login(MODERATOR);
+    await prisma.user.update({ where: { email: MODERATOR }, data: { twoFactorEmail: true } });
+    expect((await therapist.get('/therapist/community/moderation')).body.posts).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: therapistPost.body.post.id }),
+    ]));
+    expect((await moderator.get('/community/moderation')).body.posts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: therapistPost.body.post.id }),
+    ]));
+
+    const otherTherapist = await createConfirmedUser({ name: 'Outra Psicóloga Fictícia', email: OTHER_THERAPIST, patient: false, therapist: true });
+    const otherPsychologist = await login(OTHER_THERAPIST);
+    await prisma.user.update({ where: { id: otherTherapist.id }, data: { twoFactorEmail: true } });
+    await otherPsychologist.post('/therapist/community').send({});
+    await otherPsychologist.patch('/therapist/community/moderation').send({ enabled: true });
+    expect((await otherPsychologist.patch(`/therapist/community/moderation/posts/${therapistPost.body.post.id}`).send({ decision: 'APPROVE' })).status).toBe(403);
+    expect((await patient.get(`/therapist/community/moderation`)).status).toBe(403);
+
+    await prisma.user.update({ where: { id: therapistId }, data: { twoFactorEmail: false } });
+    expect((await therapist.get('/therapist/community/moderation')).status).toBe(403);
+    const afterTwoFactorDisabled = await patient.get('/community');
+    expect(afterTwoFactorDisabled.body.community.moderationReviewer).toBe('PLATFORM');
+    expect(afterTwoFactorDisabled.body.feed.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ body: 'A revisão das publicações e dos comentários passou para a equipe da plataforma.' }),
+    ]));
+    expect((await therapist.patch('/therapist/community/moderation').send({ enabled: false })).body.enabled).toBe(false);
+    expect((await patient.get('/community')).body.community.moderationReviewer).toBe('PLATFORM');
+    expect((await patient.get('/community')).body.feed.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ body: 'A revisão das publicações e dos comentários passou para a equipe da plataforma.' }),
+    ]));
+  });
+
+  it('limita à psicóloga da comunidade a revisão de comentários e denúncias de conteúdo de pacientes', async () => {
+    const patient = await login(PATIENT);
+    const otherPatient = await login(OTHER_PATIENT);
+    await join(patient);
+    await approve();
+    await join(otherPatient, 'Lua');
+    await approve(OTHER_PATIENT);
+
+    const post = await patient.post('/community/posts').send({ body: 'Publicação fictícia para comentários.' });
+    const platformModerator = await login(MODERATOR);
+    await prisma.user.update({ where: { email: MODERATOR }, data: { twoFactorEmail: true } });
+    await platformModerator.patch(`/community/moderation/posts/${post.body.post.id}`).send({ decision: 'APPROVE' });
+
+    const comment = await otherPatient.post(`/community/posts/${post.body.post.id}/comments`).send({ body: 'Comentário fictício para revisão.' });
+    const therapist = await login(THERAPIST);
+    await prisma.user.update({ where: { id: therapistId }, data: { twoFactorEmail: true } });
+    await therapist.patch('/therapist/community/moderation').send({ enabled: true });
+    expect((await therapist.get('/therapist/community/moderation')).body.comments).toEqual([
+      expect.objectContaining({ id: comment.body.comment.id, body: 'Comentário fictício para revisão.' }),
+    ]);
+    expect((await therapist.patch(`/therapist/community/moderation/comments/${comment.body.comment.id}`).send({ decision: 'APPROVE' })).body.comment.status).toBe('PUBLISHED');
+
+    const commentReport = await patient.post('/community/reports').send({ commentId: comment.body.comment.id, reason: 'OTHER' });
+    expect(commentReport.status).toBe(201);
+    const therapistQueue = await therapist.get('/therapist/community/moderation');
+    expect(therapistQueue.body.reports).toEqual([expect.objectContaining({ id: expect.any(String), comment: expect.objectContaining({ id: comment.body.comment.id }) })]);
+    const commentReportId = therapistQueue.body.reports[0].id;
+    expect((await therapist.patch(`/therapist/community/moderation/reports/${commentReportId}`).send({ decision: 'REVIEWED' })).status).toBe(200);
+
+    const therapistPost = await therapist.post('/therapist/community/posts').send({ body: 'Publicação fictícia da psicóloga denunciada.' });
+    await platformModerator.patch(`/community/moderation/posts/${therapistPost.body.post.id}`).send({ decision: 'APPROVE' });
+    const therapistContentReport = await patient.post('/community/reports').send({ postId: therapistPost.body.post.id, reason: 'OTHER' });
+    expect(therapistContentReport.status).toBe(201);
+
+    const therapistComment = await therapist.post(`/therapist/community/posts/${post.body.post.id}/comments`).send({ body: 'Comentário fictício da psicóloga denunciado.' });
+    await platformModerator.patch(`/community/moderation/comments/${therapistComment.body.comment.id}`).send({ decision: 'APPROVE' });
+    const therapistCommentReport = await patient.post('/community/reports').send({ commentId: therapistComment.body.comment.id, reason: 'OTHER' });
+    expect(therapistCommentReport.status).toBe(201);
+    expect((await therapist.get('/therapist/community/moderation')).body.reports).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ post: expect.objectContaining({ id: therapistPost.body.post.id }) }),
+      expect.objectContaining({ comment: expect.objectContaining({ id: therapistComment.body.comment.id }) }),
+    ]));
+    const platformQueue = await platformModerator.get('/community/moderation');
+    const platformReport = platformQueue.body.reports.find((item: { post: { id: string } | null }) => item.post?.id === therapistPost.body.post.id);
+    const platformCommentReport = platformQueue.body.reports.find((item: { comment: { id: string } | null }) => item.comment?.id === therapistComment.body.comment.id);
+    expect(platformReport).toBeTruthy();
+    expect(platformCommentReport).toBeTruthy();
+    expect((await therapist.patch(`/therapist/community/moderation/reports/${platformReport.id}`).send({ decision: 'REVIEWED' })).status).toBe(403);
+    expect((await therapist.patch(`/therapist/community/moderation/reports/${platformCommentReport.id}`).send({ decision: 'REVIEWED' })).status).toBe(403);
+
+    const otherTherapist = await createConfirmedUser({ name: 'Outra Psicóloga Fictícia', email: OTHER_THERAPIST, patient: false, therapist: true });
+    const otherPsychologist = await login(OTHER_THERAPIST);
+    await prisma.user.update({ where: { id: otherTherapist.id }, data: { twoFactorEmail: true } });
+    await otherPsychologist.post('/therapist/community').send({});
+    await otherPsychologist.patch('/therapist/community/moderation').send({ enabled: true });
+    expect((await otherPsychologist.patch(`/therapist/community/moderation/comments/${comment.body.comment.id}`).send({ decision: 'HIDE', message: 'Motivo fictício para ocultar.' })).status).toBe(403);
+    expect((await otherPsychologist.patch(`/therapist/community/moderation/reports/${commentReportId}`).send({ decision: 'REVIEWED' })).status).toBe(403);
   });
 
   it('apagar a conta da psicóloga apaga a comunidade e todo o conteúdo em cascata', async () => {

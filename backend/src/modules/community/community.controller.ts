@@ -8,6 +8,7 @@ import {
   communityJoinSchema,
   communityMembershipDecisionSchema,
   communityModerationDecisionSchema,
+  communityModerationPreferenceSchema,
   communityReportDecisionSchema,
   communityReportSchema,
 } from './community.schema.js';
@@ -75,6 +76,19 @@ export function createCommunityController(service: CommunityService) {
     const { decision } = communityMembershipDecisionSchema.parse(req.body);
     res.json(await service.decideMembership(getAuthUser(req).id, routeId(req, 'membershipId'), decision));
   };
+  const setTherapistModeration: RequestHandler = async (req, res) => {
+    res.json(await service.setTherapistModeration(getAuthUser(req).id, communityModerationPreferenceSchema.parse(req.body).enabled));
+  };
+  const therapistModerationQueue: RequestHandler = async (req, res) => res.json(await service.therapistModerationQueue(getAuthUser(req).id));
+  const moderateTherapistPost: RequestHandler = async (req, res) => {
+    res.json(await service.moderateTherapistPost(getAuthUser(req).id, routeId(req, 'postId'), communityModerationDecisionSchema.parse(req.body)));
+  };
+  const moderateTherapistComment: RequestHandler = async (req, res) => {
+    res.json(await service.moderateTherapistComment(getAuthUser(req).id, routeId(req, 'commentId'), communityModerationDecisionSchema.parse(req.body)));
+  };
+  const reviewTherapistReport: RequestHandler = async (req, res) => {
+    res.json(await service.reviewTherapistReport(getAuthUser(req).id, routeId(req, 'reportId'), communityReportDecisionSchema.parse(req.body).decision));
+  };
   const moderationQueue: RequestHandler = async (_req, res) => res.json(await service.moderationQueue());
   const moderatePost: RequestHandler = async (req, res) => {
     res.json(await service.moderatePost(getAuthUser(req).id, routeId(req, 'postId'), communityModerationDecisionSchema.parse(req.body)));
@@ -95,5 +109,7 @@ export function createCommunityController(service: CommunityService) {
     createPatientComment, createTherapistComment, editPost, editComment, deletePost,
     deleteComment, report, therapistState, therapistFeed, createCommunity, invite,
     decideMembership, moderationQueue, moderatePost, moderateComment, reviewReport,
+    setTherapistModeration, therapistModerationQueue, moderateTherapistPost,
+    moderateTherapistComment, reviewTherapistReport,
   };
 }
