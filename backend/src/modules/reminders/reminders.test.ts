@@ -462,8 +462,6 @@ describe('autorização (regra 1)', () => {
       await therapist.put('/reminders').send(validSettings),
       await therapist.post('/reminders/pause').send({ until: '2026-12-01' }),
       await therapist.delete('/reminders/pause'),
-      await therapist.post('/reminders/push-subscriptions').send(validSubscription),
-      await therapist.delete('/reminders/push-subscriptions').send({ endpoint: validSubscription.endpoint }),
     ]) {
       expect(res.status).toBe(403);
       expect(res.body.error.code).toBe('PATIENT_PROFILE_REQUIRED');

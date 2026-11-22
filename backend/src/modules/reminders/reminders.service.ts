@@ -29,6 +29,19 @@ export const DEFAULT_REMINDER_SETTINGS = {
 };
 
 const MAX_PUSH_SUBSCRIPTIONS_PER_USER = 10;
+// Contas que já existiam mantêm a escolha anterior, inclusive a ausência de configuração.
+export function newPatientReminderSettings(userId: string) {
+  return {
+    userId,
+    morningEnabled: true,
+    eveningEnabled: true,
+    morningTime: timeOnlyToDate(DEFAULT_REMINDER_SETTINGS.morningTime),
+    eveningTime: timeOnlyToDate(DEFAULT_REMINDER_SETTINGS.eveningTime),
+    quietStart: timeOnlyToDate(DEFAULT_REMINDER_SETTINGS.quietStart),
+    quietEnd: timeOnlyToDate(DEFAULT_REMINDER_SETTINGS.quietEnd),
+  };
+}
+
 const MAX_PAUSE_DAYS_AHEAD = 365;
 const SCHEDULER_INTERVAL_MS = 5 * 60 * 1000;
 

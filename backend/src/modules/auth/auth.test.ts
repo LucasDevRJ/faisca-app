@@ -10,6 +10,7 @@ import { SESSION_COOKIE } from '../../lib/session.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
 import { PRIVACY_VERSION } from './auth.service.js';
+import { MESSAGES_PRIVACY_VERSION, versionToRecord } from './privacy.js';
 import { LEGACY_SHOWN_VERSION } from './privacy.js';
 
 // Dados fictícios (regra 5 do AGENTS.md).
@@ -739,6 +740,12 @@ describe('POST /auth/profiles', () => {
 });
 
 describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
+  it('mantém a versão exibida durante o deploy em etapas e preserva um aceite mais novo', () => {
+    expect(versionToRecord('2026-11.10')).toBe('2026-11.10');
+    expect(versionToRecord(MESSAGES_PRIVACY_VERSION)).toBe(MESSAGES_PRIVACY_VERSION);
+    expect(versionToRecord('2026-11.10', MESSAGES_PRIVACY_VERSION)).toBe(MESSAGES_PRIVACY_VERSION);
+  });
+
   it('conta com a versão anterior: o /auth/me avisa e o aceite grava a data e a versão atual', async () => {
     const user = await createConfirmedUser({ email: EMAIL, password: PASSWORD, privacyVersion: '2026-10' });
     const agent = await loginAgent();
@@ -778,6 +785,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       community: false,
       medications: false,
       readReceipts: false,
+      messages: false,
     };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
@@ -842,6 +850,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
         '2026-11.10',
         { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true, readReceipts: true },
       ],
+      ['2026-11.11', Object.fromEntries(Object.keys(none).map((key) => [key, true]))],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {

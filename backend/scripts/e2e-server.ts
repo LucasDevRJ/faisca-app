@@ -28,11 +28,14 @@ const { hashPassword } = await import('../src/lib/password.js');
 const { FakeMailer } = await import('../src/test/fake-mailer.js');
 const { FakePushSender } = await import('../src/test/fake-push-sender.js');
 const { runInline } = await import('../src/lib/background.js');
+const { MESSAGES_PRIVACY_VERSION } = await import('../src/modules/auth/privacy.js');
 
 // Usuários fictícios (regra 5). As mesmas credenciais estão em tests/fixtures/users.ts.
 const SEED_PASSWORD = 'senha-ficticia-123';
 // privacyVersion: versão do aviso já aceita. Sem ela, a conta é de antes do aviso (null).
 const SEED_USERS: { name: string; email: string; patient: boolean; therapist: boolean; privacyVersion?: string }[] = [
+  { name: 'Paciente Mensagens Fictícia', email: 'mensagens-paciente@faisca.test', patient: true, therapist: false, privacyVersion: MESSAGES_PRIVACY_VERSION },
+  { name: 'Profissional Mensagens Fictícia', email: 'mensagens-profissional@faisca.test', patient: false, therapist: true, privacyVersion: MESSAGES_PRIVACY_VERSION },
   // Só Sono, humor e remédio (api/daily-check-ins.spec.ts, DEC-107), com a versão que cita a área.
   { name: 'Paciente Sono Fictícia', email: 'sono-paciente@faisca.test', patient: true, therapist: false, privacyVersion: '2026-11.7' },
   { name: 'Psiquiatra Sono Fictícia', email: 'sono-psiquiatra@faisca.test', patient: false, therapist: true, privacyVersion: '2026-11.7' },

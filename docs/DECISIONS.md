@@ -2865,6 +2865,25 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   instalação variam por aparelho e navegador. O texto não é orientação clínica; a página só deve
   entrar em produção depois da revisão profissional das descrições clínicas.
 
+## DEC-125 — Mensagens privadas com a profissional (#219)
+
+- **Decisão:** usar uma conversa de texto por vínculo ativo entre paciente e psicóloga ou psiquiatra.
+  As duas pessoas precisam aceitar o aviso `2026-11.11`. Cada mensagem tem assunto (logística ou
+  dúvida breve), texto de até 2.000 caracteres, autoria e data, sem confirmação de leitura.
+  As rotas próprias de mensagens permitem enviar conteúdo da conversa, sem acesso extra nem
+  alterações em registros clínicos. Encerrar o vínculo bloqueia envio, leitura e exportação para
+  ambos. Um novo vínculo começa outra conversa. Excluir uma das contas apaga a conversa do banco
+  ativo, com o prazo de expiração das cópias de segurança vigente.
+- **Avisos:** e-mail e push de mensagens começam ligados, com controles separados na própria
+  conta. Push requer permissão do navegador. O aviso externo contém só texto neutro e endereço
+  para abrir Mensagens. Novos perfis de paciente também começam com os lembretes de manhã e noite
+  ligados. As escolhas de lembrete dos perfis existentes são preservadas.
+- **Motivo:** facilitar a comunicação entre consultas e manter o conteúdo no espaço de acesso
+  restrito de cada vínculo.
+- **Limite conhecido:** conversa assíncrona, sem anexos, prazo fixo de resposta ou atendimento de
+  urgência. A falha de um aviso externo não afeta a mensagem salva. O download em JSON cobre a
+  conversa acessível. A exportação geral da conta continua na #88.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
