@@ -98,8 +98,9 @@ const SENSITIVE_KEYS = [
   'reason',
   // Ação (DEC-051): a expectativa (nome, prazer, realização e observação já estão acima).
   'expectation',
-  // Mural da terapeuta (DEC-079): o texto do aviso.
+  // Mural da terapeuta (DEC-079) e mensagens privadas (DEC-125): texto sensível.
   'body',
+  'messages',
   // Comunidade (DEC-113): publicações, comentários, motivos de denúncia e mensagem de moderação.
   'moderationMessage',
   'details',

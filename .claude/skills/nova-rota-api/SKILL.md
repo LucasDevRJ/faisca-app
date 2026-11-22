@@ -30,6 +30,8 @@ em caso de dúvida, eles prevalecem sobre esta skill.
   alterar apenas conteúdo publicado para aquela comunidade, nunca registros clínicos. A psicóloga
   responsável gerencia a própria comunidade; a pessoa moderadora precisa estar na allowlist de e-mail
   e ter 2FA ativo. Todas as rotas exigem o aceite de privacidade `community`.
+- Exceção isolada de Mensagens (DEC-125): `/messages` permite ler e trocar mensagens entre as duas
+  pessoas do vínculo ativo após ambos aceitarem a área `messages`, sem acessar registros clínicos.
 
 ## 2. Estrutura
 `src/modules/<modulo>/` com `schema`, `service`, `controller` e `routes` (backend/CLAUDE.md).

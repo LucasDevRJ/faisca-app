@@ -18,6 +18,7 @@ const AREA_NAMES: Record<PrivacyArea, string> = {
   community: 'a Comunidade',
   medications: 'os Remédios e o que sinto',
   readReceipts: 'o "Lido" da profissional',
+  messages: 'as Mensagens',
 };
 
 // Cada área de dado novo entrou no aviso de privacidade numa versão (DEC-039, DEC-042). Quem

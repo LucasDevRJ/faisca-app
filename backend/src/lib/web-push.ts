@@ -11,6 +11,7 @@ export type PushMessage = {
   title: string;
   body: string;
   url: string;
+  tag?: string;
 };
 
 export type PushSendResult = 'sent' | 'expired' | 'failed';
