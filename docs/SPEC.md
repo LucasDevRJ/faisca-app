@@ -539,13 +539,28 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   denúncias correspondentes continuam com a plataforma. A moderação da plataforma exige e-mail
   autorizado e 2FA ativo. A moderação é isolada e não concede acesso a perfil ou registros clínicos
   (DEC-122).
+  O canal privado de Mensagens (DEC-125) tem rotas próprias para leitura e envio pelas duas pessoas
+  do vínculo ativo com aceite da área, sem tocar em registros clínicos.
 - No papel de paciente: acesso somente aos próprios dados.
 - Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado, área não liberada ou dado de outra pessoa.
 - Tudo isso é garantido no backend, nunca só na interface.
 
+## Mensagens privadas (DEC-125)
+- Em **Mensagens**, paciente e psicóloga ou psiquiatra veem as conversas dos seus vínculos ativos.
+  As duas pessoas precisam aceitar o aviso de privacidade `2026-11.11` para consultar ou enviar.
+  A conversa tem texto de até 2.000 caracteres, assunto (logística ou dúvida breve) e data, sem
+  anexos nem recibos de leitura. O canal não atende urgências e a resposta depende da disponibilidade.
+- O histórico pode ser baixado enquanto o vínculo estiver ativo. Revogar o vínculo suspende todo
+  acesso dos dois lados. O histórico não aparece num novo vínculo. Excluir qualquer uma das contas
+  apaga a conversa do banco ativo.
+- Os avisos por e-mail e push são neutros e começam ligados. Cada parte escolhe os canais em Conta.
+  Push depende de permissão e inscrição do aparelho. As mensagens ficam disponíveis no app mesmo
+  quando os dois canais estão desligados.
+
 ## Lembretes (somente perfil paciente)
 - O paciente escolhe **um canal único** na conta (DEC-089): **E-mail** (padrão) ou **Notificação no aparelho** (Web Push). Se o envio por notificação falhar ou não houver mais aparelho inscrito, o lembrete **cai automaticamente para o e-mail** e grava `lastFallbackAt` para avisar no app.
-- Existem dois tipos de lembrete, desligados por padrão, cada um com liga/desliga e horário próprio:
+- Existem dois tipos de lembrete, ligados por padrão para novos perfis de paciente (DEC-125),
+  cada um com liga/desliga e horário próprio. Contas existentes mantêm as escolhas anteriores:
   - **Manhã** (padrão `08:00`): enviado se houver **Atividade `PLANEJADA`** ou **Ação `PLANEJADA`** para hoje.
   - **Noite** (padrão `20:00`): enviado se houver **Atividade `PLANEJADA` ou `PENDENTE`** ou **Ação `PLANEJADA`** com data até hoje.
 - **Horário de silêncio** (ligado por padrão, das `22:00` às `07:00`, ajustável): nenhum lembrete sai dentro desse intervalo; o que cairia nele aguarda e sai no fim do silêncio.

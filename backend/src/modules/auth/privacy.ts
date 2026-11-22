@@ -41,6 +41,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.8',
   '2026-11.9',
   '2026-11.10',
+  '2026-11.11',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -59,7 +60,7 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // sinto, DEC-114) foi conhecida na API antes e virou a atual no PR das telas, com o texto (DEC-115).
 // A 2026-11.10 ("Lido" para o paciente, DEC-117) seguiu o mesmo fluxo: virou a atual no PR das telas,
 // com o texto (DEC-118).
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.10';
+export const PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
 
 // Qual versão gravar no aceite (DEC-105). O app manda a versão que mostrou; o servidor só grava a que
 // a pessoa leu. Sem versão é um app de antes dessa regra (instalado e ainda não atualizado, ou nos
@@ -112,6 +113,7 @@ export const PRIVACY_AREAS = {
   medications: '2026-11.9',
   // "Lido" para o paciente (DEC-117): a data em que a profissional leu, se os dois ligarem.
   readReceipts: '2026-11.10',
+  messages: '2026-11.11',
 } as const satisfies Record<string, PrivacyVersion>;
 
 export type PrivacyArea = keyof typeof PRIVACY_AREAS;
@@ -139,5 +141,6 @@ export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea
     community: coversArea(acceptedVersion, 'community'),
     medications: coversArea(acceptedVersion, 'medications'),
     readReceipts: coversArea(acceptedVersion, 'readReceipts'),
+    messages: coversArea(acceptedVersion, 'messages'),
   };
 }

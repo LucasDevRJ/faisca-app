@@ -26,12 +26,23 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   community: 'a Comunidade',
   medications: 'os Remédios e o que sinto',
   readReceipts: 'a opção de ver quando a profissional lê os registros',
+  messages: 'as Mensagens',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
 // consente com o uso dos próprios dados; a terapeuta, com o acesso aos dos pacientes (DEC-041).
 type ConsentCopy = { intro: string; scope: string };
 const CONSENT_TEXT: Record<PrivacyArea, { patient: ConsentCopy; therapist: ConsentCopy; moderator?: ConsentCopy }> = {
+  messages: {
+    patient: {
+      intro: 'Para trocar mensagens com quem acompanha você, leia o que mudou e confirme.',
+      scope: 'inclusive com o armazenamento e o compartilhamento das mensagens privadas com a profissional vinculada.',
+    },
+    therapist: {
+      intro: 'Para trocar mensagens com seus pacientes, leia o que mudou e confirme.',
+      scope: 'inclusive com o armazenamento e o compartilhamento das mensagens privadas com meus pacientes vinculados.',
+    },
+  },
   thoughtRecords: {
     patient: {
       intro: 'Para usar esta parte, leia o que mudou e confirme.',

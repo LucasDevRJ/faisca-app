@@ -365,15 +365,21 @@ await prisma.$transaction(async (tx) => {
   const active = await tx.therapistLink.findFirst({
     where: { patientId: patient.id, kind: 'PSICOLOGIA', revokedAt: null },
   });
-  if (!active) {
-    await tx.therapistLink.create({
+  const devLink = active ?? await tx.therapistLink.create({
+    data: {
+      patientId: patient.id,
+      therapistId: therapist.id,
+      method: 'CODE',
+      kind: 'PSICOLOGIA',
+      sharedAreas: [...SHARED_AREAS],
+      seenByPatientAt: new Date(),
+    },
+  });
+  if (devLink.therapistId === therapist.id && !await tx.privateMessage.count({ where: { linkId: devLink.id } })) {
+    await tx.privateMessage.create({
       data: {
-        patientId: patient.id,
-        therapistId: therapist.id,
-        method: 'CODE',
-        kind: 'PSICOLOGIA',
-        sharedAreas: [...SHARED_AREAS],
-        seenByPatientAt: new Date(),
+        linkId: devLink.id, sentByPatient: false, topic: 'LOGISTICA',
+        body: 'Oi! Podemos confirmar o horário da próxima consulta? Esta é uma mensagem fictícia.',
       },
     });
   }

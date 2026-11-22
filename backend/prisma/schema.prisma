@@ -21,6 +21,8 @@ enum AnnouncementEmailStatus {
 }
 
 model User {
+  messageEmailEnabled         Boolean           @default(true)
+  messagePushEnabled          Boolean           @default(true)
   tasks                       HomeworkTask[]
   dailyCheckIns               DailyCheckIn[]
   medications                 Medication[]
@@ -572,6 +574,7 @@ enum CommunityReportStatus {
 // Escritos à mão na migration: no máximo um vínculo ativo por paciente e tipo (índice único parcial, DEC-097)
 // e ninguém se vincula a si mesmo (CHECK).
 model TherapistLink {
+  messages                PrivateMessage[]
   agreedTasks             HomeworkTask[]
   id                      String           @id @default(uuid()) @db.Uuid
   patientId               String           @db.Uuid
@@ -598,6 +601,24 @@ model TherapistLink {
 
   @@index([patientId])
   @@index([therapistId])
+}
+
+// Conversa privada por vínculo. Excluir qualquer uma das contas apaga o vínculo e as mensagens.
+model PrivateMessage {
+  id            String        @id @default(uuid()) @db.Uuid
+  linkId        String        @db.Uuid
+  sentByPatient Boolean
+  topic         MessageTopic
+  body          String
+  createdAt     DateTime      @default(now())
+  link          TherapistLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId, createdAt, id])
+}
+
+enum MessageTopic {
+  LOGISTICA
+  DUVIDA
 }
 
 // Convite por e-mail. Não expira e vale uma vez; o token em texto só existe no e-mail (regra 8).

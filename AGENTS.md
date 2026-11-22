@@ -68,10 +68,13 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    continua podendo editar, encerrar ou apagar. Exceção de leitura: `POST
    /therapist/patients/:patientId/records/search` apenas pesquisa com termo no corpo, sem gravar ou
    alterar registros, e mantém as mesmas verificações de vínculo, área e aceite de cada resultado.
+   As rotas próprias `/messages` (DEC-125) permitem ler e enviar mensagens privadas somente entre
+   as duas pessoas do vínculo ativo após aceite de ambas. Esse acesso é separado dos registros.
    No contexto de paciente, só os próprios dados.
    Toda rota nova com dado de paciente precisa de teste de autorização (caso permitido e negado).
 2. **Registros finais são imutáveis.** Editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA retorna 409.
 3. **Notificações neutras.** Push e e-mail de lembrete nunca contêm nome de atividade, notas ou observações.
+   Avisos de mensagens não contêm conteúdo, assunto, nome ou identificador da outra pessoa.
 4. **Sem segredos no repositório.** Nunca commitar `.env`. Variável nova vai para o `.env.example`
    com placeholder.
 5. **Sem dados reais.** Seeds, fixtures e testes usam apenas dados fictícios.

@@ -154,6 +154,18 @@ export function PrivacyPage() {
               nos registros técnicos do sistema.
             </li>
             <li>Seus vínculos com terapeutas.</li>
+            <li>
+              Nas Mensagens: o texto, o assunto, quem enviou e a hora de envio. Só as duas pessoas do vínculo ativo
+              podem acessar a conversa, após aceitarem este aviso. As mensagens podem conter dados de saúde.
+              O texto, o assunto e o nome de quem enviou ficam fora dos avisos e dos registros técnicos.
+              Os avisos por e-mail e no aparelho começam ligados e podem ser desligados em Conta.
+              O aparelho só recebe avisos se você permitir no navegador.
+            </li>
+            <li>
+              Você pode baixar uma cópia das conversas ainda acessíveis. Encerrar o vínculo fecha o acesso para as
+              duas pessoas e mantém o histórico protegido. Excluir a conta de qualquer uma delas apaga a conversa
+              do aplicativo. As cópias de segurança seguem o prazo indicado abaixo.
+            </li>
             <li>No mural: os avisos que a terapeuta escreve e, para você, quais avisos já viu.</li>
             <li>Na Comunidade, se decidir participar: o apelido escolhido, sua confirmação de que tem 18 anos ou mais, o aceite das regras, se quer avisar o grupo quando entrar e as publicações, comentários e denúncias que fizer. Não guardamos sua data de nascimento.</li>
             <li>
@@ -187,7 +199,7 @@ export function PrivacyPage() {
             se tomou o remédio como combinado, os seus remédios e o que tem sentido, e,
             se quiser, compartilhá-los com quem cuida de você (psicóloga ou psiquiatra). Também usamos
             o seu e-mail para mensagens da conta (confirmação, nova senha e aviso de exclusão), para, se quiser, participar
-            da comunidade opcional de apoio da psicóloga com vínculo ativo e, quando você ligar os lembretes, para avisar
+            da comunidade opcional de apoio da psicóloga com vínculo ativo e, se os lembretes estiverem ligados, para avisar
             que há atividades ou ações para ver, sempre sem mostrar o que você escreveu. Não
             vendemos dados, não mostramos anúncios e não usamos ferramentas de rastreamento.
           </p>

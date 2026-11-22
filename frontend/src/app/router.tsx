@@ -12,6 +12,7 @@ import { ErrorPage } from '../pages/error-page';
 import { ForgotPasswordPage } from '../pages/forgot-password-page';
 import { LoginPage } from '../pages/login-page';
 import { MuralPage } from '../pages/mural-page';
+import { MessagesPage } from '../pages/messages-page';
 import { NotFoundPage } from '../pages/not-found-page';
 import { NoticesPage } from '../pages/notices-page';
 import { PatientPage } from '../pages/patient-page';
@@ -53,6 +54,9 @@ export const routes = [
             element: <AppLayout />,
             children: [
               { path: 'conta', element: <AccountPage /> },
+              { path: 'mensagens', element: <MessagesPage /> },
+              { path: 'mensagens/avisos', element: <MessagesPage settings /> },
+              { path: 'mensagens/:linkId', element: <MessagesPage /> },
               { path: 'novidades', element: <AnnouncementsPage /> },
               {
                 element: <RequireProfile profile="patient" />,

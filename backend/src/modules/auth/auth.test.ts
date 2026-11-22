@@ -778,6 +778,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       community: false,
       medications: false,
       readReceipts: false,
+      messages: false,
     };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
@@ -842,6 +843,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
         '2026-11.10',
         { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true, readReceipts: true },
       ],
+      ['2026-11.11', Object.fromEntries(Object.keys(none).map((key) => [key, true]))],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {

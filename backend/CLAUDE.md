@@ -27,7 +27,7 @@
   avisos do mural dela (`POST`/`PATCH`/`DELETE /therapist/notices`, DEC-079), com sessão e perfil
   de terapeuta: só gravam o próprio aviso (`TherapistNotice`), sem dado de paciente. A exceção em
   `/therapist/patients` só cria um `Plan` sob o paciente e não permite editar planos existentes ou
-  criar registros. Nada fora de
+  criar registros. Além das exceções descritas aqui, nada fora de
   `/therapist/patients/...` devolve dado de paciente além de nome, e-mail, o número de não lidos, o estado do pedido do
   "Lido" (DEC-117) e
   a versão da foto (só se ela existe e quando mudou, DEC-061) dos vinculados (`GET /links/patients`).
@@ -40,6 +40,9 @@
   A pessoa moderadora da plataforma só acessa a fila de conteúdo comunitário com e-mail explicitamente
   autorizado e 2FA ativo. Essas permissões nunca incluem perfil clínico ou registros dos pacientes.
   Todas as rotas exigem o aceite da área `community`.
+- Mensagens (DEC-125) usa `/messages` para consulta e envio privado pelos dois participantes do
+  vínculo ativo após aceite da área `messages` por ambos. Usa dados da própria conversa e nunca
+  acessa ou altera registros clínicos. Configurações de canais e aparelhos são da própria conta.
 
 ## Regras de domínio
 - Transições de estado da atividade ficam centralizadas no service de atividades. Nenhum outro

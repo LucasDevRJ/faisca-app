@@ -19,8 +19,9 @@ export function createRemindersRoutes(mailer: Mailer, pushSender: PushSender) {
   router.put('/reminders', ...patient, controller.update);
   router.post('/reminders/pause', ...patient, controller.pause);
   router.delete('/reminders/pause', ...patient, controller.resume);
-  router.post('/reminders/push-subscriptions', ...patient, pushSubLimit, controller.savePushSubscription);
-  router.delete('/reminders/push-subscriptions', ...patient, controller.deletePushSubscription);
+  // A inscrição no aparelho é da própria conta e serve também para avisos de mensagens da profissional.
+  router.post('/reminders/push-subscriptions', requireAuth, pushSubLimit, controller.savePushSubscription);
+  router.delete('/reminders/push-subscriptions', requireAuth, controller.deletePushSubscription);
 
   return router;
 }

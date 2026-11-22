@@ -33,6 +33,7 @@ export async function resetDatabase() {
   await prisma.communityPost.deleteMany();
   await prisma.communityMembership.deleteMany();
   await prisma.community.deleteMany();
+  await prisma.privateMessage.deleteMany();
   await prisma.therapistLink.deleteMany();
   await prisma.notificationLog.deleteMany();
   await prisma.announcementEmailDelivery.deleteMany();

@@ -186,6 +186,9 @@ Na prática clínica tradicional:
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
 
+- Mensagens privadas em texto entre paciente e profissional com vínculo ativo (#219), para
+  logística da consulta e dúvidas breves, com avisos opcionais sem conteúdo.
+
 **Em desenvolvimento — Ligações entre registros (#207) e repetição de pensamentos (#166):** o
 paciente poderá relacionar registros de diferentes áreas. A psicóloga só verá a ligação se as duas
 áreas estiverem compartilhadas e cobertas pelos aceites de privacidade. Pensamentos e episódios de

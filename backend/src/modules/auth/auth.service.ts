@@ -7,6 +7,7 @@ import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { prisma } from '../../lib/prisma.js';
 import { generateToken, hashToken } from '../../lib/secure-token.js';
 import type { PushSender } from '../../lib/web-push.js';
+import { newPatientReminderSettings } from '../reminders/reminders.service.js';
 import type { LinksService } from '../links/links.service.js';
 import { toAccessibilitySettings, type AccessibilitySettings } from '../profile/profile.service.js';
 import {
@@ -340,7 +341,9 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
         const { userId, now, row } = await consumeToken(tx, token, 'EMAIL_CONFIRMATION');
         // O perfil de terapeuta precisa de um tipo (CHECK do banco, DEC-097): conta antiga sem ele
         // ganha o de psicóloga.
-        const kind = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { professionalKind: true } });
+        const kind = await tx.user.findUniqueOrThrow({
+          where: { id: userId }, select: { professionalKind: true, hasPatientProfile: true },
+        });
         const { count } = await tx.user.updateMany({
           where: { id: userId, emailConfirmedAt: null },
           data: {
@@ -356,6 +359,10 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
           },
         });
         if (count > 0) {
+          const isPatient = row.pendingPasswordHash ? row.pendingPatient : kind.hasPatientProfile;
+          if (isPatient) {
+            await tx.reminderSettings.createMany({ data: [newPatientReminderSettings(userId)], skipDuplicates: true });
+          }
           await tx.authToken.deleteMany({ where: { userId, type: 'EMAIL_CONFIRMATION', usedAt: null } });
         }
         return userId;
@@ -463,7 +470,15 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
     // Ao ligar o perfil de terapeuta, o tipo escolhido, ou o que já havia, ou psicóloga (DEC-097).
     async addProfile(userId: string, input: AddProfileInput): Promise<User> {
       if (input.profile === 'patient') {
-        return prisma.user.update({ where: { id: userId }, data: { hasPatientProfile: true } });
+        return prisma.$transaction(async (tx) => {
+          const { count } = await tx.user.updateMany({
+            where: { id: userId, hasPatientProfile: false }, data: { hasPatientProfile: true },
+          });
+          if (count > 0) {
+            await tx.reminderSettings.createMany({ data: [newPatientReminderSettings(userId)], skipDuplicates: true });
+          }
+          return tx.user.findUniqueOrThrow({ where: { id: userId } });
+        });
       }
       const user = await prisma.user.findUniqueOrThrow({
         where: { id: userId },

@@ -1,0 +1,124 @@
+import { createECDH } from 'node:crypto';
+import request from 'supertest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createApp } from '../../app.js';
+import { runInline } from '../../lib/background.js';
+import { prisma } from '../../lib/prisma.js';
+import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
+import { FakeMailer } from '../../test/fake-mailer.js';
+import { FakePushSender } from '../../test/fake-push-sender.js';
+
+const patientEmail = 'mensagens-paciente@faisca.test';
+const professionalEmail = 'mensagens-profissional@faisca.test';
+const strangerEmail = 'mensagens-outra@faisca.test';
+const password = 'senha-ficticia-123';
+const text = 'Posso confirmar o horário da consulta fictícia?';
+const input = { topic: 'LOGISTICA', body: text };
+let mailer: FakeMailer;
+let pushSender: FakePushSender;
+let app: ReturnType<typeof createApp>;
+let linkId: string;
+let professionalId: string;
+
+beforeEach(async () => {
+  await resetDatabase();
+  mailer = new FakeMailer();
+  pushSender = new FakePushSender();
+  app = createApp({ mailer, pushSender, runAfterResponse: runInline });
+  const patient = await createConfirmedUser({ email: patientEmail });
+  const professional = await createConfirmedUser({
+    email: professionalEmail, patient: false, therapist: true, professionalKind: 'PSIQUIATRIA',
+  });
+  professionalId = professional.id;
+  await createConfirmedUser({ email: strangerEmail, patient: false, therapist: true });
+  const link = await createTestLink({
+    patientId: patient.id, therapistId: professional.id, kind: 'PSIQUIATRIA', sharedAreas: [],
+  });
+  linkId = link.id;
+});
+
+async function login(email: string) {
+  const agent = request.agent(app);
+  expect((await agent.post('/auth/login').send({ email, password })).status).toBe(200);
+  return agent;
+}
+
+describe('autorização (regra 1)', () => {
+  it('paciente e psiquiatra enviam e leem apenas a conversa em comum', async () => {
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    const url = `/messages/${linkId}`;
+    expect((await patient.get('/messages')).body).toEqual([
+      expect.objectContaining({ id: linkId, counterpart: 'PSIQUIATRIA', available: true }),
+    ]);
+    const sent = await patient.post(url).send(input);
+    expect(sent.status).toBe(201);
+    expect(sent.headers['cache-control']).toBe('no-store');
+    expect(sent.body).toEqual({ id: expect.any(String), topic: 'LOGISTICA', body: text, mine: true, createdAt: expect.any(String) });
+    expect((await professional.get(url)).body.messages[0]).toMatchObject({ body: text, mine: false });
+    expect((await professional.post(url).send({ topic: 'DUVIDA', body: 'Sim, podemos confirmar.' })).status).toBe(201);
+    expect((await patient.get(url)).body.messages).toHaveLength(2);
+  });
+
+  it('barra visitante, outra profissional, campo forjado e as duas partes após revogação', async () => {
+    const url = `/messages/${linkId}`;
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    const stranger = await login(strangerEmail);
+    expect((await request(app).get(url)).status).toBe(401);
+    expect((await request(app).post(url).send(input)).status).toBe(401);
+    expect((await stranger.get('/messages')).body).toEqual([]);
+    expect((await stranger.get(url)).status).toBe(403);
+    expect((await stranger.post(url).send(input)).status).toBe(403);
+    expect((await patient.post(url).send({ ...input, patientId: professionalId })).status).toBe(400);
+    expect((await patient.post(url).send(input)).status).toBe(201);
+    await prisma.therapistLink.update({ where: { id: linkId }, data: { revokedAt: new Date() } });
+    for (const participant of [patient, professional]) {
+      expect((await participant.get('/messages')).body).toEqual([]);
+      expect((await participant.get(url)).status).toBe(403);
+      expect((await participant.post(url).send(input)).status).toBe(403);
+    }
+    expect(await prisma.privateMessage.count()).toBe(1);
+    expect((await professional.post('/auth/delete-account').send({ password })).status).toBe(204);
+    expect(await prisma.privateMessage.count()).toBe(0);
+  });
+
+  it('pede o aceite de ambas as partes antes de abrir a conversa', async () => {
+    await prisma.user.update({ where: { id: professionalId }, data: { privacyVersion: '2026-11.10' } });
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    expect((await patient.get('/messages')).body[0].available).toBe(false);
+    expect((await patient.post(`/messages/${linkId}`).send(input)).status).toBe(403);
+    expect((await professional.get('/messages')).body.error.code).toBe('PRIVACY_CONSENT_REQUIRED');
+  });
+
+  it('envia avisos neutros ao destinatário e respeita os canais desligados', async () => {
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    const ecdh = createECDH('prime256v1');
+    ecdh.generateKeys();
+    const subscription = {
+      endpoint: 'https://fcm.googleapis.com/fcm/send/mensagens-teste',
+      p256dh: ecdh.getPublicKey().toString('base64url'),
+      auth: Buffer.alloc(16, 7).toString('base64url'),
+    };
+    const { endpoint, ...keys } = subscription;
+    expect((await professional.post('/reminders/push-subscriptions').send({ endpoint, keys })).status).toBe(200);
+    mailer.sent.length = 0;
+    const url = `/messages/${linkId}`;
+    expect((await professional.get('/messages/preferences')).body).toMatchObject({ email: true, push: true });
+    expect((await patient.post(url).send(input)).status).toBe(201);
+    expect(mailer.sent).toHaveLength(1);
+    expect(mailer.lastTo(professionalEmail)?.text).toContain('/mensagens');
+    expect(mailer.lastTo(professionalEmail)?.text).not.toContain(text);
+    expect(mailer.lastTo(professionalEmail)?.html).not.toContain(text);
+    expect(pushSender.sent).toEqual([{ target: expect.objectContaining(subscription), message: {
+      title: 'Você tem uma nova mensagem no Faísca', body: 'Abra o Faísca para ver sua mensagem.', url: '/mensagens',
+      tag: 'faisca-messages',
+    } }]);
+    expect((await professional.put('/messages/preferences').send({ email: false, push: false })).status).toBe(204);
+    expect((await patient.post(url).send(input)).status).toBe(201);
+    expect(mailer.sent).toHaveLength(1);
+    expect(pushSender.sent).toHaveLength(1);
+  });
+});
