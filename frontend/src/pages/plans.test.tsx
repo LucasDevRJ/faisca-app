@@ -415,7 +415,7 @@ describe('visão da terapeuta', () => {
     renderRoute(`/pacientes/${PATIENT_ID}`);
 
     const tabs = await screen.findByRole('group', { name: 'Tipo de registro' });
-    await waitFor(() => expect(within(tabs).getAllByRole('button')).toHaveLength(5));
+    await waitFor(() => expect(within(tabs).getAllByRole('button')).toHaveLength(6));
     expect(tabs).toHaveClass('grid-cols-3');
     expect(screen.queryByRole('button', { name: 'Criar plano para Paula' })).not.toBeInTheDocument();
   });

@@ -10,6 +10,7 @@ import {
   todayInAppZone,
 } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
+import { lockRecordLinksForPatient, removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import {
   TENSION_EPISODES_MAX,
   type CreateTensionEpisodeInput,
@@ -113,8 +114,8 @@ function stillEditable(userId: string, id: string): Prisma.TensionEpisodeWhereIn
 }
 
 // Explica uma escrita condicional que não alterou nada.
-async function conflictAfterRace(id: string): Promise<AppError> {
-  const exists = await prisma.tensionEpisode.findUnique({ where: { id }, select: { id: true } });
+async function conflictAfterRace(id: string, db: Prisma.TransactionClient = prisma): Promise<AppError> {
+  const exists = await db.tensionEpisode.findUnique({ where: { id }, select: { id: true } });
   return exists ? tensionEpisodeLocked() : notFound();
 }
 
@@ -135,16 +136,24 @@ export function createTensionEpisodesService() {
   }
 
   async function create(userId: string, input: CreateTensionEpisodeInput) {
-    const { episodeDate, episodeTime = null, ...rest } = input;
+    const { episodeDate, episodeTime = null, repeatFromId, ...rest } = input;
     assertNotFuture(episodeDate, episodeTime);
-
-    // Trava a conta antes de contar (DEC-112): pedidos ao mesmo tempo não passam juntos do teto.
     const episode = await prisma.$transaction(async (tx) => {
+      await lockRecordLinksForPatient(tx, userId);
+      // Trava a conta antes de contar (DEC-123): pedidos concorrentes não passam juntos do teto.
       await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
       if ((await tx.tensionEpisode.count({ where: { userId } })) >= TENSION_EPISODES_MAX) {
         throw new AppError(409, 'TENSION_EPISODES_LIMIT', 'Você chegou ao limite de episódios de tensão desta conta.');
       }
-      return tx.tensionEpisode.create({
+      const repeatSource = repeatFromId
+        ? await tx.tensionEpisode.findFirst({ where: { id: repeatFromId, userId }, select: { id: true } })
+        : null;
+      if (repeatFromId && !repeatSource) throw notFound();
+      const previous = repeatSource
+        ? await tx.recordLink.findFirst({ where: { userId, kind: 'REPETITION', targetType: 'TENSION_EPISODE', targetId: repeatSource.id }, select: { sourceId: true } })
+        : null;
+      const rootId = previous?.sourceId ?? repeatSource?.id;
+      const created = await tx.tensionEpisode.create({
         data: {
           ...rest,
           userId,
@@ -152,6 +161,11 @@ export function createTensionEpisodesService() {
           episodeTime: timeColumn(episodeTime),
         },
       });
+      if (rootId) await tx.recordLink.create({ data: {
+        userId, sourceType: 'TENSION_EPISODE', sourceId: rootId,
+        targetType: 'TENSION_EPISODE', targetId: created.id, kind: 'REPETITION',
+      } });
+      return created;
     });
     return toPublicTensionEpisode(episode);
   }
@@ -187,8 +201,11 @@ export function createTensionEpisodesService() {
     const episode = await findOwned(userId, id);
     if (!isEditable(episode.createdAt)) throw tensionEpisodeLocked();
 
-    const { count } = await prisma.tensionEpisode.deleteMany({ where: stillEditable(userId, id) });
-    if (count === 0) throw await conflictAfterRace(id);
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.tensionEpisode.deleteMany({ where: stillEditable(userId, id) });
+      if (count === 0) throw await conflictAfterRace(id, tx);
+      await removeRecordLinks(tx, userId, 'TENSION_EPISODE', id);
+    });
   }
 
   // Episódios escolhidos por id, de qualquer data, na ordem da lista (visão "Não lidos", DEC-057).

@@ -9,6 +9,7 @@ import {
   todayInAppZone,
 } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
+import { removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import { CHECK_IN_WINDOW_DAYS, type CheckInInput } from './daily-check-ins.schema.js';
 
 // Sono, humor e remédio (DEC-107). Um registro por dia; a noite pertence ao dia em que a pessoa
@@ -137,8 +138,13 @@ export function createDailyCheckInsService() {
 
   async function remove(userId: string, date: string) {
     assertEditable(date);
-    const { count } = await prisma.dailyCheckIn.deleteMany({ where: { userId, checkInDate: dateOnlyToDate(date) } });
-    if (count === 0) throw new AppError(404, 'CHECK_IN_NOT_FOUND', 'Não há registro neste dia.');
+    await prisma.$transaction(async (tx) => {
+      const row = await tx.dailyCheckIn.findFirst({ where: { userId, checkInDate: dateOnlyToDate(date) }, select: { id: true } });
+      if (!row) throw new AppError(404, 'CHECK_IN_NOT_FOUND', 'Não há registro neste dia.');
+      await tx.dailyCheckIn.delete({ where: { id: row.id } });
+      await removeRecordLinks(tx, userId, 'SLEEP_MOOD', row.id);
+      await removeRecordLinks(tx, userId, 'MEDICATION', row.id);
+    });
   }
 
   async function settings(userId: string) {

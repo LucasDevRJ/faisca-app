@@ -8,7 +8,7 @@ import {
   setSessionCookie,
   shouldRenewSession,
 } from '../lib/session.js';
-import type { Palette } from '../generated/prisma/client.js';
+import type { Palette, ProfessionalKind } from '../generated/prisma/client.js';
 
 export type AuthUser = {
   id: string;
@@ -16,6 +16,7 @@ export type AuthUser = {
   email: string;
   hasPatientProfile: boolean;
   hasTherapistProfile: boolean;
+  professionalKind: ProfessionalKind | null;
   // Versão do aviso de privacidade aceita (DEC-036); a área de RPD exige a atual (DEC-039).
   privacyVersion: string | null;
   // Última novidade vista (card de Novidades, DEC-054).
@@ -30,6 +31,7 @@ export type AuthUser = {
   reducedMotion: boolean;
   // Aviso de login novo (DEC-091).
   loginAlertEnabled: boolean;
+  announcementEmailsEnabled: boolean;
 };
 
 function unauthenticated() {
@@ -51,6 +53,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
           email: true,
           hasPatientProfile: true,
           hasTherapistProfile: true,
+          professionalKind: true,
           emailConfirmedAt: true,
           sessionVersion: true,
           privacyVersion: true,
@@ -62,6 +65,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
           noTimePressure: true,
           reducedMotion: true,
           loginAlertEnabled: true,
+          announcementEmailsEnabled: true,
         },
       })
     : null;
@@ -82,6 +86,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     email: user.email,
     hasPatientProfile: user.hasPatientProfile,
     hasTherapistProfile: user.hasTherapistProfile,
+    professionalKind: user.professionalKind,
     privacyVersion: user.privacyVersion,
     seenAnnouncement: user.seenAnnouncement,
     palette: user.palette,
@@ -91,6 +96,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     noTimePressure: user.noTimePressure,
     reducedMotion: user.reducedMotion,
     loginAlertEnabled: user.loginAlertEnabled,
+    announcementEmailsEnabled: user.announcementEmailsEnabled,
   };
   req.sessionId = session.sessionId;
   next();

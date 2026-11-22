@@ -400,7 +400,7 @@ describe('isEditable', () => {
   });
 });
 
-describe('teto por conta (DEC-112)', () => {
+describe('teto por conta (DEC-123)', () => {
   function seedMany(count: number) {
     const situationDate = dateOnlyToDate(today());
     return prisma.thoughtRecord.createMany({

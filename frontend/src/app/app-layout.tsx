@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
 import { Button } from '../components/ui/button';
@@ -15,8 +16,33 @@ export function AppLayout() {
   const bothProfiles = user?.profiles.patient && user.profiles.therapist;
   // "Meus registros" segue marcado nas telas de Pensamentos, Tensão, Ação, Consultas e Avisos, que são do
   // mesmo perfil; "Meus pacientes", no Mural.
-  const { pathname } = useLocation();
-  const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/acao', '/consultas', '/avisos'].some(
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    const targetId = decodeURIComponent(hash.slice(1));
+    let observer: MutationObserver | null = null;
+    let timeout: number | undefined;
+    const stop = () => {
+      observer?.disconnect();
+      if (timeout !== undefined) window.clearTimeout(timeout);
+    };
+    const reveal = () => {
+      const target = document.getElementById(targetId);
+      if (!target) return false;
+      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      target.scrollIntoView?.({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+      if (target instanceof HTMLElement && target.tabIndex === -1) target.focus({ preventScroll: true });
+      stop();
+      return true;
+    };
+    if (!reveal()) {
+      observer = new MutationObserver(reveal);
+      observer.observe(document.body, { childList: true, subtree: true });
+      timeout = window.setTimeout(stop, 10_000);
+    }
+    return stop;
+  }, [hash, pathname]);
+  const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/acao', '/consultas', '/avisos', '/comunidade'].some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 

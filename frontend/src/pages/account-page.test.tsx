@@ -146,7 +146,7 @@ describe('/conta: quem me acompanha', () => {
     const user = userEvent.setup();
     linkStatus({
       ...noLink,
-      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, kind: 'PSICOLOGIA', sharedAreas: [], therapist },
+      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, kind: 'PSICOLOGIA', sharedAreas: [], readReceipts: 'OFF', therapist },
     });
     const revoke = vi.fn();
     server.use(
@@ -337,7 +337,7 @@ describe('/conta: excluir conta, pausa em vez de excluir (DEC-078)', () => {
     const user = userEvent.setup();
     linkStatus({
       ...noLink,
-      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, kind: 'PSICOLOGIA', sharedAreas: [], therapist },
+      link: { id: 'l1', method: 'CODE', createdAt: '2026-09-28T15:00:00Z', seen: true, kind: 'PSICOLOGIA', sharedAreas: [], readReceipts: 'OFF', therapist },
     });
     renderRoute('/conta');
 

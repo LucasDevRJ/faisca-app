@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { PatientReadReceipts } from '../features/read-receipts/read-receipts-request';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
@@ -59,6 +60,7 @@ import type { ThoughtRecord } from '../features/thought-records/thought-records-
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 import { AboutMeCard } from '../features/about-me/about-me-card';
 import { PatientTasksTab } from '../features/tasks/patient-tasks-tab';
+import { PatientSleepMoodTab } from '../features/daily-check-ins/patient-sleep-mood-tab';
 import { TaskCard } from '../features/tasks/task-card';
 import { PatientPlansTab } from '../features/plans/patient-plans-tab';
 import { PatientPeriodSummaryCard } from '../features/summary/period-summary-card';
@@ -70,7 +72,7 @@ import { avatarUrls } from '../features/profile/profile-api';
 // Aba na URL (?aba=pensamentos ou ?aba=tensao), junto com o período (DEC-040, DEC-043).
 // Sem ?aba, Atividades. ?aba=para-ler é a visão dos registros para ler, fora do ciclo (DEC-058).
 // ?aba=planos é o Meus Planos (DEC-095), com o plano escolhido em ?plano=.
-const TABS = ['pensamentos', 'tensao', 'acao', 'planos', 'tarefas', 'para-ler'] as const;
+const TABS = ['pensamentos', 'tensao', 'acao', 'planos', 'tarefas', 'sono-humor', 'para-ler'] as const;
 type RecordTab = (typeof TABS)[number] | null;
 
 function parseTab(value: string | null): RecordTab {
@@ -157,7 +159,12 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
   const anyReadConsented = consented || tensionConsented || actionsConsented || aboutConsented || plansConsented || tasksConsented;
   const requestedTab = parseTab(searchParams.get('aba'));
   // As abas que o paciente liberou. Uma aba fechada pedida na URL abre a primeira liberada.
-  const allowedTabs = TAB_LABELS.map((item) => item.tab).filter((item) => shared.has(TAB_AREA[item ?? 'atividades']));
+  // A aba Sono e humor aparece com qualquer uma das três caixas (DEC-107, DEC-115): a API tira o resto.
+  const showCheckIns = shared.has('SLEEP_MOOD') || shared.has('MEDICATION');
+  const showMedications = shared.has('MEDICATIONS');
+  const allowedTabs = TAB_LABELS.map((item) => item.tab).filter((item) =>
+    item === 'sono-humor' ? showCheckIns || showMedications : shared.has(TAB_AREA[item ?? 'atividades']),
+  );
   const noAreas = allowedTabs.length === 0;
   // Sem aceite em nenhuma das três áreas, não há o que ler: um link salvo para "Para ler" abre o ciclo.
   const tab: RecordTab =
@@ -253,6 +260,13 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
           <p className="text-sm text-muted">Vinculado desde {formatDate(patient.linkedAt)}</p>
         </div>
       </section>
+      {/* O pedido para ver quando ela lê, ou a opção para mudar de ideia (DEC-118). */}
+      <PatientReadReceipts patientId={patientId} />
+      {shared.size > 0 && (
+        <Link to={`/pacientes/${patientId}/buscar`} className={buttonClasses('secondary', 'self-start')}>
+          Buscar nos registros
+        </Link>
+      )}
 
       {shared.has('ABOUT_ME') && (
         <PatientAboutMe patientId={patientId} firstName={firstName ?? patient.name} consented={aboutConsented} />
@@ -356,7 +370,18 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
                 </p>
               )}
 
-              {tab === 'tarefas' ? <PatientTasksTab patientId={patientId} consented={tasksConsented} /> : tab === 'planos' ? (
+              {tab === 'sono-humor' ? (
+                <PatientSleepMoodTab
+                  patientId={patientId}
+                  firstName={firstName ?? patient.name}
+                  consented={Boolean(user?.privacyAreas.sleepMood)}
+                  medicationsConsented={Boolean(user?.privacyAreas.medications)}
+                  showCheckIns={showCheckIns}
+                  showMedications={showMedications}
+                  range={range}
+                  ready={ready}
+                />
+              ) : tab === 'tarefas' ? <PatientTasksTab patientId={patientId} consented={tasksConsented} /> : tab === 'planos' ? (
                 <PatientPlansTab
                   patientId={patientId}
                   firstName={firstName ?? patient.name}
@@ -501,6 +526,9 @@ const SUMMARY_TAB: Record<SummaryArea, RecordTab> = {
   tensionEpisodes: 'tensao',
   actions: 'acao',
   plans: 'planos',
+  sleepMood: 'sono-humor',
+  medication: 'sono-humor',
+  medications: 'sono-humor',
 };
 
 const TAB_LABELS: { tab: RecordTab; label: string }[] = [
@@ -510,6 +538,7 @@ const TAB_LABELS: { tab: RecordTab; label: string }[] = [
   { tab: 'acao', label: 'Ação' },
   { tab: 'planos', label: 'Meus Planos' },
   { tab: 'tarefas', label: 'Tarefas' },
+  { tab: 'sono-humor', label: 'Sono e humor' },
 ];
 
 // A área de cada aba, para mostrar só as liberadas (DEC-097, DEC-099).
@@ -520,6 +549,7 @@ const TAB_AREA: Record<NonNullable<RecordTab> | 'atividades', SharedArea> = {
   acao: 'ACTIONS',
   planos: 'PLANS',
   tarefas: 'TASKS',
+  'sono-humor': 'SLEEP_MOOD',
   'para-ler': 'ACTIVITIES',
 };
 
@@ -547,7 +577,7 @@ function RecordTabs({ tab, onSelect, counts, showPlans, allowed }: RecordTabsPro
     <div
       role="group"
       aria-label="Tipo de registro"
-      className={`grid ${labels.length > 4 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}
+      className={`grid min-w-0 ${labels.length > 4 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 sm:flex`}
     >
       {labels.map((item) => {
         const key = item.tab ? TAB_COUNT[item.tab] : undefined;
@@ -557,15 +587,17 @@ function RecordTabs({ tab, onSelect, counts, showPlans, allowed }: RecordTabsPro
             key={item.label}
             variant={tab === item.tab ? 'primary' : 'secondary'}
             aria-pressed={tab === item.tab}
-            className="px-2 text-sm sm:px-5 sm:text-base"
+            className={`min-w-0 px-2 text-sm leading-tight sm:px-5 sm:text-base ${
+              labels.length > 4 ? 'flex-col gap-y-0.5 sm:flex-row sm:gap-y-0' : ''
+            }`}
             onClick={() => onSelect(item.tab)}
           >
-            {item.label}
+            <span className="min-w-0 max-w-full break-words text-center">{item.label}</span>
             {count ? (
               <>
                 <span
                   aria-hidden="true"
-                  className="rounded-full bg-bg px-1.5 text-xs font-semibold text-text tabular-nums"
+                  className="shrink-0 rounded-full bg-bg px-1.5 text-xs font-semibold text-text tabular-nums"
                 >
                   {count}
                 </span>
@@ -680,7 +712,7 @@ function ToReadView({
     ...(tasks ?? []).map((task) => ({
       key: `task-${task.id}`, area: 'Tarefa', date: todayInAppZone(new Date(task.respondedAt ?? task.updatedAt)), createdAt: task.updatedAt,
       item: { type: 'TASK' as const, id: task.id },
-      card: <TaskCard task={task} footer={<ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} />} />,
+      card: <TaskCard task={task} readOnly patientId={patientId} footer={<ReadControl patientId={patientId} type="TASK" record={task} label={task.title ?? 'Tarefa'} />} />,
     })),
     ...(thoughtRecords ?? []).map((record) => ({
       key: `t-${record.id}`,
@@ -752,6 +784,7 @@ function ToReadView({
         <PlanEntryCard
           entry={entry}
           readOnly
+          patientId={patientId}
           showPlan
           footer={<ReadControl patientId={patientId} type="PLAN_ENTRY" record={entry} label={entry.planTitle} />}
         />
@@ -881,6 +914,7 @@ function ThoughtsDay({ patientId, day, records, today }: ThoughtsDayProps) {
             key={record.id}
             record={record}
             readOnly
+            patientId={patientId}
             footer={
               <ReadControl patientId={patientId} type="THOUGHT_RECORD" record={record} label={record.situation} />
             }
@@ -981,6 +1015,7 @@ function TensionDay({ patientId, day, episodes, today }: TensionDayProps) {
             key={episode.id}
             episode={episode}
             readOnly
+            patientId={patientId}
             footer={
               <ReadControl patientId={patientId} type="TENSION_EPISODE" record={episode} label={episode.situation} />
             }

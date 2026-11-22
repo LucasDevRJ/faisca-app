@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { LongText } from '../../components/ui/long-text';
@@ -7,6 +8,8 @@ import { useAccessibility } from '../profile/use-profile';
 import { ActionPhotos } from './action-photos';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action } from './actions-api';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
+import { recordAnchorId } from '../record-links/record-links-format';
 
 const STATUS_LABEL: Record<Action['status'], string> = {
   PLANEJADA: 'Planejada',
@@ -39,6 +42,8 @@ export function ActionCard(props: ActionCardProps) {
 
   return (
     <article
+      id={recordAnchorId(action.id)}
+      tabIndex={-1}
       aria-labelledby={titleId}
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4"
     >
@@ -77,6 +82,8 @@ export function ActionCard(props: ActionCardProps) {
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(action.createdAt)}</p>}
       {props.readOnly && props.footer}
+      {/* Só na visão do paciente, e só se a profissional ativou (DEC-118). */}
+      {!props.readOnly && <ReadReceiptLine type="ACTION" id={props.action.id} />}
 
       {!props.readOnly && planned && (
         <div className="flex flex-col gap-2">
@@ -105,6 +112,7 @@ export function ActionCard(props: ActionCardProps) {
           </div>
         </div>
       )}
+      {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTION" id={action.id} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
     </article>
   );
 }

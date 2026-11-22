@@ -20,6 +20,7 @@ dado de paciente ou segredo aqui.
 ## 1. Quem é o autor e o que é o Faísca
 
 - **Nome do projeto:** Faísca
+- **Por que Faísca:** uma faísca é pequena, mas consegue acender um fogo. Na ativação comportamental, que faz parte da Terapia Cognitivo-Comportamental, a ideia é parecida: começar por algo pequeno, mesmo sem vontade, e notar o que muda depois. O nome lembra que um passo pequeno já conta. (Mesmo texto do "Por que Faísca?" das telas de entrar e de cadastro; em conteúdos, evite prometer que o humor melhora: "notar o que muda", não "ficar bem".)
 - **Endereço oficial:** https://minhafaisca.com.br
 - **Autor:** Lucas Pereira de Lima (contato do projeto: `suporte@minhafaisca.com.br`)
 - **O que é:** produto digital independente criado para digitalizar e acolher atividades essenciais da **Terapia Cognitivo-Comportamental (TCC)** no dia a dia entre as sessões. O Faísca **entrou em produção em 30/09/2026**, está em **uso real e contínuo por paciente e psicóloga**, e tem **cadastro aberto e gratuito**, sem anúncios e sem pedir documentos pessoais.
@@ -64,6 +65,7 @@ Na prática clínica tradicional:
   - Se não conseguiu fazer, marca **"Não aconteceu"** (`NAO_REALIZADA`) com o diálogo acolhedor *"Tudo bem, quer contar o que aconteceu?"* e observação opcional.
   - Também permite criar registro retroativo de algo já feito.
   - **Fotos das atividades:** o paciente pode adicionar **até 10 fotos** a uma atividade, como lembrança do que fez: enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta. Numa atividade que não aconteceu, dá para tirar as fotos que já estavam lá. Elas aparecem só para a profissional a quem o paciente liberar.
+  - **Retorno calmo ao concluir:** ao contar como foi uma atividade (ou avaliar uma Ação), o cartão assenta e um ✓ se desenha uma vez num círculo verde-sálvia; o leitor de tela ouve *"Registro guardado."*. É reconhecimento do esforço, sem confete, "parabéns" ou pontos. Com **Menos movimento** ligado, o ✓ aparece pronto, sem animação.
   - Exibe um **gráfico comparativo** (*Vontade antes × Prazer × Realização*) em barras horizontais no celular e colunas lado a lado no tablet/computador, usando uma única cor em três intensidades (nunca vermelho/verde).
 
 - **Registro de Pensamentos (RPD):**
@@ -77,7 +79,6 @@ Na prática clínica tradicional:
   - Para registrar momentos de tensão física/emocional ou tiques vocais/de ansiedade.
   - Campos: **dia**, **hora** (opcional, para quem não lembra a hora exata), **situação**, **tensão no corpo** (0 a 10), **vontade de vocalizar** (0 a 10 — falar, gritar ou se movimentar para expressar a ansiedade), **o que fez** e **o que aconteceu depois**.
   - No fim da tela, um **gráfico de linha** mostra a evolução da tensão e da vontade de vocalizar ao longo do período, marcando os dias em que houve consulta.
-
 - **Ação (Prazer, Conexão e Realização):**
   - Ações intencionais que a pessoa escolhe fazer no ciclo, divididas em três categorias claras:
     1. **Prazer:** algo que se gosta de fazer (ex.: ouvir música, tomar sol, cozinhar algo gostoso);
@@ -100,6 +101,17 @@ Na prática clínica tradicional:
   - A cada vez que a situação acontece, o paciente registra as respostas; o registro guarda as perguntas como estavam, e o plano pode ser encerrado e reaberto.
   - A aba só aparece quando existe algum plano.
 
+- **Tarefas (combinadas na consulta):**
+  - O próprio paciente anota a tarefa que combinou na consulta (descrição e título opcional) e responde no seu tempo: em texto livre, com "Não consegui fazer" ou com "Não faz sentido para mim agora", sem a palavra "atrasada".
+  - Pode editar a resposta até a próxima consulta, quando ela fica guardada como final.
+  - A aba fica sempre disponível. Tarefas com tipos ligados às outras áreas, fotos na resposta e a psicóloga criando tarefas ficam para depois.
+
+- **Sono e humor (e o remédio do dia):**
+  - Um cartão em Meus registros para registrar, em menos de um minuto, a hora em que deitou e acordou (o app calcula as horas de sono), uma nota de 0 a 10 para o sono e outra para o humor e, se quiser, uma palavra para o dia. Tudo opcional, sem sequência e sem cobrança por dia esquecido.
+  - Quem quiser liga em Conta a pergunta **"Tomou o remédio como combinado?"** (Sim, Esqueci algum, Hoje não).
+  - **Remédios e o que sinto:** quem quiser liga em Conta "Anotar meus remédios e o que sinto". Na aba Sono e humor aparecem os remédios (nome, dose e horário, em texto livre), as mudanças com data (mudou a dose, parou, voltou a tomar) e o que a pessoa tem sentido, com a intensidade de 0 a 10, a evolução ("como está agora") e quando passou. O app mostra quantos dias depois da mudança do remédio o sintoma começou, para separar o começo do uso contínuo, e marca as mudanças no gráfico de sono e humor. O Faísca **não avalia** remédios nem sintomas e lembra que mudanças no remédio são só com quem receitou.
+  - A aba **Sono e humor** mostra um gráfico das horas de sono e do humor no período. Dá para registrar e editar os últimos 7 dias.
+
 - **Lembretes de manhã e de noite:**
   - Por e-mail ou como notificação no aparelho (Web Push), quando há atividades ou ações planejadas, sempre com **texto 100% neutro** (nunca mostram o que a pessoa escreveu), horário de silêncio e opção de pausar.
 
@@ -115,6 +127,7 @@ Na prática clínica tradicional:
   - **O paciente escolhe o que cada uma vê** ("O que [nome] pode ver"): atividades e as fotos delas, pensamentos, tensão, Ação e as fotos dela, "Sobre mim", agenda e Meus Planos. Uma profissional nova **começa sem ver nada**, e mudar vale na hora.
   - O paciente pode **desfazer cada vínculo a qualquer momento** em Conta, e o acesso daquela profissional cessa imediatamente.
   - Quando a psicóloga publica um comunicado no mural dela, o paciente vê um cartão discreto no topo de *Meus registros* com o selo `"Novo"` e a página `/avisos`.
+  - **Ver quando a profissional leu (opcional, dos dois lados):** no cartão de cada profissional, o paciente pode marcar *"Quero ver quando [nome] ler os meus registros"*. Enquanto ela não ativa, a tela diz *"Pedido enviado"*. Com os dois ligados, aparece discretamente no fim do registro *"Lido pela sua psicóloga em 12/11"*, só nos registros já lidos e só das áreas liberadas para ela. **Nunca** aparece "não lido" nem o que falta ler, e o paciente nunca fica sabendo se ela preferiu não ativar. Qualquer um desliga quando quiser.
 
 ### 4.2. Para a Psicóloga e a Psiquiatra
 
@@ -125,6 +138,8 @@ Na prática clínica tradicional:
   - **A psicóloga cria planos de ação para o paciente** em Meus Planos, quando a área está liberada. O plano fica na conta do paciente, que continua dono dele e faz os registros; a psicóloga não edita planos nem cria registros.
   - A **psiquiatra** vê os mesmos registros por **1, 2 ou 3 meses** (começa em 3), com setas para voltar no tempo.
   - **Resumo do período em números:** no topo da página do paciente, um cartão com o essencial do período (dias com registro, atividades, as emoções mais presentes, a crença no pensamento e o efeito da explicação alternativa, tensão, Ação e Meus Planos), comparado com o **período anterior do mesmo tamanho** em formato neutro ("antes: 6,1"). Só números, sem interpretação e sem texto do paciente; só das áreas liberadas. Pensado para consultas espaçadas, como as da psiquiatra.
+  - **Tarefas:** quando o paciente libera a área, a profissional lê as tarefas e as respostas, que entram em "Para ler".
+  - **Sono e humor:** quando o paciente libera (são três áreas separadas, "Sono e humor", "Remédio" e "Remédios e o que sinto"), a profissional vê o gráfico das horas de sono e do humor, os dias registrados, se o paciente tomou o remédio como combinado e, com a terceira área, os remédios, as mudanças e o que ele tem sentido, só para leitura. Os números também entram no Resumo do período.
   - No cadastro ou no convite, a profissional diz se é **psicóloga ou psiquiatra** e, em Conta, pode informar o número do conselho (CRP ou CRM), que aparece para os pacientes.
   - **Regra inviolável de arquitetura:** a terapeuta nunca altera nem apaga nenhum dado do paciente (bloqueado no backend com `403`).
 
@@ -133,7 +148,8 @@ Na prática clínica tradicional:
   - Se o paciente editar um registro do dia, adicionar uma explicação alternativa depois ou enviar uma foto nova na Ação, o cartão passa a mostrar o selo **"Atualizado depois que você leu"**.
   - A visão **"Para ler"** reúne tudo o que ainda não foi lido (ou foi atualizado), de qualquer data, do mais antigo para o mais recente — garantindo que um registro feito num ciclo anterior nunca passe despercebido.
   - Em *Meus pacientes*, um card no topo resume o total (`"12 registros para ler, de 2 pacientes"`) e ordena no topo os pacientes com itens pendentes.
-  - **Cuidado clínico:** essa marcação é uma ferramenta de organização exclusiva da psicóloga — **o paciente não vê** se um registro foi marcado como lido ou não, evitando ansiedade de *"será que ela leu o que eu escrevi?"*.
+  - **Cuidado clínico:** essa marcação é uma ferramenta de organização da profissional. Por padrão, **o paciente não vê** se um registro foi marcado como lido, evitando a ansiedade de *"será que ela leu o que eu escrevi?"*.
+  - **Mostrar a leitura ao paciente (opcional, por paciente):** se o paciente pedir, a profissional recebe no app o aviso *"[nome] gostaria de ver quando você lê os registros"* e escolhe **"Ativar"** ou **"Agora não"**. Ativado, o paciente vê só a data em que ela marcou cada registro como lido, nunca o que falta ler. O "Agora não" não chega ao paciente, e ela pode mudar de ideia depois na página dele. Assim ninguém é pressionado: nem o paciente pela espera, nem a psicóloga que prefere ler na véspera da consulta.
 
 - **Mural de avisos (`/mural`):**
   - Permite publicar avisos de até 2.000 caracteres para **todos os pacientes vinculados de uma só vez** (ex.: recesso de fim de ano, feriado, mudança na agenda).
@@ -170,19 +186,41 @@ Na prática clínica tradicional:
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
 
-**Em desenvolvimento — Tarefas (#150):** o paciente anota o que combinou na consulta, responde em
-texto livre ou registra que não conseguiu fazer ou que não faz sentido agora. Compartilha a área
-com as profissionais que escolher; as respostas entram em Para ler. A aba fica sempre disponível.
-A primeira entrega ainda não foi publicada. Fotos e ligação a outras áreas ficam para depois.
+**Em desenvolvimento — Ligações entre registros (#207) e repetição de pensamentos (#166):** o
+paciente poderá relacionar registros de diferentes áreas. A psicóloga só verá a ligação se as duas
+áreas estiverem compartilhadas e cobertas pelos aceites de privacidade. Pensamentos e episódios de
+tensão terão atalhos para criar uma nova ocorrência sem alterar a anterior; o histórico mostrará a
+evolução de crença, emoções e tensão. No seletor, as datas aparecerão no padrão brasileiro e os
+títulos longos terão uma prévia local, mantendo o texto integral acessível. A ligação também mostrará
+a anotação opcional da Atividade, quando existir, e permitirá abrir diretamente o registro relacionado.
+Ainda não publicado.
 
+
+**Em desenvolvimento — Busca nos registros (#152):** paciente e psicóloga poderão localizar registros
+por texto, período e filtros. Para a psicóloga, os resultados respeitam vínculo, áreas compartilhadas
+e aceites de privacidade; o termo não é guardado no histórico nem enviado pela URL. Ainda não publicado.
+
+**Comunidade de apoio (#220):** espaço opcional da psicóloga para pacientes adultos com vínculo ativo.
+A entrada depende de aprovação; cada pessoa escolhe um apelido e pode optar por uma mensagem de
+boas-vindas no feed. Publicações e comentários passam por revisão humana antes de aparecer. A
+comunidade não dá acesso aos registros clínicos.
+
+**Em desenvolvimento — Revisão pela psicóloga na comunidade (#251):** se quiser, a psicóloga poderá
+revisar conteúdo de pacientes da própria comunidade, com verificação em duas etapas ativa. A equipe
+da plataforma continua como retaguarda e revisa conteúdo escrito pela própria psicóloga. Os membros
+veem quem revisa e recebem um aviso no feed quando essa pessoa muda.
+
+**Em desenvolvimento — Avisos por e-mail de novidades importantes (#231):** quem quiser poderá
+receber uma mensagem individual quando uma funcionalidade importante entrar no ar. A preferência
+será separada dos e-mails de conta e poderá ser desligada em Conta; correções pequenas continuarão
+aparecendo apenas dentro do app. Ainda não publicado.
 
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.
-3. **Feedback sensorial suave ao salvar:** animação, som e vibração sutis ao concluir um registro, com opção de desligar.
+3. **Feedback sensorial suave ao salvar:** som e vibração sutis e a animação também nos outros registros (Pensamentos, Tensão), com opção de desligar. A animação ao concluir uma atividade ou avaliar uma Ação já está no ar.
 4. **Trava do app (#137) e entrar com passkey.**
 5. **Baixar cópia dos próprios dados (portabilidade LGPD, #88).**
-6. **Sono e humor (#188)** e **medicação (#171)**, pensados para o acompanhamento com a psiquiatra.
 
 ---
 

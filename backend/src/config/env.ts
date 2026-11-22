@@ -26,6 +26,8 @@ const envSchema = z.object({
     .min(32)
     .refine((value) => !value.startsWith('CHANGE_ME')),
   RESEND_API_KEY: z.string().min(1),
+  // IDs separados por vírgula; só liberar cada novidade depois de ela estar disponível no front.
+  ANNOUNCEMENT_EMAIL_RELEASES: z.string().default(''),
   // O domínio de exemplo nunca é aceito pelo Resend: melhor falhar ao subir do que no primeiro cadastro.
   EMAIL_FROM: z
     .string()
@@ -46,6 +48,8 @@ const envSchema = z.object({
   // a do HMAC dos códigos. Opcional para a API subir antes de ela ser cadastrada no Railway; sem
   // ela (ou com o placeholder do .env.example), só o 2FA fica indisponível.
   TWO_FACTOR_SECRET: z.string().min(32).optional(),
+  // Issue #220 / DEC-113: contas autorizadas a moderar somente a comunidade; exige 2FA.
+  COMMUNITY_MODERATOR_EMAILS: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

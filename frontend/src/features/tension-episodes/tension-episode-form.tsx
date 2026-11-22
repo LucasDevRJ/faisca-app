@@ -26,6 +26,7 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 type TensionEpisodeFormProps = {
   initial?: TensionEpisode;
+  initialSituation?: string;
   initialDate: string;
   submitLabel: string;
   pending: boolean;
@@ -39,6 +40,7 @@ type TensionEpisodeFormProps = {
 // (SPEC). A validação aqui só avisa antes; quem decide é a API.
 export function TensionEpisodeForm({
   initial,
+  initialSituation,
   initialDate,
   submitLabel,
   pending,
@@ -51,7 +53,7 @@ export function TensionEpisodeForm({
   const [date, setDate] = useState(initial?.episodeDate ?? initialDate);
   const [time, setTime] = useState(initial?.episodeTime ?? '');
   const [texts, setTexts] = useState<Record<TextKey, string>>({
-    situation: initial?.situation ?? '',
+    situation: initial?.situation ?? initialSituation ?? '',
     behavior: initial?.behavior ?? '',
     consequence: initial?.consequence ?? '',
   });

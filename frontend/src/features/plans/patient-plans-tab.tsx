@@ -13,6 +13,7 @@ import { inPeriod, type PeriodScope } from '../therapist/months-period';
 import { PlanForm } from './plan-form';
 import type { PlanInput } from './plans-api';
 import { PlanEntryCard } from './plan-entry-card';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
 
 type PatientPlansTabProps = {
   patientId: string;
@@ -125,6 +126,7 @@ export function PatientPlansTab({
           })}
         />
       )}
+      <RecordLinksPanel type="PLAN" id={selected.id} readOnly patientId={patientId} />
 
       {list.length > 1 && (
         <div role="group" aria-label="Plano" className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -144,11 +146,11 @@ export function PatientPlansTab({
       )}
 
       <section
-        aria-labelledby="plan-title"
+        aria-labelledby={`registro-${selected.id}`}
         className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-soft"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <h3 id="plan-title" className="text-lg font-semibold break-words">
+          <h3 id={`registro-${selected.id}`} tabIndex={-1} className="text-lg font-semibold break-words focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-text">
             {selected.title}
           </h3>
           {selected.archived && (
@@ -219,6 +221,7 @@ export function PatientPlansTab({
                         key={entry.id}
                         entry={entry}
                         readOnly
+                        patientId={patientId}
                         footer={
                           <ReadControl patientId={patientId} type="PLAN_ENTRY" record={entry} label={entry.planTitle} />
                         }

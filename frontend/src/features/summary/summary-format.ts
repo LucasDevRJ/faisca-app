@@ -1,12 +1,21 @@
 import { formatDayMonth } from '../activities/week';
 import { EMOTION_LABEL } from '../thought-records/thought-record-labels';
+import { formatSleep } from '../daily-check-ins/check-in-labels';
 import type { PeriodSummary } from './summary-api';
 
 // Textos do resumo do período (DEC-100), aprovados pelo usuário. Só números, sem interpretação: a
 // comparação vem neutra, "(antes: 6,1)", sem seta, cor ou "piorou". Uma área sem nenhum registro no
 // período não aparece.
 
-export type SummaryArea = 'activities' | 'thoughtRecords' | 'tensionEpisodes' | 'actions' | 'plans';
+export type SummaryArea =
+  | 'activities'
+  | 'thoughtRecords'
+  | 'tensionEpisodes'
+  | 'actions'
+  | 'plans'
+  | 'sleepMood'
+  | 'medication'
+  | 'medications';
 
 export type SummaryBlock = { area: SummaryArea; title: string; lines: string[] };
 
@@ -16,6 +25,9 @@ export const AREA_TITLE: Record<SummaryArea, string> = {
   tensionEpisodes: 'Tensão',
   actions: 'Ação',
   plans: 'Meus Planos',
+  sleepMood: 'Sono e humor',
+  medication: 'Remédio',
+  medications: 'Remédios e o que sinto',
 };
 
 // O "Ver registros" de cada bloco, com alvo de toque de 44 px.
@@ -163,12 +175,77 @@ export function summaryBlocks(summary: PeriodSummary): SummaryBlock[] {
     });
   }
 
+  // Sono e humor (DEC-108): o gráfico do período fica no cartão, junto deste bloco.
+  const sleepMood = summary.sleepMood;
+  if (sleepMood && (sleepMood.current.nights > 0 || sleepMood.current.moodDays > 0)) {
+    const { current: now, previous: old } = sleepMood;
+    const lines: string[] = [];
+    if (now.nights > 0) {
+      const hours = now.avgSleepMinutes === null ? '—' : formatSleep(now.avgSleepMinutes);
+      const oldHours = old.avgSleepMinutes === null ? null : formatSleep(old.avgSleepMinutes);
+      lines.push(
+        `Sono: ${plural(now.nights, 'noite registrada', 'noites registradas')} · ${hours} em média${before(oldHours)}` +
+          (now.avgSleepQuality === null ? '' : ` · nota do sono ${formatScore(now.avgSleepQuality)}${beforeScore(old.avgSleepQuality)}`),
+      );
+    }
+    if (now.moodDays > 0) {
+      lines.push(
+        `Humor: ${plural(now.moodDays, 'dia registrado', 'dias registrados')} · média ${formatScore(now.avgMood)}${beforeScore(
+          old.avgMood,
+        )} · a menor: ${now.minMood ?? '—'} · a maior: ${now.maxMood ?? '—'}`,
+      );
+    }
+    blocks.push({ area: 'sleepMood', title: AREA_TITLE.sleepMood, lines });
+  }
+
+  // Remédio (DEC-107): em quantos dias registrados tomou como combinado, sem nome nem dose.
+  const medication = summary.medication;
+  if (medication && medication.current.days > 0) {
+    const { current: now } = medication;
+    blocks.push({
+      area: 'medication',
+      title: AREA_TITLE.medication,
+      lines: [
+        `${now.days === 1 ? 'No dia registrado' : `Nos ${now.days} dias registrados`}: como combinado ${now.taken} · esqueceu algum ${now.forgotSome} · não tomou ${now.notTaken}`,
+      ],
+    });
+  }
+
+  // Remédios e o que sinto (DEC-115): só números e datas, sem o nome do remédio nem o texto do sintoma.
+  const medications = summary.medications;
+  if (medications) {
+    const { current: now } = medications;
+    const lines: string[] = [];
+    if (now.activeMedications > 0) lines.push(`Remédios em uso no fim do período: ${now.activeMedications}`);
+    if (now.changes.length > 0) {
+      lines.push(
+        `Mudanças: ${now.changes.map((change) => `${formatDayMonth(change.date)}, ${CHANGE_TEXT[change.kind]}`).join('; ')}`,
+      );
+    }
+    if (now.newSymptoms > 0 || now.endedSymptoms > 0) {
+      lines.push(`Sintomas novos: ${now.newSymptoms} · que passaram: ${now.endedSymptoms}`);
+    }
+    if (now.maxIntensity !== null) lines.push(`Maior intensidade anotada: ${now.maxIntensity} de 10`);
+    if (lines.length > 0) blocks.push({ area: 'medications', title: AREA_TITLE.medications, lines });
+  }
+
   return blocks;
 }
 
+const CHANGE_TEXT = { COMECOU: 'começou', MUDOU_DOSE: 'mudou a dose', PAROU: 'parou' } as const;
+
 // Alguma área chegou (liberada e com aceite)? Sem nenhuma, o cartão nem aparece.
 export function hasAnyArea(summary: PeriodSummary): boolean {
-  return [summary.activities, summary.thoughtRecords, summary.tensionEpisodes, summary.actions, summary.plans].some(
+  return [
+    summary.activities,
+    summary.thoughtRecords,
+    summary.tensionEpisodes,
+    summary.actions,
+    summary.plans,
+    summary.sleepMood,
+    summary.medication,
+    summary.medications,
+  ].some(
     (area) => area !== null,
   );
 }

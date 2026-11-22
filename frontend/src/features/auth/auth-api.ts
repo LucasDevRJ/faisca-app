@@ -13,6 +13,7 @@ export type SessionUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
+  professionalKind?: 'PSICOLOGIA' | 'PSIQUIATRIA' | null;
   // Aceitou a versão atual do aviso de privacidade? Serve para a faixa "o aviso mudou".
   privacyUpToDate: boolean;
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o Registro de Pensamentos e os
@@ -30,6 +31,14 @@ export type SessionUser = {
     activityPhotos: boolean;
     // Tarefas (DEC-106).
     tasks: boolean;
+    // Sono e humor e o Remédio do dia (DEC-107, DEC-108).
+    sleepMood: boolean;
+    medication: boolean;
+    community: boolean;
+    // Remédios e o que sinto (DEC-114, DEC-115).
+    medications: boolean;
+    // Ver quando a profissional leu (DEC-117, DEC-118).
+    readReceipts: boolean;
   };
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: string | null;
@@ -39,6 +48,8 @@ export type SessionUser = {
   accessibility?: AccessibilitySettings;
   // Aviso de login novo por e-mail e push (DEC-091); ligado por padrão.
   loginAlert?: boolean;
+  // Avisos de novidades importantes por e-mail (DEC-119); separado dos avisos de conta.
+  announcementEmails?: boolean;
 };
 
 export type SignupInput = {
@@ -163,6 +174,11 @@ export async function acceptPrivacy(): Promise<SessionUser> {
 // Card de Novidades: a pessoa tocou em "Entendi" (DEC-054). A resposta traz a sessão atualizada.
 export async function markAnnouncementSeen(announcement: string): Promise<SessionUser> {
   const { data } = await api.post<{ user: SessionUser }>('/auth/announcement-seen', { announcement });
+  return data.user;
+}
+
+export async function setAnnouncementEmails(enabled: boolean): Promise<SessionUser> {
+  const { data } = await api.put<{ user: SessionUser }>('/auth/announcement-emails', { enabled });
   return data.user;
 }
 

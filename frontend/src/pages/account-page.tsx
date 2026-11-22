@@ -11,7 +11,9 @@ import { TherapistLinkSection } from '../features/links/therapist-link-section';
 import { AccessibilitySection } from '../features/profile/accessibility-section';
 import { ProfileSection } from '../features/profile/profile-section';
 import { RemindersSection } from '../features/reminders/reminders-section';
+import { MedicationSettingSection } from '../features/daily-check-ins/medication-setting-section';
 import { ProfessionalSection } from '../features/profile/professional-section';
+import { AnnouncementEmailSetting } from '../features/announcements/announcement-email-setting';
 
 const profileInfo = {
   patient: {
@@ -51,8 +53,13 @@ export function AccountPage() {
 
       <AccessibilitySection />
 
+      <AnnouncementEmailSetting />
+
       {/* Lembretes de manhã e de noite (DEC-089, DEC-090): só para quem é paciente. */}
       {user.profiles.patient && <RemindersSection />}
+
+      {/* A pergunta do remédio no registro do dia (DEC-107, DEC-108): só para quem é paciente. */}
+      {user.profiles.patient && <MedicationSettingSection />}
 
       {/* "Sobre mim" (DEC-082): só para quem é paciente; a psicóloga vinculada lê. */}
       {user.profiles.patient && <AboutMeSection />}

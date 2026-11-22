@@ -6,6 +6,7 @@ import { PRIVACY_VERSION } from '../modules/auth/auth.service.js';
 
 // Apaga os dados entre testes. deleteMany em vez de TRUNCATE: o faisca_app só tem DML.
 export async function resetDatabase() {
+  await prisma.recordLink.deleteMany();
   await prisma.activityPhoto.deleteMany();
   await prisma.activity.deleteMany();
   // As emoções saem em cascata.
@@ -26,8 +27,16 @@ export async function resetDatabase() {
   await prisma.linkInvite.deleteMany();
   await prisma.noticeSeen.deleteMany();
   await prisma.therapistNotice.deleteMany();
+  await prisma.communityReport.deleteMany();
+  await prisma.communityEvent.deleteMany();
+  await prisma.communityComment.deleteMany();
+  await prisma.communityPost.deleteMany();
+  await prisma.communityMembership.deleteMany();
+  await prisma.community.deleteMany();
   await prisma.therapistLink.deleteMany();
   await prisma.notificationLog.deleteMany();
+  await prisma.announcementEmailDelivery.deleteMany();
+  await prisma.announcementRelease.deleteMany();
   await prisma.pushSubscription.deleteMany();
   await prisma.reminderSettings.deleteMany();
   await prisma.userAvatar.deleteMany();

@@ -19,7 +19,8 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
   funcionalidade entra no ar) e IDEIAS-TCC (técnicas da TCC planejadas). A APRESENTACAO só aponta
   para o BRIEFING-IA.
 - `.claude/skills/`: skills do projeto (`nova-rota-api`, `nova-tela`, `nova-migration`,
-  `nova-decisao`, `finalizar-mudanca` e `deploy-checklist`).
+  `nova-decisao`, `diagnosticar-defeito-front`, `corrigir-defeito-front`, `finalizar-mudanca` e
+  `deploy-checklist`).
 - `.claude/agents/`: subagentes do projeto (`revisor-regras` para as regras invioláveis,
   `revisor-telas` para tom, cores, contraste, acessibilidade e celular, e `revisor-seguranca`
   para falhas de segurança e dependências, por área ou pelo diff).
@@ -51,12 +52,22 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    só GET, só de pacientes com vínculo ativo e só das **áreas que o paciente liberou para ela**
    (DEC-097); qualquer outro caso retorna 403. Exceções: os POSTs que criam o vínculo
    (`/links/redeem-code`, `/links/accept-invite`, DEC-031), as marcas de leitura da própria terapeuta
-   (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057), os avisos do mural
+   (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057), a resposta dela ao
+   pedido do paciente para ver essas marcas (`PUT /therapist/read-receipts/:patientId`, com vínculo
+   ativo; grava só a preferência dela no vínculo, DEC-117), os avisos do mural
    dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079) e **somente a
    psicóloga** criando um plano para o paciente (`POST /therapist/patients/:patientId/plans`, DEC-102).
+   As rotas específicas da Comunidade (DEC-113), fora de `/therapist/patients`, podem ler e alterar
+   apenas conteúdo criado para o grupo e exigem aceite da área; a psicóloga responsável não ganha
+   acesso aos registros clínicos. A psicóloga pode, com 2FA ativo, moderar apenas conteúdo de
+   pacientes da própria comunidade; conteúdo e denúncias contra ela permanecem com a plataforma. A
+   moderação da plataforma exige e-mail autorizado e 2FA ativo. Toda troca de revisor é informada no
+   feed comunitário (DEC-122).
    Essa última rota exige vínculo ativo, área Meus Planos liberada e aceite da área pelo paciente e
    pela psicóloga; ela não pode editar planos nem criar registros. O plano pertence ao paciente, que
-   continua podendo editar, encerrar ou apagar.
+   continua podendo editar, encerrar ou apagar. Exceção de leitura: `POST
+   /therapist/patients/:patientId/records/search` apenas pesquisa com termo no corpo, sem gravar ou
+   alterar registros, e mantém as mesmas verificações de vínculo, área e aceite de cada resultado.
    No contexto de paciente, só os próprios dados.
    Toda rota nova com dado de paciente precisa de teste de autorização (caso permitido e negado).
 2. **Registros finais são imutáveis.** Editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA retorna 409.

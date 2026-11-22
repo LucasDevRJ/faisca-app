@@ -512,7 +512,7 @@ describe('CHECKs do banco (segunda linha de defesa)', () => {
   });
 });
 
-describe('teto por conta e limite por minuto (DEC-112)', () => {
+describe('teto por conta e limite por minuto (DEC-123)', () => {
   const payload = () => ({ status: 'PLANEJADA', name: 'Caminhada fictícia', activityDate: today() });
 
   it(

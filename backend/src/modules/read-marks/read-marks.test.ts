@@ -313,7 +313,7 @@ describe('visão "Não lidos" e contador (DEC-057)', () => {
     expect(res.body.nextCursor).toBeNull();
   });
 
-  it(`pagina de ${UNREAD_PAGE_SIZE} em ${UNREAD_PAGE_SIZE} com cursor, do mais antigo ao mais novo, mantendo counts com o total (DEC-112)`, async () => {
+  it(`pagina de ${UNREAD_PAGE_SIZE} em ${UNREAD_PAGE_SIZE} com cursor, do mais antigo ao mais novo, mantendo counts com o total (DEC-123)`, async () => {
     const baseTime = new Date('2026-09-01T12:00:00.000Z').getTime();
     const olderThoughts = await Promise.all(
       Array.from({ length: 30 }, (_, index) =>

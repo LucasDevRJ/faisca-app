@@ -11,6 +11,7 @@ import {
   logoutAll,
   markAnnouncementSeen,
   setLoginAlert,
+  setAnnouncementEmails,
 } from './auth-api';
 
 export const SESSION_QUERY_KEY = ['session'] as const;
@@ -92,6 +93,14 @@ export function useSetLoginAlert() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: setLoginAlert,
+    onSuccess: (user) => queryClient.setQueryData(SESSION_QUERY_KEY, user),
+  });
+}
+
+export function useSetAnnouncementEmails() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: setAnnouncementEmails,
     onSuccess: (user) => queryClient.setQueryData(SESSION_QUERY_KEY, user),
   });
 }

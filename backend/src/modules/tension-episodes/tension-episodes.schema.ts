@@ -3,7 +3,7 @@ import { LIST_MAX_DAYS, THERAPIST_LIST_MAX_DAYS, listQuerySchema } from '../acti
 
 // Limite da DEC-042, em 5000 pela DEC-053. O mesmo valor está no CHECK do banco.
 export const TEXT_MAX = 5000;
-// Teto de episódios de tensão por conta (DEC-112).
+// Teto de episódios de tensão por conta (DEC-123).
 export const TENSION_EPISODES_MAX = 5000;
 
 function textSchema(emptyMessage: string) {
@@ -41,6 +41,7 @@ const fields = {
 export const createTensionEpisodeSchema = z.strictObject({
   ...fields,
   episodeTime: fields.episodeTime.optional(),
+  repeatFromId: z.uuid().optional(),
 });
 
 // Na edição, manda só o que mudou. episodeTime: null apaga a hora.

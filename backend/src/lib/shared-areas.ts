@@ -17,6 +17,8 @@ export const SHARED_AREAS = [
   // psiquiatra, por exemplo.
   'SLEEP_MOOD',
   'MEDICATION',
+  // Remédios e o que sinto (DEC-114): caixa própria, separada da adesão ("tomou como combinado?").
+  'MEDICATIONS',
 ] as const satisfies readonly SharedArea[];
 
 // Campos que vêm de outra área e não podem vazar por uma área liberada (achados do revisor-regras):

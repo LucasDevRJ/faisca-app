@@ -37,6 +37,7 @@ export type PublicUser = {
   name: string;
   email: string;
   profiles: { patient: boolean; therapist: boolean };
+  professionalKind: User['professionalKind'];
   // Aceitou a versão atual do aviso? Serve para a faixa "o aviso mudou" no app.
   privacyUpToDate: boolean;
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o RPD e os episódios de tensão
@@ -50,6 +51,8 @@ export type PublicUser = {
   accessibility: AccessibilitySettings;
   // Aviso de login novo por e-mail e push (DEC-091).
   loginAlert: boolean;
+  // Avisos de novidades importantes por e-mail (DEC-119).
+  announcementEmails: boolean;
 };
 
 export function toPublicUser(
@@ -60,6 +63,7 @@ export function toPublicUser(
     | 'email'
     | 'hasPatientProfile'
     | 'hasTherapistProfile'
+    | 'professionalKind'
     | 'privacyVersion'
     | 'seenAnnouncement'
     | 'palette'
@@ -69,6 +73,7 @@ export function toPublicUser(
     | 'noTimePressure'
     | 'reducedMotion'
     | 'loginAlertEnabled'
+    | 'announcementEmailsEnabled'
   >,
 ): PublicUser {
   return {
@@ -76,6 +81,7 @@ export function toPublicUser(
     name: user.name,
     email: user.email,
     profiles: { patient: user.hasPatientProfile, therapist: user.hasTherapistProfile },
+    professionalKind: user.professionalKind,
     privacyUpToDate: user.privacyVersion === PRIVACY_VERSION,
     privacyAreas: privacyAreas(user.privacyVersion),
     pendingAnnouncement: pendingAnnouncement(user.seenAnnouncement, {
@@ -85,6 +91,7 @@ export function toPublicUser(
     palette: user.palette ?? 'SALVIA',
     accessibility: toAccessibilitySettings(user),
     loginAlert: user.loginAlertEnabled,
+    announcementEmails: user.announcementEmailsEnabled,
   };
 }
 
@@ -441,6 +448,16 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
         await sendSafely('login-alert-disabled', loginAlertDisabledEmail(user.email, user.name));
       }
       return user;
+    },
+
+    async setAnnouncementEmails(userId: string, enabled: boolean): Promise<User> {
+      return prisma.user.update({
+        where: { id: userId },
+        data: {
+          announcementEmailsEnabled: enabled,
+          announcementEmailsEnabledAt: enabled ? new Date() : null,
+        },
+      });
     },
 
     // Ao ligar o perfil de terapeuta, o tipo escolhido, ou o que já havia, ou psicóloga (DEC-097).

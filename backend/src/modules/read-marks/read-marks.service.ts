@@ -75,7 +75,7 @@ async function recordsOf(type: ReadType, patientId: string, ids?: string[]) {
 
 type PendingDescriptor = UnreadCursor & { updatedAt: Date };
 
-// Ordem do "Para ler" (DEC-058, DEC-112): do dia mais antigo ao mais novo; no mesmo dia, pelo
+// Ordem do "Para ler" (DEC-058, DEC-123): do dia mais antigo ao mais novo; no mesmo dia, pelo
 // instante do registro (ou da mudança, em Sobre mim e Tarefa), desempatando por tipo e id.
 export function compareUnreadCursor(a: UnreadCursor, b: UnreadCursor): number {
   if (a.date !== b.date) return a.date.localeCompare(b.date);
@@ -347,7 +347,7 @@ export function createReadMarksService(
   // A visão "Não lidos": tudo o que ainda não foi lido ou mudou depois de lido, de qualquer data,
   // nas áreas que a terapeuta pode ver. Área sem o aceite do aviso, ou que o paciente não liberou
   // para ela (DEC-097), vem como null. Paginada com cursor de até UNREAD_PAGE_SIZE registros por vez,
-  // do mais antigo ao mais novo, mantendo o total geral de cada área em counts (DEC-112).
+  // do mais antigo ao mais novo, mantendo o total geral de cada área em counts (DEC-123).
   async function unread(
     therapistId: string,
     patientId: string,

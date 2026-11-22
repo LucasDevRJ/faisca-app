@@ -12,66 +12,82 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AnnouncementEmailStatus {
+  PENDING
+  SENDING
+  SENT
+  SKIPPED
+  FAILED
+}
+
 model User {
-  tasks               HomeworkTask[]
-  dailyCheckIns       DailyCheckIn[]
-  id                  String            @id @default(uuid()) @db.Uuid
-  name                String
+  tasks                       HomeworkTask[]
+  dailyCheckIns               DailyCheckIn[]
+  medications                 Medication[]
+  symptoms                    Symptom[]
+  id                          String            @id @default(uuid()) @db.Uuid
+  name                        String
   // Sempre em minúsculas e sem espaços nas pontas (normalizado no schema Zod).
-  email               String            @unique
-  passwordHash        String
+  email                       String            @unique
+  passwordHash                String
   // Pelo menos um dos dois é true: garantido por CHECK na migration (DEC-013).
-  hasPatientProfile   Boolean           @default(false)
-  hasTherapistProfile Boolean           @default(false)
+  hasPatientProfile           Boolean           @default(false)
+  hasTherapistProfile         Boolean           @default(false)
   // Tipo de profissional (DEC-097): obrigatório com o perfil de terapeuta (CHECK na migration).
   // Quem já era terapeuta virou psicóloga. Muda só sem vínculo ativo.
-  professionalKind    ProfessionalKind?
+  professionalKind            ProfessionalKind?
   // CRP ou CRM, opcional, só para mostrar ao paciente (1 a 30 caracteres, CHECK na migration).
-  councilNumber       String?
+  councilNumber               String?
   // null = e-mail ainda não confirmado; o login é recusado até confirmar.
-  emailConfirmedAt    DateTime?
+  emailConfirmedAt            DateTime?
   // Vai dentro do JWT. Ao redefinir a senha, sobe e derruba as sessões abertas (DEC-025).
-  sessionVersion      Int               @default(0)
+  sessionVersion              Int               @default(0)
   // Consentimento com o aviso de privacidade (LGPD, dado de saúde; DEC-036): quando e qual versão.
   // null só em contas criadas antes do aviso existir.
-  privacyAcceptedAt   DateTime?
-  privacyVersion      String?
+  privacyAcceptedAt           DateTime?
+  privacyVersion              String?
   // A última novidade do app que a pessoa já viu (card de Novidades, DEC-054). Fica no banco, e
   // não no aparelho: no iPhone, o Safari e o app instalado não dividem o armazenamento.
-  seenAnnouncement    String?
+  seenAnnouncement            String?
   // Perfil básico (DEC-061): o nome completo, opcional. O `name` é o "Como podemos te chamar?",
   // que continua sendo o nome mostrado no app.
-  fullName            String?
+  fullName                    String?
   // Paleta de cores escolhida (DEC-063); null = Sálvia, a padrão. Combina com o tema claro/escuro,
   // que continua no aparelho.
-  palette             Palette?
+  palette                     Palette?
   // Ajustes de acessibilidade (DEC-076, issue #87): abertos a todos, desligados por padrão. Ficam
   // na conta para valer em qualquer aparelho.
-  directLanguage      Boolean           @default(false)
-  oneThingAtATime     Boolean           @default(false)
-  comfortableReading  Boolean           @default(false)
-  noTimePressure      Boolean           @default(false)
-  reducedMotion       Boolean           @default(false)
+  directLanguage              Boolean           @default(false)
+  oneThingAtATime             Boolean           @default(false)
+  comfortableReading          Boolean           @default(false)
+  noTimePressure              Boolean           @default(false)
+  reducedMotion               Boolean           @default(false)
   // Sono, humor e remédio (DEC-107): a pergunta "Tomou o remédio como combinado?" só aparece para
   // quem liga esta opção em Conta. Desligada por padrão.
-  tracksMedication    Boolean           @default(false)
+  tracksMedication            Boolean           @default(false)
+  // Remédios e o que sinto (DEC-114, #171): a seção só aparece para quem liga "Anotar meus remédios e
+  // o que sinto" em Conta. Desligada por padrão; desligar só esconde, o que já foi anotado fica.
+  listsMedications            Boolean           @default(false)
   // Aviso de login novo por e-mail e push (DEC-091, issue #135): ligado por padrão.
-  loginAlertEnabled   Boolean           @default(true)
+  loginAlertEnabled           Boolean           @default(true)
+  // Avisos de novidades importantes por e-mail (DEC-119), separados dos avisos de conta.
+  announcementEmailsEnabled   Boolean           @default(true)
+  announcementEmailsEnabledAt DateTime?         @default(now())
   // Já entrou alguma vez? O primeiro login de todos não gera aviso de acesso novo (DEC-091).
-  hasLoggedIn         Boolean           @default(false)
+  hasLoggedIn                 Boolean           @default(false)
   // Verificação em duas etapas (DEC-092). Código por e-mail ligado?
-  twoFactorEmail      Boolean           @default(false)
+  twoFactorEmail              Boolean           @default(false)
   // App autenticador: segredo cifrado (AES-256-GCM, chave fora do banco), quando ligou e o último
   // passo de 30 s aceito, para o mesmo código não valer duas vezes. O "pendente" é o da configuração,
   // até a pessoa provar que o app funciona.
-  totpSecret          String?
-  totpEnabledAt       DateTime?
-  totpLastStep        Int?
-  totpPendingSecret   String?
+  totpSecret                  String?
+  totpEnabledAt               DateTime?
+  totpLastStep                Int?
+  totpPendingSecret           String?
   // Último método usado no login ("EMAIL" ou "TOTP"): a tela "Confirme que é você" abre nele.
-  twoFactorLastMethod String?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  twoFactorLastMethod         String?
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
 
   authTokens      AuthToken[]
   activities      Activity[]
@@ -83,32 +99,43 @@ model User {
   tensionEpisodes TensionEpisode[]
   plans           Plan[]
   planEntries     PlanEntry[]
+  recordLinks     RecordLink[]
 
   // Vínculo (DEC-015, DEC-031): o mesmo usuário pode estar dos dois lados, em vínculos diferentes.
-  linksAsPatient       TherapistLink[]   @relation("LinkPatient")
-  linksAsTherapist     TherapistLink[]   @relation("LinkTherapist")
+  linksAsPatient            TherapistLink[]       @relation("LinkPatient")
+  linksAsTherapist          TherapistLink[]       @relation("LinkTherapist")
+  // Comunidade de apoio entre pacientes (DEC-113): conteúdo separado dos registros terapêuticos.
+  ownedCommunity            Community?            @relation("CommunityOwner")
+  communityMemberships      CommunityMembership[]
+  communityPosts            CommunityPost[]       @relation("CommunityPostAuthor")
+  communityComments         CommunityComment[]    @relation("CommunityCommentAuthor")
+  communityReports          CommunityReport[]     @relation("CommunityReportAuthor")
+  communityDecisions        CommunityPost[]       @relation("CommunityPostModerator")
+  communityCommentDecisions CommunityComment[]    @relation("CommunityCommentModerator")
+  reviewedCommunityReports  CommunityReport[]     @relation("CommunityReportModerator")
   // Marcas de leitura (DEC-057): as que esta conta fez como terapeuta e as que foram feitas nos
   // registros dela como paciente (só a terapeuta as vê).
-  readMarksAsTherapist ReadMark[]        @relation("ReadMarkTherapist")
-  readMarksAsPatient   ReadMark[]        @relation("ReadMarkPatient")
-  invitesSent          LinkInvite[]      @relation("InvitePatient")
-  invitesSignedUp      LinkInvite[]      @relation("InviteSignupUser")
-  linkCodes            LinkCode[]
-  linkCodeAttempts     LinkCodeAttempt[]
+  readMarksAsTherapist      ReadMark[]            @relation("ReadMarkTherapist")
+  readMarksAsPatient        ReadMark[]            @relation("ReadMarkPatient")
+  invitesSent               LinkInvite[]          @relation("InvitePatient")
+  invitesSignedUp           LinkInvite[]          @relation("InviteSignupUser")
+  linkCodes                 LinkCode[]
+  linkCodeAttempts          LinkCodeAttempt[]
   // Mural de avisos (DEC-079): os avisos que esta conta publicou como terapeuta e os que ela já viu
   // como paciente.
-  notices              TherapistNotice[]
+  notices                   TherapistNotice[]
   // "Sobre mim" do paciente (DEC-081): um só por conta.
-  about                PatientAbout?
-  noticesSeen          NoticeSeen[]
+  about                     PatientAbout?
+  noticesSeen               NoticeSeen[]
 
   // Lembretes e notificações (DEC-004, DEC-006, DEC-089): configuração, inscrições de Web Push e
   // registro de envio para idempotência.
-  reminderSettings    ReminderSettings?
-  pushSubscriptions   PushSubscription[]
-  recoveryCodes       RecoveryCode[]
-  twoFactorChallenges TwoFactorChallenge[]
-  notificationLogs    NotificationLog[]
+  reminderSettings            ReminderSettings?
+  pushSubscriptions           PushSubscription[]
+  recoveryCodes               RecoveryCode[]
+  twoFactorChallenges         TwoFactorChallenge[]
+  notificationLogs            NotificationLog[]
+  announcementEmailDeliveries AnnouncementEmailDelivery[]
 
   // Foto de perfil (DEC-061), opcional.
   avatar UserAvatar?
@@ -481,26 +508,90 @@ enum SharedArea {
   // Sono e humor e o remédio do dia (DEC-107): caixas próprias, fechadas nos vínculos que já existiam.
   SLEEP_MOOD
   MEDICATION
+  // Remédios, mudanças e o que o paciente sente (DEC-114): caixa própria, fechada nos vínculos que já
+  // existiam. A caixa MEDICATION continua só com o "tomou como combinado?".
+  MEDICATIONS
+}
+
+// Registros que podem ser ligados entre si (DEC-111). Sono e Remédio são subtipos do mesmo
+// DailyCheckIn, separados para não misturar as permissões próprias dessas áreas.
+enum LinkedRecordType {
+  ACTIVITY
+  THOUGHT_RECORD
+  TENSION_EPISODE
+  ACTION
+  PLAN
+  PLAN_ENTRY
+  TASK
+  SLEEP_MOOD
+  MEDICATION
+}
+
+enum RecordLinkKind {
+  RELATED
+  REPETITION
+}
+
+// Estados da participação na comunidade de apoio (DEC-113).
+enum CommunityMembershipStatus {
+  INVITED
+  REQUESTED
+  ACTIVE
+  LEFT
+  SUSPENDED
+  REJECTED
+}
+
+// Autoria e revisão humana do conteúdo da comunidade (DEC-113).
+enum CommunityAuthorKind {
+  PATIENT
+  THERAPIST
+}
+
+enum CommunityContentStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  HIDDEN
+  DELETED
+}
+
+enum CommunityReportReason {
+  HARASSMENT
+  PRIVACY
+  UNSAFE_ADVICE
+  OTHER
+}
+
+enum CommunityReportStatus {
+  OPEN
+  REVIEWED
 }
 
 // Vínculo paciente ↔ terapeuta (SPEC, "Vínculo"). Revogar preenche revokedAt e o registro fica.
 // Escritos à mão na migration: no máximo um vínculo ativo por paciente e tipo (índice único parcial, DEC-097)
 // e ninguém se vincula a si mesmo (CHECK).
 model TherapistLink {
-  agreedTasks     HomeworkTask[]
-  id              String           @id @default(uuid()) @db.Uuid
-  patientId       String           @db.Uuid
-  therapistId     String           @db.Uuid
-  method          LinkMethod
-  createdAt       DateTime         @default(now())
-  revokedAt       DateTime?
+  agreedTasks             HomeworkTask[]
+  id                      String           @id @default(uuid()) @db.Uuid
+  patientId               String           @db.Uuid
+  therapistId             String           @db.Uuid
+  method                  LinkMethod
+  createdAt               DateTime         @default(now())
+  revokedAt               DateTime?
   // O tipo da profissional no momento do vínculo (DEC-097): o índice único parcial usa ele.
-  kind            ProfessionalKind
+  kind                    ProfessionalKind
   // O que o paciente liberou para esta profissional. Vínculo novo começa sem nada; os que já
   // existiam ganharam todas as áreas na migration, para nada mudar para quem já usava.
-  sharedAreas     SharedArea[]     @default([])
+  sharedAreas             SharedArea[]     @default([])
   // null = o paciente ainda não viu o aviso de novo vínculo no app.
-  seenByPatientAt DateTime?
+  seenByPatientAt         DateTime?
+  // "Lido" para o paciente (DEC-117): só aparece com os dois lados ligados. O paciente pede
+  // (requestedAt) e a profissional ativa (sharedAt) ou responde "Agora não" (notNowAt), que só
+  // esconde o aviso dela. O paciente nunca vê a recusa. Desligar do lado do paciente zera os três.
+  readReceiptsRequestedAt DateTime?
+  readReceiptsSharedAt    DateTime?
+  readReceiptsNotNowAt    DateTime?
 
   patient   User @relation("LinkPatient", fields: [patientId], references: [id], onDelete: Cascade)
   therapist User @relation("LinkTherapist", fields: [therapistId], references: [id], onDelete: Cascade)
@@ -688,6 +779,139 @@ model NoticeSeen {
   @@index([patientId])
 }
 
+// Comunidade opcional de apoio de uma psicóloga. Excluir a conta da psicóloga apaga a comunidade e
+// os conteúdos em cascata; o paciente pode apagar os próprios conteúdos antes disso (DEC-113).
+model Community {
+  id                         String             @id @default(uuid()) @db.Uuid
+  therapistId                String             @unique @db.Uuid
+  // Última pessoa revisora comunicada aos membros; permite avisar quando o 2FA pausa a revisão.
+  announcedModerator         CommunityModerator @default(PLATFORM)
+  // A escolha da psicóloga é opcional; sem ela, a equipe da plataforma revisa (DEC-122).
+  therapistModerationEnabled Boolean            @default(false)
+  createdAt                  DateTime           @default(now())
+
+  therapist   User                  @relation("CommunityOwner", fields: [therapistId], references: [id], onDelete: Cascade)
+  memberships CommunityMembership[]
+  posts       CommunityPost[]
+  events      CommunityEvent[]
+  reports     CommunityReport[]
+}
+
+enum CommunityModerator {
+  PLATFORM
+  THERAPIST
+}
+
+// Participação opcional do paciente. A confirmação 18+ guarda somente a data, nunca a data de
+// nascimento. A adesão depende de vínculo ativo com a psicóloga e aprovação dela (DEC-113).
+model CommunityMembership {
+  id               String                    @id @default(uuid()) @db.Uuid
+  communityId      String                    @db.Uuid
+  patientId        String                    @db.Uuid
+  status           CommunityMembershipStatus @default(REQUESTED)
+  displayName      String?
+  acceptedRulesAt  DateTime?
+  adultConfirmedAt DateTime?
+  announceOnJoin   Boolean                   @default(false)
+  requestedAt      DateTime?
+  invitedAt        DateTime?
+  joinedAt         DateTime?
+  leftAt           DateTime?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  patient   User      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([communityId, patientId])
+  @@index([communityId, status, createdAt])
+}
+
+// Publicação que só aparece para a comunidade depois da revisão humana (DEC-113).
+model CommunityPost {
+  id                String                 @id @default(uuid()) @db.Uuid
+  communityId       String                 @db.Uuid
+  authorId          String                 @db.Uuid
+  authorKind        CommunityAuthorKind
+  authorDisplayName String
+  body              String
+  status            CommunityContentStatus @default(PENDING)
+  moderationMessage String?
+  reviewedAt        DateTime?
+  moderatorId       String?                @db.Uuid
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  community Community          @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author    User               @relation("CommunityPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  moderator User?              @relation("CommunityPostModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+  comments  CommunityComment[]
+  reports   CommunityReport[]
+
+  @@index([communityId, status, createdAt])
+  @@index([authorId, createdAt])
+}
+
+// Comentários sem resposta encadeada, também revisados antes de aparecer (DEC-113).
+model CommunityComment {
+  id                String                 @id @default(uuid()) @db.Uuid
+  postId            String                 @db.Uuid
+  authorId          String                 @db.Uuid
+  authorKind        CommunityAuthorKind
+  authorDisplayName String
+  body              String
+  status            CommunityContentStatus @default(PENDING)
+  moderationMessage String?
+  reviewedAt        DateTime?
+  moderatorId       String?                @db.Uuid
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  post      CommunityPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User              @relation("CommunityCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  moderator User?             @relation("CommunityCommentModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+  reports   CommunityReport[]
+
+  @@index([postId, status, createdAt])
+  @@index([authorId, createdAt])
+}
+
+// Aviso opcional de boas-vindas no feed, sem expor a identidade da conta (DEC-113).
+model CommunityEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  communityId String   @db.Uuid
+  body        String
+  createdAt   DateTime @default(now())
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@index([communityId, createdAt])
+}
+
+// Denúncias feitas por membros. Cada alvo é uma publicação ou um comentário (CHECK na migration).
+model CommunityReport {
+  id          String                @id @default(uuid()) @db.Uuid
+  communityId String                @db.Uuid
+  reporterId  String                @db.Uuid
+  postId      String?               @db.Uuid
+  commentId   String?               @db.Uuid
+  reason      CommunityReportReason
+  details     String?
+  status      CommunityReportStatus @default(OPEN)
+  reviewedAt  DateTime?
+  moderatorId String?               @db.Uuid
+  createdAt   DateTime              @default(now())
+
+  community Community         @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  reporter  User              @relation("CommunityReportAuthor", fields: [reporterId], references: [id], onDelete: Cascade)
+  post      CommunityPost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   CommunityComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  moderator User?             @relation("CommunityReportModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  @@index([communityId, status, createdAt])
+  @@index([reporterId, createdAt])
+}
+
 // Contas excluídas nas últimas 5 semanas, só pelo id (DEC-077). Se um dia for preciso restaurar uma
 // cópia de segurança (DEC-075), estas contas são apagadas de novo, para ninguém voltar depois de
 // excluir. Sem relação com o User (ele já não existe) e sem nome nem e-mail: fora das cópias de
@@ -785,6 +1009,36 @@ model NotificationLog {
   @@index([referenceDate])
 }
 
+// Um envio por pessoa e novidade. A chave única e a chave de idempotência do Resend permitem
+// retomar tentativas sem repetir a mensagem (DEC-119).
+model AnnouncementEmailDelivery {
+  id             String                  @id @default(uuid()) @db.Uuid
+  userId         String                  @db.Uuid
+  announcementId String
+  status         AnnouncementEmailStatus @default(PENDING)
+  attempts       Int                     @default(0)
+  nextAttemptAt  DateTime                @default(now())
+  lockedUntil    DateTime?
+  firstAttemptAt DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement AnnouncementRelease @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, announcementId])
+  @@index([status, nextAttemptAt])
+}
+
+// Data em que a novidade entrou no ar. Criada no primeiro início da API após o front publicar o
+// mesmo id (DEC-056), exclui contas criadas depois e evita avisos retroativos (DEC-119).
+model AnnouncementRelease {
+  id          String                      @id
+  publishedAt DateTime                    @default(now())
+  deliveries  AnnouncementEmailDelivery[]
+}
+
 // Códigos de recuperação do 2FA (DEC-092): 10 por vez, cada um vale uma vez. Só o HMAC é guardado.
 model RecoveryCode {
   id        String    @id @default(uuid()) @db.Uuid
@@ -874,4 +1128,103 @@ model DailyCheckIn {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, checkInDate])
+}
+
+// Remédios e o que sinto (DEC-114, #171). Tudo é anotação do paciente, em texto livre e sem catálogo:
+// o Faísca não avalia remédio nem sintoma. O paciente edita e apaga tudo (não são registros finais).
+enum MedicationChangeKind {
+  COMECOU
+  MUDOU_DOSE
+  PAROU
+}
+
+// Um remédio. A dose atual e se está em uso saem das mudanças (a última, pela data).
+model Medication {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  // Nome e horário em texto livre (texto do paciente: fora dos logs).
+  name      String
+  schedule  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  changes  MedicationChange[]
+  symptoms Symptom[]
+
+  @@index([userId])
+}
+
+// Linha do tempo do remédio: começou, mudou a dose ou parou, sempre com data. A primeira é um
+// COMECOU, criada junto com o remédio; depois de PAROU, só um novo COMECOU (voltou a tomar).
+model MedicationChange {
+  id           String               @id @default(uuid()) @db.Uuid
+  medicationId String               @db.Uuid
+  kind         MedicationChangeKind
+  changeDate   DateTime             @db.Date
+  // A dose a partir desta mudança (COMECOU e MUDOU_DOSE); vazia no PAROU.
+  dose         String?
+  note         String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  medication Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+
+  @@index([medicationId, changeDate])
+}
+
+// O que o paciente tem sentido. A ligação com um remédio é opcional ("começou depois de algum remédio
+// ou mudança?") e não afirma que o sintoma é dele.
+model Symptom {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  description  String
+  startedOn    DateTime  @db.Date
+  // "Já passou": vazio enquanto continua.
+  endedOn      DateTime? @db.Date
+  medicationId String?   @db.Uuid
+  note         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medication Medication?    @relation(fields: [medicationId], references: [id], onDelete: SetNull)
+  checks     SymptomCheck[]
+
+  @@index([userId])
+}
+
+// "Como está agora": a intensidade de 0 a 10 num dia, uma por dia, para ver a evolução do começo do
+// remédio para o uso contínuo.
+model SymptomCheck {
+  id        String   @id @default(uuid()) @db.Uuid
+  symptomId String   @db.Uuid
+  checkedOn DateTime @db.Date
+  intensity Int      @db.SmallInt
+  createdAt DateTime @default(now())
+
+  symptom Symptom @relation(fields: [symptomId], references: [id], onDelete: Cascade)
+
+  @@unique([symptomId, checkedOn])
+}
+
+// Ligação entre registros do mesmo paciente (DEC-111). Os ids são polimórficos; a API confere
+// dono e área para cada ponta, e apaga/ajusta as ligações junto com a exclusão do registro.
+// Nas ligações RELATED, source/target são normalizados para deduplicar o par; em REPETITION,
+// source é a raiz da família e target é a nova ocorrência.
+model RecordLink {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @db.Uuid
+  sourceType LinkedRecordType
+  sourceId   String           @db.Uuid
+  targetType LinkedRecordType
+  targetId   String           @db.Uuid
+  kind       RecordLinkKind   @default(RELATED)
+  createdAt  DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sourceType, sourceId, targetType, targetId, kind])
+  @@index([userId, sourceType, sourceId])
+  @@index([userId, targetType, targetId])
 }

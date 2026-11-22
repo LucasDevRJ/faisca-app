@@ -21,9 +21,15 @@ em caso de dúvida, eles prevalecem sobre esta skill.
   - **C. Sem dado de paciente**: conta, vínculo, health. Justifique por que não há dado de paciente.
 - Terapeuta escrevendo dado de paciente só existe na criação estreita de plano da DEC-102. As demais
   escritas permitidas são os POSTs que criam o vínculo (DEC-031), as marcas de leitura dela em
-  `/therapist/read-marks` (DEC-057, `src/modules/read-marks/`), que não tocam no registro, e os avisos
+  `/therapist/read-marks` (DEC-057, `src/modules/read-marks/`), que não tocam no registro, a resposta
+  dela ao pedido do paciente para ver essas marcas em `/therapist/read-receipts` (DEC-117,
+  `src/modules/read-receipts/`), que só grava a preferência dela no vínculo, e os avisos
   do mural dela em `/therapist/notices` (DEC-079, `src/modules/notices/`), que são conteúdo dela.
   Qualquer outra escrita exige decisão explícita e alteração desta regra.
+- Exceção isolada da Comunidade (DEC-113): rotas fora de `/therapist/patients` podem acessar ou
+  alterar apenas conteúdo publicado para aquela comunidade, nunca registros clínicos. A psicóloga
+  responsável gerencia a própria comunidade; a pessoa moderadora precisa estar na allowlist de e-mail
+  e ter 2FA ativo. Todas as rotas exigem o aceite de privacidade `community`.
 
 ## 2. Estrutura
 `src/modules/<modulo>/` com `schema`, `service`, `controller` e `routes` (backend/CLAUDE.md).

@@ -20,6 +20,61 @@ export type AnnouncementText = {
 export type Profiles = { patient: boolean; therapist: boolean };
 
 export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
+  '2026-11-novidades-email': {
+    title: 'Avisos por e-mail sobre novidades',
+    icon: '✉️',
+    date: '2026-11-20',
+    patient: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta e pode ser alterada quando quiser.</p>,
+    therapist: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta e pode ser alterada quando quiser.</p>,
+    link: { to: '/conta#novidades-email', label: 'Ver preferência' },
+  },
+  '2026-11-lido-paciente': {
+    title: 'Ver quando a profissional leu',
+    icon: '👀',
+    date: '2026-11-20',
+    patient: (
+      <p>
+        Se quiser, peça em Conta para ver quando a sua psicóloga ou a sua psiquiatra ler os seus registros. Quando ela
+        ativar, aparece em cada registro a data em que ela leu. Nunca aparece o que falta ler, e você pode desligar
+        quando quiser.
+      </p>
+    ),
+    link: { to: '/conta', label: 'Abrir Conta' },
+  },
+  '2026-11-comunidade': {
+    title: 'Comunidade de apoio',
+    icon: '💬',
+    date: '2026-11-19',
+    patient: <p>Você pode participar da comunidade opcional da sua psicóloga com um apelido. As publicações e os comentários passam por revisão humana antes de aparecer. Você escolhe se quer avisar o grupo quando entrar.</p>,
+    therapist: <p>Agora você pode criar uma comunidade opcional para pacientes adultos com vínculo ativo. A entrada depende de aprovação, e as publicações e os comentários passam por revisão humana antes de aparecer.</p>,
+    link: { to: '/comunidade', label: 'Abrir comunidade' },
+  },
+  '2026-11-remedios': {
+    title: 'Remédios e o que sinto',
+    icon: '💊',
+    date: '2026-11-19',
+    patient: (
+      <p>
+        Se quiser, anote em Sono e humor os remédios que toma, as mudanças de dose com data e o que tem sentido, para
+        levar à consulta. Ligue a opção em Conta, em Sono e humor. Você escolhe com quais profissionais compartilhar. O
+        Faísca não avalia remédios nem sintomas.
+      </p>
+    ),
+    therapist: (
+      <p>
+        Os pacientes podem anotar os remédios, as mudanças de dose e o que têm sentido, com a intensidade. Quando
+        liberarem a área “Remédios e o que sinto” para você, isso aparece na aba Sono e humor e no Resumo do período,
+        só para leitura.
+      </p>
+    ),
+    link: { to: '/sono-humor', label: 'Ver meus remédios' },
+  },
+  '2026-11-sono-humor': {
+    title: 'Sono e humor', date: '2026-11-18',
+    patient: <p>Registre como dormiu e como está o dia em menos de um minuto, no cartão de Meus registros. Se quiser, ligue em Conta a pergunta “Tomou o remédio como combinado?”. Você escolhe com quais profissionais compartilhar.</p>,
+    therapist: <p>Os pacientes podem registrar o sono, o humor e, se quiserem, se tomaram o remédio como combinado. Quando liberarem a área para você, aparece a aba Sono e humor, com o gráfico, e os números entram no Resumo do período.</p>,
+    link: { to: '/sono-humor', label: 'Ver meu sono e humor' },
+  },
   '2026-11-tarefas': {
     title: 'Tarefas combinadas na consulta', date: '2026-11-15',
     patient: <p>Anote o que você combinou na consulta e responda no seu tempo. Você escolhe com quais profissionais compartilhar a área Tarefas.</p>,

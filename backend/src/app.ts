@@ -23,10 +23,15 @@ import { createActionsRoutes } from './modules/actions/actions.routes.js';
 import { createTherapistRoutes } from './modules/therapist/therapist.routes.js';
 import { createNoticesRoutes } from './modules/notices/notices.routes.js';
 import { createReadMarksRoutes } from './modules/read-marks/read-marks.routes.js';
+import { createReadReceiptsRoutes } from './modules/read-receipts/read-receipts.routes.js';
 import { createThoughtRecordsRoutes } from './modules/thought-records/thought-records.routes.js';
 import { createTasksRoutes } from './modules/tasks/tasks.routes.js';
 import { createDailyCheckInsRoutes } from './modules/daily-check-ins/daily-check-ins.routes.js';
+import { createMedicationsRoutes } from './modules/medications/medications.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { createRecordLinksRoutes } from './modules/record-links/record-links.routes.js';
+import { createRecordSearchRoutes } from './modules/record-search/record-search.routes.js';
+import { createCommunityRoutes } from './modules/community/community.routes.js';
 
 export type AppDependencies = {
   // Os testes passam um mailer em memória; em dev e produção é o Resend.
@@ -83,6 +88,10 @@ export function createApp({
   app.use(createPlansRoutes());
   app.use(createTasksRoutes());
   app.use(createDailyCheckInsRoutes());
+  app.use(createMedicationsRoutes());
+  app.use(createRecordLinksRoutes());
+  app.use(createRecordSearchRoutes());
+  app.use(createCommunityRoutes());
   app.use(createSummaryRoutes());
   app.use(createLinksRoutes(mailer));
   app.use(createProfileRoutes());
@@ -90,6 +99,7 @@ export function createApp({
   app.use(createTherapistRoutes());
   // Marcas de leitura da terapeuta (DEC-057), num prefixo próprio, fora do só leitura.
   app.use(createReadMarksRoutes());
+  app.use(createReadReceiptsRoutes());
   // Mural de avisos (DEC-079): escritas da terapeuta só no próprio aviso, fora de /therapist/patients.
   app.use(createNoticesRoutes());
 

@@ -7,6 +7,7 @@ import { PasswordField, TextField } from '../components/ui/text-field';
 import { getApiError, signup } from '../features/auth/auth-api';
 import { AuthLayout } from '../features/auth/auth-layout';
 import { PASSWORD_MIN, validateEmail, validateNewPassword } from '../features/auth/validation';
+import { WhyFaisca } from '../features/auth/why-faisca';
 import { readInviteToken } from '../features/links/invite-state';
 import { choiceCardClasses } from '../components/ui/field-styles';
 import { FieldError } from '../components/ui/field-error';
@@ -188,6 +189,7 @@ export function SignupPage() {
           Entrar
         </Link>
       </p>
+      <WhyFaisca />
     </AuthLayout>
   );
 }

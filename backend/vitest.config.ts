@@ -25,6 +25,7 @@ export default defineConfig({
       TWO_FACTOR_SECRET: 'segredo-ficticio-da-verificacao-em-duas-etapas-0123',
       RESEND_API_KEY: 're_ficticio_testes',
       EMAIL_FROM: 'Faísca <testes@faisca.test>',
+      COMMUNITY_MODERATOR_EMAILS: 'moderador@faisca.test,moderador-sem-2fa@faisca.test',
     },
   },
 });

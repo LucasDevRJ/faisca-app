@@ -4,10 +4,10 @@ import { useSession } from '../features/auth/use-session';
 import { usePlans } from '../features/plans/use-plans';
 import { useAccessibility } from '../features/profile/use-profile';
 
-// No celular, as abas ficam em grade: 2×2 com quatro (DEC-052) e 3 colunas com cinco ou seis
-// (DEC-095); no computador, uma linha só. Texto menor no celular.
+// No celular, as abas ficam em grade de três colunas. No computador, o nome nunca quebra: cada aba
+// tem uma linha só e, se não couberem (fonte grande), passam para a fileira de baixo em vez de esticar.
 const tabClass = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-11 items-center justify-center rounded-md px-2 text-center text-sm font-medium sm:px-4 sm:text-base ${
+  `flex min-h-11 items-center justify-center rounded-md px-2 text-center text-sm font-medium sm:flex-none sm:whitespace-nowrap sm:px-3 ${
     isActive ? 'bg-primary text-on-primary' : 'border border-border bg-surface text-text hover:bg-bg'
   }`;
 
@@ -19,6 +19,8 @@ const GATED: Record<string, PrivacyArea> = {
   '/tensao': 'tensionEpisodes',
   '/acao': 'actions',
   '/tarefas': 'tasks',
+  '/sono-humor': 'sleepMood',
+  '/comunidade': 'community',
 };
 
 function gatedAreaOf(pathname: string): PrivacyArea | undefined {
@@ -26,8 +28,8 @@ function gatedAreaOf(pathname: string): PrivacyArea | undefined {
   return GATED[pathname];
 }
 
-// Telas principais do paciente: Atividades, Pensamentos, Tensão, Ação e Meus Planos, em abas
-// (DEC-040, DEC-043, DEC-052, DEC-095). A faixa do aviso de privacidade aparece aqui enquanto falta
+// Telas principais do paciente em abas (DEC-040, DEC-043, DEC-052, DEC-095, DEC-106, DEC-107,
+// DEC-113). A faixa do aviso de privacidade aparece aqui enquanto falta
 // algum aceite.
 export function PatientTabsLayout() {
   const location = useLocation();
@@ -51,7 +53,7 @@ export function PatientTabsLayout() {
   const search = kept.size ? `?${kept}` : '';
   return (
     <>
-      <nav aria-label="Registros" className={`grid grid-cols-3 gap-2 sm:flex`}>
+      <nav aria-label="Registros" className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
         <NavLink to={{ pathname: '/registros', search }} className={tabClass}>
           Atividades
         </NavLink>
@@ -65,6 +67,10 @@ export function PatientTabsLayout() {
           Ação
         </NavLink>
         <NavLink to="/tarefas" end className={tabClass}>Tarefas</NavLink>
+        <NavLink to={{ pathname: '/sono-humor', search }} end className={tabClass}>
+          Sono e humor
+        </NavLink>
+        <NavLink to="/comunidade" end className={tabClass}>Comunidade</NavLink>
         {showPlans && (
           // Sem `end`: a aba continua marcada nos registros de um plano (/planos/:id).
           <NavLink to="/planos" className={tabClass}>

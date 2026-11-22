@@ -17,6 +17,8 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - Quem tem os dois perfis alterna entre "Meus registros" e "Meus pacientes".
   Quem tem um perfil só nunca vê telas do outro.
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.
+- As telas de entrar e de cadastro têm "Por que Faísca?", fechado por padrão, que explica o nome
+  pela ativação comportamental (o mesmo texto do `docs/BRIEFING-IA.md`).
 - Recuperação de senha por e-mail.
 - **Sair de todos os aparelhos**, em Conta: confirmado com a senha, encerra todas as sessões da
   própria conta, inclusive a do aparelho em uso (DEC-085). Os outros aparelhos percebem na
@@ -81,7 +83,7 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - CONCLUIDA e NAO_REALIZADA só com data até hoje; PLANEJADA e PENDENTE aceitam qualquer data.
 - Nome da atividade com 1 a 100 caracteres; observação com até 5000 (DEC-067).
 - No mesmo dia, as atividades aparecem na ordem em que foram registradas.
-- Até **5000 atividades por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** nas rotas da área (DEC-112).
+- Até **5000 atividades por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** nas rotas da área (DEC-123).
 
 ### Fotos (DEC-103, #197)
 - Até **10 fotos** por atividade, todas opcionais, com o mesmo tratamento das fotos da Ação: sem os
@@ -168,7 +170,7 @@ Registro da TCC, independente das atividades. O paciente alterna entre as abas *
   dá para adicionar depois. Depois de adicionada, fica fixa, como o resto do registro (**409**). A data em
   que ela entrou fica guardada e aparece para a terapeuta.
 - Pode haver vários registros no mesmo dia, na ordem em que foram feitos.
-- Até **5000 registros de pensamento por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-112).
+- Até **5000 registros de pensamento por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - Termos clínicos suaves: "Registro de Pensamentos (RPD)", "pensamento automático".
 - Usar o RPD exige ter aceitado uma versão do aviso de privacidade que o cite (veja "Privacidade").
 
@@ -187,10 +189,36 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
 - Editar e excluir só até o fim do dia em que o registro foi feito; depois, **409**.
 - Pode haver vários episódios no mesmo dia: pela hora e, no fim, os sem hora, na ordem em que foram
   registrados.
-- Até **5000 episódios de tensão por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-112).
+- Até **5000 episódios de tensão por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - A tela mostra, por semana, só os dias com episódio e, no fim, um **gráfico** da tensão e da vontade
   de vocalizar ao longo da semana, com os dias de consulta marcados.
 - Usar os episódios exige ter aceitado uma versão do aviso de privacidade que os cite.
+
+## Ligações entre registros e repetições (DEC-111; #207 e #166)
+- O paciente pode ligar dois registros próprios de qualquer área: Atividades, Pensamentos, Tensão,
+  Ação, Meus Planos (plano ou registro), Tarefas, Sono e humor ou Remédio do dia. Agenda, perfil,
+  fotos e textos do mural não são registros ligáveis. A ligação não pede justificativa.
+- A ligação é bidirecional e pode ser removida pelo paciente; não altera nenhum dos registros.
+  Identificadores de registros de pacientes diferentes nunca podem ser ligados.
+- A psicóloga só lê uma ligação quando o vínculo está ativo, as duas áreas estão compartilhadas e
+  paciente e psicóloga aceitaram as versões de privacidade que cobrem as duas áreas. Se uma ponta
+  estiver oculta, a ligação inteira não aparece. Profissionais não criam, editam nem removem ligações.
+- “Tive esse pensamento de novo” cria um novo RPD com a data de hoje, situação em branco e cópia do
+  pensamento automático, crença, emoções, comportamento e consequência. A explicação alternativa
+  anterior aparece apenas como lembrete. “Isso aconteceu de novo” cria novo episódio de tensão com a
+  situação anterior preenchida. Nenhum registro anterior é alterado.
+- Repetições de RPD e Tensão pertencem à mesma família e usam a mesma estrutura de ligações. A
+  evolução mostra crença e intensidades das emoções no RPD e intensidade da tensão em cada episódio.
+  A nova ocorrência continua aparecendo como não lida para a profissional. Ao apagar a raiz, a
+  ocorrência sobrevivente mais antiga vira a nova raiz; apagar uma filha remove só sua ligação.
+- O seletor começa com registros próximos à data do registro aberto e permite ampliar o período.
+  Mostra as datas no padrão brasileiro (DD/MM/AAAA) e uma prévia curta para títulos longos; o texto
+  integral continua acessível e é mostrado após selecionar o registro. A prévia é local e
+  determinística, sem serviço de IA. Na ligação com uma Atividade, o campo opcional “Quer anotar
+  algo?” também aparece quando preenchido. O título do registro ligado é um link interno que abre a
+  área e o período correspondentes e leva ao próprio registro. Na visão da profissional, essa
+  navegação mantém as abas e períodos sujeitos às permissões e áreas já compartilhadas. Ligações
+  funcionam com registros finais. Apagar qualquer registro também apaga suas ligações.
 
 ## Ação
 Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das atividades (DEC-051).
@@ -207,7 +235,7 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 - Uma ação planejada com o dia já passado continua pendente, sem prazo para contar como foi.
 - **Avaliada e não realizada são finais**: editar ou excluir retorna **409**. A planejada pode ser
   editada (mudar o dia segue a janela de planejar) e excluída.
-- Até **5000 ações por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-112).
+- Até **5000 ações por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - A meta é **uma de cada tipo por ciclo da consulta** (duas de cada no ciclo de 14 dias ou mais),
   mostrada de forma neutra, sem placar.
 - Usar a Ação exige ter aceitado uma versão do aviso de privacidade que a cite.
@@ -241,7 +269,7 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   tem texto. O registro guarda **uma cópia das perguntas** como estavam: mudar o plano depois não
   muda o sentido de um registro antigo.
 - Editar e excluir o registro só no dia em que foi feito; depois, **409**, como na Tensão.
-- Até **5000 registros em planos por conta** (somando todos os planos), com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-112).
+- Até **5000 registros em planos por conta** (somando todos os planos), com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - Na terapeuta: os planos (ativos e encerrados) e os registros, só leitura, exceto criar plano para
   a psicóloga nas condições acima. Nem a psicóloga nem a psiquiatra alteram planos existentes ou
   criam registros. Os **registros** entram no "Para ler" e têm o "Lido" (DEC-057); o plano em si, não.
@@ -251,7 +279,7 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   plano; sem plano, um link discreto "Criar um plano" abaixo das abas. Na página da terapeuta, a aba
   também aparece enquanto falta o aceite para ela aceitar, e para a psicóloga com Meus Planos
   liberado, mesmo sem planos, para poder criar o primeiro. A psiquiatra continua vendo a aba só quando
-  existe plano. No celular, com 5 ou 6 abas, a grade passa a 3 colunas. O modelo das 6 perguntas entra
+  existe plano. No celular, a grade das abas usa 3 colunas. O modelo das 6 perguntas entra
   por um botão, e não já preenchido.
 
 ## Tarefas (DEC-106, #150)
@@ -268,9 +296,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   continua editável. Ao aparecer consulta, o prazo é congelado; antecipar encurta, apagar ou
   desmarcar não reabre um prazo congelado. Sem horário, a consulta fecha a edição no início do dia,
   como na explicação alternativa (DEC-054). Exatamente no prazo, a resposta fica final (409).
-- Aba **Tarefas** sempre disponível ao paciente. Cinco ou seis abas usam grade de três colunas no
-  celular; Meus Planos continua condicional. As tarefas são listadas de qualquer data, mais novas
-  primeiro; na profissional, essa lista não depende do período selecionado para as outras áreas.
+- Aba **Tarefas** sempre disponível ao paciente. As abas usam grade de três colunas no celular; o Meus Planos continua condicional. A Comunidade de apoio (DEC-113) também aparece como recurso opcional.
+- As tarefas são listadas de qualquer data, mais novas primeiro; na profissional, essa lista não depende do período selecionado para as outras áreas.
 - A profissional só lê com vínculo ativo, área **TASKS** liberada pelo paciente e aceite do aviso
   que cobre Tarefas. A área nova começa fechada, inclusive nos vínculos existentes. Nada muda na
   regra de escrita da profissional. "Combinada com" é omitido na visão profissional; o prazo da
@@ -286,14 +313,55 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 
 ## Sono, humor e remédio (DEC-107, #188 e #171)
 - Um registro por dia, todo opcional: a hora em que deitou e a hora em que acordou (as horas de sono
-  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra para o dia e, para quem liga a
+  são calculadas), a nota do sono e a do humor (0 a 10), uma palavra ou frase para o dia (até 120
+  caracteres) e, para quem liga a
   opção em Conta, "Tomou o remédio como combinado?" (Sim, Esqueci algum ou Hoje não). A noite pertence
   ao dia em que a pessoa acordou.
 - O paciente registra e edita os últimos 7 dias. Sem cobrança, sem sequência e sem lembrete diário.
-- O Faísca não guarda nome, dose nem efeito de remédio.
+- O "tomou como combinado?" não guarda nome nem dose; os remédios ficam na seção abaixo (DEC-114).
 - Duas áreas no vínculo, "Sono e humor" e "Remédio", fechadas para todas as profissionais até o
   paciente liberar. A profissional só lê, sem "Lido". As duas entram no resumo do período, sem a
   palavra do dia.
+- **Telas (DEC-108):** o cartão "Sono e humor de hoje" em Meus registros; a aba "Sono e humor", com o
+  gráfico das horas de sono e do humor e os dias; a caixa "Registrar se tomei o remédio" em Conta
+  (desligar só esconde a pergunta). Na profissional, a aba "Sono e humor" e os blocos no resumo.
+
+## Remédios e o que sinto (DEC-114, #171)
+- Anotações do paciente, todas opcionais, em texto livre e sem catálogo, para quem liga "Anotar meus
+  remédios e o que sinto" em Conta (desligado por padrão; desligar só esconde).
+- **Meus remédios:** nome (até 60), dose e horário (até 40 cada) e a data de início. A dose muda por
+  uma **mudança com data**: começou, mudou a dose (com a dose nova) ou parou, com nota de até 200. A
+  linha do tempo precisa fazer sentido: começa com "começou", a dose muda e o remédio para só enquanto
+  está em uso, e só volta a começar depois de parar. Nome e horário mudam direto.
+- **O que tenho sentido:** o que é (até 80), desde quando, a intensidade de 0 a 10 (opcional), a
+  ligação opcional a um remédio ("começou depois de algum remédio ou mudança?"), observação de até 500
+  e "já passou", com data. **"Como está agora"** anota a intensidade num dia, uma por dia, entre o
+  começo e o fim do sintoma.
+- **"No começo" ou "com o uso contínuo"** é calculado na leitura: os dias entre a última mudança do
+  remédio ligado e o começo do sintoma ("5 dias depois de mudar a dose"), sem corte clínico.
+- Nada no futuro e nada antes de 1950. Tetos: 50 remédios, 100 mudanças por remédio, 300 sintomas e
+  400 dias de "como está" por sintoma. O paciente edita e apaga tudo; apagar um remédio mantém os
+  sintomas, sem a ligação.
+- Nas listas e janelas de remédios e do que sente, as datas aparecem com o ano (DD/MM/AAAA), porque
+  o histórico atravessa anos; o gráfico do sono e humor, que mostra uma semana, segue com dd/mm.
+- O Faísca não avalia se é efeito do remédio, não sugere dose, troca, interação nem parada e não
+  avisa a profissional. Push e e-mail nunca falam de remédio nem de sintoma.
+- **Caixa própria no vínculo**, "Remédios e o que sinto" (`MEDICATIONS`), fechada para todas as
+  profissionais, inclusive nos vínculos que já existiam; a caixa "Remédio" continua só com a adesão. A
+  profissional (psiquiatra ou psicóloga) só lê, em `GET /therapist/patients/:patientId/medications`.
+- **Resumo do período:** remédios em uso no fim do período, as mudanças com data e tipo, sintomas novos
+  e os que passaram e a maior intensidade, sem o nome do remédio nem o texto do sintoma.
+- Aviso **2026-11.9** (versão 16) com a área `medications`, atual desde as telas (DEC-115).
+- Rotas do paciente: GET `/medications`, PUT `/medications/settings`, POST `/medications`,
+  PATCH/DELETE `/medications/:id`, POST `/medications/:id/changes`, PATCH/DELETE
+  `/medications/:id/changes/:changeId`, POST `/symptoms`, PATCH/DELETE `/symptoms/:id` e PUT/DELETE
+  `/symptoms/:id/checks/:date`.
+- **Telas (DEC-115):** na aba Sono e humor, "Meus remédios" e "O que tenho sentido", para quem liga a
+  opção em Conta; as mudanças do período viram linhas no gráfico; "Anotar o que estou sentindo" no
+  cartão de hoje. Na profissional, a aba Sono e humor aparece com qualquer uma das três caixas, com a
+  seção "Remédios e o que sente" só para leitura e o bloco no Resumo do período.
+- **Para depois:** sintomas novos e mudanças no "Para ler" da profissional, depois da paginação do
+  "Para ler" (#216).
 
 ## Resumo do período (DEC-100, #172)
 - Números do período aberto na tela, para o paciente ("Meu resumo") e para a profissional, comparados
@@ -315,6 +383,33 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
 - A semana vai de segunda a domingo.
 - Mostra a lista de atividades e um gráfico comparando vontade × prazer × realização.
 - As notas usam uma única cor que varia de intensidade (sem vermelho/verde).
+- Ao voltar a uma semana ou ciclo de 1 ano atrás ou mais, uma linha neutra embaixo do título diz
+  "há 1 ano" ou "há N anos" (DEC-120). Só orientação: nada antigo é trazido de volta sozinho.
+
+## Buscar nos registros (DEC-112, #152)
+- Paciente busca nos próprios registros; a terapeuta só pesquisa os registros de um paciente com
+  vínculo ativo e nas áreas liberadas pelo paciente, com os aceites de privacidade válidos para
+  ambas as contas. A busca nunca marca o registro como lido.
+- Tipos atuais: Atividades, Pensamentos, Tensão, Ação, Sobre mim, registros do Meus Planos, Tarefas,
+  Sono e humor e Remédio do dia. Cada área respeita suas caixas de compartilhamento e aceites; uma
+  busca conjunta não pode revelar resultado de uma área fechada.
+- O termo é obrigatório (até 120 caracteres) e vai no corpo de `POST`, nunca na URL. A busca não é
+  gravada em banco, `localStorage`, `sessionStorage` nem no histórico da URL; o app não mantém
+  buscas recentes. A API carrega apenas os campos necessários, procura em memória e não faz busca
+  textual no SQL, mantendo compatibilidade com futura criptografia dos registros.
+- Sem período informado, busca os últimos 90 dias. É possível escolher um intervalo de até 367 dias
+  e filtrar por tipo, emoção e intensidade mínima (quando o registro tem esse campo). Resultados são
+  paginados, 20 por página (máximo 50), do mais novo ao mais antigo; a interface mostra um trecho
+  com a correspondência destacada e permite expandir o registro completo no contexto da busca.
+  Quando os resultados são de mais de um ano, um título com o ano separa cada grupo (DEC-120).
+- A comparação ignora caixa e acentos. Também aproxima flexões comuns de gênero terminadas em “a”
+  ou “o” (por exemplo, “ansiosa” encontra “ansioso”), sem IA nem envio a serviço externo.
+- A terapeuta pode filtrar os registros para ler. Esse filtro cobre apenas registros que entram no
+  Para ler e que ainda não foram lidos ou foram atualizados depois da leitura; tarefas só entram
+  nessa lista depois de respondidas. Atividades e dados diários não têm marca de leitura.
+- A busca da terapeuta usa um `POST` estritamente de leitura para manter o termo fora da URL. Ele
+  passa pela cadeia de sessão, perfil e vínculo ativo e só devolve registros filtrados pelas áreas
+  e aceites; nenhuma outra escrita de terapeuta é permitida.
 
 ## Visão da terapeuta
 - Lista de pacientes com vínculo ativo. Os dados do paciente (nome etc.) vêm da conta dele, nada é digitado pela terapeuta.
@@ -334,10 +429,24 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada, resposta de tarefa editada) volta
   a contar, como **atualizado**. A visão **Para ler** junta as áreas liberadas fora do ciclo, do mais
   antigo ao mais novo, paginada na API em blocos de **50 registros por vez** com cursor (`nextCursor`),
-  mantendo os contadores (`counts`) sempre com o total geral de cada área (DEC-112); a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
+  mantendo os contadores (`counts`) sempre com o total geral de cada área (DEC-123); a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
   algo para ler no topo, e o total de todos ("12 registros para ler, de 2 pacientes"). As marcas são da
-  terapeuta: o paciente não as vê, e uma terapeuta nova começa sem nenhuma. Nas telas, o texto
-  fala em **"para ler"** (DEC-058).
+  terapeuta: o paciente não as vê, salvo o "Lido para o paciente" abaixo, e uma terapeuta nova começa
+  sem nenhuma. Nas telas, o texto fala em **"para ler"** (DEC-058).
+- **Lido para o paciente** (DEC-117, #130): opcional e **dos dois lados**, por vínculo (psicóloga e
+  psiquiatra separadas). O paciente pede, em Conta, para ver quando cada profissional lê os registros
+  dele; ela recebe o pedido no app e escolhe **ativar** ou **"Agora não"**. Só com os dois ligados o
+  paciente vê a data em que ela leu cada registro, e só:
+  - das marcas em dia (LIDO): registro mudado depois da leitura não mostra nada até ela ler de novo;
+  - das áreas que ele libera hoje para ela e que o aceite dela cobre;
+  - com o tipo da profissional, nunca "não lido" nem contagem do que falta.
+  O paciente nunca vê a recusa: "Agora não" continua "Pedido enviado" para ele. Qualquer um desliga
+  quando quiser; desligar do lado do paciente zera os dois lados, e um pedido novo volta a esperar a
+  resposta dela. Desmarcar como lido também tira a data da tela do paciente. As duas contas precisam
+  do aceite do aviso que cita o recurso (`2026-11.10`). Sem notificação do pedido por e-mail ou push
+  por ora (#82, #32). Telas (DEC-118): a caixa "Quero ver quando [nome] ler os meus registros" no
+  cartão de cada profissional em Conta; "Lido pela sua psicóloga em 12/11" no fim do cartão do registro;
+  o pedido em "Meus pacientes" e na página do paciente, com "Ativar para [nome]" e "Agora não".
 - O perfil de terapeuta não recebe notificações.
 
 ## Vínculo paciente ↔ terapeuta
@@ -408,12 +517,28 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   entrarem, o aviso novo gera um texto neutro ("Você tem um aviso novo no Faísca"), com
   liga/desliga.
 
+## Comunidade de apoio (DEC-113)
+- Uma psicóloga pode criar uma comunidade opcional. Só pacientes adultos com vínculo ativo de psicologia podem pedir entrada; a psicóloga aprova ou recusa. A pessoa confirma ter 18 anos ou mais e aceita as regras. A data de nascimento não é coletada.
+- Cada pessoa escolhe um apelido de até 40 caracteres. O nome e o e-mail da conta não aparecem para outros pacientes. A pessoa pode escolher se uma mensagem neutra com o apelido será mostrada no feed quando entrar.
+- Membros ativos veem o histórico completo de publicações e comentários aprovados, inclusive conteúdos anteriores à entrada. Ao sair, deixam de ver e participar, mas podem pedir entrada novamente; ao voltar, veem o histórico. O fim do vínculo suspende o acesso imediatamente. Nenhum conteúdo comunitário dá acesso a registros clínicos. A lista ainda não tem paginação.
+- Publicações e comentários ficam pendentes até revisão humana. A pessoa autora pode editar (o conteúdo volta à fila) e apagar seus próprios itens; o texto apagado vira uma indicação genérica para preservar respostas. Membros podem denunciar conteúdo. A pessoa autora recebe em privado o motivo de uma rejeição/ocultação.
+- A psicóloga responsável vê e publica conteúdo na comunidade, gerencia convites e pedidos e não ganha acesso aos registros do paciente. Ela pode, se quiser, ativar a revisão das publicações e comentários escritos por pacientes da própria comunidade. A opção começa desligada, exige verificação em duas etapas e pode ser desligada a qualquer momento. Ela não revisa o próprio conteúdo: denúncias e conteúdos escritos por ela continuam na fila da plataforma. A plataforma permanece como retaguarda e revisa quando a opção está desligada ou o 2FA da psicóloga não está ativo.
+- Antes do pedido de entrada, a pessoa vê quem revisará o conteúdo e aceita essa regra. Mudanças de revisor são registradas no feed para membros ativos; se o 2FA mudar, a troca efetiva também é avisada quando um membro abrir a comunidade. A escolha não amplia o acesso da psicóloga aos registros clínicos. (DEC-122)
+- A exclusão da conta do paciente apaga seu conteúdo comunitário. A exclusão da conta da psicóloga apaga a comunidade, as participações, publicações, comentários, denúncias e eventos em cascata.
+- Novas entradas voluntárias podem gerar um evento neutro no feed. Não há push nem e-mail nesta versão.
+
 ## Autorização (regra inviolável)
 - No papel de terapeuta (psicóloga ou psiquiatra): somente requisições GET, apenas de pacientes com
   vínculo ativo e só das áreas que o paciente liberou para ela (DEC-097).
-  As exceções não alteram dado de paciente: os dois pedidos que criam o vínculo (digitar o código e
-  aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057) e os avisos do
-  mural dela, que são conteúdo dela (DEC-079).
+  As exceções não alteram registros clínicos: os dois pedidos que criam o vínculo (digitar o código e
+  aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057), a resposta dela
+  ao pedido do "Lido para o paciente", que grava só a preferência dela no vínculo (DEC-117), os avisos do
+  mural dela (DEC-079) e as rotas próprias da Comunidade (DEC-113), que só leem ou alteram conteúdo
+  publicado para esse grupo, mediante aceite específico de privacidade. A psicóloga pode moderar
+  somente conteúdo de pacientes da própria comunidade, com 2FA ativo; conteúdo escrito por ela e
+  denúncias correspondentes continuam com a plataforma. A moderação da plataforma exige e-mail
+  autorizado e 2FA ativo. A moderação é isolada e não concede acesso a perfil ou registros clínicos
+  (DEC-122).
 - No papel de paciente: acesso somente aos próprios dados.
 - Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado, área não liberada ou dado de outra pessoa.
 - Tudo isso é garantido no backend, nunca só na interface.
@@ -431,7 +556,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Sair de um aparelho remove a inscrição de push daquela sessão; trocar a senha remove as dos outros aparelhos e mantém a do aparelho atual; "Sair de todos os aparelhos" remove todas (DEC-085, DEC-089).
 
 ## Privacidade (LGPD)
-- Tarefas exigem a versão `2026-11.6` (DEC-106), apresentada junto com o texto novo no app.
+- Tarefas exigem a versão `2026-11.6` (DEC-106), Sono e humor e Remédio exigem `2026-11.7` (DEC-107), e a Comunidade exige `2026-11.8` (DEC-113), apresentadas junto com o texto novo no app.
 - O sistema coleta nome, e-mail e senha (guardada só como hash), os registros e o que o aviso de privacidade descreve (preferências da conta, dados de segurança como os da verificação em duas etapas, vínculos e lembretes); nada além disso.
 - Um **aviso de privacidade** público (`/privacidade`) diz quem é o responsável, o que é coletado e para quê, quem vê, onde os dados ficam, por quanto tempo, os direitos da pessoa e o contato. Ele tem link no cadastro, na tela de entrar, no rodapé do app e em Conta.
 - Como os registros são dados de saúde (dado sensível na LGPD), o cadastro pede consentimento específico e destacado. A API grava a data e a versão do aviso aceito.
@@ -448,12 +573,31 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 ## Tom e interface
 - Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
 - Textos acolhedores ("Conta como foi?") por padrão, ou literais e objetivos com **Linguagem direta** ligada ("Avaliar atividade", DEC-087); nos dois modos, sem gamificação nem mensagens que gerem culpa.
+- **Retorno ao concluir ou avaliar** (issue #93): quando o paciente conclui uma atividade pelo "Conta
+  como foi?" ou avalia uma Ação, o cartão assenta (~300 ms) e um ✓ se desenha uma vez num círculo
+  verde-sálvia no canto dele; o leitor de tela ouve "Registro guardado.". É reconhecimento calmo, sem
+  confete, "parabéns", contador ou movimento contínuo. O ✓ some ao abrir outra ação ou sair da tela.
+  Com **Menos movimento** (conta ou sistema), nada se move e o ✓ aparece pronto. Só no contexto do
+  paciente; "Não aconteceu" e o registro direto em "Já fiz" não ganham o retorno.
+- **Datas com o ano quando são de outro ano** (DEC-120): no app inteiro, uma data deste ano aparece
+  como "15/09" ou "segunda-feira, 21/09"; de outro ano, no passado ou no futuro, ganha o ano
+  ("15/09/2025", "21 a 27 de set. de 2025"). Os rótulos dos eixos dos gráficos ficam sem o ano. Os
+  remédios e o que a pessoa sente mostram sempre o ano (#241).
 - PWA instalável; usar o app exige conexão.
 - **Card de Novidades:** uma melhoria do app é avisada uma vez, no topo das telas, até a pessoa
   tocar em "Entendi". O "já vi" fica na conta (vale em todos os aparelhos), e quem se cadastra
   depois não recebe como novidade o que já existia (DEC-054, DEC-055).
 - **O que há de novo:** uma página reúne todas as novidades da pessoa, da mais nova para a mais
   antiga, com a data, inclusive as já vistas; abrir a página não fecha o card (DEC-060).
+- **Avisos por e-mail de novidades importantes (DEC-119):** a pessoa pode desligar separadamente
+  os avisos por e-mail em Conta. Eles começam ligados, conforme a preferência do produto para
+  notificações; desligar não afeta mensagens transacionais, lembretes nem avisos de segurança.
+  Enviamos um e-mail individual até cinco minutos depois da publicação, apenas para novidades
+  importantes cadastradas para e-mail; correções pequenas e mudanças internas ficam no app. O
+  público é o definido para a novidade. Só recebe quem confirmou o e-mail, já tinha conta na data
+  em que a novidade entrou no ar e estava inscrito nessa data. Novidades anteriores à ativação do
+  recurso não geram e-mails retroativos. O texto é fixo, breve e neutro, sem registros, dados de
+  saúde ou rastreamento de abertura; falha no envio não afeta o card nem o histórico dentro do app.
 
 ## Fora do escopo (por ora)
 - Exportação CSV/PDF

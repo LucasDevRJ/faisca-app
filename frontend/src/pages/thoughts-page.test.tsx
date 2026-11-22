@@ -124,9 +124,13 @@ describe('/pensamentos', () => {
       expect.stringMatching(/^\/pensamentos\/.+\/editar$/),
     );
     expect(within(today).getByRole('button', { name: 'Excluir' })).toBeInTheDocument();
-    expect(within(old).queryByRole('button')).not.toBeInTheDocument();
-    // Sem consulta agendada, o único link é o convite para a agenda (DEC-055).
-    expect(within(old).getAllByRole('link').map((link) => link.textContent)).toEqual(['Ir para a agenda']);
+    expect(within(old).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(within(old).queryByRole('button', { name: 'Excluir' })).not.toBeInTheDocument();
+    expect(within(old).getByRole('button', { name: 'Ligar a outro registro' })).toBeInTheDocument();
+    // Sem consulta agendada, mantém o convite para a agenda (DEC-055) e oferece repetir o pensamento.
+    expect(within(old).getAllByRole('link').map((link) => link.textContent).sort()).toEqual([
+      'Ir para a agenda', 'Tive esse pensamento de novo',
+    ]);
     expect(within(old).getByText(/Registrado em/)).toHaveTextContent('Registrado em 22/09, 12:00');
   });
 

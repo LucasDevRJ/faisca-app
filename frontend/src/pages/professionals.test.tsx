@@ -16,6 +16,7 @@ const psychologist: PatientLink = {
   seen: true,
   kind: 'PSICOLOGIA',
   sharedAreas: [...SHARED_AREAS],
+  readReceipts: 'OFF' as const,
   therapist: {
     name: 'Tereza Fictícia',
     email: 'tereza@faisca.test',
@@ -30,6 +31,7 @@ const psychiatrist: PatientLink = {
   seen: true,
   kind: 'PSIQUIATRIA',
   sharedAreas: [],
+  readReceipts: 'OFF' as const,
   therapist: { name: 'Ana Fictícia', email: 'ana@faisca.test', avatarVersion: null, councilNumber: null },
 };
 

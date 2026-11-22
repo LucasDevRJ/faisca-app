@@ -758,7 +758,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
     expect(saved.privacyAcceptedAt!.getTime()).toBeGreaterThan(Date.now() - 60_000);
   });
 
-  it('o /auth/me diz quais áreas a versão aceita libera (DEC-042, DEC-045)', async () => {
+  it('o /auth/me diz quais áreas a versão aceita libera (DEC-042, DEC-045, DEC-113, DEC-114)', async () => {
     const user = await createConfirmedUser({ email: EMAIL, password: PASSWORD, privacyVersion: null });
     const agent = await loginAgent();
     const areas = async () => (await agent.get('/auth/me')).body.user.privacyAreas;
@@ -775,6 +775,9 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       tasks: false,
       sleepMood: false,
       medication: false,
+      community: false,
+      medications: false,
+      readReceipts: false,
     };
     expect(await areas()).toEqual(none);
     for (const [version, expected] of [
@@ -823,6 +826,21 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
       [
         '2026-11.7',
         { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true },
+      ],
+      // Comunidade de apoio (DEC-113): só fica liberada com a nova versão aceita.
+      [
+        '2026-11.8',
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true },
+      ],
+      // Remédios e o que sinto (DEC-114): área nova, sem mudar as anteriores.
+      [
+        '2026-11.9',
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true },
+      ],
+      // "Lido" para o paciente (DEC-117): área nova, sem mudar as anteriores.
+      [
+        '2026-11.10',
+        { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true, readReceipts: true },
       ],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],

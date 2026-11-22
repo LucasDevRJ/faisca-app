@@ -56,7 +56,7 @@ export function createRateLimit({ windowMinutes, limit, key, onlyFailures = fals
   });
 }
 
-// Limite por conta para as rotas que gravam registros de uma área (DEC-112): barra scripts sem
+// Limite por conta para as rotas que gravam registros de uma área (DEC-123): barra scripts sem
 // atrapalhar o uso real. Cada área cria o próprio contador junto com as rotas.
 export const RECORD_WRITE_LIMIT_PER_MINUTE = 30;
 

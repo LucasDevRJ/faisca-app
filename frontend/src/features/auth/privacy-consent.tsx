@@ -9,7 +9,7 @@ import { useAcceptPrivacy, useSession } from './use-session';
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
 export type PrivacyArea = keyof SessionUser['privacyAreas'];
-type Audience = 'patient' | 'therapist';
+type Audience = 'patient' | 'therapist' | 'moderator';
 
 const AREA_NAME: Record<PrivacyArea, string> = {
   thoughtRecords: 'o Registro de Pensamentos',
@@ -21,11 +21,17 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   plans: 'o Meus Planos',
   activityPhotos: 'as fotos das atividades',
   tasks: 'as Tarefas',
+  sleepMood: 'o Sono e humor',
+  medication: 'o Remédio do dia',
+  community: 'a Comunidade',
+  medications: 'os Remédios e o que sinto',
+  readReceipts: 'a opção de ver quando a profissional lê os registros',
 };
 
 // O mesmo aceite (DEC-039, DEC-042), com o texto de quem o faz e da área bloqueada: o paciente
 // consente com o uso dos próprios dados; a terapeuta, com o acesso aos dos pacientes (DEC-041).
-const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope: string }>> = {
+type ConsentCopy = { intro: string; scope: string };
+const CONSENT_TEXT: Record<PrivacyArea, { patient: ConsentCopy; therapist: ConsentCopy; moderator?: ConsentCopy }> = {
   thoughtRecords: {
     patient: {
       intro: 'Para usar esta parte, leia o que mudou e confirme.',
@@ -122,6 +128,64 @@ const CONSENT_TEXT: Record<PrivacyArea, Record<Audience, { intro: string; scope:
       scope: 'inclusive com o acesso aos planos dos meus pacientes e ao que eles registrarem neles como dados de saúde.',
     },
   },
+  // Sono e humor (DEC-107, DEC-108): horários de deitar e acordar, notas do sono e do humor e a palavra do dia.
+  sleepMood: {
+    patient: {
+      intro: 'Para registrar o sono e o humor, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso do meu sono, do meu humor e, se eu ligar, de se tomei o remédio como dados de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver o sono e o humor dos seus pacientes, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso ao sono, ao humor e ao remédio do dia dos meus pacientes como dados de saúde.',
+    },
+  },
+  // Remédio do dia (DEC-107): só se tomou como combinado, sem nome nem dose.
+  medication: {
+    patient: {
+      intro: 'Para registrar se tomou o remédio, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso de se tomei o remédio como combinado como dado de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver se seus pacientes tomaram o remédio como combinado, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso a se meus pacientes tomaram o remédio como combinado como dado de saúde.',
+    },
+  },
+  // Remédios e o que sinto (DEC-114, DEC-115): nome, dose e horário, as mudanças e o que a pessoa sente.
+  medications: {
+    patient: {
+      intro: 'Para anotar seus remédios e o que tem sentido, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso dos meus remédios, das mudanças e do que eu anotar que sinto como dados de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver os remédios e o que seus pacientes têm sentido, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso aos remédios, às mudanças e ao que meus pacientes anotarem que sentem como dados de saúde.',
+    },
+  },
+  // "Lido" para o paciente (DEC-117, DEC-118): a data em que a profissional leu, se os dois ligarem.
+  readReceipts: {
+    patient: {
+      intro: 'Para pedir para ver quando a profissional lê os seus registros, leia o que mudou e confirme.',
+      scope: 'inclusive com o uso do meu pedido e das datas em que cada profissional que ativar leu os meus registros.',
+    },
+    therapist: {
+      intro: 'Para responder aos pedidos dos pacientes que querem ver quando você lê os registros, leia o que mudou e confirme.',
+      scope: 'inclusive com mostrar aos pacientes, quando eu ativar, as datas em que marquei os registros como lidos.',
+    },
+  },
+  community: {
+    patient: {
+      intro: 'Para participar da Comunidade, leia como seu apelido e conteúdo serão usados e quem poderá vê-los.',
+      scope: 'inclusive com o uso do meu apelido, das minhas publicações, comentários e denúncias na Comunidade, visíveis aos membros e à psicóloga responsável e revisados por uma pessoa moderadora.',
+    },
+    therapist: {
+      intro: 'Para criar e acompanhar a Comunidade, leia como o conteúdo dos participantes será usado.',
+      scope: 'inclusive com o acesso e a moderação das publicações e comentários feitos na Comunidade, sem acesso aos registros clínicos por esta área.',
+    },
+    moderator: {
+      intro: 'Para revisar conteúdo da Comunidade, leia o que poderá acessar e como será usado.',
+      scope: 'inclusive com o acesso às publicações, comentários e denúncias da Comunidade para revisão humana, sem acesso aos registros clínicos.',
+    },
+  },
 };
 
 // onCancel: o pedido está numa janela (Dialog), que já tem o título; sem o cartão e com "Agora não".
@@ -139,7 +203,7 @@ export function PrivacyConsentGate({ area, audience = 'patient', onCancel, onAcc
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const accept = useAcceptPrivacy();
-  const text = CONSENT_TEXT[area][audience];
+  const text = CONSENT_TEXT[area][audience] ?? CONSENT_TEXT[area].patient;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

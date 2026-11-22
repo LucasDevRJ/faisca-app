@@ -15,6 +15,9 @@ import { requireTherapist } from '../../middlewares/require-therapist.js';
 import { AppError } from '../../errors/app-error.js';
 import { createAboutMeService } from '../about-me/about-me.service.js';
 import { createDailyCheckInsController } from '../daily-check-ins/daily-check-ins.controller.js';
+import { createMedicationsController } from '../medications/medications.controller.js';
+import { createRecordLinksController } from '../record-links/record-links.controller.js';
+import { createRecordLinksService } from '../record-links/record-links.service.js';
 import { createActionsController } from '../actions/actions.controller.js';
 import { createActionsService } from '../actions/actions.service.js';
 import { createActivitiesController } from '../activities/activities.controller.js';
@@ -30,6 +33,7 @@ import { createTensionEpisodesService } from '../tension-episodes/tension-episod
 import { createThoughtRecordsService } from '../thought-records/thought-records.service.js';
 import { createTherapistController } from './therapist.controller.js';
 import { createTherapistService } from './therapist.service.js';
+import { createRecordSearchController } from '../record-search/record-search.controller.js';
 
 // Visão da terapeuta (SPEC, "Visão da terapeuta"; DEC-033). Tudo sob o mesmo prefixo, que
 // passa pela mesma cadeia: leitura (com a exceção POST de criação de plano) → sessão → perfil → vínculo.
@@ -62,6 +66,8 @@ export function createTherapistRoutes() {
     ),
   );
   const profile = createProfileController(createProfileService());
+  const recordLinks = createRecordLinksController(createRecordLinksService());
+  const recordSearch = createRecordSearchController();
   const router = Router();
 
   // router.use com o prefixo pega também caminhos que não existem: um POST em qualquer
@@ -153,7 +159,22 @@ export function createTherapistRoutes() {
     requireAnySharedArea('SLEEP_MOOD', 'MEDICATION'),
     createDailyCheckInsController().patient,
   );
+  // Remédios e o que sinto (DEC-114): caixa própria e o aceite da versão do aviso que os cita.
+  router.get(
+    `${PREFIX}/medications`,
+    requireSharedArea('MEDICATIONS'),
+    requirePrivacy('medications'),
+    createMedicationsController().patient,
+  );
   router.get(`${PREFIX}/unread`, controller.unread);
+  router.get(`${PREFIX}/record-links`, requireAnySharedArea(
+    'ACTIVITIES', 'THOUGHT_RECORDS', 'TENSION_EPISODES', 'ACTIONS', 'PLANS', 'TASKS', 'SLEEP_MOOD', 'MEDICATION',
+  ), recordLinks.therapistList);
+  // Busca só de leitura: o POST mantém o termo fora da URL. O service limita cada resultado às
+  // áreas compartilhadas e aos aceites de privacidade das duas pessoas (Issue #152).
+  router.post(`${PREFIX}/records/search`, requireAnySharedArea(
+    'ACTIVITIES', 'THOUGHT_RECORDS', 'TENSION_EPISODES', 'ACTIONS', 'ABOUT_ME', 'PLANS', 'TASKS', 'SLEEP_MOOD', 'MEDICATION',
+  ), recordSearch.therapist);
 
   return router;
 }

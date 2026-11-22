@@ -345,7 +345,7 @@ describe('janelas de data (funções puras)', () => {
   });
 });
 
-describe('teto por conta (DEC-112)', () => {
+describe('teto por conta (DEC-123)', () => {
   function seedMany(count: number) {
     const actionDate = dateOnlyToDate(today());
     return prisma.behavioralAction.createMany({

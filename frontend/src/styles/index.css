@@ -401,6 +401,45 @@
   .score-range[data-empty]::-moz-range-progress {
     background: transparent;
   }
+
+  /* Retorno ao concluir ou avaliar (issue #93, SavedFeedback). Toca uma vez, sem repetir. O estado
+     de repouso é o final: com menos movimento, a duração vai a zero e o ✓ já aparece inteiro. */
+  .saved-settle {
+    animation: faisca-settle 300ms ease-out both;
+  }
+
+  .saved-check {
+    animation: faisca-check-in 200ms ease-out both;
+  }
+
+  .saved-check path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    /* Sem animation-delay: a regra de menos movimento zera a duração, não o atraso, e o ✓ ficaria
+       escondido nesse intervalo. A pausa antes do traço fica dentro do próprio keyframe. */
+    animation: faisca-check-draw 450ms ease-out both;
+  }
+}
+
+@keyframes faisca-settle {
+  from {
+    transform: scale(0.98);
+    opacity: 0.85;
+  }
+}
+
+@keyframes faisca-check-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes faisca-check-draw {
+  0%,
+  25% {
+    stroke-dashoffset: 1;
+  }
 }
 
 /* Leitura confortável: fonte maior e mais respiro entre linhas, letras e palavras (DEC-087). */

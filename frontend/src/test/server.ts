@@ -16,7 +16,7 @@ export const fakeUser: SessionUser = {
   email: 'ana@faisca.test',
   profiles: { patient: true, therapist: false },
   privacyUpToDate: true,
-  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true },
+  privacyAreas: { thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true, readReceipts: true },
   pendingAnnouncement: null,
   palette: 'SALVIA',
   accessibility: DEFAULT_ACCESSIBILITY,
@@ -25,7 +25,7 @@ export const fakeUser: SessionUser = {
 // Conta que só aceitou o aviso de antes do RPD: nenhuma área nova liberada.
 export const outdatedPrivacy = {
   privacyUpToDate: false,
-  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false },
+  privacyAreas: { thoughtRecords: false, tensionEpisodes: false, appointmentSchedule: false, actions: false, actionPhotos: false, aboutMe: false, plans: false, activityPhotos: false, tasks: false, sleepMood: false, medication: false, community: false, medications: false, readReceipts: false },
 } satisfies Partial<SessionUser>;
 
 // Sessão fictícia da agenda (DEC-045): recorrente e agendada, às 14:00, por padrão.
@@ -137,6 +137,9 @@ export function fakePeriodSummary(overrides: Partial<PeriodSummary> = {}): Perio
     tensionEpisodes: null,
     actions: null,
     plans: null,
+    sleepMood: null,
+    medication: null,
+    medications: null,
     ...overrides,
   };
 }
@@ -175,6 +178,8 @@ export const handlers = [
   // Sem vínculo e sem pacientes, por padrão.
   http.get('*/api/link', () => HttpResponse.json({ links: [], link: null, invite: null, code: null })),
   http.get('*/api/links/patients', () => HttpResponse.json({ patients: [] })),
+  // "Lido" para o paciente (DEC-118): nenhuma leitura visível, por padrão.
+  http.get('*/api/read-receipts', () => HttpResponse.json({ receipts: [] })),
   // Mural de avisos (DEC-080): nenhum aviso, por padrão.
   http.get('*/api/notices', () => HttpResponse.json({ notices: [], unseenCount: 0 })),
   http.get('*/api/therapist/notices', () => HttpResponse.json({ notices: [] })),
@@ -193,6 +198,15 @@ export const handlers = [
   http.get('*/api/period-summary', () => HttpResponse.json(fakePeriodSummary())),
   http.get('*/api/therapist/patients/:patientId/period-summary', () => HttpResponse.json(fakePeriodSummary())),
   http.get('*/api/tasks', () => HttpResponse.json({ tasks: [] })),
+  // Sono e humor (DEC-107): nenhum dia registrado e a pergunta do remédio desligada, por padrão.
+  http.get('*/api/daily-check-ins', () => HttpResponse.json({ checkIns: [], tracksMedication: false })),
+  http.get('*/api/therapist/patients/:patientId/daily-check-ins', () => HttpResponse.json({ checkIns: [] })),
+  // Remédios e o que sinto (DEC-115): nada anotado e a seção desligada, por padrão.
+  http.get('*/api/medications', () => HttpResponse.json({ medications: [], symptoms: [], listsMedications: false })),
+  http.get('*/api/therapist/patients/:patientId/medications', () => HttpResponse.json({ medications: [], symptoms: [] })),
+  http.get('*/api/record-links', () => HttpResponse.json({ links: [] })),
+  http.get('*/api/record-links/candidates', () => HttpResponse.json({ records: [] })),
+  http.get('*/api/therapist/patients/:patientId/record-links', () => HttpResponse.json({ links: [] })),
   // Nenhum plano, por padrão (DEC-094, DEC-095): a aba Meus Planos fica escondida.
   http.get('*/api/plans', () => HttpResponse.json({ plans: [] })),
   http.get('*/api/therapist/patients/:patientId/plans', () => HttpResponse.json({ plans: [] })),

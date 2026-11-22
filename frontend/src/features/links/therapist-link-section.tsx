@@ -9,6 +9,7 @@ import { AREA_LABEL, firstName, KIND_LABEL } from './professional-labels';
 import { useCancelInvite, useGenerateLinkCode, useLinkStatus, useSetSharedAreas } from './use-links';
 import { Avatar } from '../profile/avatar';
 import { avatarUrls } from '../profile/profile-api';
+import { ReadReceiptsSetting } from '../read-receipts/read-receipts-setting';
 
 // "Quem me acompanha" em /conta (SPEC, "Vínculo"; DEC-097, DEC-098): um cartão por profissional
 // vinculada, com o que cada uma pode ver, e o caminho para vincular mais uma enquanto houver vaga
@@ -134,6 +135,9 @@ function ProfessionalCard({ link, saved, onSaved, onEdit, onRevoke }: Profession
         onSaved={onSaved}
         onEdit={onEdit}
       />
+
+      {/* Ver quando ela lê (DEC-118): pedido por profissional, que só vale se ela também ativar. */}
+      <ReadReceiptsSetting link={link} />
 
       <div>
         <Button variant="secondary" className="break-words" onClick={onRevoke}>

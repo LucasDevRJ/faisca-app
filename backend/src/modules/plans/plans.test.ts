@@ -398,7 +398,7 @@ describe('registros', () => {
   });
 
   it(
-    `até ${PLAN_ENTRIES_MAX} registros em planos por conta; o seguinte é 409 PLAN_ENTRIES_LIMIT (DEC-112)`,
+    `até ${PLAN_ENTRIES_MAX} registros em planos por conta; o seguinte é 409 PLAN_ENTRIES_LIMIT (DEC-123)`,
     { timeout: 60_000 },
     async () => {
       const planA = await seedPlan(patientId);

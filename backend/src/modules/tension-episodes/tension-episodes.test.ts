@@ -384,7 +384,7 @@ describe('exclusão da conta', () => {
   });
 });
 
-describe('teto por conta (DEC-112)', () => {
+describe('teto por conta (DEC-123)', () => {
   function seedMany(count: number) {
     const episodeDate = dateOnlyToDate(addDays(today(), -1));
     return prisma.tensionEpisode.createMany({

@@ -2454,8 +2454,36 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** sem lembrete diário nesta entrega, para não virar cobrança. Os textos, o gráfico
   e a pergunta do remédio em Conta ficam para o PR das telas (DEC-108).
 
-## DEC-108 — Sono, humor e remédio (telas)
-- **Decisão (#188, #171):** em construção.
+## DEC-108 — Sono, humor e remédio (telas) e aviso de privacidade versão 14
+- **Decisão (#188 e parte da #171, sobre a API da DEC-107, desenho e textos aprovados pelo usuário):**
+  - **cartão "Sono e humor de hoje" em Meus registros**, o caminho rápido do dia a dia: sem registro,
+    "Quer registrar como dormiu e como está o dia? Leva menos de um minuto."; com registro, a linha curta
+    ("Dormiu 7h30 · sono 6 · humor 7 · remédio: como combinado") e "Editar". Sem cobrança, sem sequência
+    e sem "você não registrou ontem";
+  - **a janela do dia**: os dois horários (com "Dá 7h30 de sono." enquanto preenche), as notas do sono e
+    do humor (cada uma pode voltar a ficar em branco), a palavra do dia e, para quem ligou em Conta, "Tomou
+    o remédio como combinado?" (Sim, Esqueci algum, Hoje não), com "Mudanças no remédio, só com quem
+    receitou." e "Tudo bem preencher só uma parte.". Apagar o registro do dia pede confirmação;
+  - **aba "Sono e humor"**, depois de Tarefas: o mesmo período das outras abas, o gráfico e os dias, do
+    mais recente ao mais antigo. Aparecem os dias com registro e os que ainda aceitam registro (os
+    últimos 7); um dia antigo fica só para ver;
+  - **o gráfico**: horas de sono (eixo da esquerda) e humor de 0 a 10 (eixo da direita), na cor sálvia em
+    dois tons, com linha contínua e tracejada e a tabela "Ver os números", como o gráfico da tensão;
+  - **Conta → "Sono e humor"**: a caixa "Registrar se tomei o remédio". O texto diz que desligar só
+    esconde a pergunta, que o que já foi respondido continua guardado e que quem vê o remédio é decidido
+    na área Remédio de cada profissional (dúvida do `revisor-seguranca`, confirmada pelo usuário);
+  - **a profissional**: aba "Sono e humor" quando o paciente libera pelo menos uma das duas caixas, só
+    leitura, com o gráfico e o remédio em terceira pessoa ("remédio: esqueceu algum"). No "Resumo do
+    período" (DEC-101) entram os blocos Sono e humor (com o gráfico) e Remédio, nos textos aprovados;
+  - **Conta → "O que [nome] pode ver"**: as caixas "Sono e humor" e "Remédio (se tomou como combinado)";
+  - **aviso de privacidade versão 14** (`2026-11.7` vira a atual): cita o Sono e humor e o Remédio em "O
+    que guardamos", em "Para quê" e em "Quem vê", com "O Faísca não guarda o nome nem a dose de nenhum
+    remédio.";
+  - **novidade `2026-11-sono-humor`**, para pacientes e profissionais.
+- **Motivo:** fechar o pedido da psiquiatra (métricas entre consultas espaçadas) com a API da DEC-107, e
+  trocar a versão do aviso no mesmo PR que mostra o texto, para ninguém aceitar o que ainda não leu.
+- **Limite conhecido:** sem lembrete diário (para não virar cobrança). A lista de remédios, as mudanças de
+  dose e os efeitos colaterais continuam na #171, para depois.
 
 ## DEC-109 — Virada do ciclo na hora da consulta
 - **Decisão (#185, opção B):** revê a regra da DEC-049 e o cabeçalho da DEC-050:
@@ -2495,7 +2523,292 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   acontecer, uma delas troca a variável no `.claude/settings.local.json`. Os bancos de teste antigos
   podem ficar no Postgres de dev; apagar é seguro, porque são recriados.
 
-## DEC-112 — Teto de registros por conta, limite de escritas por minuto e paginação no "Para ler" (API)
+## DEC-111 — Ligações entre registros e repetição (18/11/2026)
+- **Decisão:** ligações bidirecionais pertencem ao paciente e podem conectar registros das áreas
+  Atividades, Pensamentos, Tensão, Ação, Meus Planos, Tarefas, Sono e humor e Remédio do dia. O
+  paciente cria e remove; a profissional só lê. O backend confirma dono, vínculo, áreas e aceite
+  de privacidade para as duas pontas; se uma ponta não estiver visível, não revela a associação.
+- **Repetição:** RPD e Tensão usam o mesmo modelo de ligação (`REPETITION`) das associações manuais.
+  No RPD, a nova ocorrência copia pensamento, crença, emoções, comportamento e consequência,
+  deixa situação em branco e mostra a alternativa anterior só como lembrete. Na Tensão, copia só a
+  situação. Novos registros são independentes e não alteram a origem.
+- **Família:** a repetição aponta da raiz para cada nova ocorrência. Se a raiz for apagada, a
+  ocorrência sobrevivente mais antiga vira a raiz. Apagar uma ocorrência remove apenas sua aresta;
+  apagar registros remove suas associações. Ligações podem envolver registros finais.
+- **Motivo:** relacionar eventos sem expor áreas privadas e observar a recorrência sem sobrescrever
+  o histórico nem transformar a relação em interpretação clínica.
+- **Limite conhecido:** o vínculo guarda IDs polimórficos, então toda rota de exclusão precisa
+  remover as associações na mesma transação. A API e a interface devem manter os tipos de registro
+  sincronizados com as áreas liberadas.
+
+## DEC-112 — Busca privada nos registros (19/11/2026)
+- **Decisão (#152):** paciente pesquisa os próprios registros; a terapeuta pesquisa somente os de
+  paciente vinculado, conforme áreas compartilhadas e aceites de privacidade dos dois. Termo no
+  corpo do `POST`, nunca na URL; nenhuma busca fica salva no banco, no armazenamento do navegador ou
+  em histórico recente. A busca filtra em memória, depois de carregar apenas dados autorizados, para
+  seguir compatível com a criptografia planejada. Traz tipo, período de até 367 dias, emoção,
+  intensidade mínima, paginação de até 50 resultados e “só para ler” na visão profissional. A
+  comparação ignora caixa e acentos e aproxima flexões de gênero “a/o”, sem IA.
+- **Exceção limitada de método:** como o termo pode revelar dado de saúde, a rota da terapeuta usa
+  `POST` para transportar o corpo, embora seja estritamente de leitura. A mesma cadeia de sessão,
+  perfil, vínculo, áreas e aceites continua obrigatória; nenhum registro ou marca de leitura é
+  alterado.
+- **Motivo:** localizar registros antigos sem percorrer ciclos e semanas, reduzindo exposição do
+  termo na URL e preservando as regras de privacidade de cada área.
+- **Limite conhecido:** a busca textual roda em memória da API, com intervalo limitado a 367 dias;
+  flexões aproximadas se restringem a gênero final “a/o” e não cobrem sinônimos ou derivações gerais.
+  O filtro de não lidos só considera tipos com marca de leitura, e Tarefas respondidas.
+
+## DEC-113 — Comunidade opcional de apoio (19/11/2026)
+- **Decisão:** reabrimos a ideia de comunidade entre pacientes, antes recusada na DEC-079, com limites explícitos. Cada psicóloga pode ter uma comunidade opcional; pacientes com vínculo ativo de psicologia podem solicitar entrada, e a psicóloga aprova ou recusa. Só maiores de 18 anos participam na primeira versão, por autoconfirmação; não coletamos data de nascimento. Cada pessoa escolhe um apelido, aceita regras e pode optar por aparecer num evento neutro de boas-vindas.
+- Membros ativos podem ler o histórico completo aprovado antes de entrarem. Sair bloqueia o acesso, mas a pessoa pode solicitar entrada de novo e, se voltar a ser aprovada, recupera o acesso ao histórico. O fim do vínculo de psicologia bloqueia o acesso imediatamente. A comunidade não integra nem concede acesso aos registros clínicos. A psicóloga pode criar, convidar, aprovar, publicar e comentar somente dentro da comunidade.
+- **Moderação:** toda publicação e comentário começa pendente e precisa de revisão humana antes de aparecer. Participantes podem denunciar; a autora ou o autor pode editar (reiniciando a revisão) ou apagar o próprio conteúdo. Rejeição e ocultação registram mensagem privada de motivo. Uma pessoa moderadora da plataforma é explicitamente autorizada por e-mail e precisa ter 2FA ativo; suas rotas só expõem conteúdo da comunidade e nunca perfil clínico ou registros. A psicóloga responsável também pode ler esse conteúdo para moderar seu grupo.
+- **Dados e exclusão:** nomes e e-mails da conta não aparecem aos outros pacientes. A exclusão da conta do paciente remove seu conteúdo. A exclusão da conta da psicóloga remove a comunidade e todo o conteúdo em cascata. O banco guarda a confirmação de maioridade e o aceite das regras, sem data de nascimento.
+- **Privacidade:** nova área `community`, com aceite da versão `2026-11.8`; aviso de privacidade explica conteúdo, apelido, visibilidade e revisão humana. O card de novidade é `2026-11-comunidade`.
+- **Regra de autorização:** nova exceção isolada para conteúdo comunitário, fora de `/therapist/patients`; não altera a proibição de escritas em dados clínicos. A moderação não é um perfil administrativo geral.
+- **Motivo:** oferecer apoio entre pessoas acompanhadas pela mesma profissional, preservando pseudonimato entre pacientes, entrada consentida, mediação antes da publicação e limites claros de acesso.
+- **Limite conhecido:** maiores de 18 anos é uma escolha conservadora para a primeira versão, não uma conclusão de que a lei proíbe a participação de adolescentes. A maioridade é autodeclarada, não verificada por documento. O evento de entrada aparece apenas no feed, sem push/e-mail; o funcionamento exige revisão humana ativa. O histórico completo é carregado sem paginação e pode ficar pesado se a comunidade crescer. Sem painel de gestão de denúncias fora da fila dedicada e sem moderação automatizada nesta etapa.
+
+## DEC-114 — Remédios, mudanças e o que o paciente sente (API)
+- **Decisão (#171, desenho aprovado pelo usuário em 19/11/2026, pela prática comum da psiquiatria):**
+  - **anotações do paciente, sem catálogo** (`Medication`, `MedicationChange`, `Symptom` e
+    `SymptomCheck`): o remédio tem nome e horário; a dose e o "em uso" saem da **linha do tempo** de
+    mudanças com data (`COMECOU`, `MUDOU_DOSE` com a dose nova, `PAROU` sem dose), que começa com um
+    `COMECOU` criado junto com o remédio e precisa fazer sentido (409 `MEDICATION_TIMELINE_INVALID`);
+  - **o que o paciente sente**: descrição curta, começo, "já passou" e observação, com a ligação
+    opcional a um remédio, que não afirma que o sintoma é dele. **"Como está agora"** guarda a
+    intensidade de 0 a 10 num dia (uma por dia, dentro do período do sintoma), para a evolução do começo
+    para o uso contínuo. O "começo ou uso contínuo" é só a conta dos dias desde a última mudança do
+    remédio ligado (`sinceChange`), feita na leitura, sem corte clínico;
+  - nada no futuro (400 `DATE_IN_FUTURE`) nem antes de 1950; tetos por conta (50 remédios, 100
+    mudanças por remédio, 300 sintomas, 400 dias por sintoma), com a conta travada na escrita; o
+    paciente edita e apaga tudo, porque não são registros finais;
+  - **caixa nova no vínculo** (`MEDICATIONS`), fechada para todas as profissionais, inclusive nos
+    vínculos que já existiam. A caixa `MEDICATION` continua só com o "tomou como combinado?": ampliá-la
+    mostraria o nome dos remédios a quem só liberou a adesão. A profissional (psiquiatra, ou psicóloga se
+    o paciente liberar para ela) só lê, em
+    `GET /therapist/patients/:patientId/medications`, com a caixa e o aceite dela;
+  - **resumo do período (DEC-100)**: o bloco Remédios só com números e datas (remédios em uso, mudanças
+    com data e tipo, sintomas novos e que passaram, a maior intensidade), sem texto do paciente;
+  - a opção "Anotar meus remédios e o que sinto" (`listsMedications`, desligada) só esconde a seção;
+  - área nova no aviso de privacidade (`2026-11.9`, `medications`), conhecida na API e atual só no PR
+    das telas (DEC-115); dose, horário, notas, datas e a ligação entram no `SENSITIVE_KEYS` (regra 7).
+- **Motivo:** quem faz tratamento psiquiátrico precisa contar o que toma, o que mudou e o que sente
+  entre consultas espaçadas, e separar o efeito do começo do efeito do uso contínuo. Guardar só o que o
+  paciente conta, sem avaliar nada, mantém o Faísca longe de conduta médica.
+- **Limite conhecido:** sem alerta para a profissional, de propósito. Os sintomas novos e as mudanças
+  no "Para ler" (aprovados) ficam para depois da paginação do "Para ler" (#216), que mexe nos mesmos
+  arquivos; as telas, o texto do aviso e a novidade `2026-11-remedios` vêm na DEC-115. As escritas
+  ainda não têm o limite por minuto do #216.
+
+## DEC-115 — Remédios, mudanças e o que o paciente sente (telas) e aviso de privacidade versão 16
+- **Decisão (#171, sobre a API da DEC-114, desenho e textos aprovados pelo usuário em 19/11/2026):**
+  - **na aba Sono e humor**, sem aba nova (as abas do paciente já estão no limite): as seções **"Meus
+    remédios"** e **"O que tenho sentido"**, só para quem liga "Anotar meus remédios e o que sinto" em
+    Conta → Sono e humor (desligado; desligar só esconde). Os remédios que pararam ficam recolhidos em
+    "Remédios que já tomei";
+  - **as janelas**: anotar e editar remédio (a dose muda só por "Registrar mudança", para a data ficar
+    anotada), registrar e editar mudança ("Mudou a dose" e "Parei"; num remédio parado, só "Voltei a
+    tomar"), anotar e editar o que sente (com "Começou depois de algum remédio ou mudança?", com "Não
+    sei, ou nenhum"), "Como está agora?" (a intensidade num dia) e "Já passou". Todas lembram
+    "Mudanças no remédio, só com quem receitou." e as do que se sente trazem o texto de cuidado ("não
+    avalia remédios nem sintomas", "Em emergência, ligue 192 (SAMU)");
+  - **no cartão**: "Desde 10/11 · 5 dias depois de mudar a dose de X" e a evolução "7 → 5 → 3", com as
+    datas. Nada de "efeito colateral", alerta ou cobrança;
+  - **no gráfico de sono e humor**: uma linha pontilhada no dia de cada mudança do período, com o texto
+    ao tocar e na tabela "Ver os números"; na profissional, só com as duas caixas;
+  - **o cartão "Sono e humor de hoje"** ganha "Anotar o que estou sentindo", para quem ligou a opção;
+  - **a profissional**: a aba Sono e humor aparece com qualquer uma das três caixas; com "Remédios e o
+    que sinto", a seção "Remédios e o que sente", só leitura, em terceira pessoa ("Anotações de [nome],
+    sem avaliação do Faísca."). No Resumo do período, o bloco "Remédios e o que sinto" só com números e
+    datas;
+  - **Conta → "O que [nome] pode ver"**: a caixa "Remédios e o que sinto (nome, dose, mudanças e o que
+    sente)";
+  - **aviso de privacidade versão 16** (`2026-11.9` vira a atual): cita os remédios, as mudanças e o que
+    a pessoa sente em "O que guardamos", em "Para quê" e em "Quem vê"; sai "O Faísca não guarda o nome
+    nem a dose de nenhum remédio.";
+  - **novidade `2026-11-remedios`**, para pacientes e profissionais.
+- **Motivo:** fechar a #171 sobre a API da DEC-114 e trocar a versão do aviso no mesmo PR que mostra o
+  texto, para ninguém aceitar o que ainda não leu.
+- **Limite conhecido:** os sintomas novos e as mudanças no "Para ler" continuam esperando a paginação
+  do "Para ler" (#216). Nos minutos em que o front novo já está no ar e a API ainda não, o aceite da
+  versão 16 responde que o aviso mudou, até a API subir (como nas versões anteriores, DEC-056).
+
+## DEC-116 — Override da `effect` na CLI do Prisma (19/11/2026)
+- **Decisão:** `overrides` no `backend/package.json` também para `effect` (^3.22.5), no mesmo padrão da
+  DEC-038. O alerta GHSA-7589-6fvf-x4pw (ReDoS em `Schema.TemplateLiteral`, `effect` até 3.22.0) chega
+  pelo `@prisma/config` do Prisma 7.10, que fixa a 3.20.0 (inclusive na 7.10.1, a mais nova), e fazia
+  o CI `audit (backend)` falhar em todo PR. O conserto sugerido pelo npm era voltar para o Prisma 6.
+- **Motivo:** destravar o CI sem trocar o Prisma. O alerta não era alcançável pelo app: a `effect` só
+  serve para a CLI ler o `prisma.config.ts` (no build, no `postinstall` e no pre-deploy), o runtime
+  não a carrega e o `@prisma/config` não usa `TemplateLiteral`. Validar, gerar o client e aplicar as
+  migrations continuam funcionando (revisor-seguranca).
+- **Limite conhecido:** a versão forçada não é a que o Prisma testou. Remover o override quando o
+  `@prisma/config` pedir `effect` 3.22.1 ou mais nova (conferir com `npm ls effect` a cada
+  atualização do Prisma), e olhar o primeiro pre-deploy no Railway depois do merge.
+
+## DEC-117 — Paciente vê quando a profissional leu (API)
+- **Decisão (#130):**
+  - o "Lido" continua sendo da profissional (DEC-057), mas ela pode **mostrar ao paciente** quando os
+    dois ligam, cada um no seu lado. A escolha é **por vínculo**: a psicóloga e a psiquiatra
+    respondem cada uma ao pedido que é para ela;
+  - três colunas novas em `TherapistLink`: `readReceiptsRequestedAt` (o paciente pediu),
+    `readReceiptsSharedAt` (ela ativou) e `readReceiptsNotNowAt` (ela respondeu "Agora não"). Um
+    CHECK garante que ela só responde a um pedido e nunca ativa e recusa ao mesmo tempo. Vínculo novo
+    começa desligado; desfeito, tudo para de valer;
+  - **paciente** (`requireAuth`, `requirePatient`, aceite da área `readReceipts`):
+    `PUT /link/:linkId/read-receipts` com `{ requested }` liga ou desliga o pedido (vínculo de outra
+    pessoa ou desfeito → 404). Desligar zera os três campos, então um pedido novo volta a esperar a
+    resposta dela. `GET /read-receipts` devolve `{ receipts: [{ type, id, readAt, kind }] }`;
+  - **profissional**: `PUT /therapist/read-receipts/:patientId` com `{ shared }`, num prefixo próprio
+    como as marcas (sessão → perfil → vínculo ativo → aceite da área). `true` ativa; `false` é o
+    "Agora não" ou o desligar. Sem pedido do paciente → 409 `READ_RECEIPTS_NOT_REQUESTED`. É **mais
+    uma exceção estreita da regra 1**: grava só a preferência dela no vínculo, nunca dado do
+    paciente; `/therapist/patients/...` continua com o `onlyReads` antes de tudo;
+  - o paciente só recebe a leitura quando: os dois lados estão ligados; o aceite dela cobre o recurso
+    e a área; ele libera hoje a área para ela; e a marca está **em dia** (LIDO). Um registro que mudou
+    depois da leitura (ATUALIZADO) não mostra nada até ela ler de novo, para "Lido em 12/11" não
+    parecer que ela leu a versão nova. A resposta traz o tipo da profissional (`kind`), nunca quem é,
+    e nunca o que falta ler. Desmarcar como lido tira a data da tela do paciente na hora. Só contam as
+    leituras do vínculo atual (`readAt` a partir do `createdAt` do vínculo): desfeito e refeito com a
+    mesma profissional, começa sem leituras visíveis;
+  - o paciente **nunca vê a recusa**: `GET /link` traz `readReceipts` como `OFF`, `REQUESTED` ou `ON`,
+    e "Agora não" continua `REQUESTED`. `GET /links/patients` traz para ela `OFF`, `PENDING`,
+    `NOT_NOW` ou `ON`, para o aviso do pedido e o botão na página do paciente, e `OFF` enquanto o
+    aceite dela não cobre o recurso (revisor-regras e revisor-seguranca);
+  - nova versão `2026-11.10` do aviso de privacidade, com a área `readReceipts`: conhecida na API e
+    atual só no PR das telas (DEC-118), como nas DEC-064/065. Sem a área, as rotas respondem 403
+    `PRIVACY_CONSENT_REQUIRED`;
+  - sem notificação do pedido por e-mail ou push: o pedido aparece só no app, até a #82/#32;
+  - o módulo `read-receipts` só importa `READ_TYPES` e `readStatusOf` do `read-marks`, com o mapa das
+    áreas repetido, para não colidir com o #216, que reescreve o `read-marks.service`.
+- **Motivo:** o paciente pediu para saber se a psicóloga viu o que ele escreveu, mas o "visto" pode
+  pesar dos dois lados: a ansiedade do "ainda não leu" na semana difícil e a pressão sobre quem lê na
+  véspera da consulta. Por isso as duas pessoas precisam querer, o paciente só vê o que já foi lido,
+  sem contagem do que falta, e a resposta dela fica invisível para ele. A marca é um dado de trabalho
+  dela (DEC-057); mostrá-la é uma escolha dela, por paciente.
+- **Limite conhecido:** `GET /read-receipts` lê todas as marcas de cada profissional ativa e filtra na
+  memória, como o contador da DEC-057; com poucos registros por paciente, é suficiente por ora. O
+  mapa das áreas está repetido em `read-receipts.service.ts`: depois do #216, juntar com o do
+  `read-marks.service`. O paciente pode desligar e ligar o pedido sem limite, e cada pedido novo volta
+  a aparecer para ela: sem notificação é só o aviso no app, mas, se o pedido um dia gerar e-mail ou
+  push (#82, #32), precisa de limite de tentativas.
+
+## DEC-118 — Paciente vê quando a profissional leu (telas) e aviso de privacidade versão 17
+- **Decisão (#130):**
+  - **paciente, em Conta**, no cartão de cada profissional, abaixo do que ela pode ver: a caixa
+    **"Quero ver quando [nome] ler os meus registros"**, com o estado logo abaixo, numa região viva:
+    desligado ("Se [nome] também ativar, você vê nos seus registros a data em que cada um foi lido.
+    Nunca aparece o que falta ler."), **"Pedido enviado. Quando [nome] ativar, você passa a ver."** e
+    **"Ativo. Nos seus registros, aparece a data em que [nome] leu cada um."**. A dica fica fora do
+    `<label>`, para não entrar no nome da caixa. Sem o aceite da versão nova, o cartão pede "Ler e
+    aceitar", com o aceite da área;
+  - **paciente, nos registros**: uma linha discreta no fim do cartão de Pensamentos, Tensão, Ação,
+    registros de Meus Planos, Tarefas respondidas e no "Sobre mim": **"Lido pela sua psicóloga em
+    12/11"**, ou "Lido pela sua psicóloga em 12/11 e pela sua psiquiatra em 13/11". Texto muted, sem
+    ícone nem cor. Sem leitura, o cartão não diz nada: nunca "não lido". Um só pedido
+    (`GET /read-receipts`) para a tela inteira, e nem isso sem o aceite. Desfazer o vínculo, mudar as
+    áreas ou o pedido recarregam as leituras na hora (revisor-seguranca);
+  - **profissional, em "Meus pacientes"**: um cartão por pedido esperando resposta, **"[nome] gostaria
+    de ver quando você lê os registros"**, com o que acontece se ativar, a garantia de que o paciente
+    não fica sabendo do "Agora não", e os botões **"Ativar para [nome]"** e **"Agora não"**. Some
+    depois da resposta, e o foco vai para uma confirmação sempre montada (região viva), e não para o
+    começo da página. Sem o aceite da versão nova, "Ler e aceitar" no lugar dos botões. O texto usa o
+    nome, e não "dele" ou "dela": o gênero do paciente não é informado;
+  - **profissional, na página do paciente**, abaixo do cabeçalho: o mesmo pedido enquanto espera; ativo,
+    "[nome] vê a data em que você marca um registro como lido." e **"Parar de mostrar para [nome]"**;
+    depois do "Agora não", a lembrança do pedido e "Ativar para [nome]";
+  - **aviso de privacidade versão 17** (`2026-11.10`), agora a atual: em "O que guardamos", o pedido e a
+    resposta; em "Quem vê", a marca deixa de ser "só dela" e passa a "dela: a outra profissional nunca
+    a vê", com quando o paciente vê a data e que qualquer um desliga. Novo aceite, com a área
+    `readReceipts` ("a opção de ver quando a profissional lê os registros");
+  - **novidade `2026-11-lido-paciente`, só para paciente**: é ele quem pede, e a profissional fica
+    sabendo pelo cartão do pedido. Atalho para Conta;
+  - `db:seed-dev`: a paciente dev pede, e o pedido espera a resposta da terapeuta dev.
+- **Motivo:** o paciente decide em Conta, onde já escolhe o que cada profissional vê; a profissional
+  responde onde já trabalha. A linha nos cartões é pequena de propósito: informa sem virar cobrança, e
+  some quando o registro muda, até ela ler de novo (DEC-117).
+- **Limite conhecido:** sem notificação do pedido (#82, #32): a profissional só vê o pedido ao abrir o
+  app. O nome vem do primeiro nome da conta, então duas pessoas com o mesmo primeiro nome aparecem
+  iguais no cartão do pedido; o cartão de cada paciente na lista logo abaixo desfaz a dúvida.
+
+## DEC-120 — Datas com o ano quando são de outro ano (20/11/2026)
+- **Decisão:** as datas curtas do app (dd/mm, o dia por extenso, o dia curto, a semana e a data e
+  hora do vínculo) ganham o ano quando a data é de outro ano que não o atual, no fuso do app, para o
+  passado e para o futuro. Os rótulos dos eixos dos gráficos ficam sem o ano. A regra fica nas
+  funções de `features/activities/week.ts` e `features/links/link-format.ts`, e não em cada tela. Os
+  remédios e o que a pessoa sente continuam com o ano sempre (#241). Duas peças acompanham: na busca
+  nos registros, um título com o ano separa os resultados quando são de mais de um ano; no cabeçalho
+  do período, ao voltar 1 ano ou mais, uma linha "há 1 ano"/"há N anos".
+- **Motivo:** o Faísca guarda os registros até a pessoa apagar, então o histórico atravessa anos e
+  "15/09" passa a ser ambíguo. O gatilho é o ano diferente, e não "completar um ano", para a virada
+  já ficar clara (um registro de 20/12 visto em janeiro). Os eixos mostram uma semana e já têm o
+  período no título; o ano neles só apertaria o gráfico no celular. O "há N anos" é só orientação:
+  num app de saúde mental, não trazemos registros antigos de volta sem a pessoa pedir.
+  Por ser orientação sobre um período passado, e não distância até uma consulta, ele aparece também
+  com **Sem pressão de tempo** ligado, de propósito.
+- **Limite conhecido:** o "Para ler" da profissional segue com a regra das datas, mas sem título por
+  ano, para não colidir com a paginação do PR #216. O resumo do período segue dd/mm, com a regra.
+
+## DEC-121 — Aumenta o limite da palavra do dia (21/11/2026)
+- **Decisão:** `moodWord` passa de 40 para até 120 caracteres. O campo continua opcional e com texto
+  livre; pode guardar uma palavra ou uma frase curta. O limite fica alinhado na interface, API e
+  restrição do banco. A migration altera a constraint com uma migration nova, sem editar a DEC-107
+  nem a migration já aplicada.
+- **Motivo:** 40 caracteres não comportavam frases curtas que descrevem melhor o humor do dia, como
+  a que o usuário tentou registrar.
+- **Limite conhecido:** segue sendo um campo breve, não um espaço para relato longo; o resumo do
+  período continua sem exibir a palavra ou frase.
+
+## DEC-119 — Avisos por e-mail de novidades importantes (20/11/2026)
+- **Decisão (#231):**
+  - reutilizar os mesmos IDs e públicos do card e do histórico (DEC-054, DEC-058, DEC-060). A
+    campanha entra no código da API, mas só é liberada por `ANNOUNCEMENT_EMAIL_RELEASES` depois de
+    o front estar no ar. A API grava a data real da liberação uma vez, e o agendador verifica os
+    envios a cada cinco minutos;
+  - somente novidades importantes cadastradas com texto próprio de e-mail são enviadas. Correções
+    pequenas, conteúdo técnico e novidades antigas continuam apenas dentro do app. A mensagem sai
+    individualmente, em até cinco minutos da publicação; não há digest, cópia para outros
+    destinatários nem rastreamento de abertura;
+  - só recebe quem tinha conta antes da publicação, confirmou o e-mail, tem perfil dentro do público
+    da novidade e estava com a preferência ativa na data da publicação. Contas criadas depois não
+    recebem mensagens anteriores. Novidades antigas não são convertidas em campanhas quando o
+    recurso é ligado;
+  - `User.announcementEmailsEnabled` começa `true`, conforme a decisão do usuário de começar todos
+    os avisos ligados, e `Conta → Novidades por e-mail` permite desligar ou reativar. A preferência
+    é separada de lembretes, alertas de acesso e mensagens transacionais de conta; desligá-la nunca
+    bloqueia esses e-mails necessários;
+  - `AnnouncementRelease` registra a publicação e `AnnouncementEmailDelivery` registra o estado por
+    pessoa e novidade, com chave única, tentativas e reserva de envio. O Resend recebe a mesma chave
+    de idempotência em cada repetição. Há até 10 tentativas, espaçadas em cinco minutos, antes de
+    23 horas da primeira tentativa; depois disso o envio fica `FAILED`, sem risco de repetir uma
+    mensagem após a expiração da chave do provedor;
+  - assunto e texto são fixos no código e neutros; não interpolam nome, e-mail, papel, vínculo ou
+    conteúdo do paciente. A mensagem leva à preferência em Conta. Falha deixa o card e o histórico
+    dentro do app disponíveis;
+  - **sem nova versão do aviso de privacidade:** a preferência usa o endereço já cadastrado e o
+    texto de produto não trata de dados de saúde. A tela explica o conteúdo, a finalidade e como
+    desligar antes da escolha.
+- **Motivo:** alcançar quem não abre o app, mantendo as novidades no mesmo cadastro e separando os
+  avisos de produto dos e-mails necessários à conta. O passo explícito de liberação evita que uma
+  publicação antecipada da API dispare e-mails antes de a novidade aparecer no front.
+- **Limite conhecido:** a campanha só começa quando alguém libera seu ID no Railway após confirmar
+  que o front está no ar. Se a API ficar fora por mais de 23 horas após uma tentativa, o e-mail não
+  é repetido automaticamente; a novidade continua disponível dentro do app. Como o envio ao
+  provedor é externo ao banco, um opt-out feito depois da última checagem e durante a chamada pode
+  deixar uma mensagem já em trânsito.
+
+## DEC-122 — Revisão opcional da própria comunidade pela psicóloga (22/11/2026)
+- **Decisão (#251):**
+  - a revisão da psicóloga começa desligada e só pode ser ativada por ela para a própria comunidade, com verificação em duas etapas ativa. Ela pode desligar a opção quando quiser;
+  - ativada, a psicóloga pode aprovar, recusar ou ocultar publicações e comentários de pacientes do grupo. Não revisa conteúdo escrito por ela nem denúncias relacionadas ao próprio conteúdo; esses casos ficam com a plataforma;
+  - a moderação da plataforma continua disponível para todas as comunidades e assume quando a opção está desligada ou quando o 2FA da psicóloga não está ativo. Reativar o 2FA restaura a escolha da psicóloga, se ela não tiver desligado a opção;
+  - antes de pedir entrada, o paciente vê quem revisa e aceita essa regra. Cada mudança efetiva de revisor gera um evento no feed dos membros ativos; se a mudança vier do estado do 2FA, o evento é reconciliado quando um membro abre a comunidade. A fila e as respostas privadas não dão à psicóloga acesso a registros clínicos;
+  - não há nova área nem versão de aviso de privacidade: a revisão continua tratando somente do conteúdo que a pessoa escolheu publicar na comunidade, já coberto pela área `community` e pelas regras aceitas na entrada.
+- **Motivo:** permitir que a psicóloga acompanhe o espaço opcional do próprio grupo, sem obrigá-la a moderar nem retirar da plataforma a função de retaguarda. A exigência de 2FA e a revisão pela plataforma de conteúdo da própria psicóloga reduzem riscos de acesso indevido e conflito de interesse.
+- **Limite conhecido:** se o 2FA mudar, a transição é avisada no feed quando um membro ativo abre a comunidade; não há push nem e-mail. A opção não cria prazo de resposta, alerta de fila ou obrigação de moderação para a psicóloga.
+
+## DEC-123 — Teto de registros por conta, limite de escritas por minuto e paginação no "Para ler" (API)
 - **Decisão (#181, achado do `revisor-seguranca` na DEC-094, com escolhas aprovadas pelo usuário):**
   - **teto de 5000 registros por conta em cada área** que ainda não tinha limite: Atividades
     (`ACTIVITIES_MAX`, 409 `ACTIVITIES_LIMIT`), Pensamentos (`THOUGHT_RECORDS_MAX`, 409
@@ -2527,6 +2840,7 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   (`feat/paginacao-para-ler-telas`); até lá, a tela mostra os 50 registros mais antigos para ler e os
   contadores continuam mostrando o total geral. As listas por período das abas da profissional continuam
   limitadas pela janela de até 92 dias (DEC-033), sem cursor próprio.
+
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

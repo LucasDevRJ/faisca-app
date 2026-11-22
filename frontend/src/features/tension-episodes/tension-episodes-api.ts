@@ -27,6 +27,7 @@ export type TensionEpisodeInput = {
   vocalizeUrge: number;
   behavior: string;
   consequence: string;
+  repeatFromId?: string;
 };
 
 export async function fetchTensionEpisodes(from: string, to: string): Promise<TensionEpisode[]> {

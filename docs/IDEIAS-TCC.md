@@ -1,14 +1,14 @@
 # Ideias de atividades da TCC para evolução do Faísca
 
-Este documento reúne técnicas clássicas da **Terapia Cognitivo-Comportamental (TCC)** planejadas para entrar no Faísca em etapas futuras, conectando cada uma com a estrutura atual do aplicativo (**Ciclo da consulta**, grade de abas no celular (2×2 com 4 abas, 3 colunas com 5 ou 6, DEC-095), visão somente leitura da psicóloga com **"Para ler"**, acessibilidade e as 8 regras invioláveis do `AGENTS.md`).
+Este documento reúne técnicas clássicas da **Terapia Cognitivo-Comportamental (TCC)** planejadas para entrar no Faísca em etapas futuras, conectando cada uma com a estrutura atual do aplicativo (Ciclo da consulta, abas e recursos opcionais — incluindo Tarefas, Sono e humor e Comunidade —, visão somente leitura da psicóloga com **"Para ler"**, acessibilidade e as 8 regras invioláveis do `AGENTS.md`).
 
-> **Importante:** nada neste documento está em produção ainda. Quando uma funcionalidade começar a ser implementada, suas regras definitivas devem ir para `docs/SPEC.md` e `docs/DECISIONS.md` (e, quando entrar no ar, para `docs/BRIEFING-IA.md`).
+> **Importante:** nada neste documento está em produção ainda. A Comunidade de apoio (DEC-113) é um recurso social opcional, não uma técnica de TCC e não entra nesta lista. Quando uma técnica deste documento começar a ser implementada, suas regras definitivas devem ir para `docs/SPEC.md` e `docs/DECISIONS.md` (e, quando entrar no ar, para `docs/BRIEFING-IA.md`).
 
 ---
 
 ## Como todas as 7 se encaixam sem poluir a tela
 
-Hoje a tela de registros tem **4 abas principais** (**Atividades | Pensamentos | Tensão | Ação**) e a aba **Meus Planos**, que só aparece quando existe plano; no celular, a grade passa de 2×2 para 3 colunas com 5 ou 6 abas (DEC-095). Para manter a interface calma, acolhedora e acessível, as 7 técnicas se dividem em **3 grupos**:
+Hoje a tela do paciente reúne Atividades, Pensamentos, Tensão, Ação, Tarefas, Sono e humor e Comunidade; **Meus Planos** aparece quando existe plano. No celular, as abas usam três colunas. A Comunidade é um espaço social opcional, não uma técnica de TCC. Para manter a interface calma, acolhedora e acessível, as 7 técnicas se dividem em **3 grupos**:
 
 1. **Grupo 1 — Evoluções das abas que já existem** (sem criar aba nova no ciclo);
 2. **Grupo 2 — Ferramentas permanentes de apoio** (consultadas/atualizadas aos poucos, como o *"Sobre mim"*, fora das abas diárias);

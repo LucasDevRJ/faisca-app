@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Activity } from '../features/activities/activities-api';
 import { renderRoute } from '../test/render';
-import { apiError, fakeActivity, loggedIn, server } from '../test/server';
+import { apiError, fakeActivity, fakeThoughtRecord, loggedIn, server } from '../test/server';
 
 // "Hoje" fixo: quinta, 24/09/2026, 15h em São Paulo. Só o relógio é simulado; os timers
 // continuam reais para o MSW e o userEvent.
@@ -119,6 +119,27 @@ describe('RecordsPage: semana', () => {
     expect(await screen.findByRole('heading', { name: '21 a 27 de set.' })).toBeInTheDocument();
   });
 
+  it('semana de outro ano mostra o ano e, de 1 ano atrás ou mais, "há 1 ano" (DEC-120)', async () => {
+    weekHandler([fakeActivity({ activityDate: '2025-09-17', name: 'Caminhada fictícia' })]);
+    renderRoute('/registros?semana=2025-09-17');
+
+    expect(await screen.findByRole('heading', { name: '15 a 21 de set. de 2025' })).toBeInTheDocument();
+    expect(screen.getByText('há 1 ano')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^quarta-feira, 17\/09\/2025/ })).toBeInTheDocument();
+  });
+
+  it('de 2 anos atrás, "há 2 anos"', async () => {
+    renderRoute('/registros?semana=2024-03-06');
+    expect(await screen.findByRole('heading', { name: '4 a 10 de mar. de 2024' })).toBeInTheDocument();
+    expect(screen.getByText('há 2 anos')).toBeInTheDocument();
+  });
+
+  it('semana deste ano não mostra o ano nem "há"', async () => {
+    renderRoute('/registros?semana=2026-01-07');
+    expect(await screen.findByRole('heading', { name: '5 a 11 de jan.' })).toBeInTheDocument();
+    expect(screen.queryByText(/^há /)).not.toBeInTheDocument();
+  });
+
   it('avisa com calma quando a semana não carrega', async () => {
     server.use(http.get('*/api/activities', () => new HttpResponse(null, { status: 500 })));
     renderRoute('/registros');
@@ -149,7 +170,7 @@ describe('RecordsPage: ações por estado', () => {
     expect(within(card).getByRole('button', { name: 'Editar' })).toBeInTheDocument();
   });
 
-  it.each(['CONCLUIDA', 'NAO_REALIZADA'] as const)('%s é só leitura: nenhum botão', async (status) => {
+  it.each(['CONCLUIDA', 'NAO_REALIZADA'] as const)('%s não pode ser editada nem excluída', async (status) => {
     weekHandler([
       fakeActivity({
         name: 'Registro final',
@@ -157,14 +178,14 @@ describe('RecordsPage: ações por estado', () => {
         wantBefore: 3,
         ...(status === 'CONCLUIDA' ? { pleasure: 7, achievement: 8 } : {}),
         observation: 'Choveu um pouco.',
-        // Fora do prazo das fotos (DEC-104): sem nenhum botão. Com o prazo aberto, só os das fotos.
+        // Fora do prazo das fotos (DEC-104): sem ação de foto; a ligação continua disponível.
         photosOpen: false,
       }),
     ]);
     renderRoute('/registros');
 
     const card = await findCard('Registro final');
-    expect(within(card).queryAllByRole('button')).toHaveLength(0);
+    expect(within(card).getAllByRole('button').map((button) => button.textContent)).toEqual(['Ligar a outro registro']);
     expect(within(card).getByText('Choveu um pouco.')).toBeInTheDocument();
   });
 
@@ -186,6 +207,67 @@ describe('RecordsPage: ações por estado', () => {
     const row = within(table).getByRole('row', { name: 'Caminhada, qui, 24/09 2 7 9'});
     expect(within(row).getAllByRole('cell').map((c) => c.textContent)).toEqual(['2', '7', '9']);
     expect(within(table).queryByText('Planejada')).not.toBeInTheDocument();
+  });
+});
+
+describe('RecordsPage: seletor de registros ligados', () => {
+  it('formata a data, pré-visualiza títulos longos e mostra o título inteiro ao selecionar', async () => {
+    const title = 'Uma situação longa que descreve o contexto deste registro com bastante detalhe';
+    const targetId = '00000000-0000-4000-9000-000000000099';
+    weekHandler([fakeActivity({ name: 'Caminhada' })]);
+    server.use(
+      http.get('*/api/record-links/candidates', () =>
+        HttpResponse.json({
+          records: [{ type: 'THOUGHT_RECORD', id: targetId, date: '2026-09-23', title }],
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderRoute('/registros');
+
+    const card = await findCard('Caminhada');
+    await user.click(within(card).getByRole('button', { name: 'Ligar a outro registro' }));
+    const selector = await within(card).findByRole('combobox', { name: 'Registro para ligar' });
+    const option = within(selector).getByRole('option', { name: `Pensamento · 23/09/2026 · ${title}` });
+
+    expect(option.textContent).toBe('Pensamento · 23/09/2026 · Uma situação longa que descreve o contexto deste…');
+    await user.selectOptions(selector, `THOUGHT_RECORD:${targetId}`);
+    expect(within(card).getByText('Texto completo do registro:')).toBeInTheDocument();
+    expect(within(card).getByText(title)).toBeInTheDocument();
+  });
+
+  it('mostra a anotação da atividade na ligação e abre o pensamento relacionado', async () => {
+    const observation = 'Foi bom perceber que consegui aproveitar a atividade.';
+    const activity = fakeActivity({ name: 'Academia', observation });
+    const thought = fakeThoughtRecord({
+      id: '00000000-0000-4000-9000-000000000099',
+      situationDate: '2026-09-24',
+      automaticThought: 'Pensamento relacionado fictício',
+    });
+    weekHandler([activity]);
+    server.use(
+      http.get('*/api/record-links', () => HttpResponse.json({ links: [{
+        id: '00000000-0000-4000-9000-000000000098',
+        kind: 'RELATED',
+        source: { type: 'ACTIVITY', id: activity.id, date: activity.activityDate, title: activity.name, observation },
+        target: { type: 'THOUGHT_RECORD', id: thought.id, date: thought.situationDate, title: thought.automaticThought },
+      }] })),
+      http.get('*/api/thought-records', () => HttpResponse.json({ thoughtRecords: [thought] })),
+    );
+    const user = userEvent.setup();
+    const { router } = renderRoute('/registros');
+
+    const card = await findCard('Academia');
+    const linksPanel = within(card).getByRole('region', { name: 'Registros ligados' });
+    expect(await within(linksPanel).findByText(observation)).toBeInTheDocument();
+    const related = await within(card).findByRole('link', { name: /Pensamento relacionado fictício/ });
+    expect(related).toHaveAttribute('href', `/pensamentos?semana=2026-09-21#registro-${thought.id}`);
+
+    await user.click(related);
+    expect(await screen.findByRole('heading', { name: 'Registro de Pensamentos' })).toBeInTheDocument();
+    expect(await screen.findByText('Pensamento relacionado fictício')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/pensamentos');
+    expect(router.state.location.hash).toBe(`#registro-${thought.id}`);
   });
 });
 
@@ -329,6 +411,54 @@ describe('RecordsPage: transições', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  // Retorno calmo ao concluir (issue #93): ✓ no cartão e "Registro guardado." para o leitor de tela.
+  async function completeCaminhada() {
+    weekHandler([fakeActivity({ name: 'Caminhada', status: 'PENDENTE', wantBefore: 4 })]);
+    recordWrites();
+    const user = userEvent.setup();
+    renderRoute('/registros');
+    await user.click(within(await findCard('Caminhada')).getByRole('button', { name: 'Conta como foi?' }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Prazer'), { target: { value: '6' } });
+    fireEvent.change(within(dialog).getByLabelText('Realização'), { target: { value: '9' } });
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    return user;
+  }
+
+  function checkOf(card: HTMLElement) {
+    return card.parentElement!.querySelector('[data-saved-check]');
+  }
+
+  it('ao concluir, o cartão ganha o ✓ e o leitor de tela ouve "Registro guardado."', async () => {
+    const user = await completeCaminhada();
+
+    const card = await findCard('Caminhada');
+    expect(await screen.findByText('Registro guardado.')).toHaveAttribute('role', 'status');
+    expect(checkOf(card)).toHaveAttribute('aria-hidden', 'true');
+    expect(card.parentElement).toHaveClass('saved-settle');
+    // Sem confete nem parabéns: o retorno é só o ✓ e a frase neutra.
+    expect(screen.queryByText(/parabéns/i)).not.toBeInTheDocument();
+
+    // Abrir outra ação no cartão tira o retorno.
+    await user.click(within(card).getByRole('button', { name: /excluir/i }));
+    expect(checkOf(card)).toBeNull();
+  });
+
+  it('com "Menos movimento", a marcação do ✓ já é a do estado final (o CSS só zera a duração)', async () => {
+    document.documentElement.dataset.reducedMotion = 'true';
+    try {
+      await completeCaminhada();
+      const check = checkOf(await findCard('Caminhada'));
+      expect(check).not.toBeNull();
+      // O traço em repouso é o final (inteiro): com a duração zerada pelo CSS, nada se move.
+      expect(check!.querySelector('path')).toHaveAttribute('pathLength', '1');
+      expect(screen.getByText('Registro guardado.')).toBeInTheDocument();
+    } finally {
+      delete document.documentElement.dataset.reducedMotion;
+    }
+  });
+
   it('se só o primeiro passo gravar, fecha o formulário e avisa na tela', async () => {
     weekHandler([fakeActivity({ name: 'Caminhada', status: 'PLANEJADA' })]);
     recordWrites({ 'POST /activities/:id/complete': () => new HttpResponse(null, { status: 500 }) });
@@ -350,6 +480,9 @@ describe('RecordsPage: transições', () => {
       await screen.findByText('Salvamos a vontade, mas não deu para concluir. Tente de novo pelo card.'),
     ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // Só parte gravou: sem o retorno de concluído.
+    expect(document.querySelector('[data-saved-check]')).toBeNull();
+    expect(screen.queryByText('Registro guardado.')).not.toBeInTheDocument();
   });
 
   it('registra a vontade de uma PLANEJADA', async () => {

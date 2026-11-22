@@ -108,7 +108,7 @@ describe('/acao', () => {
     expect(asked).toBe(false);
   });
 
-  it('cinco abas, a meta do ciclo em espaços e o cartão com a expectativa ao lado do resultado', async () => {
+  it('sete abas, a meta do ciclo em espaços e o cartão com a expectativa ao lado do resultado', async () => {
     actionsApi([
       fakeAction({ name: 'Ouvir um disco', category: 'PRAZER', status: 'AVALIADA', expectation: 3, pleasure: 7, achievement: 6, actionDate: '2026-09-23' }),
       fakeAction({ name: 'Café com amiga', category: 'CONEXAO', status: 'NAO_REALIZADA', actionDate: '2026-09-22', observation: 'Ela desmarcou.' }),
@@ -116,7 +116,7 @@ describe('/acao', () => {
     renderRoute('/acao');
 
     const tabs = await screen.findByRole('navigation', { name: 'Registros' });
-    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas']);
+    expect(within(tabs).getAllByRole('link').map((l) => l.textContent)).toEqual(['Atividades', 'Pensamentos', 'Tensão', 'Ação', 'Tarefas', 'Sono e humor', 'Comunidade']);
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
 
     const goal = await screen.findByRole('region', { name: 'Neste ciclo' });
@@ -128,7 +128,7 @@ describe('/acao', () => {
     const done = screen.getByRole('article', { name: 'Ouvir um disco' });
     expect(done).toHaveTextContent('Esperava3');
     expect(done).toHaveTextContent('Prazer7');
-    expect(within(done).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(done).getByRole('button', { name: 'Ligar a outro registro' })).toBeInTheDocument();
     const notDone = screen.getByRole('article', { name: 'Café com amiga' });
     expect(notDone).toHaveTextContent('Não deu desta vez');
     expect(notDone).toHaveTextContent('Ela desmarcou.');
@@ -157,6 +157,27 @@ describe('/acao', () => {
     await waitFor(() => expect(writes).toHaveLength(1));
     expect(writes[0]!.path).toBe(`/actions/${action.id}/evaluate`);
     expect(writes[0]!.body).toEqual({ pleasure: 7, achievement: 6 });
+
+    // Retorno calmo ao avaliar (issue #93).
+    expect(await screen.findByText('Registro guardado.')).toHaveAttribute('role', 'status');
+    const evaluated = await screen.findByRole('article', { name: 'Caminhar' });
+    expect(evaluated.parentElement!.querySelector('[data-saved-check]')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('"Não deu desta vez" não ganha o retorno de avaliada', async () => {
+    const action = fakeAction({ name: 'Pintar' });
+    actionsApi([action]);
+    recordWrites();
+    const user = userEvent.setup();
+    renderRoute('/acao');
+
+    const card = await screen.findByRole('article', { name: 'Pintar' });
+    await user.click(within(card).getByRole('button', { name: 'Não deu desta vez' }));
+    const dialog = screen.getByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(document.querySelector('[data-saved-check]')).toBeNull();
+    expect(screen.queryByText('Registro guardado.')).not.toBeInTheDocument();
   });
 
   it('observação longa (DEC-067): 1500 caracteres passam; acima de 5000, aviso sem enviar', async () => {

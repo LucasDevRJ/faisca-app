@@ -5,7 +5,7 @@ import { LIST_MAX_DAYS, THERAPIST_LIST_MAX_DAYS, listQuerySchema } from '../acti
 // Limites da DEC-039, com o texto em 5000 pela DEC-053. Os mesmos valores estão nos CHECKs do banco.
 export const TEXT_MAX = 5000;
 export const OTHER_LABEL_MAX = 50;
-// Teto de registros de pensamento por conta (DEC-112).
+// Teto de registros de pensamento por conta (DEC-123).
 export const THOUGHT_RECORDS_MAX = 5000;
 
 // Ordem em que as emoções aparecem (a da lista na SPEC).
@@ -83,7 +83,7 @@ const NEEDS_ALTERNATIVE = {
 // Todos os campos são obrigatórios (SPEC), menos a explicação alternativa (DEC-054). Objetos
 // estritos: campo a mais é 400.
 export const createThoughtRecordSchema = z
-  .strictObject({ ...fields, alternativeExplanation: fields.alternativeExplanation.optional() })
+  .strictObject({ ...fields, alternativeExplanation: fields.alternativeExplanation.optional(), repeatFromId: z.uuid().optional() })
   .refine(
     (data) => data.alternativeExplanation !== undefined || data.emotions.every((e) => e.intensityAfter === undefined),
     NEEDS_ALTERNATIVE,

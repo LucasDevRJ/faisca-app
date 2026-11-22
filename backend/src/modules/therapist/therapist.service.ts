@@ -152,7 +152,7 @@ export function createTherapistService(
       return readMarks.withReadStatus(therapistId, 'PLAN_ENTRY', await plans.listEntries(patientId, planId, query));
     },
 
-    // A visão "Não lidos" (DEC-057), fora do ciclo, só nas áreas liberadas (DEC-097), paginada (DEC-112).
+    // A visão "Não lidos" (DEC-057), fora do ciclo, só nas áreas liberadas (DEC-097), paginada (DEC-123).
     unread(
       therapistId: string,
       patientId: string,

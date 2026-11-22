@@ -25,7 +25,7 @@ export const readMarksBodySchema = z.strictObject({
     }),
 });
 
-// Página da visão "Para ler" (DEC-112): do mais antigo ao mais novo entre as áreas liberadas.
+// Página da visão "Para ler" (DEC-123): do mais antigo ao mais novo entre as áreas liberadas.
 export const UNREAD_PAGE_SIZE = 50;
 
 const cursorPayloadSchema = z.strictObject({

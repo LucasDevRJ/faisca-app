@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { buttonClasses } from '../../components/ui/button-styles';
@@ -6,12 +7,14 @@ import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { formatEntryTime } from './plan-labels';
 import type { PlanEntry } from './plans-api';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
+import { recordAnchorId } from '../record-links/record-links-format';
 
 // readOnly: visão da terapeuta. Sem botões e sempre com a hora do registro. showPlan: na visão
 // "Para ler", que junta registros de vários planos, o nome do plano vem no topo.
 type PlanEntryCardProps =
   | { entry: PlanEntry; onDelete: (entry: PlanEntry) => void; readOnly?: false; showPlan?: boolean }
-  | { entry: PlanEntry; readOnly: true; footer?: ReactNode; showPlan?: boolean };
+  | { entry: PlanEntry; readOnly: true; footer?: ReactNode; showPlan?: boolean; patientId?: string };
 
 // Editar e excluir só no dia em que foi registrado (DEC-094). Depois disso, o registro fica fixo e
 // o backend responderia 409: esconder os botões é conforto, não segurança.
@@ -19,9 +22,12 @@ export function PlanEntryCard(props: PlanEntryCardProps) {
   const { entry } = props;
   const titleId = useId();
   const canChange = !props.readOnly && entry.editable;
+  const linkPatientId = props.readOnly ? props.patientId : undefined;
 
   return (
     <article
+      id={recordAnchorId(entry.id)}
+      tabIndex={-1}
       aria-labelledby={titleId}
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4"
     >
@@ -51,6 +57,8 @@ export function PlanEntryCard(props: PlanEntryCardProps) {
       )}
 
       {props.readOnly && props.footer}
+      {/* Só na visão do paciente, e só se a profissional ativou (DEC-118). */}
+      {!props.readOnly && <ReadReceiptLine type="PLAN_ENTRY" id={props.entry.id} />}
 
       {canChange && (
         <div className="flex gap-1">
@@ -63,6 +71,7 @@ export function PlanEntryCard(props: PlanEntryCardProps) {
           </Button>
         </div>
       )}
+      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="PLAN_ENTRY" id={entry.id} readOnly={props.readOnly} patientId={linkPatientId} />}
     </article>
   );
 }

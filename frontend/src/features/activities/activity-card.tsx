@@ -6,6 +6,8 @@ import { useAccessibility } from '../profile/use-profile';
 import { isFinal, type Activity } from './activities-api';
 import { ActivityPhotos } from './activity-photos';
 import { SCORE_TEXT, STATUS_LABEL } from './activity-labels';
+import { RecordLinksPanel } from '../record-links/record-links-panel';
+import { recordAnchorId } from '../record-links/record-links-format';
 
 // Botão de meia largura na grade do celular: texto menor e sem quebra, para caber em 360px.
 const HALF_WIDTH = 'px-2 text-sm whitespace-nowrap sm:px-5 sm:text-base';
@@ -40,6 +42,8 @@ export function ActivityCard(props: ActivityCardProps) {
 
   return (
     <article
+      id={recordAnchorId(activity.id)}
+      tabIndex={-1}
       aria-labelledby={titleId}
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-soft sm:p-4"
     >
@@ -117,6 +121,7 @@ export function ActivityCard(props: ActivityCardProps) {
         activity={activity}
         viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
       />
+      {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTIVITY" id={activity.id} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
     </article>
   );
 }
