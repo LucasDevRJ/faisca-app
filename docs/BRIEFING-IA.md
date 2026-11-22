@@ -157,6 +157,11 @@ Na prática clínica tradicional:
 
 ### 4.3. Para Todos (Personalização, Acessibilidade e Segurança da Conta)
 
+- **Mensagens privadas:** paciente e psicóloga ou psiquiatra com vínculo ativo podem trocar
+  mensagens de texto sobre logística da consulta e dúvidas breves. As duas pessoas precisam
+  aceitar o aviso de privacidade. Os avisos por e-mail e no aparelho são opcionais e sem conteúdo
+  da conversa. O canal não atende urgências.
+
 - **Foto de perfil e 5 paletas de cores:**
   - Foto de perfil com recorte circular no próprio navegador antes de enviar (e iniciais quando não há foto).
   - **5 paletas de cores** salvas na conta (valem no celular e no computador), com **prévia na hora** ao tocar:
@@ -185,9 +190,6 @@ Na prática clínica tradicional:
 ---
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
-
-- Mensagens privadas em texto entre paciente e profissional com vínculo ativo (#219), para
-  logística da consulta e dúvidas breves, com avisos opcionais sem conteúdo.
 
 **Em desenvolvimento — Ligações entre registros (#207) e repetição de pensamentos (#166):** o
 paciente poderá relacionar registros de diferentes áreas. A psicóloga só verá a ligação se as duas
