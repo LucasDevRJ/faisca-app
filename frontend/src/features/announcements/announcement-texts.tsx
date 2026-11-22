@@ -20,6 +20,14 @@ export type AnnouncementText = {
 export type Profiles = { patient: boolean; therapist: boolean };
 
 export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
+  '2026-11-novidades-email': {
+    title: 'Avisos por e-mail sobre novidades',
+    icon: '✉️',
+    date: '2026-11-20',
+    patient: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta e pode ser alterada quando quiser.</p>,
+    therapist: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta e pode ser alterada quando quiser.</p>,
+    link: { to: '/conta#novidades-email', label: 'Ver preferência' },
+  },
   '2026-11-lido-paciente': {
     title: 'Ver quando a profissional leu',
     icon: '👀',

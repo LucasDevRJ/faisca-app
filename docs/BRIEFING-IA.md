@@ -205,6 +205,11 @@ adultos com vínculo ativo. A entrada depende de aprovação; cada pessoa escolh
 optar por uma mensagem de boas-vindas no feed. Publicações e comentários passam por revisão humana
 antes de aparecer. A comunidade não dá acesso aos registros clínicos.
 
+**Em desenvolvimento — Avisos por e-mail de novidades importantes (#231):** quem quiser poderá
+receber uma mensagem individual quando uma funcionalidade importante entrar no ar. A preferência
+será separada dos e-mails de conta e poderá ser desligada em Conta; correções pequenas continuarão
+aparecendo apenas dentro do app. Ainda não publicado.
+
 Estes itens estão planejados no backlog e **ainda não estão no ar**:
 1. **Perfil de saúde opcional (Parte 2 da #87):** pergunta opcional sobre neurodivergência, condições de saúde (TEA, TDAH, Dislexia, Ansiedade, Depressão, TOC, Bipolaridade, Altas habilidades/Superdotação, Outra) com sugestão automática dos ajustes de acessibilidade, lista de remédios em uso e contatos de emergência (visíveis em modo leitura para a psicóloga vinculada, com consentimento próprio).
 2. **Lembretes também por WhatsApp (#82):** o e-mail e o Web Push já estão no ar; o WhatsApp é o próximo canal, com o mesmo texto neutro.

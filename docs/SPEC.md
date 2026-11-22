@@ -579,6 +579,15 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   depois não recebe como novidade o que já existia (DEC-054, DEC-055).
 - **O que há de novo:** uma página reúne todas as novidades da pessoa, da mais nova para a mais
   antiga, com a data, inclusive as já vistas; abrir a página não fecha o card (DEC-060).
+- **Avisos por e-mail de novidades importantes (DEC-119):** a pessoa pode desligar separadamente
+  os avisos por e-mail em Conta. Eles começam ligados, conforme a preferência do produto para
+  notificações; desligar não afeta mensagens transacionais, lembretes nem avisos de segurança.
+  Enviamos um e-mail individual até cinco minutos depois da publicação, apenas para novidades
+  importantes cadastradas para e-mail; correções pequenas e mudanças internas ficam no app. O
+  público é o definido para a novidade. Só recebe quem confirmou o e-mail, já tinha conta na data
+  em que a novidade entrou no ar e estava inscrito nessa data. Novidades anteriores à ativação do
+  recurso não geram e-mails retroativos. O texto é fixo, breve e neutro, sem registros, dados de
+  saúde ou rastreamento de abertura; falha no envio não afeta o card nem o histórico dentro do app.
 
 ## Fora do escopo (por ora)
 - Exportação CSV/PDF

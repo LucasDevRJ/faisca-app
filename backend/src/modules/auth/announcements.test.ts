@@ -41,6 +41,7 @@ const TASKS = '2026-11-tarefas';
 const SLEEP = '2026-11-sono-humor';
 const COMMUNITY = '2026-11-comunidade';
 const MEDICATIONS = '2026-11-remedios';
+const EMAIL_UPDATES = '2026-11-novidades-email';
 const READ_RECEIPTS = '2026-11-lido-paciente';
 
 describe('card de Novidades (DEC-054, DEC-058)', () => {
@@ -60,10 +61,10 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
     await createConfirmedUser({ email: 'terapeuta@faisca.test', patient: false, therapist: true });
     const agent = await loginAgent('terapeuta@faisca.test');
 
-    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(MEDICATIONS);
+    expect((await agent.get('/auth/me')).body.user.pendingAnnouncement).toBe(EMAIL_UPDATES);
     // A anterior não pode ser marcada no lugar da que está aparecendo.
     expect((await agent.post('/auth/announcement-seen').send({ announcement: MURAL })).status).toBe(400);
-    expect((await agent.post('/auth/announcement-seen').send({ announcement: MEDICATIONS })).status).toBe(200);
+    expect((await agent.post('/auth/announcement-seen').send({ announcement: EMAIL_UPDATES })).status).toBe(200);
   });
 
   it('conta nova não recebe como novidade o que já existia no cadastro', async () => {
@@ -97,26 +98,25 @@ describe('card de Novidades (DEC-054, DEC-058)', () => {
 
     expect(pendingAnnouncement(null, patient)).toBe(READ_RECEIPTS);
     // O Meus Planos é para os dois perfis (DEC-095): a terapeuta também o recebe.
-    expect(pendingAnnouncement(null, therapist)).toBe(MEDICATIONS);
-    // O "Sobre mim" e os lembretes são só de quem é paciente (DEC-082, DEC-090): a terapeuta que já viu
-    // o mural não tem nada entre ele e o Meus Planos.
-    expect(pendingAnnouncement(MURAL, therapist)).toBe(MEDICATIONS);
+    expect(pendingAnnouncement(null, therapist)).toBe(EMAIL_UPDATES);
+    // A novidade por e-mail vale para os dois perfis; o "Lido" é só para paciente.
+    expect(pendingAnnouncement(MURAL, therapist)).toBe(EMAIL_UPDATES);
     expect(pendingAnnouncement(ALTERNATIVE, patient)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(READ_MARKS, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(PHOTOS, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(BACKUPS, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(ABOUT_ME, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(REMINDERS, both)).toBe(READ_RECEIPTS);
-    expect(pendingAnnouncement(REMINDERS, therapist)).toBe(MEDICATIONS);
+    expect(pendingAnnouncement(REMINDERS, therapist)).toBe(EMAIL_UPDATES);
     expect(pendingAnnouncement(PLANS, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(ACTIVITY_PHOTOS, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(TASKS, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(SLEEP, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(COMMUNITY, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(MEDICATIONS, both)).toBe(READ_RECEIPTS);
-    // O "Lido" para o paciente é só de quem é paciente (DEC-118): para a terapeuta, a mais recente
-    // continua sendo a dos remédios.
-    expect(pendingAnnouncement(MEDICATIONS, therapist)).toBeNull();
+    expect(pendingAnnouncement(MEDICATIONS, therapist)).toBe(EMAIL_UPDATES);
+    expect(pendingAnnouncement(EMAIL_UPDATES, therapist)).toBeNull();
+    expect(pendingAnnouncement(EMAIL_UPDATES, both)).toBe(READ_RECEIPTS);
     expect(pendingAnnouncement(READ_RECEIPTS, both)).toBeNull();
     expect(pendingAnnouncement('desconhecida', patient)).toBe(READ_RECEIPTS);
   });

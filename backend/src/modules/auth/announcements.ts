@@ -14,6 +14,7 @@
 // - 2026-11-sono-humor: Sono, humor e remédio do dia (DEC-108), para paciente e terapeuta.
 // - 2026-11-comunidade: comunidade de apoio entre pacientes (DEC-113), para paciente e psicóloga.
 // - 2026-11-remedios: Remédios e o que sinto (DEC-115), para paciente e terapeuta.
+// - 2026-11-novidades-email: avisos de novidades importantes por e-mail (DEC-119), para todos.
 // - 2026-11-lido-paciente: ver quando a profissional leu (DEC-118), só para paciente: é ele quem pede,
 //   e a profissional fica sabendo pelo aviso do pedido.
 export const ANNOUNCEMENTS = [
@@ -30,6 +31,7 @@ export const ANNOUNCEMENTS = [
   '2026-11-sono-humor',
   '2026-11-comunidade',
   '2026-11-remedios',
+  '2026-11-novidades-email',
   '2026-11-lido-paciente',
 ] as const;
 
@@ -52,10 +54,25 @@ const AUDIENCE: Record<Announcement, Audience> = {
   '2026-11-sono-humor': 'TODOS',
   '2026-11-comunidade': 'TODOS',
   '2026-11-remedios': 'TODOS',
+  '2026-11-novidades-email': 'TODOS',
   '2026-11-lido-paciente': 'PACIENTE',
 };
 
+// Só novidades importantes recebem e-mail. Correções pequenas e mudanças internas continuam
+// apenas no card e no histórico. O texto é fixo, sem dados do usuário nem conteúdo clínico.
+export const EMAIL_ANNOUNCEMENTS = {
+  '2026-11-novidades-email': {
+    subject: 'Uma novidade importante no Faísca',
+    title: 'Avisos por e-mail sobre novidades',
+    summary: 'Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar.',
+  },
+} as const satisfies Partial<Record<Announcement, { subject: string; title: string; summary: string }>>;
+
 export type Profiles = { patient: boolean; therapist: boolean };
+
+export function announcementAudience(announcement: Announcement): Audience {
+  return AUDIENCE[announcement];
+}
 
 // A mais nova de todas: conta nova nasce com ela vista, porque já conhece o app como ele está.
 export const CURRENT_ANNOUNCEMENT: Announcement = ANNOUNCEMENTS[ANNOUNCEMENTS.length - 1]!;

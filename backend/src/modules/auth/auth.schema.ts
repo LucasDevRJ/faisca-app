@@ -106,3 +106,5 @@ export type AddProfileInput = z.infer<typeof addProfileSchema>;
 
 // Ligar ou desligar o aviso de login novo (DEC-091).
 export const loginAlertSchema = z.strictObject({ enabled: z.boolean() });
+
+export const announcementEmailsSchema = z.strictObject({ enabled: z.boolean() });

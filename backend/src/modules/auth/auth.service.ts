@@ -51,6 +51,8 @@ export type PublicUser = {
   accessibility: AccessibilitySettings;
   // Aviso de login novo por e-mail e push (DEC-091).
   loginAlert: boolean;
+  // Avisos de novidades importantes por e-mail (DEC-119).
+  announcementEmails: boolean;
 };
 
 export function toPublicUser(
@@ -71,6 +73,7 @@ export function toPublicUser(
     | 'noTimePressure'
     | 'reducedMotion'
     | 'loginAlertEnabled'
+    | 'announcementEmailsEnabled'
   >,
 ): PublicUser {
   return {
@@ -88,6 +91,7 @@ export function toPublicUser(
     palette: user.palette ?? 'SALVIA',
     accessibility: toAccessibilitySettings(user),
     loginAlert: user.loginAlertEnabled,
+    announcementEmails: user.announcementEmailsEnabled,
   };
 }
 
@@ -444,6 +448,16 @@ export function createAuthService(mailer: Mailer, links: LinksService, pushSende
         await sendSafely('login-alert-disabled', loginAlertDisabledEmail(user.email, user.name));
       }
       return user;
+    },
+
+    async setAnnouncementEmails(userId: string, enabled: boolean): Promise<User> {
+      return prisma.user.update({
+        where: { id: userId },
+        data: {
+          announcementEmailsEnabled: enabled,
+          announcementEmailsEnabledAt: enabled ? new Date() : null,
+        },
+      });
     },
 
     // Ao ligar o perfil de terapeuta, o tipo escolhido, ou o que já havia, ou psicóloga (DEC-097).

@@ -31,6 +31,7 @@ export type AuthUser = {
   reducedMotion: boolean;
   // Aviso de login novo (DEC-091).
   loginAlertEnabled: boolean;
+  announcementEmailsEnabled: boolean;
 };
 
 function unauthenticated() {
@@ -64,6 +65,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
           noTimePressure: true,
           reducedMotion: true,
           loginAlertEnabled: true,
+          announcementEmailsEnabled: true,
         },
       })
     : null;
@@ -94,6 +96,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
     noTimePressure: user.noTimePressure,
     reducedMotion: user.reducedMotion,
     loginAlertEnabled: user.loginAlertEnabled,
+    announcementEmailsEnabled: user.announcementEmailsEnabled,
   };
   req.sessionId = session.sessionId;
   next();
