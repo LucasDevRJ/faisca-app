@@ -82,7 +82,7 @@ describe('cartão de hoje em Meus registros', () => {
     await user.type(within(dialog).getByLabelText('Que horas você deitou?'), '23:30');
     await user.type(within(dialog).getByLabelText('Que horas acordou?'), '07:00');
     expect(within(dialog).getByText('Dá 7h30 de sono.')).toBeInTheDocument();
-    await user.type(within(dialog).getByLabelText('Uma palavra para o dia (opcional)'), 'tranquila');
+    await user.type(within(dialog).getByLabelText('Uma palavra ou frase para o dia (opcional)'), 'tranquila');
     await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
 
     expect(await screen.findByText('Registro do dia salvo.')).toBeInTheDocument();

@@ -3,7 +3,7 @@ import type { CheckIn, MedicationTaken } from './daily-check-ins-api';
 // Textos do Sono e humor (DEC-108), aprovados pelo usuário. Sem cobrança, sem sequência e sem
 // "você não registrou": esquecer um dia é normal (frontend/CLAUDE.md).
 
-export const MOOD_WORD_MAX = 40;
+export const MOOD_WORD_MAX = 120;
 // Os últimos 7 dias aceitam registro (DEC-107).
 export const CHECK_IN_WINDOW_DAYS = 7;
 
