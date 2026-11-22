@@ -2798,6 +2798,16 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   provedor é externo ao banco, um opt-out feito depois da última checagem e durante a chamada pode
   deixar uma mensagem já em trânsito.
 
+## DEC-122 — Revisão opcional da própria comunidade pela psicóloga (22/11/2026)
+- **Decisão (#251):**
+  - a revisão da psicóloga começa desligada e só pode ser ativada por ela para a própria comunidade, com verificação em duas etapas ativa. Ela pode desligar a opção quando quiser;
+  - ativada, a psicóloga pode aprovar, recusar ou ocultar publicações e comentários de pacientes do grupo. Não revisa conteúdo escrito por ela nem denúncias relacionadas ao próprio conteúdo; esses casos ficam com a plataforma;
+  - a moderação da plataforma continua disponível para todas as comunidades e assume quando a opção está desligada ou quando o 2FA da psicóloga não está ativo. Reativar o 2FA restaura a escolha da psicóloga, se ela não tiver desligado a opção;
+  - antes de pedir entrada, o paciente vê quem revisa e aceita essa regra. Cada mudança efetiva de revisor gera um evento no feed dos membros ativos; se a mudança vier do estado do 2FA, o evento é reconciliado quando um membro abre a comunidade. A fila e as respostas privadas não dão à psicóloga acesso a registros clínicos;
+  - não há nova área nem versão de aviso de privacidade: a revisão continua tratando somente do conteúdo que a pessoa escolheu publicar na comunidade, já coberto pela área `community` e pelas regras aceitas na entrada.
+- **Motivo:** permitir que a psicóloga acompanhe o espaço opcional do próprio grupo, sem obrigá-la a moderar nem retirar da plataforma a função de retaguarda. A exigência de 2FA e a revisão pela plataforma de conteúdo da própria psicóloga reduzem riscos de acesso indevido e conflito de interesse.
+- **Limite conhecido:** se o 2FA mudar, a transição é avisada no feed quando um membro ativo abre a comunidade; não há push nem e-mail. A opção não cria prazo de resposta, alerta de fila ou obrigação de moderação para a psicóloga.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

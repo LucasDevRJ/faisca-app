@@ -19,6 +19,7 @@ import { PrivacyPage } from '../pages/privacy-page';
 import { CommunityPage } from '../pages/community-page';
 import { CommunityModerationPage } from '../pages/community-moderation-page';
 import { TherapistCommunityPage } from '../pages/therapist-community-page';
+import { TherapistCommunityModerationPage } from '../pages/therapist-community-moderation-page';
 import { PatientsPage } from '../pages/patients-page';
 import { EditPlanEntryPage, NewPlanEntryPage } from '../pages/plan-entry-form-page';
 import { EditPlanPage, NewPlanPage } from '../pages/plan-form-page';
@@ -97,6 +98,7 @@ export const routes = [
                   // Mural de avisos da terapeuta (DEC-079, DEC-080).
                   { path: 'mural', element: <MuralPage /> },
                   { path: 'comunidade-psicologa', element: <TherapistCommunityPage /> },
+                  { path: 'comunidade-psicologa/moderacao', element: <TherapistCommunityModerationPage /> },
                 ],
               },
               { path: 'comunidade/moderacao', element: <CommunityModerationPage /> },

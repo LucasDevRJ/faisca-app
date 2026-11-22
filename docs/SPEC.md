@@ -516,7 +516,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Cada pessoa escolhe um apelido de até 40 caracteres. O nome e o e-mail da conta não aparecem para outros pacientes. A pessoa pode escolher se uma mensagem neutra com o apelido será mostrada no feed quando entrar.
 - Membros ativos veem o histórico completo de publicações e comentários aprovados, inclusive conteúdos anteriores à entrada. Ao sair, deixam de ver e participar, mas podem pedir entrada novamente; ao voltar, veem o histórico. O fim do vínculo suspende o acesso imediatamente. Nenhum conteúdo comunitário dá acesso a registros clínicos. A lista ainda não tem paginação.
 - Publicações e comentários ficam pendentes até revisão humana. A pessoa autora pode editar (o conteúdo volta à fila) e apagar seus próprios itens; o texto apagado vira uma indicação genérica para preservar respostas. Membros podem denunciar conteúdo. A pessoa autora recebe em privado o motivo de uma rejeição/ocultação.
-- A psicóloga responsável vê e publica conteúdo na comunidade, gerencia convites e pedidos e não ganha acesso aos registros do paciente. A moderação da plataforma acessa somente conteúdo comunitário e exige conta explicitamente autorizada e verificação em duas etapas ativa.
+- A psicóloga responsável vê e publica conteúdo na comunidade, gerencia convites e pedidos e não ganha acesso aos registros do paciente. Ela pode, se quiser, ativar a revisão das publicações e comentários escritos por pacientes da própria comunidade. A opção começa desligada, exige verificação em duas etapas e pode ser desligada a qualquer momento. Ela não revisa o próprio conteúdo: denúncias e conteúdos escritos por ela continuam na fila da plataforma. A plataforma permanece como retaguarda e revisa quando a opção está desligada ou o 2FA da psicóloga não está ativo.
+- Antes do pedido de entrada, a pessoa vê quem revisará o conteúdo e aceita essa regra. Mudanças de revisor são registradas no feed para membros ativos; se o 2FA mudar, a troca efetiva também é avisada quando um membro abrir a comunidade. A escolha não amplia o acesso da psicóloga aos registros clínicos. (DEC-122)
 - A exclusão da conta do paciente apaga seu conteúdo comunitário. A exclusão da conta da psicóloga apaga a comunidade, as participações, publicações, comentários, denúncias e eventos em cascata.
 - Novas entradas voluntárias podem gerar um evento neutro no feed. Não há push nem e-mail nesta versão.
 
@@ -527,8 +528,11 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057), a resposta dela
   ao pedido do "Lido para o paciente", que grava só a preferência dela no vínculo (DEC-117), os avisos do
   mural dela (DEC-079) e as rotas próprias da Comunidade (DEC-113), que só leem ou alteram conteúdo
-  publicado para esse grupo, mediante aceite específico de privacidade. A moderação é isolada e não
-  concede acesso a perfil ou registros clínicos.
+  publicado para esse grupo, mediante aceite específico de privacidade. A psicóloga pode moderar
+  somente conteúdo de pacientes da própria comunidade, com 2FA ativo; conteúdo escrito por ela e
+  denúncias correspondentes continuam com a plataforma. A moderação da plataforma exige e-mail
+  autorizado e 2FA ativo. A moderação é isolada e não concede acesso a perfil ou registros clínicos
+  (DEC-122).
 - No papel de paciente: acesso somente aos próprios dados.
 - Qualquer outro caso retorna **403**: outro método, paciente sem vínculo, vínculo revogado, área não liberada ou dado de outra pessoa.
 - Tudo isso é garantido no backend, nunca só na interface.

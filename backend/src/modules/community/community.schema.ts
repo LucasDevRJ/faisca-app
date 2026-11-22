@@ -20,6 +20,7 @@ export const communityJoinSchema = z.strictObject({
 });
 export const communityInviteSchema = z.strictObject({ patientId: z.uuid({ error: 'Paciente inválido.' }) });
 export const communityMembershipDecisionSchema = z.strictObject({ decision: z.enum(['APPROVE', 'REJECT']) });
+export const communityModerationPreferenceSchema = z.strictObject({ enabled: z.boolean() });
 export const communityModerationDecisionSchema = z.strictObject({
   decision: z.enum(['APPROVE', 'REJECT', 'HIDE', 'KEEP']),
   message: z.string().trim().max(COMMUNITY_REASON_MAX).optional(),

@@ -782,15 +782,24 @@ model NoticeSeen {
 // Comunidade opcional de apoio de uma psicóloga. Excluir a conta da psicóloga apaga a comunidade e
 // os conteúdos em cascata; o paciente pode apagar os próprios conteúdos antes disso (DEC-113).
 model Community {
-  id          String   @id @default(uuid()) @db.Uuid
-  therapistId String   @unique @db.Uuid
-  createdAt   DateTime @default(now())
+  id                         String             @id @default(uuid()) @db.Uuid
+  therapistId                String             @unique @db.Uuid
+  // Última pessoa revisora comunicada aos membros; permite avisar quando o 2FA pausa a revisão.
+  announcedModerator         CommunityModerator @default(PLATFORM)
+  // A escolha da psicóloga é opcional; sem ela, a equipe da plataforma revisa (DEC-122).
+  therapistModerationEnabled Boolean            @default(false)
+  createdAt                  DateTime           @default(now())
 
   therapist   User                  @relation("CommunityOwner", fields: [therapistId], references: [id], onDelete: Cascade)
   memberships CommunityMembership[]
   posts       CommunityPost[]
   events      CommunityEvent[]
   reports     CommunityReport[]
+}
+
+enum CommunityModerator {
+  PLATFORM
+  THERAPIST
 }
 
 // Participação opcional do paciente. A confirmação 18+ guarda somente a data, nunca a data de

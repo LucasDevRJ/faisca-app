@@ -42,6 +42,11 @@ export function createCommunityRoutes() {
   router.delete('/therapist/community/posts/:postId', ...therapist, controller.deletePost);
   router.patch('/therapist/community/comments/:commentId', ...therapist, commentLimit, controller.editComment);
   router.delete('/therapist/community/comments/:commentId', ...therapist, controller.deleteComment);
+  router.patch('/therapist/community/moderation', ...therapist, controller.setTherapistModeration);
+  router.get('/therapist/community/moderation', ...therapist, controller.therapistModerationQueue);
+  router.patch('/therapist/community/moderation/posts/:postId', ...therapist, controller.moderateTherapistPost);
+  router.patch('/therapist/community/moderation/comments/:commentId', ...therapist, controller.moderateTherapistComment);
+  router.patch('/therapist/community/moderation/reports/:reportId', ...therapist, controller.reviewTherapistReport);
 
   router.get('/community/moderation', ...moderator, controller.moderationQueue);
   router.patch('/community/moderation/posts/:postId', ...moderator, controller.moderatePost);

@@ -47,7 +47,7 @@ export function CommunityPage() {
   }
   function handlePost(event: FormEvent) {
     event.preventDefault();
-    create.mutate(body, { onSuccess: () => { setBody(''); setFeedback('Sua publicação foi enviada para revisão humana. Ela aparecerá depois de aprovada.'); } });
+    create.mutate(body, { onSuccess: () => { setBody(''); setFeedback(`Sua publicação foi enviada para revisão. Ela aparecerá depois de aprovada. ${moderationReviewText}`); } });
   }
   function handleComment(event: FormEvent, postId: string) {
     event.preventDefault();
@@ -60,6 +60,9 @@ export function CommunityPage() {
 
   const error = state.error ?? join.error ?? leave.error ?? create.error ?? comment.error ?? report.error ?? deletePost.error ?? deleteComment.error ?? editPost.error ?? editComment.error;
   const membership = state.data?.membership;
+  const moderationReviewText = state.data?.community?.moderationReviewer === 'THERAPIST'
+    ? 'A psicóloga responsável revisará cada publicação e comentário antes de aparecer.'
+    : 'A equipe da plataforma revisará cada publicação e comentário antes de aparecer.';
   const canJoin = !membership || ['LEFT', 'REJECTED', 'INVITED'].includes(membership.status);
 
   if (user && !user.privacyAreas.community) return <PrivacyConsentGate area="community" />;
@@ -75,6 +78,7 @@ export function CommunityPage() {
     {state.isPending && <p className="text-muted">Carregando…</p>}
     {state.data && !state.data.available && <Alert>Esta comunidade aparece quando sua psicóloga tiver criado uma e seu vínculo estiver ativo.</Alert>}
     {state.data?.available && !membership && <Alert>Você pode pedir para participar. A psicóloga aprova a entrada.</Alert>}
+    {state.data?.available && <Alert>{moderationReviewText} A equipe da plataforma continua disponível como apoio.</Alert>}
     {state.data?.available && membership?.status === 'REQUESTED' && <Alert>Seu pedido está aguardando a aprovação da psicóloga.</Alert>}
     {state.data?.available && membership?.status === 'SUSPENDED' && <Alert>Seu acesso está suspenso enquanto o vínculo com a psicóloga estiver inativo.</Alert>}
     {state.data?.available && canJoin && <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6">
@@ -83,7 +87,7 @@ export function CommunityPage() {
       <form onSubmit={handleJoin} className="flex flex-col gap-4">
         <TextField label="Apelido na comunidade" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={40} required />
         <label className="flex min-h-11 items-start gap-3"><input type="checkbox" checked={adult} onChange={(event) => setAdult(event.target.checked)} className="mt-1 size-5 accent-primary" /><span>Confirmo que tenho 18 anos ou mais.</span></label>
-        <div className="rounded-lg border border-border p-4"><h3 className="font-semibold">Regras da comunidade</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-muted"><li>Respeite os limites e a privacidade das outras pessoas.</li><li>Não publique dados que identifiquem você ou outra pessoa.</li><li>Compartilhe sua experiência sem orientar, diagnosticar ou substituir a conversa com profissionais.</li><li>As publicações e os comentários passam por revisão humana antes de aparecer.</li></ul></div>
+        <div className="rounded-lg border border-border p-4"><h3 className="font-semibold">Regras da comunidade</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-muted"><li>Respeite os limites e a privacidade das outras pessoas.</li><li>Não publique dados que identifiquem você ou outra pessoa.</li><li>Compartilhe sua experiência sem orientar, diagnosticar ou substituir a conversa com profissionais.</li><li>{moderationReviewText} A equipe da plataforma continua disponível como apoio.</li></ul></div>
         <label className="flex min-h-11 items-start gap-3"><input type="checkbox" checked={rules} onChange={(event) => setRules(event.target.checked)} className="mt-1 size-5 accent-primary" /><span>Li e aceito as regras da comunidade.</span></label>
         <label className="flex min-h-11 items-start gap-3"><input type="checkbox" checked={announce} onChange={(event) => setAnnounce(event.target.checked)} className="mt-1 size-5 accent-primary" /><span>Se eu entrar, mostrar no feed uma mensagem de boas-vindas com meu apelido. (Opcional)</span></label>
         <Button type="submit" disabled={!adult || !rules || displayName.trim().length === 0 || join.isPending}>{join.isPending ? 'Enviando…' : membership?.status === 'INVITED' ? 'Aceitar e entrar' : 'Enviar pedido'}</Button>
@@ -92,7 +96,7 @@ export function CommunityPage() {
     {state.data?.membership?.status === 'ACTIVE' && <>
       <section className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6">
         <h2 className="text-xl font-semibold">Escrever para a comunidade</h2>
-        <p className="text-muted">As publicações passam por revisão humana antes de aparecer. Evite informações que identifiquem você ou outras pessoas.</p>
+        <p className="text-muted">{moderationReviewText} Evite informações que identifiquem você ou outras pessoas.</p>
         <form onSubmit={handlePost} className="flex flex-col gap-3">
           <TextAreaField label="Sua publicação" value={body} onChange={(event) => setBody(event.target.value)} limit={postLimit} rows={5} required />
           <Button type="submit" disabled={create.isPending || !body.trim() || body.trim().length > postLimit}>{create.isPending ? 'Enviando…' : 'Enviar para revisão'}</Button>
