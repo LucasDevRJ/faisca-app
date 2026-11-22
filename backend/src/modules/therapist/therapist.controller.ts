@@ -12,6 +12,7 @@ import {
   therapistActivitiesQuerySchema,
   therapistTensionEpisodesQuerySchema,
   therapistThoughtRecordsQuerySchema,
+  therapistUnreadQuerySchema,
 } from './therapist.schema.js';
 import type { TherapistService } from './therapist.service.js';
 
@@ -62,12 +63,15 @@ export function createTherapistController(service: TherapistService) {
     res.status(200).json({ actions: await service.listActions(getAuthUser(req).id, patientId, query, sharedAreas) });
   };
 
-  // Não lidos e atualizados das três áreas (DEC-057). Área sem o aceite do aviso vem como null,
-  // em vez de 403, para a tela mostrar o resto.
+  // Não lidos e atualizados das áreas liberadas (DEC-057, DEC-123). Área sem o aceite do aviso vem
+  // como null, em vez de 403, para a tela mostrar o resto.
   const unread: RequestHandler = async (req, res) => {
     const { patientId } = patientParamsSchema.parse(req.params);
+    const query = therapistUnreadQuerySchema.parse(req.query);
     const user = getAuthUser(req);
-    res.status(200).json(await service.unread(user.id, patientId, user.privacyVersion, getPatientLink(res).sharedAreas));
+    res
+      .status(200)
+      .json(await service.unread(user.id, patientId, user.privacyVersion, getPatientLink(res).sharedAreas, query));
   };
 
   const aboutMe: RequestHandler = async (req, res) => {

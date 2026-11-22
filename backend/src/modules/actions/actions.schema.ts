@@ -5,6 +5,8 @@ import { LIST_MAX_DAYS, THERAPIST_LIST_MAX_DAYS, listQuerySchema } from '../acti
 export const NAME_MAX = 100;
 // Igual ao CHECK do banco (DEC-067; era 1000).
 export const OBSERVATION_MAX = 5000;
+// Teto de ações por conta (DEC-123).
+export const ACTIONS_MAX = 5000;
 
 const dateSchema = z.iso.date({ error: 'Informe uma data válida (AAAA-MM-DD).' });
 

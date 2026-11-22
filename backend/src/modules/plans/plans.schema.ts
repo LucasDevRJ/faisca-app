@@ -9,6 +9,8 @@ export const QUESTION_MAX = 200;
 export const ANSWER_MAX = 5000;
 // Teto de planos por conta, ativos e encerrados: protege a API de abuso.
 export const PLANS_MAX = 30;
+// Teto de registros em planos por conta, somando todos os planos (DEC-123).
+export const PLAN_ENTRIES_MAX = 5000;
 
 const titleSchema = z
   .string()

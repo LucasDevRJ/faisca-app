@@ -5,6 +5,7 @@ import { addDays, dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
+import { ACTIONS_MAX } from './actions.schema.js';
 import { planDateError, recordDateError } from './actions.service.js';
 
 // Dados fictícios (regra 5 do AGENTS.md).
@@ -342,4 +343,54 @@ describe('janelas de data (funções puras)', () => {
     expect(recordDateError('2026-09-26', '2026-10-04')).not.toBeNull();
     expect(recordDateError('2026-10-05', '2026-10-04')).not.toBeNull();
   });
+});
+
+describe('teto por conta (DEC-123)', () => {
+  function seedMany(count: number) {
+    const actionDate = dateOnlyToDate(today());
+    return prisma.behavioralAction.createMany({
+      data: Array.from({ length: count }, () => ({
+        userId: patientId,
+        actionDate,
+        name: 'Ação fictícia',
+        category: 'PRAZER' as const,
+        expectation: 3,
+        status: 'PLANEJADA' as const,
+      })),
+    });
+  }
+
+  it(
+    `até ${ACTIONS_MAX} ações por conta; a seguinte é 409 ACTIONS_LIMIT`,
+    { timeout: 60_000 },
+    async () => {
+      await seedMany(ACTIONS_MAX - 1);
+      const agent = await loginAgent();
+
+      const atLimit = await agent.post('/actions').send(planned());
+      const overLimit = await agent.post('/actions').send(planned());
+
+      expect(atLimit.status).toBe(201);
+      expect(overLimit.status).toBe(409);
+      expect(overLimit.body.error.code).toBe('ACTIONS_LIMIT');
+      expect(await prisma.behavioralAction.count({ where: { userId: patientId } })).toBe(ACTIONS_MAX);
+      await prisma.behavioralAction.deleteMany({ where: { userId: patientId } });
+    },
+  );
+
+  it(
+    `pedidos ao mesmo tempo não passam do teto de ${ACTIONS_MAX} ações`,
+    { timeout: 60_000 },
+    async () => {
+      await seedMany(ACTIONS_MAX - 1);
+      const agent = await loginAgent();
+
+      const results = await Promise.all(Array.from({ length: 5 }, () => agent.post('/actions').send(planned())));
+
+      expect(results.filter((res) => res.status === 201)).toHaveLength(1);
+      expect(results.filter((res) => res.status === 409)).toHaveLength(4);
+      expect(await prisma.behavioralAction.count({ where: { userId: patientId } })).toBe(ACTIONS_MAX);
+      await prisma.behavioralAction.deleteMany({ where: { userId: patientId } });
+    },
+  );
 });

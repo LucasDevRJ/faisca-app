@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createRecordWriteLimit } from '../../middlewares/rate-limit.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePatient } from '../../middlewares/require-patient.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
@@ -12,17 +13,18 @@ export function createPlansRoutes() {
   const router = Router();
   // Sem o aceite de uma versão do aviso que cite o Meus Planos, só esta área fica bloqueada.
   const patient = [requireAuth, requirePatient, requirePrivacy('plans')];
+  const writeLimit = createRecordWriteLimit();
 
   router.get('/plans', ...patient, controller.list);
-  router.post('/plans', ...patient, controller.create);
+  router.post('/plans', ...patient, writeLimit, controller.create);
   router.get('/plans/:id', ...patient, controller.get);
-  router.patch('/plans/:id', ...patient, controller.update);
-  router.delete('/plans/:id', ...patient, controller.remove);
+  router.patch('/plans/:id', ...patient, writeLimit, controller.update);
+  router.delete('/plans/:id', ...patient, writeLimit, controller.remove);
   router.get('/plans/:id/entries', ...patient, controller.listEntries);
-  router.post('/plans/:id/entries', ...patient, controller.createEntry);
+  router.post('/plans/:id/entries', ...patient, writeLimit, controller.createEntry);
   router.get('/plan-entries/:id', ...patient, controller.getEntry);
-  router.patch('/plan-entries/:id', ...patient, controller.updateEntry);
-  router.delete('/plan-entries/:id', ...patient, controller.removeEntry);
+  router.patch('/plan-entries/:id', ...patient, writeLimit, controller.updateEntry);
+  router.delete('/plan-entries/:id', ...patient, writeLimit, controller.removeEntry);
 
   return router;
 }

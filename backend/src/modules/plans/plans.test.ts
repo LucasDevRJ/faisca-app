@@ -5,7 +5,7 @@ import { addDays, dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, createTestLink, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
-import { ANSWER_MAX, PLANS_MAX, QUESTION_MAX, QUESTIONS_MAX, TITLE_MAX } from './plans.schema.js';
+import { ANSWER_MAX, PLAN_ENTRIES_MAX, PLANS_MAX, QUESTION_MAX, QUESTIONS_MAX, TITLE_MAX } from './plans.schema.js';
 
 // Meus Planos, 1ª entrega (SPEC, "Meus Planos"; DEC-094). Dados fictícios (regra 5).
 const PLANS_VERSION = '2026-11.2';
@@ -396,6 +396,66 @@ describe('registros', () => {
     await expect(prisma.planEntry.create({ data: { ...data, answers: ['Só uma'] } })).rejects.toThrow();
     await expect(prisma.planEntry.create({ data: { ...data, answers: Array(6).fill('') } })).rejects.toThrow();
   });
+
+  it(
+    `até ${PLAN_ENTRIES_MAX} registros em planos por conta; o seguinte é 409 PLAN_ENTRIES_LIMIT (DEC-123)`,
+    { timeout: 60_000 },
+    async () => {
+      const planA = await seedPlan(patientId);
+      const planB = await seedPlan(patientId);
+      const entryDate = dateOnlyToDate(addDays(today(), -1));
+      await prisma.planEntry.createMany({
+        data: Array.from({ length: PLAN_ENTRIES_MAX - 1 }, () => ({
+          planId: planA.id,
+          userId: patientId,
+          entryDate,
+          questions: QUESTIONS,
+          answers: answers(),
+        })),
+      });
+      const patient = await loginAgent(PATIENT);
+
+      const atLimit = await patient.post(`/plans/${planB.id}/entries`).send(entryBody());
+      const overLimit = await patient.post(`/plans/${planB.id}/entries`).send(entryBody());
+
+      expect(atLimit.status).toBe(201);
+      expect(overLimit.status).toBe(409);
+      expect(overLimit.body.error.code).toBe('PLAN_ENTRIES_LIMIT');
+      expect(await prisma.planEntry.count({ where: { userId: patientId } })).toBe(PLAN_ENTRIES_MAX);
+      await prisma.planEntry.deleteMany({ where: { userId: patientId } });
+    },
+  );
+
+  it(
+    `pedidos ao mesmo tempo em planos diferentes não passam do teto de ${PLAN_ENTRIES_MAX} registros`,
+    { timeout: 60_000 },
+    async () => {
+      const planA = await seedPlan(patientId);
+      const planB = await seedPlan(patientId);
+      const entryDate = dateOnlyToDate(addDays(today(), -1));
+      await prisma.planEntry.createMany({
+        data: Array.from({ length: PLAN_ENTRIES_MAX - 1 }, () => ({
+          planId: planA.id,
+          userId: patientId,
+          entryDate,
+          questions: QUESTIONS,
+          answers: answers(),
+        })),
+      });
+      const patient = await loginAgent(PATIENT);
+
+      const results = await Promise.all(
+        [planA.id, planB.id, planA.id, planB.id, planA.id].map((id) =>
+          patient.post(`/plans/${id}/entries`).send(entryBody()),
+        ),
+      );
+
+      expect(results.filter((res) => res.status === 201)).toHaveLength(1);
+      expect(results.filter((res) => res.status === 409)).toHaveLength(4);
+      expect(await prisma.planEntry.count({ where: { userId: patientId } })).toBe(PLAN_ENTRIES_MAX);
+      await prisma.planEntry.deleteMany({ where: { userId: patientId } });
+    },
+  );
 });
 
 describe('visão e criação pela psicóloga (DEC-094, DEC-102)', () => {

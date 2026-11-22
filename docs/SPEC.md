@@ -83,6 +83,7 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - CONCLUIDA e NAO_REALIZADA só com data até hoje; PLANEJADA e PENDENTE aceitam qualquer data.
 - Nome da atividade com 1 a 100 caracteres; observação com até 5000 (DEC-067).
 - No mesmo dia, as atividades aparecem na ordem em que foram registradas.
+- Até **5000 atividades por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** nas rotas da área (DEC-123).
 
 ### Fotos (DEC-103, #197)
 - Até **10 fotos** por atividade, todas opcionais, com o mesmo tratamento das fotos da Ação: sem os
@@ -169,6 +170,7 @@ Registro da TCC, independente das atividades. O paciente alterna entre as abas *
   dá para adicionar depois. Depois de adicionada, fica fixa, como o resto do registro (**409**). A data em
   que ela entrou fica guardada e aparece para a terapeuta.
 - Pode haver vários registros no mesmo dia, na ordem em que foram feitos.
+- Até **5000 registros de pensamento por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - Termos clínicos suaves: "Registro de Pensamentos (RPD)", "pensamento automático".
 - Usar o RPD exige ter aceitado uma versão do aviso de privacidade que o cite (veja "Privacidade").
 
@@ -187,6 +189,7 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
 - Editar e excluir só até o fim do dia em que o registro foi feito; depois, **409**.
 - Pode haver vários episódios no mesmo dia: pela hora e, no fim, os sem hora, na ordem em que foram
   registrados.
+- Até **5000 episódios de tensão por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - A tela mostra, por semana, só os dias com episódio e, no fim, um **gráfico** da tensão e da vontade
   de vocalizar ao longo da semana, com os dias de consulta marcados.
 - Usar os episódios exige ter aceitado uma versão do aviso de privacidade que os cite.
@@ -232,6 +235,7 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
 - Uma ação planejada com o dia já passado continua pendente, sem prazo para contar como foi.
 - **Avaliada e não realizada são finais**: editar ou excluir retorna **409**. A planejada pode ser
   editada (mudar o dia segue a janela de planejar) e excluída.
+- Até **5000 ações por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - A meta é **uma de cada tipo por ciclo da consulta** (duas de cada no ciclo de 14 dias ou mais),
   mostrada de forma neutra, sem placar.
 - Usar a Ação exige ter aceitado uma versão do aviso de privacidade que a cite.
@@ -265,6 +269,7 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   tem texto. O registro guarda **uma cópia das perguntas** como estavam: mudar o plano depois não
   muda o sentido de um registro antigo.
 - Editar e excluir o registro só no dia em que foi feito; depois, **409**, como na Tensão.
+- Até **5000 registros em planos por conta** (somando todos os planos), com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - Na terapeuta: os planos (ativos e encerrados) e os registros, só leitura, exceto criar plano para
   a psicóloga nas condições acima. Nem a psicóloga nem a psiquiatra alteram planos existentes ou
   criam registros. Os **registros** entram no "Para ler" e têm o "Lido" (DEC-057); o plano em si, não.
@@ -419,11 +424,12 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
     da tensão e da vontade de vocalizar no período, com os dias de consulta marcados;
   - gráficos;
 - **Período**: a psicóloga abre no **ciclo da consulta** (seção "Ciclo da consulta"), o mesmo que o paciente vê, em todas as abas; dá para alternar para a semana e navegar entre ciclos ou semanas. O ciclo substitui o antigo destaque e o filtro "desde a última consulta" (DEC-050). Sem a agenda liberada, a semana. A **psiquiatra** vê por **meses** (1, 2 ou 3 até hoje, começando em 3), com setas para voltar no tempo (DEC-099).
-- **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão, Ação, o "Sobre mim" (DEC-081) ou registro do Meus Planos (DEC-094) como **lido**
+- **Lido** (DEC-057): a terapeuta marca cada Pensamento, Episódio de tensão, Ação, o "Sobre mim" (DEC-081), registro do Meus Planos (DEC-094) ou resposta de Tarefa (DEC-106) como **lido**
   (e desfaz), ou **todos da lista aberta** de uma vez. Nunca marca sozinho ao abrir. Um registro
-  que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada) volta
+  que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada, resposta de tarefa editada) volta
   a contar, como **atualizado**. A visão **Para ler** junta as áreas liberadas fora do ciclo, do mais
-  antigo ao mais novo, e a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
+  antigo ao mais novo, paginada na API em blocos de **50 registros por vez** com cursor (`nextCursor`),
+  mantendo os contadores (`counts`) sempre com o total geral de cada área (DEC-123); a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
   algo para ler no topo, e o total de todos ("12 registros para ler, de 2 pacientes"). As marcas são da
   terapeuta: o paciente não as vê, salvo o "Lido para o paciente" abaixo, e uma terapeuta nova começa
   sem nenhuma. Nas telas, o texto fala em **"para ler"** (DEC-058).

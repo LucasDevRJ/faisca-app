@@ -5,6 +5,7 @@ import { addDays, dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import { createConfirmedUser, resetDatabase } from '../../test/db.js';
 import { FakeMailer } from '../../test/fake-mailer.js';
+import { THOUGHT_RECORDS_MAX } from './thought-records.schema.js';
 import { isEditable } from './thought-records.service.js';
 
 // Registro de Pensamentos (SPEC, "Registro de Pensamentos"; DEC-039).
@@ -397,4 +398,55 @@ describe('isEditable', () => {
     expect(isEditable(createdAt, new Date('2026-10-02T02:59:00Z'))).toBe(true);
     expect(isEditable(createdAt, new Date('2026-10-02T03:00:00Z'))).toBe(false);
   });
+});
+
+describe('teto por conta (DEC-123)', () => {
+  function seedMany(count: number) {
+    const situationDate = dateOnlyToDate(today());
+    return prisma.thoughtRecord.createMany({
+      data: Array.from({ length: count }, () => ({
+        userId: patientId,
+        situationDate,
+        situation: 'Situação fictícia',
+        automaticThought: 'Pensamento fictício',
+        beliefLevel: 5,
+        behavior: 'Comportamento fictício',
+        consequence: 'Consequência fictícia',
+      })),
+    });
+  }
+
+  it(
+    `até ${THOUGHT_RECORDS_MAX} registros por conta; o seguinte é 409 THOUGHT_RECORDS_LIMIT`,
+    { timeout: 60_000 },
+    async () => {
+      await seedMany(THOUGHT_RECORDS_MAX - 1);
+      const agent = await loginAgent();
+
+      const atLimit = await agent.post('/thought-records').send(body());
+      const overLimit = await agent.post('/thought-records').send(body());
+
+      expect(atLimit.status).toBe(201);
+      expect(overLimit.status).toBe(409);
+      expect(overLimit.body.error.code).toBe('THOUGHT_RECORDS_LIMIT');
+      expect(await prisma.thoughtRecord.count({ where: { userId: patientId } })).toBe(THOUGHT_RECORDS_MAX);
+      await prisma.thoughtRecord.deleteMany({ where: { userId: patientId } });
+    },
+  );
+
+  it(
+    `pedidos ao mesmo tempo não passam do teto de ${THOUGHT_RECORDS_MAX} registros`,
+    { timeout: 60_000 },
+    async () => {
+      await seedMany(THOUGHT_RECORDS_MAX - 1);
+      const agent = await loginAgent();
+
+      const results = await Promise.all(Array.from({ length: 5 }, () => agent.post('/thought-records').send(body())));
+
+      expect(results.filter((res) => res.status === 201)).toHaveLength(1);
+      expect(results.filter((res) => res.status === 409)).toHaveLength(4);
+      expect(await prisma.thoughtRecord.count({ where: { userId: patientId } })).toBe(THOUGHT_RECORDS_MAX);
+      await prisma.thoughtRecord.deleteMany({ where: { userId: patientId } });
+    },
+  );
 });

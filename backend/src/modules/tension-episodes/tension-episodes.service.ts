@@ -11,10 +11,11 @@ import {
 } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import { lockRecordLinksForPatient, removeRecordLinks } from '../record-links/record-links.cleanup.js';
-import type {
-  CreateTensionEpisodeInput,
-  ListTensionEpisodesQuery,
-  UpdateTensionEpisodeInput,
+import {
+  TENSION_EPISODES_MAX,
+  type CreateTensionEpisodeInput,
+  type ListTensionEpisodesQuery,
+  type UpdateTensionEpisodeInput,
 } from './tension-episodes.schema.js';
 
 // Episódios de tensão (SPEC, "Episódios de tensão"; DEC-042).
@@ -139,6 +140,11 @@ export function createTensionEpisodesService() {
     assertNotFuture(episodeDate, episodeTime);
     const episode = await prisma.$transaction(async (tx) => {
       await lockRecordLinksForPatient(tx, userId);
+      // Trava a conta antes de contar (DEC-123): pedidos concorrentes não passam juntos do teto.
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
+      if ((await tx.tensionEpisode.count({ where: { userId } })) >= TENSION_EPISODES_MAX) {
+        throw new AppError(409, 'TENSION_EPISODES_LIMIT', 'Você chegou ao limite de episódios de tensão desta conta.');
+      }
       const repeatSource = repeatFromId
         ? await tx.tensionEpisode.findFirst({ where: { id: repeatFromId, userId }, select: { id: true } })
         : null;
@@ -147,9 +153,14 @@ export function createTensionEpisodesService() {
         ? await tx.recordLink.findFirst({ where: { userId, kind: 'REPETITION', targetType: 'TENSION_EPISODE', targetId: repeatSource.id }, select: { sourceId: true } })
         : null;
       const rootId = previous?.sourceId ?? repeatSource?.id;
-      const created = await tx.tensionEpisode.create({ data: {
-        ...rest, userId, episodeDate: dateOnlyToDate(episodeDate), episodeTime: timeColumn(episodeTime),
-      } });
+      const created = await tx.tensionEpisode.create({
+        data: {
+          ...rest,
+          userId,
+          episodeDate: dateOnlyToDate(episodeDate),
+          episodeTime: timeColumn(episodeTime),
+        },
+      });
       if (rootId) await tx.recordLink.create({ data: {
         userId, sourceType: 'TENSION_EPISODE', sourceId: rootId,
         targetType: 'TENSION_EPISODE', targetId: created.id, kind: 'REPETITION',

@@ -1,6 +1,7 @@
 import { createTasksService, taskForProfessional } from '../tasks/tasks.service.js';
 import { AppError } from '../../errors/app-error.js';
 import { Prisma, type SharedArea } from '../../generated/prisma/client.js';
+import { dateToDateOnly, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
 import type { AboutMeService, PublicAboutMe } from '../about-me/about-me.service.js';
 import type { ActionsService } from '../actions/actions.service.js';
@@ -9,7 +10,15 @@ import { actionForProfessional, thoughtForProfessional } from '../../lib/shared-
 import type { PlansService } from '../plans/plans.service.js';
 import type { TensionEpisodesService } from '../tension-episodes/tension-episodes.service.js';
 import type { ThoughtRecordsService } from '../thought-records/thought-records.service.js';
-import { READ_TYPES, type ReadMarkItem, type ReadType } from './read-marks.schema.js';
+import {
+  encodeUnreadCursor,
+  READ_TYPES,
+  UNREAD_PAGE_SIZE,
+  type ReadMarkItem,
+  type ReadType,
+  type UnreadCursor,
+  type UnreadQuery,
+} from './read-marks.schema.js';
 
 // Marcas de leitura da terapeuta (SPEC, "Visão da terapeuta"; DEC-057). É a única escrita da
 // terapeuta sobre os registros de um paciente (exceção da regra 1 do AGENTS.md), e nunca altera o
@@ -62,6 +71,98 @@ async function recordsOf(type: ReadType, patientId: string, ids?: string[]) {
   if (type === 'TASK') return prisma.homeworkTask.findMany({ where: { ...where, respondedAt: { not: null } }, select });
   if (type === 'PLAN_ENTRY') return prisma.planEntry.findMany({ where, select });
   return prisma.behavioralAction.findMany({ where, select });
+}
+
+type PendingDescriptor = UnreadCursor & { updatedAt: Date };
+
+// Ordem do "Para ler" (DEC-058, DEC-123): do dia mais antigo ao mais novo; no mesmo dia, pelo
+// instante do registro (ou da mudança, em Sobre mim e Tarefa), desempatando por tipo e id.
+export function compareUnreadCursor(a: UnreadCursor, b: UnreadCursor): number {
+  if (a.date !== b.date) return a.date.localeCompare(b.date);
+  if (a.sortAt !== b.sortAt) return a.sortAt.localeCompare(b.sortAt);
+  if (a.type !== b.type) return a.type.localeCompare(b.type);
+  return a.id.localeCompare(b.id);
+}
+
+// Só os metadados leves para contar e ordenar antes de carregar o texto completo da página.
+async function descriptorsOf(type: ReadType, patientId: string): Promise<PendingDescriptor[]> {
+  const where = { userId: patientId };
+  if (type === 'THOUGHT_RECORD') {
+    const rows = await prisma.thoughtRecord.findMany({
+      where,
+      select: { id: true, updatedAt: true, createdAt: true, situationDate: true },
+    });
+    return rows.map((r) => ({
+      type,
+      id: r.id,
+      updatedAt: r.updatedAt,
+      date: dateToDateOnly(r.situationDate),
+      sortAt: r.createdAt.toISOString(),
+    }));
+  }
+  if (type === 'TENSION_EPISODE') {
+    const rows = await prisma.tensionEpisode.findMany({
+      where,
+      select: { id: true, updatedAt: true, createdAt: true, episodeDate: true },
+    });
+    return rows.map((r) => ({
+      type,
+      id: r.id,
+      updatedAt: r.updatedAt,
+      date: dateToDateOnly(r.episodeDate),
+      sortAt: r.createdAt.toISOString(),
+    }));
+  }
+  if (type === 'ACTION') {
+    const rows = await prisma.behavioralAction.findMany({
+      where,
+      select: { id: true, updatedAt: true, createdAt: true, actionDate: true },
+    });
+    return rows.map((r) => ({
+      type,
+      id: r.id,
+      updatedAt: r.updatedAt,
+      date: dateToDateOnly(r.actionDate),
+      sortAt: r.createdAt.toISOString(),
+    }));
+  }
+  if (type === 'PLAN_ENTRY') {
+    const rows = await prisma.planEntry.findMany({
+      where,
+      select: { id: true, updatedAt: true, createdAt: true, entryDate: true },
+    });
+    return rows.map((r) => ({
+      type,
+      id: r.id,
+      updatedAt: r.updatedAt,
+      date: dateToDateOnly(r.entryDate),
+      sortAt: r.createdAt.toISOString(),
+    }));
+  }
+  if (type === 'ABOUT_ME') {
+    const rows = await prisma.patientAbout.findMany({
+      where,
+      select: { id: true, updatedAt: true },
+    });
+    return rows.map((r) => ({
+      type,
+      id: r.id,
+      updatedAt: r.updatedAt,
+      date: todayInAppZone(r.updatedAt),
+      sortAt: r.updatedAt.toISOString(),
+    }));
+  }
+  const rows = await prisma.homeworkTask.findMany({
+    where: { ...where, respondedAt: { not: null } },
+    select: { id: true, updatedAt: true, respondedAt: true },
+  });
+  return rows.map((r) => ({
+    type,
+    id: r.id,
+    updatedAt: r.updatedAt,
+    date: todayInAppZone(r.respondedAt ?? r.updatedAt),
+    sortAt: r.updatedAt.toISOString(),
+  }));
 }
 
 // Quando a terapeuta leu cada registro da área (só os que ela marcou).
@@ -245,27 +346,52 @@ export function createReadMarksService(
 
   // A visão "Não lidos": tudo o que ainda não foi lido ou mudou depois de lido, de qualquer data,
   // nas áreas que a terapeuta pode ver. Área sem o aceite do aviso, ou que o paciente não liberou
-  // para ela (DEC-097), vem como null.
-  async function unread(therapistId: string, patientId: string, privacyVersion: string | null, sharedAreas: SharedArea[]) {
+  // para ela (DEC-097), vem como null. Paginada com cursor de até UNREAD_PAGE_SIZE registros por vez,
+  // do mais antigo ao mais novo, mantendo o total geral de cada área em counts (DEC-123).
+  async function unread(
+    therapistId: string,
+    patientId: string,
+    privacyVersion: string | null,
+    sharedAreas: SharedArea[],
+    query: UnreadQuery = {},
+  ) {
     const covered = new Set(coveredTypes(privacyVersion, sharedAreas));
+    const pendingByType = new Map<ReadType, PendingDescriptor[]>();
 
-    async function pendingIds(type: ReadType) {
-      const records = await recordsOf(type, patientId);
+    for (const type of READ_TYPES) {
+      if (!covered.has(type)) continue;
+      const descriptors = await descriptorsOf(type, patientId);
       const readAt = await readAtByRecord(
         therapistId,
         type,
-        records.map((record) => record.id),
+        descriptors.map((record) => record.id),
       );
-      return records
-        .filter((record) => readStatusOf(readAt.get(record.id), record.updatedAt) !== 'LIDO')
-        .map((record) => record.id);
+      pendingByType.set(
+        type,
+        descriptors.filter((record) => readStatusOf(readAt.get(record.id), record.updatedAt) !== 'LIDO'),
+      );
+    }
+
+    const allPending = [...pendingByType.values()].flat().sort(compareUnreadCursor);
+    const afterCursor = query.cursor
+      ? allPending.filter((item) => compareUnreadCursor(item, query.cursor!) > 0)
+      : allPending;
+    const page = afterCursor.slice(0, UNREAD_PAGE_SIZE);
+    const last = page[page.length - 1];
+    const nextCursor =
+      afterCursor.length > UNREAD_PAGE_SIZE && last
+        ? encodeUnreadCursor({ date: last.date, sortAt: last.sortAt, type: last.type, id: last.id })
+        : null;
+
+    function pageIds(type: ReadType): string[] {
+      return page.filter((item) => item.type === type).map((item) => item.id);
     }
 
     const thought = covered.has('THOUGHT_RECORD')
       ? await withReadStatus(
           therapistId,
           'THOUGHT_RECORD',
-          (await thoughtRecords.listByIds(patientId, await pendingIds('THOUGHT_RECORD'))).map((record) =>
+          (await thoughtRecords.listByIds(patientId, pageIds('THOUGHT_RECORD'))).map((record) =>
             thoughtForProfessional(record, sharedAreas),
           ),
         )
@@ -274,14 +400,14 @@ export function createReadMarksService(
       ? await withReadStatus(
           therapistId,
           'TENSION_EPISODE',
-          await tensionEpisodes.listByIds(patientId, await pendingIds('TENSION_EPISODE')),
+          await tensionEpisodes.listByIds(patientId, pageIds('TENSION_EPISODE')),
         )
       : null;
     const action = covered.has('ACTION')
       ? await withReadStatus(
           therapistId,
           'ACTION',
-          (await actions.listByIds(patientId, await pendingIds('ACTION'))).map((action) =>
+          (await actions.listByIds(patientId, pageIds('ACTION'))).map((action) =>
             actionForProfessional(action, sharedAreas),
           ),
         )
@@ -290,36 +416,44 @@ export function createReadMarksService(
       ? await withReadStatus(
           therapistId,
           'PLAN_ENTRY',
-          await plans.listEntriesByIds(patientId, await pendingIds('PLAN_ENTRY')),
+          await plans.listEntriesByIds(patientId, pageIds('PLAN_ENTRY')),
         )
       : null;
-    // O "Sobre mim" é um só: entra se ainda não foi lido ou mudou depois de lido.
+    // O "Sobre mim" é um só: entra se ainda não foi lido ou mudou depois de lido e caiu nesta página.
     let about: (PublicAboutMe & ReadInfo)[] | null = null;
-    if (covered.has('ABOUT_ME') && (await pendingIds('ABOUT_ME')).length > 0) {
+    if (covered.has('ABOUT_ME') && pageIds('ABOUT_ME').length > 0) {
       const current = await aboutMe.get(patientId);
       about = current ? await withReadStatus(therapistId, 'ABOUT_ME', [current]) : [];
     }
 
+    const taskIds = pageIds('TASK');
     const tasks = covered.has('TASK')
-      ? await withReadStatus(therapistId, 'TASK', (await createTasksService().list(patientId, await pendingIds('TASK'))).map((task) => taskForProfessional(task, sharedAreas)))
+      ? taskIds.length > 0
+        ? await withReadStatus(
+            therapistId,
+            'TASK',
+            (await createTasksService().list(patientId, taskIds)).map((task) => taskForProfessional(task, sharedAreas)),
+          )
+        : []
       : null;
     return {
       tasks,
       thoughtRecords: thought,
       tensionEpisodes: tension,
       actions: action,
-      // null sem o aceite do aviso que cita o "Sobre mim"; [] quando já foi lido.
+      // null sem o aceite do aviso que cita o "Sobre mim"; [] quando já foi lido ou ficou noutra página.
       aboutMe: covered.has('ABOUT_ME') ? (about ?? []) : null,
       // Meus Planos (DEC-094): null sem o aceite da versão que o cita.
       planEntries,
       counts: {
-        tasks: tasks?.length ?? null,
-        thoughtRecords: thought?.length ?? null,
-        tensionEpisodes: tension?.length ?? null,
-        actions: action?.length ?? null,
-        aboutMe: covered.has('ABOUT_ME') ? (about?.length ?? 0) : null,
-        planEntries: planEntries?.length ?? null,
+        tasks: covered.has('TASK') ? (pendingByType.get('TASK')?.length ?? 0) : null,
+        thoughtRecords: covered.has('THOUGHT_RECORD') ? (pendingByType.get('THOUGHT_RECORD')?.length ?? 0) : null,
+        tensionEpisodes: covered.has('TENSION_EPISODE') ? (pendingByType.get('TENSION_EPISODE')?.length ?? 0) : null,
+        actions: covered.has('ACTION') ? (pendingByType.get('ACTION')?.length ?? 0) : null,
+        aboutMe: covered.has('ABOUT_ME') ? (pendingByType.get('ABOUT_ME')?.length ?? 0) : null,
+        planEntries: covered.has('PLAN_ENTRY') ? (pendingByType.get('PLAN_ENTRY')?.length ?? 0) : null,
       },
+      nextCursor,
     };
   }
 

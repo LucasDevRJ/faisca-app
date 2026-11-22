@@ -13,6 +13,7 @@ import { firstSessionAfter, hasStarted, scheduledSessionsFrom, type Session } fr
 import { lockRecordLinksForPatient, removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import {
   EMOTIONS,
+  THOUGHT_RECORDS_MAX,
   type AddAlternativeInput,
   type CreateThoughtRecordInput,
   type EmotionInput,
@@ -290,6 +291,11 @@ export function createThoughtRecordsService() {
     const { emotions, situationDate, repeatFromId, ...rest } = input;
     const record = await prisma.$transaction(async (tx) => {
       await lockRecordLinksForPatient(tx, userId);
+      // Trava a conta antes de contar (DEC-123): pedidos concorrentes não passam juntos do teto.
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR NO KEY UPDATE`;
+      if ((await tx.thoughtRecord.count({ where: { userId } })) >= THOUGHT_RECORDS_MAX) {
+        throw new AppError(409, 'THOUGHT_RECORDS_LIMIT', 'Você chegou ao limite de registros de pensamento desta conta.');
+      }
       const repeatSource = repeatFromId
         ? await tx.thoughtRecord.findFirst({ where: { id: repeatFromId, userId }, select: { id: true } })
         : null;
