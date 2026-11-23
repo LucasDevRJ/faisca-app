@@ -235,7 +235,10 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
   ações faz parte do acompanhamento.
 - Dá para registrar algo **já feito**, já avaliado, com o dia nos últimos 7 dias.
 - Uma ação planejada com o dia já passado continua pendente, sem prazo para contar como foi.
-- **Avaliada e não realizada são finais**: editar ou excluir retorna **409**. A planejada pode ser
+- **Avaliada:** a pessoa pode corrigir os campos e as notas até o fim do dia em que contou como foi,
+  no fuso de São Paulo (DEC-129). A correção atualiza o registro sem alterar a avaliação original
+  como referência de prazo. Após a meia-noite, corrigir retorna **409**.
+- Excluir uma ação avaliada ou mudar uma ação não realizada retorna **409**. A planejada pode ser
   editada (mudar o dia segue a janela de planejar) e excluída.
 - Até **5000 ações por conta**, com trava da conta ao conferir o teto, e limite de **30 escritas por minuto** (DEC-123).
 - A meta é **uma de cada tipo por ciclo da consulta** (duas de cada no ciclo de 14 dias ou mais),

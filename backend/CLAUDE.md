@@ -48,6 +48,8 @@
 - Transições de estado da atividade ficam centralizadas no service de atividades. Nenhum outro
   lugar altera `status`.
 - Estado final (CONCLUIDA, NAO_REALIZADA) → 409 em edição ou exclusão.
+- Na Ação, apenas o paciente dono pode corrigir uma AVALIADA no mesmo dia de `evaluatedAt`,
+  pelo endpoint próprio (DEC-129). A exclusão e as mudanças em NAO_REALIZADA seguem bloqueadas.
 
 ## Prisma e banco
 - Mudança de schema = migration nova via `prisma migrate dev` com `MIGRATION_DATABASE_URL`.
