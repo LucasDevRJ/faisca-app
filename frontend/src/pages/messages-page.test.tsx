@@ -138,4 +138,15 @@ describe('Mensagens privadas', () => {
     renderRoute('/conta');
     expect(await screen.findByRole('link', { name: 'Mensagens, há mensagem nova' })).toBeInTheDocument();
   });
+
+  it('em conversa longa aparece o atalho "Ir para escrever mensagem"', async () => {
+    const messages: Message[] = Array.from({ length: 5 }, (_, index) => ({
+      id: `00000000-0000-4000-8000-0000000000c${index}`, topic: 'LOGISTICA', body: `Mensagem fictícia ${index}`,
+      mine: index % 2 === 0, createdAt: `2026-11-22T18:0${5 - index}:00Z`,
+    }));
+    server.use(loggedIn, http.get('*/api/messages', () => HttpResponse.json([{ ...conversation, unread: false, lastMessage: null }])),
+      http.get(url, () => HttpResponse.json({ messages, next: null })));
+    renderRoute(`/mensagens/${linkId}`);
+    expect(await screen.findByRole('button', { name: 'Ir para escrever mensagem' })).toBeInTheDocument();
+  });
 });

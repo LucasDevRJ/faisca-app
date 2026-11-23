@@ -8,7 +8,7 @@ import { useLogout, useSession } from '../features/auth/use-session';
 import { fetchUnread } from '../features/messages/messages-api';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-2 font-medium ${isActive ? 'bg-surface text-primary-text shadow-soft' : 'text-muted hover:text-text'}`;
+  `rounded-md px-2 py-2 font-medium sm:px-3 ${isActive ? 'bg-surface text-primary-text shadow-soft' : 'text-muted hover:text-text'}`;
 
 // Moldura das telas de quem entrou: marca e sair no topo, alternância de perfil e tema no rodapé.
 export function AppLayout() {
@@ -72,7 +72,8 @@ export function AppLayout() {
           <img src="/icon.svg" alt="" className="size-10" />
           <span className="font-heading text-2xl font-bold">Faísca</span>
         </Link>
-        <div className="ml-auto flex items-center gap-1">
+        {/* Em 320 px, com o selo de mensagem nova, os quatro itens ainda cabem numa linha (revisor-telas). */}
+        <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
           <NavLink to="/mensagens" className={(state) => `inline-flex min-h-11 items-center gap-1.5 ${navLinkClass(state)}`}>
             Mensagens
             {hasUnread && <>
@@ -88,6 +89,7 @@ export function AppLayout() {
           </NavLink>
           <Button
             variant="ghost"
+            className="px-2! sm:px-5!"
             disabled={logout.isPending}
             onClick={() => logout.mutate(undefined, { onSettled: () => navigate('/entrar', { replace: true }) })}
           >
