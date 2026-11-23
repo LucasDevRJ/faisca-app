@@ -27,6 +27,10 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // Versão 2026-11.9 (DEC-114, DEC-115): entram os Remédios e o que sinto, com novo aceite.
 // Versão 2026-11.10 (DEC-117, DEC-118): a marca de leitura pode aparecer para o paciente, se ele pedir
 // e a profissional ativar, com novo aceite. Ela deixa de ser "só dela" nesse caso, como prometia a DEC-058.
+// Versão 2026-11.11 (DEC-125): entram as Mensagens privadas, com novo aceite.
+// Versão 2026-11.12 (DEC-127, DEC-128): as Mensagens guardam também até quando cada pessoa viu a
+// conversa e o registro apontado no assunto "Sobre um registro". Sem área nova: pede o aceite numa
+// faixa, sem bloquear nada.
 // Exceção à regra acima (DEC-055): o item do RPD passou a citar a explicação alternativa e o "como
 // me sinto agora" sem versão nova, porque a finalidade é a mesma do RPD já aceito. A mudança foi
 // contada a todos pelo card de Novidades. O mesmo vale para a marca de leitura da terapeuta
@@ -38,7 +42,7 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
 // e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
 // "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
-const VERSION_LABEL = 'versão 17, de novembro de 2026';
+const VERSION_LABEL = 'versão 19, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -155,7 +159,9 @@ export function PrivacyPage() {
             </li>
             <li>Seus vínculos com terapeutas.</li>
             <li>
-              Nas Mensagens: o texto, o assunto, quem enviou e a hora de envio. Só as duas pessoas do vínculo ativo
+              Nas Mensagens: o texto, o assunto, quem enviou e a hora de envio, até quando cada pessoa viu a conversa
+              (só para mostrar a ela que chegou mensagem nova; a outra pessoa nunca vê) e, no assunto "Sobre um
+              registro", qual registro seu foi apontado (só a referência, não uma cópia). Só as duas pessoas do vínculo ativo
               podem acessar a conversa, após aceitarem este aviso. As mensagens podem conter dados de saúde.
               O texto, o assunto e o nome de quem enviou ficam fora dos avisos e dos registros técnicos.
               Os avisos por e-mail e no aparelho começam ligados e podem ser desligados em Conta.
