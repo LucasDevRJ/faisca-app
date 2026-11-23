@@ -183,8 +183,14 @@ describe('Mensagens privadas', () => {
     // Só os tipos liberados para a profissional aparecem.
     await user.click(await screen.findByRole('radio', { name: /Achei que ia dar tudo errado/ }));
     expect(screen.queryByRole('radio', { name: /Atividade de área fechada/ })).not.toBeInTheDocument();
+    // A busca do seletor não dispara o envio da mensagem (revisor-telas).
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar no texto' }), 'nada{Enter}');
+    expect(screen.queryByText('Escreva uma mensagem antes de enviar.')).not.toBeInTheDocument();
+    expect(sent).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Limpar busca' }));
+    await user.click(await screen.findByRole('radio', { name: /Achei que ia dar tudo errado/ }));
     await user.click(screen.getByRole('button', { name: 'Escolher' }));
-    expect(screen.getByRole('button', { name: 'Trocar registro' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trocar registro' })).toHaveFocus();
 
     await user.type(screen.getByRole('textbox', { name: 'Mensagem' }), 'Dúvida fictícia sobre esse registro');
     await user.click(screen.getByRole('button', { name: 'Enviar mensagem' }));

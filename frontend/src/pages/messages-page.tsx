@@ -102,9 +102,19 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
   const [replyTopic, setReplyTopic] = useState<MessageTopic | null>(null);
   // "Sobre um registro" (DEC-128): o registro escolhido para uma mensagem nova.
   const [pickedRecord, setPickedRecord] = useState<RecordSummary | null>(null);
+  // Ao escolher, o foco vai para "Trocar registro"; ao cancelar, para o assunto (o seletor some).
+  const topicSelect = useRef<HTMLSelectElement>(null);
+  const changeRecord = useRef<HTMLButtonElement>(null);
+  const focusNext = useRef<'change' | 'topic' | null>(null);
+  useEffect(() => {
+    if (focusNext.current === 'change') changeRecord.current?.focus();
+    // Sem o seletor de assunto na tela (voltou ao assunto anterior), o foco vai para a mensagem.
+    if (focusNext.current === 'topic') (topicSelect.current ?? composer.current?.querySelector('textarea'))?.focus();
+    focusNext.current = null;
+  }, [pickedRecord, newTopic]);
   const [fieldError, setFieldError] = useState('');
   const exportRequest = useRef<AbortController | null>(null);
-  const composer = useRef<HTMLFormElement>(null);
+  const composer = useRef<HTMLDivElement>(null);
   const cache = useQueryClient();
   const id = conversation.id;
   const queryKey = ['messages', userId, 'thread', id];
@@ -231,10 +241,12 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
               </li>
             ))}
           </ol>
-          <form ref={composer} className="flex flex-col gap-3" onSubmit={submit} noValidate>
+          {/* O assunto e o seletor de registro ficam fora do formulário da mensagem: o seletor tem a
+              própria busca, e um formulário dentro do outro dispararia o envio (revisor-telas). */}
+          <div ref={composer} className="flex flex-col gap-3">
             {previousTopic && (
               <div className="flex flex-wrap items-center gap-x-2">
-                {!choosingTopic && <p className="text-muted">Respondendo sobre <strong>{messageTopics[topic]}</strong></p>}
+                {!choosingTopic && <p className="text-muted">Respondendo sobre <strong>{topic === 'REGISTRO' ? 'o registro' : messageTopics[topic]}</strong></p>}
                 {!choosingTopic && topic === 'REGISTRO' && latestRecord && <RecordCard record={latestRecord} patientId={conversation.patientId} />}
                 <Button variant="ghost" disabled={send.isPending} aria-expanded={choosingTopic}
                   onClick={() => setNewTopic(choosingTopic ? null : topic)}>
@@ -245,7 +257,7 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
             {choosingTopic && (
               <label className="flex flex-col gap-1.5 font-medium">
                 Assunto
-                <select className={`${fieldClasses} min-h-11`} value={topic} disabled={send.isPending}
+                <select ref={topicSelect} className={`${fieldClasses} min-h-11`} value={topic} disabled={send.isPending}
                   onChange={(event) => {
                     const value = event.target.value;
                     setNewTopic(value === 'DUVIDA' || value === 'REGISTRO' ? value : 'LOGISTICA');
@@ -265,17 +277,18 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
                 {pickedRecord
                   ? <div className="flex flex-wrap items-center gap-2">
                     <RecordCard record={pickedRecord} />
-                    <Button variant="ghost" disabled={send.isPending} onClick={() => setPickedRecord(null)}>Trocar registro</Button>
+                    <Button ref={changeRecord} variant="ghost" disabled={send.isPending} onClick={() => setPickedRecord(null)}>Trocar registro</Button>
                   </div>
-                  : <section aria-label="Qual registro?" className="flex flex-col gap-2">
-                    <h3 className="font-medium">Qual registro?</h3>
+                  : <section aria-labelledby={`${id}-qual-registro`} className="flex flex-col gap-2">
+                    <h3 id={`${id}-qual-registro`} className="font-medium">Qual registro?</h3>
                     <RecordLinkPicker linkedKeys={NO_KEYS} busy={send.isPending} allowedTypes={conversation.recordTypes}
-                      legend="Qual registro?" confirmLabel="Escolher"
-                      onLink={(record) => setPickedRecord(record)}
-                      onCancel={() => setNewTopic(previousTopic ?? 'LOGISTICA')} />
+                      legend="Registros disponíveis" confirmLabel="Escolher"
+                      onLink={(record) => { focusNext.current = 'change'; setPickedRecord(record); }}
+                      onCancel={() => { focusNext.current = 'topic'; setNewTopic(previousTopic ?? 'LOGISTICA'); }} />
                   </section>}
               </div>
             )}
+          <form className="flex flex-col gap-3" onSubmit={submit} noValidate>
             <TextAreaField label="Mensagem" value={body} limit={MESSAGE_LIMIT} error={fieldError}
               disabled={send.isPending} onChange={(event) => {
                 const value = event.target.value;
@@ -287,6 +300,7 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
             <p role="status">{send.isSuccess ? 'Mensagem enviada.' : ''}</p>
             <Button type="submit" disabled={send.isPending} className="self-start">Enviar mensagem</Button>
           </form>
+          </div>
           {canDownload && <Button variant="secondary" disabled={download.isPending}
             onClick={() => download.mutate()} className="self-start">Baixar cópia da conversa</Button>}
           {download.isError && <Alert tone="attention">{getApiError(download.error).message}</Alert>}
