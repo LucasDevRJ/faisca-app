@@ -187,8 +187,8 @@ export function PrivacyPage() {
             </li>
             <li>
               No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro, a paleta de cores e os
-              ajustes de leitura confortável, de menos movimento e a seleção de atalhos do início. A seleção de
-              atalhos fica neste navegador, separada por conta, sem o conteúdo dos registros.
+              ajustes de leitura confortável, de menos movimento e as preferências de atalhos e cartões do início.
+              Essas escolhas do início ficam neste navegador, separadas por conta, sem o conteúdo dos registros.
             </li>
             <li>
               Se você baixar o arquivo da agenda para o calendário do celular, ele leva só o dia e a hora de cada

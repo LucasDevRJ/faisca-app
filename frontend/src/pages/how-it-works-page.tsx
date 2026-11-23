@@ -118,7 +118,8 @@ export function HowItWorksPage() {
         </p>
         <p>
           Em <strong>Conta → Personalizar início</strong>, quem usa o perfil de paciente pode fixar até três atalhos
-          em Meus registros. Os atalhos ficam salvos neste navegador.
+          em Meus registros. Em <strong>Cartões do início</strong>, pode escolher quais cartões aparecem e em
+          que ordem, além de começar com o gráfico recolhido. Essas escolhas ficam salvas neste navegador.
         </p>
       </Section>
 

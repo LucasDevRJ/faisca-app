@@ -62,6 +62,9 @@ Na prática clínica tradicional:
 
 - **Meus atalhos:** em Conta → Personalizar início, o paciente pode fixar até três atalhos
   em Meus registros. A escolha fica neste navegador, separada por conta.
+- **Cartões do início:** em Conta, o paciente pode ordenar ou esconder Avisos, Consultas e Sono e
+  humor de hoje, e começar Meus registros com o gráfico de atividades recolhido. Pode restaurar
+  o padrão. A organização fica neste navegador, separada por conta.
 
 - **Atividades (Registro de Ativação):**
   - Planejar atividades para os dias da semana/ciclo (`PLANEJADA`), registrar quanta **vontade antes** tem de fazer de 0 a 10 (`PENDENTE`) e, a partir do dia da atividade, contar como foi (`CONCLUIDA`) dando notas de 0 a 10 para **prazer** e **sensação de realização**, além de uma observação opcional (até 5.000 caracteres).

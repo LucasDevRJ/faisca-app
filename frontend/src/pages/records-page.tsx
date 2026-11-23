@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { HomeShortcuts } from '../features/home-shortcuts/home-shortcuts';
+import { readHomeLayout } from '../features/home-layout/home-layout-storage';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { useSession } from '../features/auth/use-session';
@@ -41,6 +42,12 @@ export function RecordsPage() {
   const today = todayInAppZone();
   const { period, currentMonday, showCycle, showWeek } = usePeriod(cycleQuery, today);
   const firstName = user?.name.split(' ')[0];
+  const layout = readHomeLayout(user?.id);
+  const homeCards = {
+    notices: <NoticesCard key="notices" />,
+    appointments: <AppointmentsCard key="appointments" today={today} />,
+    sleep: <TodayCheckInCard key="sleep" today={today} />,
+  };
 
   return (
     <>
@@ -56,17 +63,14 @@ export function RecordsPage() {
 
       <NewLinkNotice />
 
-      <NoticesCard />
-
-      <AppointmentsCard today={today} />
-
-      <TodayCheckInCard today={today} />
+      {layout.order.filter((card) => !layout.hidden.includes(card)).map((card) => homeCards[card])}
 
       {period ? (
         <PeriodRecords
           period={period}
           today={today}
           currentMonday={currentMonday}
+          collapseChart={layout.collapseChart}
           onCycle={showCycle}
           onWeek={showWeek}
         />
@@ -83,11 +87,12 @@ type PeriodRecordsProps = {
   period: Period;
   today: string;
   currentMonday: string;
+  collapseChart: boolean;
   onCycle: (date: string | null) => void;
   onWeek: (monday: string) => void;
 };
 
-function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: PeriodRecordsProps) {
+function PeriodRecords({ period, today, currentMonday, collapseChart, onCycle, onWeek }: PeriodRecordsProps) {
   const [dialog, setDialog] = useState<OpenDialog>(null);
   const [notice, setNotice] = useState<string | null>(null);
   // Atividade que a pessoa acabou de concluir: o cartão dela ganha o retorno calmo (issue #93).
@@ -174,7 +179,12 @@ function PeriodRecords({ period, today, currentMonday, onCycle, onWeek }: Period
               </p>
             )}
 
-            <WeekChart activities={activities} period={inCycle ? 'no ciclo' : 'na semana'} />
+            {collapseChart ? (
+              <details className="rounded-lg border border-border bg-surface p-3">
+                <summary className="min-h-11 cursor-pointer py-2 font-medium text-primary-text">Gráfico de atividades</summary>
+                <WeekChart activities={activities} period={inCycle ? 'no ciclo' : 'na semana'} />
+              </details>
+            ) : <WeekChart activities={activities} period={inCycle ? 'no ciclo' : 'na semana'} />}
 
             <ol className="flex flex-col gap-2 sm:gap-6">
               {days.map((day) => {

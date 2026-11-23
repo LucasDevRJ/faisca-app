@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { HomeShortcutSettings } from '../features/home-shortcuts/home-shortcuts';
+import { HomeLayoutSettings } from '../features/home-layout/home-layout';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { buttonClasses } from '../components/ui/button-styles';
@@ -59,6 +60,7 @@ export function AccountPage() {
 
       <ProfileSection />
       {user.profiles.patient && <HomeShortcutSettings key={user.id} userId={user.id} />}
+      {user.profiles.patient && <HomeLayoutSettings key={`layout:${user.id}`} userId={user.id} />}
 
       <AccessibilitySection />
 

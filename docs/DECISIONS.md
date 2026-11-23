@@ -2965,6 +2965,14 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a preferência não sincroniza entre aparelhos. Os atalhos usam as
   telas existentes e seus controles de acesso.
 
+## DEC-131 — Organização dos cartões do início (#273)
+
+- **Decisão:** o paciente pode mostrar, esconder e ordenar Avisos, Consultas e Sono e humor de hoje
+  em Conta. Também pode iniciar Meus registros com o gráfico de atividades recolhido e restaurar
+  a organização padrão. Avisos de vínculo, atalhos e a lista de registros ficam em seus próprios lugares.
+- **Motivo:** deixar o início mais fácil de consultar conforme a rotina de cada pessoa.
+- **Limite conhecido:** a preferência é local ao navegador e separada por conta, como na DEC-130.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
