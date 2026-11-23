@@ -50,6 +50,66 @@ describe('/conta: preferências', () => {
   });
 });
 
+describe('/conta: compartilhar o Faísca', () => {
+  const guideUrl = 'https://minhafaisca.com.br/como-funciona';
+
+  it.each([true, false])('envia só a mensagem e o link público pelo menu do aparelho (perfil de paciente: %s)', async (patient) => {
+    const user = userEvent.setup();
+    const share = vi.fn().mockResolvedValue(undefined);
+    const userProfile = { ...fakeUser, profiles: { patient, therapist: !patient } };
+    server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: userProfile })));
+    const originalShare = Object.getOwnPropertyDescriptor(navigator, 'share');
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+
+    try {
+      renderRoute(`/conta?identificador=${userProfile.id}`);
+      const section = await screen.findByRole('region', { name: 'Compartilhar o Faísca' });
+      await user.click(within(section).getByRole('button', { name: 'Compartilhar' }));
+
+      expect(share).toHaveBeenCalledExactlyOnceWith({
+        title: 'Conheça o Faísca',
+        text: expect.stringContaining('registrar pensamentos, emoções e atividades'),
+        url: guideUrl,
+      });
+      const sent = JSON.stringify(share.mock.calls[0]);
+      for (const value of [userProfile.id, userProfile.name, userProfile.email]) {
+        expect(sent).not.toContain(value);
+      }
+    } finally {
+      if (originalShare) Object.defineProperty(navigator, 'share', originalShare);
+      else Reflect.deleteProperty(navigator, 'share');
+    }
+  });
+
+  it('copia a mensagem e o link mesmo sem o menu do aparelho', async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    renderRoute('/conta');
+
+    const section = await screen.findByRole('region', { name: 'Compartilhar o Faísca' });
+    expect(within(section).queryByRole('button', { name: 'Compartilhar' })).not.toBeInTheDocument();
+    await user.click(within(section).getByRole('button', { name: 'Copiar convite' }));
+
+    expect(writeText).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(`\n\n${guideUrl}`));
+    expect(writeText.mock.lastCall?.[0]).not.toContain(fakeUser.email);
+    expect(within(section).getByRole('status')).toHaveTextContent('Convite copiado.');
+  });
+
+  it('oferece seleção manual se o navegador bloquear a cópia', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new DOMException('Bloqueado', 'NotAllowedError'));
+    renderRoute('/conta');
+
+    const section = await screen.findByRole('region', { name: 'Compartilhar o Faísca' });
+    await user.click(within(section).getByRole('button', { name: 'Copiar convite' }));
+
+    const preview = within(section).getByRole('textbox', { name: 'Mensagem do convite' });
+    expect(preview).toHaveAttribute('readonly');
+    expect((preview as HTMLTextAreaElement).value).toContain(guideUrl);
+    expect(within(section).getByRole('status')).toHaveTextContent('Selecione e copie o texto no campo abaixo.');
+  });
+});
+
 describe('/conta: quem me acompanha', () => {
   it('mostra o guia Como funciona na Conta e no rodapé', async () => {
     renderRoute('/conta');

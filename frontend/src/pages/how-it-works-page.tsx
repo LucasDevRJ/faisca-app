@@ -293,6 +293,10 @@ export function HowItWorksPage() {
 
       <Section id="perguntas" title="Perguntas frequentes">
         <details className="border-t border-border pt-3">
+          <summary className="min-h-11 cursor-pointer content-center font-semibold">Como posso convidar alguém a conhecer o Faísca?</summary>
+          <p className="mt-2 text-muted">Em Conta, procure <strong>Compartilhar o Faísca</strong>. Envie o convite pelo menu do aparelho ou copie a mensagem e o link para colar onde preferir. O convite não inclui dados da sua conta nem dos seus registros.</p>
+        </details>
+        <details className="border-t border-border pt-3">
           <summary className="min-h-11 cursor-pointer content-center font-semibold">A profissional vê meus registros assim que eu salvo?</summary>
           <p className="mt-2 text-muted">Ela pode consultar os registros ao abrir o Faísca, se o vínculo estiver ativo e você tiver liberado a área. O app não envia o texto de cada registro por aviso.</p>
         </details>

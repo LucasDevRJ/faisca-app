@@ -640,6 +640,14 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Links para âncoras levam o foco à seção correspondente, para navegação por teclado e leitores de
   tela.
 
+## Compartilhar o Faísca (DEC-134)
+- Em Conta, pacientes e profissionais podem enviar um convite para conhecer o Faísca. O botão
+  **Compartilhar** abre o menu do aparelho quando disponível. **Copiar convite** copia a mensagem e
+  o link, com seleção manual se a cópia automática estiver indisponível.
+- A mensagem explica como os registros podem apoiar as conversas na terapia. O link público leva
+  a `https://minhafaisca.com.br/como-funciona`. Mensagem e link são fixos, sem dados da conta,
+  registros, código de indicação ou rastreamento individual.
+
 ## Tom e interface
 - Interface calma e acolhedora, sem aparência clínica, com modo claro e escuro. Exceção: o RPD usa termos clínicos suaves (DEC-039).
 - Textos acolhedores ("Conta como foi?") por padrão, ou literais e objetivos com **Linguagem direta** ligada ("Avaliar atividade", DEC-087); nos dois modos, sem gamificação nem mensagens que gerem culpa.
