@@ -3,6 +3,7 @@ import { assertPhotoBody, sendPhoto } from '../../lib/photos.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import {
   actionIdSchema,
+  correctActionSchema,
   createActionSchema,
   evaluateActionSchema,
   listActionsQuerySchema,
@@ -46,6 +47,11 @@ export function createActionsController(service: ActionsService) {
     res.status(200).json({ action: await service.evaluate(userId, id, evaluateActionSchema.parse(req.body)) });
   };
 
+  const correct: RequestHandler = async (req, res) => {
+    const { userId, id } = owner(req);
+    res.status(200).json({ action: await service.correct(userId, id, correctActionSchema.parse(req.body)) });
+  };
+
   const notDone: RequestHandler = async (req, res) => {
     const { userId, id } = owner(req);
     res.status(200).json({ action: await service.notDone(userId, id, notDoneActionSchema.parse(req.body)) });
@@ -84,5 +90,5 @@ export function createActionsController(service: ActionsService) {
     sendPhoto(res, await service.photoImage(patientId, actionId, photoId, size));
   };
 
-  return { list, get, create, update, evaluate, notDone, remove, addPhoto, removePhoto, photo, therapistPhoto };
+  return { list, get, create, update, evaluate, correct, notDone, remove, addPhoto, removePhoto, photo, therapistPhoto };
 }

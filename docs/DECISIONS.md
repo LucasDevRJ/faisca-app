@@ -2901,6 +2901,17 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   o plano sozinho; "Sobre mim" não entra, porque não é ligável. Se os textos forem criptografados no
   banco (#138), a busca precisa ser revista.
 
+## DEC-129 — Corrigir uma Ação no dia da avaliação (#233)
+
+- **Decisão:** a pessoa pode corrigir a própria Ação avaliada até a meia-noite do dia de
+  `evaluatedAt`, no fuso America/Sao_Paulo. A data da Ação pode ser mantida ou corrigida dentro
+  da janela usada para registrar uma ação já feita. A nova rota `PATCH /actions/:id/evaluation`
+  preserva estado, data da avaliação e prazo das fotos. Exclusão continua bloqueada, assim como
+  a edição de uma Ação não realizada. A profissional só lê. Exceção de edição à DEC-051.
+- **Motivo:** permitir corrigir um toque acidental ou um detalhe percebido depois de avaliar.
+- **Limite conhecido:** a correção atualiza `updatedAt` e segue a indicação de registro atualizado
+  da DEC-057. A janela curta é suficiente nesta etapa e não há cópia do conteúdo anterior.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

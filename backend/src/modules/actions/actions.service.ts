@@ -1,6 +1,6 @@
 import { AppError } from '../../errors/app-error.js';
 import type { BehavioralAction, Prisma } from '../../generated/prisma/client.js';
-import { addDays, dateOnlyToDate, dateToDateOnly, todayInAppZone } from '../../lib/dates.js';
+import { addDays, dateOnlyToDate, dateToDateOnly, startOfDayInAppZone, todayInAppZone } from '../../lib/dates.js';
 import {
   accountPhotoLimit,
   countAccountPhotos,
@@ -11,6 +11,7 @@ import {
   processPhoto,
 } from '../../lib/photos.js';
 import { prisma } from '../../lib/prisma.js';
+import { logger } from '../../lib/logger.js';
 import { removeRecordLinks } from '../record-links/record-links.cleanup.js';
 import { loadAgenda } from '../appointments/appointments.service.js';
 import { scheduledSessionsFrom, type Session } from '../appointments/sessions.js';
@@ -23,6 +24,7 @@ import {
 } from '../thought-records/thought-records.service.js';
 import {
   ACTIONS_MAX,
+  type CorrectActionInput,
   type CreateActionInput,
   type EvaluateActionInput,
   type ListActionsQuery,
@@ -52,6 +54,7 @@ export type PublicAction = {
   photosDeadline: AlternativeDeadline | null;
   // Dá para adicionar ou remover fotos agora: avaliada e antes do prazo (sem prazo, sempre).
   photosOpen: boolean;
+  evaluationEditableUntil: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -70,6 +73,11 @@ const withPhotos = { photos: { select: { id: true, createdAt: true }, orderBy: {
 function photosBasis(action: BehavioralAction): Date | null {
   if (action.status !== 'AVALIADA') return null;
   return action.evaluatedAt ?? action.updatedAt;
+}
+
+function evaluationDeadline(action: BehavioralAction): Date | null {
+  if (action.status !== 'AVALIADA' || !action.evaluatedAt) return null;
+  return startOfDayInAppZone(addDays(todayInAppZone(action.evaluatedAt), 1));
 }
 
 // Funções puras, para testar as bordas sem banco. Vale o que vier primeiro: o prazo congelado ou a
@@ -100,6 +108,7 @@ export function toPublicAction(action: ActionWithPhotos, sessions: Session[] = [
     photos: action.photos.map((photo) => ({ id: photo.id, createdAt: photo.createdAt.toISOString() })),
     photosDeadline: photosDeadlineFor(action, sessions),
     photosOpen: arePhotosOpen(action, sessions, now),
+    evaluationEditableUntil: evaluationDeadline(action)?.toISOString() ?? null,
     createdAt: action.createdAt.toISOString(),
     updatedAt: action.updatedAt.toISOString(),
   };
@@ -182,8 +191,8 @@ function assertDate(error: string | null) {
   if (error) throw new AppError(400, 'DATE_OUT_OF_RANGE', error);
 }
 
-async function findOwned(userId: string, id: string): Promise<BehavioralAction> {
-  const action = await prisma.behavioralAction.findUnique({ where: { id } });
+async function findOwned(userId: string, id: string, db: Prisma.TransactionClient = prisma): Promise<BehavioralAction> {
+  const action = await db.behavioralAction.findUnique({ where: { id } });
   if (!action) throw notFound();
   if (action.userId !== userId) throw forbidden();
   return action;
@@ -309,6 +318,35 @@ export function createActionsService() {
     });
   }
 
+  async function correct(userId: string, id: string, input: CorrectActionInput) {
+    const action = await prisma.$transaction(async (tx) => {
+      // Verifica o prazo depois de obter a trava. Uma edição concorrente não estende a janela.
+      await tx.$queryRaw`SELECT id FROM "BehavioralAction" WHERE id = ${id}::uuid AND "userId" = ${userId}::uuid FOR NO KEY UPDATE`;
+      const previous = await findOwned(userId, id, tx);
+      const now = new Date();
+      const deadline = evaluationDeadline(previous);
+      if (!deadline || now >= deadline) {
+        throw new AppError(409, 'ACTION_CORRECTION_CLOSED', 'Dá para corrigir a ação só no dia em que você contou como foi.');
+      }
+      const { actionDate, observation, ...details } = input;
+      if (actionDate !== dateToDateOnly(previous.actionDate)) {
+        assertDate(recordDateError(actionDate, todayInAppZone(now)));
+      }
+      return tx.behavioralAction.update({
+        where: { id, userId },
+        data: { ...details, actionDate: dateOnlyToDate(actionDate), observation: observation ?? null, updatedAt: now },
+        include: withPhotos,
+      });
+    }).catch((error: unknown) => {
+      if (error instanceof AppError) throw error;
+      const { name, code } = (error ?? {}) as { name?: string; code?: string };
+      logger.error({ errName: name, errCode: code }, 'Falha ao corrigir uma ação');
+      throw new AppError(500, 'ACTION_CORRECTION_FAILED', 'Não conseguimos salvar a correção. Tente de novo.');
+    });
+    const [saved] = await toPublicActions(userId, [action], true);
+    return saved!;
+  }
+
   async function notDone(userId: string, id: string, input: NotDoneActionInput) {
     assertDayArrived(await findPlanned(userId, id));
     return writePlanned(userId, id, { status: 'NAO_REALIZADA', observation: input.observation ?? null });
@@ -404,6 +442,7 @@ export function createActionsService() {
     create,
     update,
     evaluate,
+    correct,
     notDone,
     remove,
     addPhoto,
