@@ -88,6 +88,7 @@ Na prática clínica tradicional:
   - Guarda a **expectativa antes** (0 a 10: o quanto espera gostar) e, depois, o **prazer** e a **realização** (0 a 10), mostrando lado a lado no cartão: `Esperava 3 · Prazer 7 · Realização 6`.
   - **Meta visual sem cobrança:** mostra espaços visuais por categoria que se preenchem conforme as ações são feitas, sem escrever *"faltam N"* e sem cor de alerta.
   - **Repetir do ciclo passado:** ações do ciclo anterior viram atalhos de um toque para planejar de novo.
+  - **Corrigir ação:** o paciente pode corrigir a avaliação até o fim do dia em que contou como foi, no fuso de São Paulo.
   - **Fotos da Ação:** em uma ação avaliada, o paciente pode adicionar **até 10 fotos** (até a próxima consulta) para guardar a memória visual daquele momento bom; a psicóloga vinculada também vê.
 
 - **Agenda de consultas e Ciclo da consulta:**
