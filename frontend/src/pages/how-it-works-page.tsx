@@ -116,6 +116,10 @@ export function HowItWorksPage() {
           Como o Faísca registra informações pessoais e de saúde, o cadastro pede que você leia e aceite o aviso de
           privacidade. Você pode consultá-lo a qualquer momento.
         </p>
+        <p>
+          Em <strong>Conta → Personalizar início</strong>, quem usa o perfil de paciente pode fixar até três atalhos
+          em Meus registros. Os atalhos ficam salvos neste navegador.
+        </p>
       </Section>
 
       <Section id="vinculo" title="Vínculo e privacidade">

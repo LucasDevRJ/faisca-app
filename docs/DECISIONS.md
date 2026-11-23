@@ -2955,6 +2955,16 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a correção atualiza `updatedAt` e segue a indicação de registro atualizado
   da DEC-057. A janela curta é suficiente nesta etapa e não há cópia do conteúdo anterior.
 
+## DEC-130 — Atalhos nos Meus registros (#274)
+
+- **Decisão:** em Conta → Personalizar início, o paciente pode fixar até três atalhos
+  nos Meus registros e restaurar o início sem atalhos. As escolhas ficam no navegador,
+  separadas por conta, com apenas identificadores fixos de navegação.
+- **Motivo:** facilitar o acesso às ações frequentes sem ocupar espaço para quem prefere
+  manter a tela inicial como está.
+- **Limite conhecido:** a preferência não sincroniza entre aparelhos. Os atalhos usam as
+  telas existentes e seus controles de acesso.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

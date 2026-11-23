@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
+import { HomeShortcuts } from '../features/home-shortcuts/home-shortcuts';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { useSession } from '../features/auth/use-session';
@@ -50,6 +51,8 @@ export function RecordsPage() {
           Buscar nos registros
         </Link>
       </section>
+
+      {user && <HomeShortcuts key={user.id} userId={user.id} />}
 
       <NewLinkNotice />
 
