@@ -44,8 +44,9 @@ function Highlighted({ text, highlight }: { text: string; highlight?: Choice['hi
 }
 
 type PickerProps = {
-  type: LinkedRecordType;
-  id: string;
+  // Registro de origem (ligações). Sem ele, o seletor só escolhe um registro (mensagens, DEC-128).
+  type?: LinkedRecordType;
+  id?: string;
   // Dia do registro de origem: a janela começa no ciclo dele.
   date?: string;
   // Registros já ligados a este (somem da lista).
@@ -53,9 +54,13 @@ type PickerProps = {
   busy: boolean;
   onLink: (target: RecordSummary) => void;
   onCancel: () => void;
+  // Só estes tipos aparecem (ex.: as áreas liberadas para a profissional da conversa).
+  allowedTypes?: LinkedRecordType[];
+  legend?: string;
+  confirmLabel?: string;
 };
 
-export function RecordLinkPicker({ type, id, date, linkedKeys, busy, onLink, onCancel }: PickerProps) {
+export function RecordLinkPicker({ type, id, date, linkedKeys, busy, onLink, onCancel, allowedTypes, legend = 'Registro para ligar', confirmLabel = 'Ligar' }: PickerProps) {
   const today = todayInAppZone();
   const baseId = useId();
   // Ao abrir, o foco entra no seletor, no primeiro filtro.
@@ -70,7 +75,12 @@ export function RecordLinkPicker({ type, id, date, linkedKeys, busy, onLink, onC
   const [searchPages, setSearchPages] = useState(1);
   const [moving, setMoving] = useState(false);
 
-  const allowed = filters.size === 0 ? null : new Set(FILTERS.filter((filter) => filters.has(filter.label)).flatMap((filter) => filter.types));
+  const permitted = allowedTypes ? new Set(allowedTypes) : null;
+  const filterOptions = permitted ? FILTERS.filter((filter) => filter.types.some((item) => permitted.has(item))) : FILTERS;
+  const chosenTypes = filters.size === 0 ? null : new Set(FILTERS.filter((filter) => filters.has(filter.label)).flatMap((filter) => filter.types));
+  const allowed = chosenTypes || permitted
+    ? new Set((Object.keys(TYPE_LABEL) as LinkedRecordType[]).filter((item) => (!chosenTypes || chosenTypes.has(item)) && (!permitted || permitted.has(item))))
+    : null;
   const visible = (item: { type: string; id: string }) =>
     !(item.type === type && item.id === id) && !linkedKeys.has(keyOf(item)) && (!allowed || allowed.has(item.type as LinkedRecordType));
 
@@ -183,7 +193,7 @@ export function RecordLinkPicker({ type, id, date, linkedKeys, busy, onLink, onC
   return <div className="flex flex-col gap-3 rounded-md bg-bg p-3">
     <div role="group" aria-label="Tipo de registro" className="flex flex-wrap gap-2">
       <Button ref={firstFilter} variant={filters.size === 0 ? 'primary' : 'secondary'} className="px-3 text-sm" aria-pressed={filters.size === 0} onClick={() => toggleFilter(null)}>Todos</Button>
-      {FILTERS.map((filter) => <Button key={filter.label} variant={filters.has(filter.label) ? 'primary' : 'secondary'} className="px-3 text-sm" aria-pressed={filters.has(filter.label)} onClick={() => toggleFilter(filter.label)}>{filter.label}</Button>)}
+      {filterOptions.map((filter) => <Button key={filter.label} variant={filters.has(filter.label) ? 'primary' : 'secondary'} className="px-3 text-sm" aria-pressed={filters.has(filter.label)} onClick={() => toggleFilter(filter.label)}>{filter.label}</Button>)}
     </div>
 
     <form role="search" className="flex flex-col gap-2 sm:flex-row sm:items-end" onSubmit={submitSearch}>
@@ -211,7 +221,7 @@ export function RecordLinkPicker({ type, id, date, linkedKeys, busy, onLink, onC
     </>}
 
     <fieldset className="flex min-w-0 flex-col gap-3">
-      <legend className="sr-only">Registro para ligar</legend>
+      <legend className="sr-only">{legend}</legend>
       {loading && <p role="status" className="text-sm text-muted">Carregando registros…</p>}
       {failed && <p role="alert" className="text-sm text-attention-text">Não foi possível buscar outros registros.</p>}
       {!loading && !failed && (list ?? <p className="text-sm text-muted">
@@ -221,7 +231,7 @@ export function RecordLinkPicker({ type, id, date, linkedKeys, busy, onLink, onC
     </fieldset>
 
     <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-      <Button disabled={!chosen || busy} onClick={() => chosen && onLink(chosen.summary)}>Ligar</Button>
+      <Button disabled={!chosen || busy} onClick={() => chosen && onLink(chosen.summary)}>{confirmLabel}</Button>
       <Button variant="ghost" disabled={busy} onClick={onCancel}>Cancelar</Button>
     </div>
   </div>;

@@ -69,7 +69,8 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 // com o texto (DEC-118).
 export const MESSAGES_PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
 // A 2026-11.12 (DEC-127, o "visto" das Mensagens) virou a atual no PR das telas, com o texto.
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.12';
+// A 2026-11.13 (DEC-128, o registro apontado nas Mensagens) virou a atual no PR das telas, com o texto.
+export const PRIVACY_VERSION: PrivacyVersion = '2026-11.13';
 
 export function privacyUpToDate(acceptedVersion: string | null): boolean {
   return PRIVACY_VERSIONS.indexOf(acceptedVersion as PrivacyVersion) >= PRIVACY_VERSIONS.indexOf(PRIVACY_VERSION);

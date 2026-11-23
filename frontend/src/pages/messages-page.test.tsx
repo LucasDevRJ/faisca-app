@@ -149,4 +149,81 @@ describe('Mensagens privadas', () => {
     renderRoute(`/mensagens/${linkId}`);
     expect(await screen.findByRole('button', { name: 'Ir para escrever mensagem' })).toBeInTheDocument();
   });
+
+  it('"Sobre um registro": escolhe o registro, envia a referência e mostra o cartão (DEC-128)', async () => {
+    const user = userEvent.setup();
+    const recordId = '00000000-0000-4000-8000-0000000000d1';
+    const messages: Message[] = [{ id: '00000000-0000-4000-8000-0000000000d0', topic: 'LOGISTICA', body: 'Oi', mine: false, createdAt: '2026-11-22T18:00:00Z', record: null }];
+    const sent: unknown[] = [];
+    server.use(
+      loggedIn,
+      http.get('*/api/messages', () => HttpResponse.json([{ ...conversation, unread: false, lastMessage: null, recordTopics: true, recordTypes: ['THOUGHT_RECORD'] }])),
+      http.get(url, () => HttpResponse.json({ messages, next: null })),
+      http.get('*/api/record-links/candidates', ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        expect(params.get('recordId')).toBeNull();
+        return HttpResponse.json({ records: [
+          { type: 'THOUGHT_RECORD', id: recordId, date: params.get('to'), title: 'Achei que ia dar tudo errado' },
+          { type: 'ACTIVITY', id: '00000000-0000-4000-8000-0000000000d2', date: params.get('to'), title: 'Atividade de área fechada' },
+        ] });
+      }),
+      http.post(url, async ({ request }) => {
+        const input = await request.json() as Record<string, unknown>;
+        sent.push(input);
+        const message = { ...input, id: '00000000-0000-4000-8000-0000000000d3', mine: true, createdAt: '2026-11-22T18:02:00Z',
+          record: { type: 'THOUGHT_RECORD', id: recordId, date: '2026-11-22', title: 'Achei que ia dar tudo errado' } } as Message;
+        messages.unshift(message);
+        return HttpResponse.json(message, { status: 201 });
+      }),
+    );
+    renderRoute(`/mensagens/${linkId}`);
+    await user.click(await screen.findByRole('button', { name: 'Mudar de assunto' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Assunto' }), 'REGISTRO');
+    expect(screen.getByText(/O conteúdo em si vocês conversam na consulta/)).toBeInTheDocument();
+    // Só os tipos liberados para a profissional aparecem.
+    await user.click(await screen.findByRole('radio', { name: /Achei que ia dar tudo errado/ }));
+    expect(screen.queryByRole('radio', { name: /Atividade de área fechada/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Escolher' }));
+    expect(screen.getByRole('button', { name: 'Trocar registro' })).toBeInTheDocument();
+
+    await user.type(screen.getByRole('textbox', { name: 'Mensagem' }), 'Dúvida fictícia sobre esse registro');
+    await user.click(screen.getByRole('button', { name: 'Enviar mensagem' }));
+    await waitFor(() => expect(sent).toEqual([{ topic: 'REGISTRO', body: 'Dúvida fictícia sobre esse registro', record: { type: 'THOUGHT_RECORD', id: recordId } }]));
+    expect((await screen.findAllByRole('link', { name: 'Abrir registro' })).length).toBeGreaterThan(0);
+  });
+
+  it('sem a opção da profissional, o assunto não aparece; registro indisponível não mostra nada dele', async () => {
+    const user = userEvent.setup();
+    const messages: Message[] = [{ id: '00000000-0000-4000-8000-0000000000e1', topic: 'REGISTRO', body: 'Sobre aquele dia', mine: true, createdAt: '2026-11-22T18:00:00Z', record: { unavailable: true } }];
+    server.use(
+      loggedIn,
+      http.get('*/api/messages', () => HttpResponse.json([{ ...conversation, unread: false, lastMessage: null, recordTopics: false, recordTypes: [] }])),
+      http.get(url, () => HttpResponse.json({ messages, next: null })),
+    );
+    renderRoute(`/mensagens/${linkId}`);
+    expect(await screen.findByText('Registro indisponível')).toBeInTheDocument();
+    // O registro sumiu: a resposta vira uma dúvida breve.
+    expect(screen.getByText(/Respondendo sobre/)).toHaveTextContent('Dúvida breve');
+    await user.click(screen.getByRole('button', { name: 'Mudar de assunto' }));
+    expect(screen.queryByRole('option', { name: 'Sobre um registro' })).not.toBeInTheDocument();
+  });
+
+  it('a profissional escolhe se recebe mensagens sobre registros', async () => {
+    const user = userEvent.setup();
+    const saved: unknown[] = [];
+    server.use(
+      http.get('*/api/auth/me', () => HttpResponse.json({ user: { ...fakeUser, profiles: { patient: false, therapist: true } } })),
+      http.get('*/api/messages/preferences', () => HttpResponse.json({ email: true, push: false, recordTopics: true, pushPublicKey: null })),
+      http.put('*/api/messages/preferences', async ({ request }) => {
+        saved.push(await request.json());
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderRoute('/mensagens/avisos');
+    const option = await screen.findByRole('checkbox', { name: 'Receber mensagens sobre registros' });
+    expect(option).toBeChecked();
+    await user.click(option);
+    await user.click(screen.getByRole('button', { name: 'Salvar preferências' }));
+    await waitFor(() => expect(saved).toEqual([{ email: true, push: false, recordTopics: false }]));
+  });
 });

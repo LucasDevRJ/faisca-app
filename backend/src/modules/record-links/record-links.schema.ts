@@ -9,6 +9,19 @@ export const listLinksSchema = z.object({
   from: z.string().date().optional(),
   to: z.string().date().optional(),
 });
+// Candidatos (DEC-126): com o registro de origem, como nas ligações; sem ele (escolher um registro
+// para uma mensagem, DEC-128), o período é obrigatório.
+export const candidatesSchema = z.object({
+  recordType: linkedRecordTypeSchema.optional(),
+  recordId: z.string().uuid().optional(),
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+}).refine((value) => (value.recordType === undefined) === (value.recordId === undefined), {
+  message: 'Informe o tipo e o id do registro juntos.', path: ['recordId'],
+}).refine((value) => value.recordId !== undefined || (value.from !== undefined && value.to !== undefined), {
+  message: 'Informe o período.', path: ['from'],
+});
+export type CandidatesQuery = z.infer<typeof candidatesSchema>;
 export const createLinkSchema = z.object({
   sourceType: linkedRecordTypeSchema,
   sourceId: z.string().uuid(),

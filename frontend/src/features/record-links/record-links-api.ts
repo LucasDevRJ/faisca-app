@@ -8,7 +8,8 @@ export async function fetchRecordLinks(type: LinkedRecordType, id: string, patie
   const { data } = await api.get<{ links: RecordLink[] }>(path, { params: { recordType: type, recordId: id } });
   return data.links;
 }
-export async function fetchRecordLinkCandidates(type: LinkedRecordType, id: string, from?: string, to?: string) {
+// Sem registro de origem (mensagens, DEC-128), o período é obrigatório.
+export async function fetchRecordLinkCandidates(type: LinkedRecordType | undefined, id: string | undefined, from?: string, to?: string) {
   const { data } = await api.get<{ records: RecordSummary[] }>('/record-links/candidates', { params: { recordType: type, recordId: id, from, to } });
   return data.records;
 }

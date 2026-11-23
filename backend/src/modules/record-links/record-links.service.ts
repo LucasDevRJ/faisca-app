@@ -4,7 +4,7 @@ import { ACCESS, delegate, MODEL, summary, type RecordSummary } from './record-a
 import { coversArea } from '../auth/privacy.js';
 import { lockRecordLinksForPatient } from './record-links.cleanup.js';
 import type { SharedArea } from '../../generated/prisma/client.js';
-import type { CreateLinkInput, LinkedRecordType, ListLinksQuery } from './record-links.schema.js';
+import type { CandidatesQuery, CreateLinkInput, LinkedRecordType, ListLinksQuery } from './record-links.schema.js';
 
 export function createRecordLinksService() {
   async function privacyVersion(userId: string) {
@@ -97,12 +97,17 @@ export function createRecordLinksService() {
         return publicLink(row, source, target);
       })).then((links) => links.filter((link): link is NonNullable<typeof link> => link !== null));
     },
-    async candidates(userId: string, query: ListLinksQuery) {
+    async candidates(userId: string, query: CandidatesQuery) {
       const version = await privacyVersion(userId);
-      requireAccess(version, query.recordType);
-      const source = await owned(userId, query.recordType, query.recordId);
-      const from = query.from ?? new Date(Date.parse(`${source.date}T00:00:00Z`) - 14 * 86400000).toISOString().slice(0, 10);
-      const to = query.to ?? new Date(Date.parse(`${source.date}T00:00:00Z`) + 14 * 86400000).toISOString().slice(0, 10);
+      // Sem registro de origem (DEC-128), o schema já exige o período.
+      let sourceDate: string | null = null;
+      if (query.recordType && query.recordId) {
+        requireAccess(version, query.recordType);
+        sourceDate = (await owned(userId, query.recordType, query.recordId)).date;
+      }
+      const around = (days: number) => new Date(Date.parse(`${sourceDate}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
+      const from = query.from ?? around(-14);
+      const to = query.to ?? around(14);
       const types = Object.keys(MODEL) as LinkedRecordType[];
       const groups = await Promise.all(types.filter((type) => canAccessType(version, type)).map(async (type) => {
         const [, dateField] = MODEL[type];
