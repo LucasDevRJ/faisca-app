@@ -23,6 +23,8 @@ enum AnnouncementEmailStatus {
 model User {
   messageEmailEnabled         Boolean           @default(true)
   messagePushEnabled          Boolean           @default(true)
+  // Profissional (DEC-128): aceita mensagens "Sobre um registro". Começa ligado.
+  messageRecordTopicsEnabled  Boolean           @default(true)
   tasks                       HomeworkTask[]
   dailyCheckIns               DailyCheckIn[]
   medications                 Medication[]
@@ -610,13 +612,17 @@ model TherapistLink {
 
 // Conversa privada por vínculo. Excluir qualquer uma das contas apaga o vínculo e as mensagens.
 model PrivateMessage {
-  id            String        @id @default(uuid()) @db.Uuid
-  linkId        String        @db.Uuid
+  id            String            @id @default(uuid()) @db.Uuid
+  linkId        String            @db.Uuid
   sentByPatient Boolean
   topic         MessageTopic
   body          String
-  createdAt     DateTime      @default(now())
-  link          TherapistLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  createdAt     DateTime          @default(now())
+  // Assunto "Sobre um registro" (DEC-128): só a referência ao registro do paciente, nunca uma cópia.
+  // A API confere o acesso a cada leitura; os dois ficam juntos (CHECK escrito à mão).
+  recordType    LinkedRecordType?
+  recordId      String?           @db.Uuid
+  link          TherapistLink     @relation(fields: [linkId], references: [id], onDelete: Cascade)
 
   @@index([linkId, createdAt, id])
 }
@@ -624,6 +630,8 @@ model PrivateMessage {
 enum MessageTopic {
   LOGISTICA
   DUVIDA
+  // DEC-128: a mensagem aponta um registro do paciente.
+  REGISTRO
 }
 
 // Convite por e-mail. Não expira e vale uma vez; o token em texto só existe no e-mail (regra 8).

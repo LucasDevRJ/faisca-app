@@ -56,7 +56,7 @@ describe('autorização (regra 1)', () => {
     const sent = await patient.post(url).send(input);
     expect(sent.status).toBe(201);
     expect(sent.headers['cache-control']).toBe('no-store');
-    expect(sent.body).toEqual({ id: expect.any(String), topic: 'LOGISTICA', body: text, mine: true, createdAt: expect.any(String) });
+    expect(sent.body).toEqual({ id: expect.any(String), topic: 'LOGISTICA', body: text, mine: true, createdAt: expect.any(String), record: null });
     expect((await professional.get(url)).body.messages[0]).toMatchObject({ body: text, mine: false });
     expect((await professional.post(url).send({ topic: 'DUVIDA', body: 'Sim, podemos confirmar.' })).status).toBe(201);
     expect((await patient.get(url)).body.messages).toHaveLength(2);

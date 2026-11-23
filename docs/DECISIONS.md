@@ -2929,7 +2929,15 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   reservada no PR da #264) citando o registro apontado.
 - **Motivo:** apontar o registro evita explicar "aquele pensamento da quinta". A opção da
   profissional e uma dica na tela ajudam a manter o conteúdo clínico na consulta (motivo da DEC-125).
-- **Limite conhecido:** detalhes de implementação e testes no PR da #264.
+- **Como:** `PrivateMessage` ganha `recordType` e `recordId` (CHECK: só e sempre no assunto
+  `REGISTRO`) e `User.messageRecordTopicsEnabled`. O paciente só aponta registro próprio, de tipo
+  liberado para aquela profissional; ela só responde sobre um registro que ele já apontou na
+  conversa. A lista de conversas diz ao paciente se a profissional aceita o assunto e quais tipos
+  ele pode apontar. As regras de acesso dos registros ficam num módulo comum com as ligações
+  (`record-links/record-access.ts`).
+- **Limite conhecido:** o cartão mostra só o começo do título; o conteúdo completo continua na área
+  do registro, com as permissões de sempre. Apagar o registro deixa a mensagem com "Registro
+  indisponível".
 ## DEC-129 — Corrigir uma Ação no dia da avaliação (#233)
 
 - **Decisão:** a pessoa pode corrigir a própria Ação avaliada até a meia-noite do dia de
