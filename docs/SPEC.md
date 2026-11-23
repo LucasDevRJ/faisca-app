@@ -226,6 +226,11 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
 - Em **Conta → Personalizar início**, o paciente pode fixar até três atalhos em **Meus registros**
   e voltar ao padrão sem atalhos. A escolha fica neste navegador, separada por conta.
 
+## Cartões do início (DEC-131)
+- Em **Conta → Cartões do início**, o paciente pode mostrar, esconder e ordenar Avisos, Consultas
+  e Sono e humor de hoje em **Meus registros**. Pode começar com o gráfico de atividades recolhido
+  e restaurar a organização padrão. A escolha fica no navegador, separada por conta.
+
 ## Ação
 Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das atividades (DEC-051).
 - **Tipo** (obrigatório, um só): **Prazer** (algo que se gosta de fazer), **Conexão** (aproximar-se
