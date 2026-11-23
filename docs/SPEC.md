@@ -222,6 +222,11 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   navegação mantém as abas e períodos sujeitos às permissões e áreas já compartilhadas. Ligações
   funcionam com registros finais. Apagar qualquer registro também apaga suas ligações.
 
+## Cor de destaque (DEC-132)
+- Em **Conta → Cor de destaque**, a pessoa pode experimentar e salvar uma cor para botões e links
+  ou restaurar a cor da paleta. A escolha é local ao navegador e separada por conta. A paleta
+  Alto contraste continua usando suas próprias cores.
+
 ## Meus atalhos (DEC-130)
 - Em **Conta → Personalizar início**, o paciente pode fixar até três atalhos em **Meus registros**
   e voltar ao padrão sem atalhos. A escolha fica neste navegador, separada por conta.

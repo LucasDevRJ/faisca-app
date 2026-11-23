@@ -121,6 +121,7 @@ export function HowItWorksPage() {
           em Meus registros. Em <strong>Cartões do início</strong>, pode escolher quais cartões aparecem e em
           que ordem, além de começar com o gráfico recolhido. Essas escolhas ficam salvas neste navegador.
         </p>
+        <p>Em <strong>Cor de destaque</strong>, experimente uma cor para botões e links ou restaure a cor da paleta.</p>
       </Section>
 
       <Section id="vinculo" title="Vínculo e privacidade">
