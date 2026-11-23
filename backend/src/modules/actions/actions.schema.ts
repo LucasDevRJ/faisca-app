@@ -71,6 +71,13 @@ export const evaluateActionSchema = z.strictObject({
   observation: observationSchema,
 });
 
+export const correctActionSchema = z.strictObject({
+  ...base,
+  pleasure: scoreSchema,
+  achievement: scoreSchema,
+  observation: observationSchema,
+});
+
 export const notDoneActionSchema = z.strictObject({ observation: observationSchema });
 
 export const actionIdSchema = z.object({ id: z.uuid({ error: 'Ação inválida.' }) });
@@ -95,5 +102,6 @@ export const therapistActionsQuerySchema = listQuerySchema(THERAPIST_LIST_MAX_DA
 export type CreateActionInput = z.infer<typeof createActionSchema>;
 export type UpdateActionInput = z.infer<typeof updateActionSchema>;
 export type EvaluateActionInput = z.infer<typeof evaluateActionSchema>;
+export type CorrectActionInput = z.infer<typeof correctActionSchema>;
 export type NotDoneActionInput = z.infer<typeof notDoneActionSchema>;
 export type ListActionsQuery = z.infer<typeof listActionsQuerySchema>;

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../app.js';
 import { addDays, dateOnlyToDate, todayInAppZone } from '../../lib/dates.js';
 import { prisma } from '../../lib/prisma.js';
@@ -49,6 +49,10 @@ const planned = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const correction = (actionDate = today()) => ({
+  actionDate, name: 'Nome corrigido', category: 'PRAZER', expectation: 4, pleasure: 0, achievement: 9,
+});
+
 type SeedOverrides = { actionDate?: Date; name?: string; category?: 'PRAZER' | 'CONEXAO' | 'REALIZACAO' };
 
 function seedAction(userId: string, overrides: SeedOverrides = {}) {
@@ -72,6 +76,7 @@ describe('autorização (regra 1)', () => {
       request(app).get(`/actions/${id}`),
       request(app).post('/actions').send(planned()),
       request(app).patch(`/actions/${id}`).send({ name: 'x' }),
+      request(app).patch(`/actions/${id}/evaluation`).send(correction()),
       request(app).post(`/actions/${id}/evaluate`).send({ pleasure: 5, achievement: 5 }),
       request(app).post(`/actions/${id}/not-done`).send({}),
       request(app).delete(`/actions/${id}`),
@@ -110,6 +115,7 @@ describe('autorização (regra 1)', () => {
     const calls = [
       agent.get(`/actions/${theirs.id}`),
       agent.patch(`/actions/${theirs.id}`).send({ name: 'Mudado' }),
+      agent.patch(`/actions/${theirs.id}/evaluation`).send(correction()),
       agent.post(`/actions/${theirs.id}/evaluate`).send({ pleasure: 5, achievement: 5 }),
       agent.post(`/actions/${theirs.id}/not-done`).send({}),
       agent.delete(`/actions/${theirs.id}`),
@@ -130,6 +136,42 @@ describe('autorização (regra 1)', () => {
     expect(withUser.status).toBe(400);
     expect(withPatient.status).toBe(400);
     expect(await prisma.behavioralAction.count()).toBe(0);
+  });
+});
+
+describe('correção no dia da avaliação (DEC-129)', () => {
+  it('corrige antes da meia-noite de São Paulo e fecha exatamente na virada', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-11-24T02:55:00Z'));
+      const agent = await loginAgent();
+      const actionDate = '2026-11-10';
+      const row = await seedAction(patientId, { actionDate: dateOnlyToDate(actionDate) });
+      const path = `/actions/${row.id}`;
+      expect((await agent.patch(`${path}/evaluation`).send(correction(actionDate))).status).toBe(409);
+      expect((await agent.post(`${path}/evaluate`).send({ pleasure: 5, achievement: 5, observation: 'Anotação fictícia' })).status).toBe(200);
+      const before = await prisma.behavioralAction.findUniqueOrThrow({ where: { id: row.id } });
+
+      vi.setSystemTime(new Date('2026-11-24T02:59:59.999Z'));
+      const written = await agent.patch(`${path}/evaluation`).send(correction(actionDate));
+      expect(written.status).toBe(200);
+      expect(written.body.action).toMatchObject({
+        ...correction(actionDate), status: 'AVALIADA', observation: null, evaluationEditableUntil: '2026-11-24T03:00:00.000Z',
+      });
+      const after = await prisma.behavioralAction.findUniqueOrThrow({ where: { id: row.id } });
+      expect(after.evaluatedAt).toEqual(before.evaluatedAt);
+      expect(after.photosDeadlineAt).toEqual(before.photosDeadlineAt);
+      expect(after.updatedAt.getTime()).toBeGreaterThan(before.updatedAt.getTime());
+      expect((await agent.delete(path)).status).toBe(409);
+
+      vi.setSystemTime(new Date('2026-11-24T03:00:00Z'));
+      const denied = await agent.patch(`${path}/evaluation`).send({ ...correction(actionDate), name: 'Tarde demais' });
+      expect(denied.status).toBe(409);
+      expect(denied.body.error.code).toBe('ACTION_CORRECTION_CLOSED');
+      expect(await prisma.behavioralAction.findUniqueOrThrow({ where: { id: row.id } })).toEqual(after);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

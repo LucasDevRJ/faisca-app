@@ -35,6 +35,9 @@ test('aceite, ação da paciente e leitura só pela terapeuta vinculada', async 
   const { id } = (await created.json()).action as { id: string };
   const evaluated = await patient.post(`/actions/${id}/evaluate`, { data: { pleasure: 7, achievement: 6 } });
   expect(evaluated.status()).toBe(200);
+  const { actionDate, name, category, expectation } = action;
+  const correction = { actionDate, name, category, expectation, pleasure: 8, achievement: 6 };
+  expect((await patient.patch(`/actions/${id}/evaluation`, { data: correction })).status()).toBe(200);
 
   const { code } = await (await patient.post('/link/code')).json();
   const patientId = (await (await therapist.post('/links/redeem-code', { data: { code } })).json()).patient.id as string;
@@ -47,12 +50,13 @@ test('aceite, ação da paciente e leitura só pela terapeuta vinculada', async 
   const read = await therapist.get(path, { params });
   expect(read.status()).toBe(200);
   expect((await read.json()).actions).toEqual([
-    expect.objectContaining({ id, status: 'AVALIADA', expectation: 3, pleasure: 7, achievement: 6 }),
+    expect.objectContaining({ id, status: 'AVALIADA', expectation: 3, pleasure: 8, achievement: 6 }),
   ]);
 
   // Escrita pela porta da terapeuta: 403 antes de tudo. Pelas rotas da paciente: 403 de perfil.
   expect((await therapist.post(path, { data: action })).status()).toBe(403);
   expect((await therapist.post('/actions', { data: action })).status()).toBe(403);
+  expect((await therapist.patch(`/actions/${id}/evaluation`, { data: correction })).status()).toBe(403);
 
   await patient.dispose();
   await therapist.dispose();
