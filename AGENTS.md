@@ -72,6 +72,10 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    as duas pessoas do vínculo ativo após aceite de ambas. Esse acesso é separado dos registros.
    Cada uma grava também o próprio "visto" da conversa (`PUT /messages/:linkId/seen`, DEC-127), só a
    própria coluna no vínculo; o "visto" de uma nunca é mostrado à outra (sem recibo de leitura).
+   No assunto "Sobre um registro" (DEC-128), a mensagem guarda só a referência a um registro do
+   paciente; a API devolve à profissional o resumo dele (tipo, data e começo do título) só com a área
+   liberada no vínculo e os aceites dos dois, conferidos a cada leitura. A profissional não aponta
+   registro novo: só responde sobre o que o paciente apontou.
    No contexto de paciente, só os próprios dados.
    Toda rota nova com dado de paciente precisa de teste de autorização (caso permitido e negado).
 2. **Registros finais são imutáveis.** Editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA retorna 409.

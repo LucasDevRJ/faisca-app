@@ -26,6 +26,8 @@ import { AppError } from '../../errors/app-error.js';
 // - 2026-11.12: as Mensagens guardam também até quando cada pessoa viu a conversa (DEC-127). Sem área
 //   nova: nada é bloqueado. O registro apontado em "Sobre um registro" (DEC-128) terá versão própria,
 //   para o aviso não citar algo que ainda não está no ar (revisor-regras).
+// - 2026-11.13: as Mensagens guardam também o registro apontado no assunto "Sobre um registro"
+//   (DEC-128), só a referência. Sem área nova: nada é bloqueado.
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -46,6 +48,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.10',
   '2026-11.11',
   '2026-11.12',
+  '2026-11.13',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -84,7 +87,7 @@ export function versionToRecord(shownVersion: string | undefined, current: strin
   const shown = shownVersion ?? LEGACY_SHOWN_VERSION;
   // A Vercel e o Railway publicam separadamente. Preserve o aceite mais novo e grave
   // apenas a versão enviada pelo app, inclusive quando o PWA ainda mostra a anterior.
-  if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION || shown === '2026-11.12') {
+  if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION || shown === '2026-11.12' || shown === '2026-11.13') {
     const kept = PRIVACY_VERSIONS.indexOf(current as PrivacyVersion);
     const displayed = PRIVACY_VERSIONS.indexOf(shown as PrivacyVersion);
     return PRIVACY_VERSIONS[Math.max(kept, displayed)]!;

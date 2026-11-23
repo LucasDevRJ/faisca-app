@@ -45,6 +45,10 @@
   acessa ou altera registros clínicos. Configurações de canais e aparelhos são da própria conta.
   O "visto" de cada pessoa (`PUT /messages/:linkId/seen`, DEC-127) grava só a coluna dela no vínculo
   (`patientMessagesSeenAt` ou `therapistMessagesSeenAt`), só avança e nunca aparece para a outra.
+  Exceção de leitura (DEC-128): no assunto "Sobre um registro", a mensagem guarda só `recordType` e
+  `recordId`, e a API devolve o resumo do registro (tipo, data e começo do título, de
+  `record-links/record-access.ts`) só com a área liberada no vínculo e os aceites dos dois,
+  conferidos a cada leitura; sem isso, `{ unavailable: true }`. Nunca grava nem altera o registro.
 
 ## Regras de domínio
 - Transições de estado da atividade ficam centralizadas no service de atividades. Nenhum outro

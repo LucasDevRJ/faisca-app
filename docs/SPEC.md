@@ -561,6 +561,12 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   outra pessoa depois dele, o menu mostra "Mensagens •" e a conversa aparece com "Nova" na lista, com
   uma prévia da última mensagem (até 80 caracteres) e a data. O "visto" de uma pessoa nunca aparece
   para a outra (sem recibo de leitura). O aviso de urgência cita o CVV (188) e o SAMU (192).
+- **Sobre um registro (DEC-128):** o paciente pode escolher o assunto "Sobre um registro" e apontar um
+  registro dele, só das áreas liberadas para aquela profissional. A conversa mostra um cartão com o
+  tipo, a data e o começo do título, que abre o registro. A profissional responde sobre ele, mas não
+  aponta registro novo, e pode desligar em Mensagens "Receber mensagens sobre registros" (começa
+  ligado). Sem a área liberada, sem os aceites ou com o registro apagado, o cartão diz "Registro
+  indisponível". Avisos por e-mail e push não citam o registro.
 - O histórico pode ser baixado enquanto o vínculo estiver ativo. Revogar o vínculo suspende todo
   acesso dos dois lados. O histórico não aparece num novo vínculo. Excluir qualquer uma das contas
   apaga a conversa do banco ativo.

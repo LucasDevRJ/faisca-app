@@ -6,10 +6,12 @@ import type { Mailer } from '../../lib/mailer.js';
 import { prisma } from '../../lib/prisma.js';
 import type { PushSender } from '../../lib/web-push.js';
 import { coversArea } from '../auth/privacy.js';
+import { ACCESS, delegate, summary } from '../record-links/record-access.js';
+import type { LinkedRecordType } from '../record-links/record-links.schema.js';
 import type { MessageInput, MessagePreferences } from './messages.schema.js';
 
 const PAGE_SIZE = 30;
-const participant = { name: true, privacyVersion: true, hasPatientProfile: true, hasTherapistProfile: true } as const;
+const participant = { name: true, privacyVersion: true, hasPatientProfile: true, hasTherapistProfile: true, messageRecordTopicsEnabled: true } as const;
 const participants = { patient: { select: participant }, therapist: { select: participant } } as const;
 
 function unavailable() {
@@ -46,6 +48,63 @@ async function requireConversation(tx: Prisma.TransactionClient, linkId: string,
   const link = await tx.therapistLink.findUniqueOrThrow({ where: { id: linkId }, include: participants });
   if (!canTalk(link)) throw unavailable();
   return link;
+}
+
+type ConversationLink = Awaited<ReturnType<typeof requireConversation>>;
+type PublicRecord = { type: LinkedRecordType; id: string; date: string; title: string; parentId?: string } | { unavailable: true };
+
+// "Sobre um registro" (DEC-128): a profissional só vê o tipo de registro com a área liberada neste
+// vínculo e os aceites dos dois (regra 1, DEC-097).
+function typeSharedInLink(link: ConversationLink, type: LinkedRecordType) {
+  const access = ACCESS[type];
+  return link.sharedAreas.includes(access.shared) && (!access.privacy
+    || (coversArea(link.patient.privacyVersion, access.privacy) && coversArea(link.therapist.privacyVersion, access.privacy)));
+}
+
+// Sono e humor e Remédio do dia estão na mesma linha (dailyCheckIn): o dia só conta como registro da
+// caixa que tem dado dela, para a mensagem não revelar um remédio com só "Sono e humor" liberada
+// (revisor-seguranca).
+function hasBoxContent(type: LinkedRecordType, row: Record<string, unknown>) {
+  if (type === 'MEDICATION') return row.medication != null;
+  if (type === 'SLEEP_MOOD') return ['bedTime', 'wakeTime', 'sleepQuality', 'mood', 'moodWord'].some((field) => row[field] != null);
+  return true;
+}
+
+async function findPatientRecords(link: ConversationLink, type: LinkedRecordType, ids: string[]) {
+  const rows = await delegate(type).findMany({
+    where: { id: { in: ids }, userId: link.patientId }, ...(type === 'THOUGHT_RECORD' && { include: { emotions: true } }),
+  });
+  return new Map(rows.filter((row) => hasBoxContent(type, row)).map((row) => [String(row.id), row]));
+}
+
+async function findPatientRecord(link: ConversationLink, type: LinkedRecordType, id: string) {
+  return (await findPatientRecords(link, type, [id])).get(id) ?? null;
+}
+
+// Conferido a cada leitura, para quem vê: o paciente vê o próprio registro (com o aceite da área); a
+// profissional, só com a área liberada. Sem acesso, ou registro apagado: "indisponível", sem nada dele.
+// Uma consulta por tipo de registro da página, e não uma por mensagem (revisor-seguranca).
+async function toPublicPage(rows: PrivateMessage[], link: ConversationLink, viewerIsPatient: boolean) {
+  const idsByType = new Map<LinkedRecordType, Set<string>>();
+  for (const row of rows) {
+    if (row.recordType && row.recordId) idsByType.set(row.recordType, (idsByType.get(row.recordType) ?? new Set()).add(row.recordId));
+  }
+  const found = new Map<string, PublicRecord>();
+  await Promise.all([...idsByType].map(async ([type, ids]) => {
+    const privacy = ACCESS[type].privacy;
+    const allowed = viewerIsPatient ? !privacy || coversArea(link.patient.privacyVersion, privacy) : typeSharedInLink(link, type);
+    if (!allowed) return;
+    for (const [id, row] of await findPatientRecords(link, type, [...ids])) {
+      const item = summary(type, row);
+      found.set(`${type}:${id}`, { type, id, date: item.date, title: previewOf(item.title), ...(item.parentId && { parentId: item.parentId }) });
+    }
+  }));
+  return rows.map((row) => ({
+    ...toPublic(row, viewerIsPatient),
+    record: row.recordType && row.recordId
+      ? found.get(`${row.recordType}:${row.recordId}`) ?? { unavailable: true as const }
+      : null,
+  }));
 }
 
 function toPublic(row: PrivateMessage, viewerIsPatient: boolean) {
@@ -100,6 +159,12 @@ export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
           counterpart: isPatient ? link.kind : 'PATIENT',
           available,
           unread: available ? await hasUnread(link, userId) : false,
+          // Só o paciente começa "Sobre um registro" (DEC-128), se a profissional aceita, e só dos
+          // tipos liberados para ela.
+          recordTopics: isPatient && available && link.therapist.messageRecordTopicsEnabled,
+          recordTypes: isPatient && available && link.therapist.messageRecordTopicsEnabled
+            ? (Object.keys(ACCESS) as LinkedRecordType[]).filter((type) => typeSharedInLink(link, type))
+            : [],
           lastMessage: last
             ? { preview: previewOf(last.body), mine: last.sentByPatient === isPatient, createdAt: last.createdAt }
             : null,
@@ -151,7 +216,7 @@ export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
         });
         const page = rows.slice(0, PAGE_SIZE);
         return {
-          messages: page.map((row) => toPublic(row, link.patientId === userId)),
+          messages: await toPublicPage(page, link, link.patientId === userId),
           next: rows.length > PAGE_SIZE ? page.at(-1)!.id : null,
         };
       });
@@ -161,27 +226,56 @@ export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
       return prisma.$transaction(async (tx) => {
         const link = await requireConversation(tx, linkId, userId);
         const sentByPatient = link.patientId === userId;
-        const row = await tx.privateMessage.create({ data: { linkId, sentByPatient, ...input } }).catch((err: unknown) => {
+        const { record, ...message } = input;
+        if (record) {
+          if (sentByPatient) {
+            if (!link.therapist.messageRecordTopicsEnabled) {
+              throw new AppError(409, 'RECORD_TOPIC_DISABLED', 'Esta profissional não recebe mensagens sobre registros.');
+            }
+            if (!typeSharedInLink(link, record.type)) {
+              throw new AppError(403, 'RECORD_NOT_SHARED', 'Esse registro é de uma área que não está liberada para esta profissional.');
+            }
+            if (!await findPatientRecord(link, record.type, record.id)) throw new AppError(404, 'RECORD_NOT_FOUND', 'Registro não encontrado.');
+          } else {
+            // A profissional só responde sobre um registro que o paciente já apontou nesta conversa.
+            const pointed = await tx.privateMessage.count({
+              where: { linkId, sentByPatient: true, recordType: record.type, recordId: record.id },
+            });
+            if (!pointed || !typeSharedInLink(link, record.type)) {
+              throw new AppError(403, 'RECORD_NOT_SHARED', 'Esse registro não está disponível nesta conversa.');
+            }
+          }
+        }
+        const row = await tx.privateMessage.create({
+          data: { linkId, sentByPatient, ...message, recordType: record?.type ?? null, recordId: record?.id ?? null },
+        }).catch((err: unknown) => {
           // O erro renderizado pelo Prisma pode citar o texto passado na gravação.
           const { name, code } = (err ?? {}) as { name?: string; code?: string };
           logger.error({ errName: name, errCode: code }, 'Falha ao gravar mensagem privada');
           throw new AppError(500, 'MESSAGE_SAVE_FAILED', 'Não consegui enviar a mensagem. Tente de novo.');
         });
-        return toPublic(row, sentByPatient);
+        const [sent] = await toPublicPage([row], link, sentByPatient);
+        return sent!;
       });
     },
 
     async preferences(userId: string) {
       const user = await prisma.user.findUniqueOrThrow({
-        where: { id: userId }, select: { messageEmailEnabled: true, messagePushEnabled: true },
+        where: { id: userId }, select: { messageEmailEnabled: true, messagePushEnabled: true, messageRecordTopicsEnabled: true },
       });
-      return { email: user.messageEmailEnabled, push: user.messagePushEnabled, pushPublicKey: pushSender.publicKey };
+      return {
+        email: user.messageEmailEnabled, push: user.messagePushEnabled,
+        recordTopics: user.messageRecordTopicsEnabled, pushPublicKey: pushSender.publicKey,
+      };
     },
 
     async updatePreferences(userId: string, input: MessagePreferences) {
       await prisma.user.update({
         where: { id: userId },
-        data: { messageEmailEnabled: input.email, messagePushEnabled: input.push },
+        data: {
+          messageEmailEnabled: input.email, messagePushEnabled: input.push,
+          ...(input.recordTopics !== undefined && { messageRecordTopicsEnabled: input.recordTopics }),
+        },
       });
     },
 
