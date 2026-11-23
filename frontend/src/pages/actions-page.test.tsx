@@ -13,6 +13,35 @@ beforeEach(() => {
   server.use(loggedIn);
 });
 
+describe('correção de Ação avaliada', () => {
+  it('abre com a avaliação atual e salva os campos pela rota de correção', async () => {
+    const user = userEvent.setup();
+    const action = fakeAction({
+      actionDate: '2026-09-10', status: 'AVALIADA', pleasure: 7, achievement: 8,
+      observation: 'Observação fictícia', evaluationEditableUntil: '2026-09-25T03:00:00.000Z',
+    });
+    let sent: unknown;
+    actionsApi([]);
+    server.use(
+      http.get(`*/api/actions/${action.id}`, () => HttpResponse.json({ action })),
+      http.patch(`*/api/actions/${action.id}/evaluation`, async ({ request }) => {
+        sent = await request.json();
+        return HttpResponse.json({ action });
+      }),
+    );
+    renderRoute(`/acao/${action.id}/editar`);
+    const observation = await screen.findByRole('textbox', { name: 'Observação (opcional)' });
+    expect(observation).toHaveValue('Observação fictícia');
+    await user.clear(observation);
+    await user.type(observation, 'Observação corrigida');
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+    await waitFor(() => expect(sent).toEqual({
+      actionDate: action.actionDate, name: action.name, category: action.category, expectation: action.expectation,
+      pleasure: 7, achievement: 8, observation: 'Observação corrigida',
+    }));
+  });
+});
+
 afterEach(() => {
   vi.useRealTimers();
 });
@@ -89,6 +118,16 @@ function recordWrites() {
 }
 
 describe('/acao', () => {
+  it('exibe Corrigir ação só enquanto a avaliação está no prazo', async () => {
+    actionsApi([
+      fakeAction({ name: 'Ação de hoje', status: 'AVALIADA', evaluationEditableUntil: '2026-09-25T03:00:00.000Z' }),
+      fakeAction({ name: 'Ação antiga', status: 'AVALIADA', evaluationEditableUntil: '2026-09-24T03:00:00.000Z' }),
+    ]);
+    renderRoute('/acao');
+    expect(await screen.findByRole('link', { name: 'Corrigir ação: Ação de hoje' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Corrigir ação: Ação antiga' })).not.toBeInTheDocument();
+  });
+
   it('sem o aceite da Ação: a explicação e o pedido de aceite, sem buscar', async () => {
     let asked = false;
     server.use(

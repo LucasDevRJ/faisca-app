@@ -26,6 +26,7 @@ export type Action = {
   photos: { id: string; createdAt: string }[];
   photosDeadline: { date: string; time: string | null } | null;
   photosOpen: boolean;
+  evaluationEditableUntil?: string | null;
 };
 
 export const MAX_ACTION_PHOTOS = 10;
@@ -39,6 +40,7 @@ export type CreateActionInput =
 
 export type UpdateActionInput = Partial<Planned>;
 export type EvaluateActionInput = { pleasure: number; achievement: number; observation?: string };
+export type CorrectActionInput = Planned & EvaluateActionInput;
 
 export async function fetchActions(from: string, to: string): Promise<Action[]> {
   const { data } = await api.get<{ actions: Action[] }>('/actions', { params: { from, to } });
@@ -62,6 +64,11 @@ export async function updateAction(id: string, input: UpdateActionInput): Promis
 
 export async function evaluateAction(id: string, input: EvaluateActionInput): Promise<Action> {
   const { data } = await api.post<{ action: Action }>(`/actions/${id}/evaluate`, input);
+  return data.action;
+}
+
+export async function correctAction(id: string, input: CorrectActionInput): Promise<Action> {
+  const { data } = await api.patch<{ action: Action }>(`/actions/${id}/evaluation`, input);
   return data.action;
 }
 
