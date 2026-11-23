@@ -61,33 +61,50 @@ function typeSharedInLink(link: ConversationLink, type: LinkedRecordType) {
     || (coversArea(link.patient.privacyVersion, access.privacy) && coversArea(link.therapist.privacyVersion, access.privacy)));
 }
 
-function findPatientRecord(link: ConversationLink, type: LinkedRecordType, id: string) {
-  return delegate(type).findFirst({ where: { id, userId: link.patientId }, ...(type === 'THOUGHT_RECORD' && { include: { emotions: true } }) });
+// Sono e humor e Remédio do dia estão na mesma linha (dailyCheckIn): o dia só conta como registro da
+// caixa que tem dado dela, para a mensagem não revelar um remédio com só "Sono e humor" liberada
+// (revisor-seguranca).
+function hasBoxContent(type: LinkedRecordType, row: Record<string, unknown>) {
+  if (type === 'MEDICATION') return row.medication != null;
+  if (type === 'SLEEP_MOOD') return ['bedTime', 'wakeTime', 'sleepQuality', 'mood', 'moodWord'].some((field) => row[field] != null);
+  return true;
+}
+
+async function findPatientRecords(link: ConversationLink, type: LinkedRecordType, ids: string[]) {
+  const rows = await delegate(type).findMany({
+    where: { id: { in: ids }, userId: link.patientId }, ...(type === 'THOUGHT_RECORD' && { include: { emotions: true } }),
+  });
+  return new Map(rows.filter((row) => hasBoxContent(type, row)).map((row) => [String(row.id), row]));
+}
+
+async function findPatientRecord(link: ConversationLink, type: LinkedRecordType, id: string) {
+  return (await findPatientRecords(link, type, [id])).get(id) ?? null;
 }
 
 // Conferido a cada leitura, para quem vê: o paciente vê o próprio registro (com o aceite da área); a
 // profissional, só com a área liberada. Sem acesso, ou registro apagado: "indisponível", sem nada dele.
-async function resolveRecord(link: ConversationLink, viewerIsPatient: boolean, type: LinkedRecordType, id: string): Promise<PublicRecord> {
-  const privacy = ACCESS[type].privacy;
-  const allowed = viewerIsPatient ? !privacy || coversArea(link.patient.privacyVersion, privacy) : typeSharedInLink(link, type);
-  const row = allowed ? await findPatientRecord(link, type, id) : null;
-  if (!row) return { unavailable: true };
-  const item = summary(type, row);
-  return { type, id, date: item.date, title: previewOf(item.title), ...(item.parentId && { parentId: item.parentId }) };
-}
-
+// Uma consulta por tipo de registro da página, e não uma por mensagem (revisor-seguranca).
 async function toPublicPage(rows: PrivateMessage[], link: ConversationLink, viewerIsPatient: boolean) {
-  const records = new Map<string, Promise<PublicRecord>>();
+  const idsByType = new Map<LinkedRecordType, Set<string>>();
   for (const row of rows) {
-    if (row.recordType && row.recordId) {
-      const key = `${row.recordType}:${row.recordId}`;
-      if (!records.has(key)) records.set(key, resolveRecord(link, viewerIsPatient, row.recordType, row.recordId));
-    }
+    if (row.recordType && row.recordId) idsByType.set(row.recordType, (idsByType.get(row.recordType) ?? new Set()).add(row.recordId));
   }
-  return Promise.all(rows.map(async (row) => ({
+  const found = new Map<string, PublicRecord>();
+  await Promise.all([...idsByType].map(async ([type, ids]) => {
+    const privacy = ACCESS[type].privacy;
+    const allowed = viewerIsPatient ? !privacy || coversArea(link.patient.privacyVersion, privacy) : typeSharedInLink(link, type);
+    if (!allowed) return;
+    for (const [id, row] of await findPatientRecords(link, type, [...ids])) {
+      const item = summary(type, row);
+      found.set(`${type}:${id}`, { type, id, date: item.date, title: previewOf(item.title), ...(item.parentId && { parentId: item.parentId }) });
+    }
+  }));
+  return rows.map((row) => ({
     ...toPublic(row, viewerIsPatient),
-    record: row.recordType && row.recordId ? await records.get(`${row.recordType}:${row.recordId}`)! : null,
-  })));
+    record: row.recordType && row.recordId
+      ? found.get(`${row.recordType}:${row.recordId}`) ?? { unavailable: true as const }
+      : null,
+  }));
 }
 
 function toPublic(row: PrivateMessage, viewerIsPatient: boolean) {

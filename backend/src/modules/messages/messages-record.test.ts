@@ -126,4 +126,46 @@ describe('mensagem "Sobre um registro" (DEC-128)', () => {
       linkId, sentByPatient: true, topic: 'DUVIDA', body: 'Com referência.', recordType: 'ACTIVITY', recordId: activityId,
     } })).rejects.toThrow();
   });
+
+  it('nega sem o aceite da área de um dos dois, e a resposta dela depois que a área sai', async () => {
+    await prisma.therapistLink.update({ where: { id: linkId }, data: { sharedAreas: ['ACTIVITIES', 'THOUGHT_RECORDS'] } });
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    const url = `/messages/${linkId}`;
+    expect((await patient.post(url).send(about('THOUGHT_RECORD', thoughtId))).status).toBe(201);
+    // A versão do aviso só avança: quem não tem o aceite do RPD também não tem o das Mensagens, e a
+    // conversa inteira fecha (403), sem mostrar nada do registro.
+    await prisma.user.update({ where: { id: professionalId }, data: { privacyVersion: '2026-10' } });
+    expect((await patient.post(url).send(about('THOUGHT_RECORD', thoughtId))).status).toBe(403);
+    expect((await professional.get(url)).status).toBe(403);
+    await prisma.user.update({ where: { id: professionalId }, data: { privacyVersion: MESSAGES_PRIVACY_VERSION } });
+
+    await patient.post(url).send(about('ACTIVITY', activityId));
+    await prisma.therapistLink.update({ where: { id: linkId }, data: { sharedAreas: [] } });
+    const reply = await professional.post(url).send({ ...about('ACTIVITY', activityId), body: 'Resposta fictícia.' });
+    expect(reply.status).toBe(403);
+    expect(reply.body.error.code).toBe('RECORD_NOT_SHARED');
+  });
+
+  it('registro apontado em outro vínculo dela não serve para responder aqui; vínculo revogado não lê', async () => {
+    const other = await createConfirmedUser({ email: 'registro-segundo@faisca.test', privacyVersion: MESSAGES_PRIVACY_VERSION });
+    const otherLink = await createTestLink({ patientId: other.id, therapistId: professionalId, sharedAreas: ['ACTIVITIES'] });
+    const otherActivity = await prisma.activity.create({ data: { userId: other.id, name: 'Outra atividade fictícia', activityDate: dateOnlyToDate(todayInAppZone()), status: 'PLANEJADA' } });
+    const secondPatient = await login('registro-segundo@faisca.test');
+    expect((await secondPatient.post(`/messages/${otherLink.id}`).send(about('ACTIVITY', otherActivity.id))).status).toBe(201);
+
+    const professional = await login(professionalEmail);
+    expect((await professional.post(`/messages/${linkId}`).send(about('ACTIVITY', otherActivity.id))).status).toBe(403);
+
+    await prisma.therapistLink.update({ where: { id: otherLink.id }, data: { revokedAt: new Date() } });
+    expect((await professional.get(`/messages/${otherLink.id}`)).status).toBe(403);
+    expect((await secondPatient.get(`/messages/${otherLink.id}`)).status).toBe(403);
+  });
+
+  it('com só "Sono e humor" liberada, um dia que só tem o remédio não vira registro apontável', async () => {
+    await prisma.therapistLink.update({ where: { id: linkId }, data: { sharedAreas: ['SLEEP_MOOD'] } });
+    const onlyMedication = await prisma.dailyCheckIn.create({ data: { userId: patientId, checkInDate: dateOnlyToDate(todayInAppZone()), medication: 'TOMOU' } });
+    const patient = await login(patientEmail);
+    expect((await patient.post(`/messages/${linkId}`).send(about('SLEEP_MOOD', onlyMedication.id))).status).toBe(404);
+  });
 });

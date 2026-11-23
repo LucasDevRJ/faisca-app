@@ -2935,6 +2935,12 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   conversa. A lista de conversas diz ao paciente se a profissional aceita o assunto e quais tipos
   ele pode apontar. As regras de acesso dos registros ficam num módulo comum com as ligações
   (`record-links/record-access.ts`).
+- **Detalhes das revisões:** Sono e humor e Remédio do dia ficam na mesma linha do dia, e o dia só
+  conta como registro da caixa que tem dado dela (com só "Sono e humor" liberada, um dia só com o
+  remédio não aparece). Se a profissional desligar a opção, ela ainda responde sobre um registro
+  apontado antes, para não cortar a conversa no meio; o paciente é que deixa de poder apontar novos.
+  A API conhece a versão `2026-11.13` antes das telas (o front é publicado minutos antes), como na
+  `2026-11.12`; o que a profissional vê pela mensagem ela já veria na área liberada.
 - **Limite conhecido:** o cartão mostra só o começo do título; o conteúdo completo continua na área
   do registro, com as permissões de sempre. Apagar o registro deixa a mensagem com "Registro
   indisponível".
