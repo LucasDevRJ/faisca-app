@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -95,5 +95,47 @@ describe('Mensagens privadas', () => {
     renderRoute('/mensagens');
     expect(await screen.findByText(/Para trocar mensagens com quem acompanha você/)).toBeInTheDocument();
     expect(fetched).toBe(false);
+  });
+
+  it('lista mostra "Nova" e a prévia; abrir a conversa marca o "visto" na mais recente (DEC-127)', async () => {
+    const user = userEvent.setup();
+    const seen: unknown[] = [];
+    const messages: Message[] = [
+      { id: '00000000-0000-4000-8000-0000000000b2', topic: 'LOGISTICA', body: 'Podemos mudar para 15h?', mine: false, createdAt: '2026-11-22T18:01:00Z' },
+      { id: '00000000-0000-4000-8000-0000000000b1', topic: 'LOGISTICA', body: 'Oi', mine: true, createdAt: '2026-11-22T18:00:00Z' },
+    ];
+    server.use(
+      loggedIn,
+      http.get('*/api/messages', () => HttpResponse.json([{ ...conversation, unread: true,
+        lastMessage: { preview: 'Podemos mudar para 15h?', mine: false, createdAt: '2026-11-22T18:01:00Z' } }])),
+      http.get(url, () => HttpResponse.json({ messages, next: null })),
+      http.put(`${url}/seen`, async ({ request }) => {
+        seen.push(await request.json());
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderRoute('/mensagens');
+    const item = await screen.findByRole('link', { name: /Profissional Fictícia, mensagem nova/ });
+    expect(screen.getByText('Nova')).toBeInTheDocument();
+    expect(screen.getByText(/Podemos mudar para 15h\?/)).toBeInTheDocument();
+
+    await user.click(item);
+    expect(await screen.findByRole('textbox', { name: 'Mensagem' })).toBeInTheDocument();
+    await waitFor(() => expect(seen).toEqual([{ lastMessageId: messages[0]!.id }]));
+    // Com poucas mensagens, o campo já está à vista: sem o atalho "Ir para escrever".
+    expect(screen.queryByRole('button', { name: 'Ir para escrever mensagem' })).not.toBeInTheDocument();
+  });
+
+  it('o aviso de urgência traz o CVV e o SAMU com toque para ligar', async () => {
+    server.use(loggedIn, http.get('*/api/messages', () => HttpResponse.json([])));
+    renderRoute('/mensagens');
+    expect(await screen.findByRole('link', { name: 'CVV, no 188' })).toHaveAttribute('href', 'tel:188');
+    expect(screen.getByRole('link', { name: 'SAMU, no 192' })).toHaveAttribute('href', 'tel:192');
+  });
+
+  it('o menu mostra o selo de mensagem nova só com o aceite das Mensagens', async () => {
+    server.use(loggedIn, http.get('*/api/messages/unread', () => HttpResponse.json({ unread: true })));
+    renderRoute('/conta');
+    expect(await screen.findByRole('link', { name: 'Mensagens, há mensagem nova' })).toBeInTheDocument();
   });
 });
