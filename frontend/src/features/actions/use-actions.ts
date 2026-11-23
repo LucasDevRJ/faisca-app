@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getApiError } from '../auth/auth-api';
 import {
   createAction,
+  correctAction,
   deleteAction,
   deleteActionPhoto,
   evaluateAction,
@@ -11,6 +13,7 @@ import {
   updateAction,
   uploadActionPhoto,
   type CreateActionInput,
+  type CorrectActionInput,
   type EvaluateActionInput,
   type UpdateActionInput,
 } from './actions-api';
@@ -53,6 +56,19 @@ export const useUpdateAction = () =>
   useActionMutation(({ id, input }: { id: string; input: UpdateActionInput }) => updateAction(id, input));
 export const useEvaluateAction = () =>
   useActionMutation(({ id, input }: { id: string; input: EvaluateActionInput }) => evaluateAction(id, input));
+export const useCorrectAction = () =>
+  useActionMutation(({ id, input }: { id: string; input: CorrectActionInput }) => correctAction(id, input));
+
+export function useActionCorrectionOpen(deadline: string | null | undefined) {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (!deadline) return;
+    const delay = Date.parse(deadline) - Date.now();
+    const timer = window.setTimeout(() => setNow(Date.now()), Math.max(0, delay));
+    return () => window.clearTimeout(timer);
+  }, [deadline]);
+  return Boolean(deadline && now < Date.parse(deadline));
+}
 export const useMarkActionNotDone = () =>
   useActionMutation(({ id, observation }: { id: string; observation?: string }) => markActionNotDone(id, observation));
 export const useDeleteAction = () => useActionMutation((id: string) => deleteAction(id));

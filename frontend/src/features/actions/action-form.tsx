@@ -24,8 +24,7 @@ type Errors = Record<string, string | undefined>;
 
 type ActionFormProps = {
   today: string;
-  initial?: Partial<Pick<Action, 'actionDate' | 'name' | 'category' | 'expectation'>>;
-  // Na edição, só planejar.
+  initial?: Partial<Pick<Action, 'actionDate' | 'name' | 'category' | 'expectation' | 'status' | 'pleasure' | 'achievement' | 'observation'>>;
   editing?: boolean;
   submitLabel: string;
   pending: boolean;
@@ -37,25 +36,25 @@ type ActionFormProps = {
 export function ActionForm({ today, initial, editing, submitLabel, pending, apiError, cancelTo, onSubmit }: ActionFormProps) {
   const { oneThingAtATime } = useAccessibility();
   const [step, setStep] = useState(0);
-  const [alreadyDone, setAlreadyDone] = useState(false);
+  const [alreadyDone, setAlreadyDone] = useState(Boolean(editing && initial?.status === 'AVALIADA'));
   const [actionDate, setActionDate] = useState(initial?.actionDate ?? today);
   const [name, setName] = useState(initial?.name ?? '');
   const [category, setCategory] = useState<ActionCategory | null>(initial?.category ?? null);
   const [expectation, setExpectation] = useState<number | null>(initial?.expectation ?? null);
-  const [pleasure, setPleasure] = useState<number | null>(null);
-  const [achievement, setAchievement] = useState<number | null>(null);
-  const [observation, setObservation] = useState('');
+  const [pleasure, setPleasure] = useState<number | null>(initial?.pleasure ?? null);
+  const [achievement, setAchievement] = useState<number | null>(initial?.achievement ?? null);
+  const [observation, setObservation] = useState(initial?.observation ?? '');
   const [errors, setErrors] = useState<Errors>({});
 
   function dateError() {
     if (!isValidDateOnly(actionDate)) return 'Escolha uma data.';
+    // Uma ação avaliada hoje pode ter sido feita há mais tempo. Manter o dia original é válido.
+    if (editing && actionDate === initial?.actionDate) return undefined;
     if (alreadyDone) {
       if (actionDate > today) return 'O que já foi feito precisa ser de hoje ou de um dia anterior.';
       if (actionDate < addDays(today, -RECORD_BACK_DAYS)) return `Dá para registrar o que foi feito nos últimos ${RECORD_BACK_DAYS} dias.`;
       return undefined;
     }
-    // Na edição, o dia que já estava (mesmo passado) continua valendo.
-    if (editing && actionDate === initial?.actionDate) return undefined;
     if (actionDate < today) return 'Planeje para hoje ou para um dia que ainda vai chegar.';
     if (actionDate > addDays(today, PLAN_AHEAD_DAYS)) return `Planeje para até ${PLAN_AHEAD_DAYS} dias à frente.`;
     return undefined;
@@ -178,7 +177,7 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
       {showStep(1) && (
         <>
           <TextField
-            label="O que você vai fazer?"
+            label={editing && alreadyDone ? 'O que você fez?' : 'O que você vai fazer?'}
             // Exemplo do tipo escolhido (DEC-052): ajuda quem trava na hora de pensar.
             placeholder={category ? CATEGORY_TEXT[category].placeholder : 'Escolha o tipo para ver um exemplo'}
             hint={category ? CATEGORY_TEXT[category].examples : undefined}
@@ -190,7 +189,9 @@ export function ActionForm({ today, initial, editing, submitLabel, pending, apiE
 
           <TextField
             label="Dia"
-            hint={alreadyDone ? `Hoje ou até ${RECORD_BACK_DAYS} dias atrás.` : `Hoje ou até ${PLAN_AHEAD_DAYS} dias à frente.`}
+            hint={alreadyDone
+              ? `${editing ? 'Se mudar o dia, escolha hoje' : 'Hoje'} ou até ${RECORD_BACK_DAYS} dias atrás.`
+              : `Hoje ou até ${PLAN_AHEAD_DAYS} dias à frente.`}
             type="date"
             value={actionDate}
             onChange={(e) => setActionDate(e.target.value)}

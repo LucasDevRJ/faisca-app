@@ -8,6 +8,7 @@ import { useAccessibility } from '../profile/use-profile';
 import { ActionPhotos } from './action-photos';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action } from './actions-api';
+import { useActionCorrectionOpen } from './use-actions';
 import { RecordLinksPanel } from '../record-links/record-links-panel';
 import { recordAnchorId } from '../record-links/record-links-format';
 
@@ -32,6 +33,7 @@ export function ActionCard(props: ActionCardProps) {
   const { directLanguage } = useAccessibility();
   const titleId = useId();
   const planned = action.status === 'PLANEJADA';
+  const correctionOpen = useActionCorrectionOpen(!props.readOnly && action.status === 'AVALIADA' ? action.evaluationEditableUntil : null);
   const dayArrived = !props.readOnly && action.actionDate <= props.today;
   const statusLabel =
     action.status === 'NAO_REALIZADA' && directLanguage ? 'Não realizada' : STATUS_LABEL[action.status];
@@ -111,6 +113,10 @@ export function ActionCard(props: ActionCardProps) {
             </Button>
           </div>
         </div>
+      )}
+      {correctionOpen && (
+        <Link to={`/acao/${action.id}/editar`} className="inline-flex min-h-11 self-start items-center rounded-md px-3 font-medium text-primary-text hover:bg-bg"
+          aria-label={`Corrigir ação: ${action.name}`}>Corrigir ação</Link>
       )}
       {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTION" id={action.id} date={action.actionDate} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
     </article>

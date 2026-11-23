@@ -169,7 +169,7 @@ export function HowItWorksPage() {
         </RecordGuide>
         <RecordGuide id="acao" title="Ação" clinical>
           <p>Planeje uma ação de prazer, conexão ou realização e, depois, compare o que esperava com o que sentiu.</p>
-          <p><strong>Quem vê:</strong> você e as profissionais a quem liberar Ação. Ações avaliadas ou marcadas como não realizadas são registros finais.</p>
+          <p><strong>Quem vê:</strong> você e as profissionais a quem liberar Ação. Você pode corrigir a avaliação até o fim do dia em que contou como foi.</p>
         </RecordGuide>
         <RecordGuide id="agenda" title="Consultas e ciclo da consulta" clinical>
           <p>Cadastre sua agenda para organizar o período entre sessões. O ciclo agrupa registros para você e sua psicóloga retomarem o que aconteceu nesse intervalo.</p>
@@ -292,7 +292,7 @@ export function HowItWorksPage() {
         </details>
         <details className="border-t border-border pt-3">
           <summary className="min-h-11 cursor-pointer content-center font-semibold">Posso editar ou apagar um registro?</summary>
-          <p className="mt-2 text-muted">Depende da área e do prazo. Atividades finalizadas e Ações avaliadas ou não realizadas ficam como registros finais e não podem ser alteradas. As regras aparecem junto de cada recurso; se tiver dúvida, converse com sua profissional.</p>
+          <p className="mt-2 text-muted">Depende da área e do prazo. Você pode corrigir uma Ação avaliada até o fim do dia em que contou como foi. Atividades finalizadas e Ações marcadas como não realizadas ficam guardadas como estão. Se tiver dúvida, converse com sua profissional.</p>
         </details>
         <details className="border-t border-border pt-3">
           <summary className="min-h-11 cursor-pointer content-center font-semibold">Esqueci minha senha. O que faço?</summary>

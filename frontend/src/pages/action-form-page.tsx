@@ -5,7 +5,7 @@ import { buttonClasses } from '../components/ui/button-styles';
 import { ActionForm } from '../features/actions/action-form';
 import { CATEGORIES } from '../features/actions/action-labels';
 import type { Action, ActionCategory } from '../features/actions/actions-api';
-import { useAction, useCreateAction, useUpdateAction } from '../features/actions/use-actions';
+import { useAction, useActionCorrectionOpen, useCorrectAction, useCreateAction, useUpdateAction } from '../features/actions/use-actions';
 import { isValidDateOnly, todayInAppZone } from '../features/activities/week';
 import { getApiError } from '../features/auth/auth-api';
 import { PrivacyConsentGate } from '../features/auth/privacy-consent';
@@ -82,13 +82,15 @@ export function NewActionPage() {
   );
 }
 
-// /acao/:id/editar (DEC-052). Só a planejada; avaliada e não realizada são finais (DEC-051).
+// /acao/:id/editar (DEC-052). Planejada ou avaliada no prazo de correção (DEC-129).
 export function EditActionPage() {
   const { id = '' } = useParams();
   const { data: user } = useSession();
   const consented = Boolean(user?.privacyAreas.actions);
   const action = useAction(id, consented);
   const update = useUpdateAction();
+  const correct = useCorrectAction();
+  const correctionOpen = useActionCorrectionOpen(action.data?.evaluationEditableUntil);
   const back = useBackToPeriod();
 
   if (!consented || (action.isError && needsPrivacyConsent(action.error))) {
@@ -120,11 +122,17 @@ export function EditActionPage() {
     );
   }
 
-  const final = action.data.status !== 'PLANEJADA' || (update.isError && getApiError(update.error).status === 409);
+  const evaluated = action.data.status === 'AVALIADA';
+  const final = (action.data.status !== 'PLANEJADA' && !(evaluated && correctionOpen))
+    || (update.isError && getApiError(update.error).status === 409)
+    || (correct.isError && getApiError(correct.error).code === 'ACTION_CORRECTION_CLOSED');
   if (final) {
     return (
       <Frame title="Editar ação">
-        <Alert tone="attention">Esta ação já foi avaliada ou marcada como não realizada. Ela continua guardada como está.</Alert>
+        <Alert tone="attention">
+          {evaluated ? 'O prazo para corrigir esta ação terminou. Ela continua guardada como está.'
+            : 'Esta ação já foi avaliada ou marcada como não realizada. Ela continua guardada como está.'}
+        </Alert>
         <Link to="/acao" className={buttonClasses('secondary', 'self-start')}>
           Voltar para a Ação
         </Link>
@@ -133,24 +141,28 @@ export function EditActionPage() {
   }
 
   return (
-    <Frame title="Editar ação">
+    <Frame title={evaluated ? 'Corrigir ação' : 'Editar ação'}>
+      {evaluated && <p className="text-muted">Você pode corrigir esta ação até o fim do dia da avaliação, no horário de São Paulo.</p>}
       <ActionForm
+        key={`${id}:${action.data.status}`}
         today={todayInAppZone()}
         initial={action.data}
         editing
         submitLabel="Salvar alterações"
-        pending={update.isPending}
-        apiError={formError(update.error)}
+        pending={update.isPending || correct.isPending}
+        apiError={formError(evaluated ? correct.error : update.error)}
         cancelTo="/acao"
-        onSubmit={(input) =>
-          update.mutate(
-            {
-              id,
-              input: { actionDate: input.actionDate, name: input.name, category: input.category, expectation: input.expectation },
-            },
-            { onSuccess: (saved) => back(saved, 'Alterações salvas.') },
-          )
-        }
+        onSubmit={(input) => {
+          const { actionDate, name, category, expectation } = input;
+          const fields = { actionDate, name, category, expectation };
+          const onSuccess = (saved: Action) => back(saved, 'Alterações salvas.');
+          if (input.status === 'AVALIADA') {
+            const { pleasure, achievement, observation } = input;
+            correct.mutate({ id, input: { ...fields, pleasure, achievement, observation } }, { onSuccess });
+            return;
+          }
+          update.mutate({ id, input: fields }, { onSuccess });
+        }}
       />
     </Frame>
   );
