@@ -57,7 +57,8 @@ describe('mensagem "Sobre um registro" (DEC-128)', () => {
     const professional = await login(professionalEmail);
     const [conversation] = (await patient.get('/messages')).body;
     expect(conversation).toMatchObject({ recordTopics: true, recordTypes: ['ACTIVITY'] });
-    expect((await professional.get('/messages')).body[0]).toMatchObject({ recordTopics: false, recordTypes: [] });
+    expect((await professional.get('/messages')).body[0]).toMatchObject({ recordTopics: false, recordTypes: [], patientId });
+    expect(conversation).not.toHaveProperty('patientId');
 
     const sent = await patient.post(`/messages/${linkId}`).send(about('ACTIVITY', activityId));
     expect(sent.status).toBe(201);

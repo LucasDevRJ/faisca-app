@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import { getPatientLink } from '../../middlewares/require-patient-access.js';
-import { createLinkSchema, listLinksSchema, recordLinkIdSchema } from './record-links.schema.js';
+import { candidatesSchema, createLinkSchema, listLinksSchema, recordLinkIdSchema } from './record-links.schema.js';
 import type { RecordLinksService } from './record-links.service.js';
 
 export function createRecordLinksController(service: RecordLinksService) {
@@ -16,7 +16,7 @@ export function createRecordLinksController(service: RecordLinksService) {
     res.status(200).json({ links });
   };
   const candidates: RequestHandler = async (req, res) => {
-    const query = listLinksSchema.parse(req.query);
+    const query = candidatesSchema.parse(req.query);
     res.status(200).json({ records: await service.candidates(getAuthUser(req).id, query) });
   };
   const create: RequestHandler = async (req, res) => {

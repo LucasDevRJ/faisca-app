@@ -6,7 +6,7 @@ import { getApiError } from '../auth/auth-api';
 import { subscribeCurrentDevice } from '../reminders/reminders-api';
 import { fetchMessagePreferences, updateMessagePreferences, type MessagePreferences } from './messages-api';
 
-export function MessageSettings({ userId }: { userId: string }) {
+export function MessageSettings({ userId, professional = false }: { userId: string; professional?: boolean }) {
   const settings = useQuery({
     queryKey: ['messages', userId, 'preferences'],
     queryFn: ({ signal }) => fetchMessagePreferences(signal),
@@ -19,13 +19,15 @@ export function MessageSettings({ userId }: { userId: string }) {
       <p className="text-muted">Escolha como receber avisos. Eles não mostram o conteúdo nem quem enviou.</p>
       {settings.isPending && <p role="status">Carregando preferências…</p>}
       {settings.isError && <Alert tone="attention">{getApiError(settings.error).message}</Alert>}
-      {settings.isSuccess && <PreferencesForm initial={settings.data} />}
+      {settings.isSuccess && <PreferencesForm initial={settings.data} professional={professional} />}
     </section>
   );
 }
 
-function PreferencesForm({ initial }: { initial: MessagePreferences }) {
+function PreferencesForm({ initial, professional }: { initial: MessagePreferences; professional: boolean }) {
   const [email, setEmail] = useState(initial.email);
+  // Profissional (DEC-128): receber mensagens "Sobre um registro". Começa ligado.
+  const [recordTopics, setRecordTopics] = useState(initial.recordTopics);
   const [push, setPush] = useState(initial.push);
   const [savedPush, setSavedPush] = useState(initial.push);
   const save = useMutation({
@@ -41,7 +43,7 @@ function PreferencesForm({ initial }: { initial: MessagePreferences }) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    save.mutate({ email, push });
+    save.mutate(professional ? { email, push, recordTopics } : { email, push });
   }
 
   return (
@@ -58,7 +60,19 @@ function PreferencesForm({ initial }: { initial: MessagePreferences }) {
             Notificação no aparelho
           </label>
         </fieldset>
-        <Button type="submit" disabled={save.isPending} className="self-start">Salvar avisos</Button>
+        {professional && (
+          <fieldset disabled={save.isPending} className="flex flex-col gap-1">
+            <legend className="sr-only">Mensagens sobre registros</legend>
+            <label className="flex min-h-11 cursor-pointer items-center gap-2">
+              <input type="checkbox" checked={recordTopics} onChange={(event) => { save.reset(); setRecordTopics(event.target.checked); }} />
+              Receber mensagens sobre registros
+            </label>
+            <p className="text-sm text-muted">
+              Seus pacientes podem apontar um registro ao escrever. Você vê só os registros das áreas que cada um liberou.
+            </p>
+          </fieldset>
+        )}
+        <Button type="submit" disabled={save.isPending} className="self-start">{professional ? 'Salvar preferências' : 'Salvar avisos'}</Button>
         {save.isError && <Alert tone="attention">{getApiError(save.error).message}</Alert>}
         <p role="status">{save.isSuccess ? 'Preferências salvas.' : ''}</p>
       </form>

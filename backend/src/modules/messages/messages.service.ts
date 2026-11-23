@@ -157,6 +157,9 @@ export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
           id: link.id,
           name: isPatient ? link.therapist.name : link.patient.name,
           counterpart: isPatient ? link.kind : 'PATIENT',
+          // Para a profissional abrir o registro apontado na página do paciente (DEC-128). Ela já
+          // conhece esse id pelos vínculos (GET /links/patients).
+          ...(!isPatient && { patientId: link.patientId }),
           available,
           unread: available ? await hasUnread(link, userId) : false,
           // Só o paciente começa "Sobre um registro" (DEC-128), se a profissional aceita, e só dos

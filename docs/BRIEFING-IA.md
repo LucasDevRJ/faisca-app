@@ -170,6 +170,9 @@ Na prática clínica tradicional:
   da conversa. Um selo discreto no menu ("Mensagens •") e o aviso "Nova" na conversa mostram que
   chegou mensagem, com uma prévia só dentro do app; a outra pessoa nunca fica sabendo se você leu.
   O canal não atende urgências e deixa à mão o **CVV (188)** e o **SAMU (192)**, com toque para ligar.
+  O paciente também pode escrever **"Sobre um registro"**: escolhe o registro (só das áreas liberadas
+  para aquela profissional) e a conversa mostra um cartão que leva até ele. A profissional pode
+  desligar esse assunto em Mensagens.
 
 - **Foto de perfil e 5 paletas de cores:**
   - Foto de perfil com recorte circular no próprio navegador antes de enviar (e iniciais quando não há foto).

@@ -67,7 +67,7 @@ describe('ligações entre registros', () => {
     } });
     const candidates = await patient.get(`/record-links/candidates?recordType=ACTIVITY&recordId=${records[0]!.id}`);
     expect(candidates.status).toBe(200);
-    expect(candidates.body.candidates).not.toEqual(expect.arrayContaining([
+    expect(candidates.body.records).not.toEqual(expect.arrayContaining([
       expect.objectContaining({ type: 'SLEEP_MOOD', id: checkIn.id }),
       expect.objectContaining({ type: 'MEDICATION', id: checkIn.id }),
     ]));
@@ -150,5 +150,20 @@ describe('ligações entre registros', () => {
     expect(await prisma.recordLink.findMany({ where: { kind: 'REPETITION', sourceType: 'THOUGHT_RECORD' } })).toMatchObject([
       { sourceId: repeatedThought.body.thoughtRecord.id, targetId: thirdThought.body.thoughtRecord.id },
     ]);
+  });
+
+  it('candidatos sem registro de origem (DEC-128): só com o período, e só os próprios', async () => {
+    const patient = await login('ligacoes@faisca.test');
+    const today = todayInAppZone();
+    expect((await patient.get('/record-links/candidates')).status).toBe(400);
+    expect((await patient.get(`/record-links/candidates?recordType=ACTIVITY&from=${today}&to=${today}`)).status).toBe(400);
+    const res = await patient.get(`/record-links/candidates?from=${today}&to=${today}`);
+    expect(res.status).toBe(200);
+    const ids = res.body.records.map((record: { id: string }) => record.id);
+    expect(ids).toEqual(expect.arrayContaining([records[0]!.id, records[1]!.id]));
+    expect(ids).not.toContain(records[2]!.id);
+    // Conta só de terapeuta: a lista é do próprio paciente (regra 1).
+    const professional = await login('profissional-ligacoes@faisca.test');
+    expect((await professional.get(`/record-links/candidates?from=${today}&to=${today}`)).status).toBe(403);
   });
 });

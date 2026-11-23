@@ -11,9 +11,12 @@ import { useSession } from '../features/auth/use-session';
 import { formatDateTime } from '../features/links/link-format';
 import {
   fetchConversations, fetchMessages, markConversationSeen, MESSAGE_LIMIT, messageTopics, sendMessage,
-  type Conversation, type Message, type MessageTopic,
+  type Conversation, type Message, type MessageRecord, type MessageTopic,
 } from '../features/messages/messages-api';
 import { MessageSettings } from '../features/messages/message-settings';
+import { RecordLinkPicker } from '../features/record-links/record-link-picker';
+import type { RecordSummary } from '../features/record-links/record-links-api';
+import { formatRecordDate, recordLinkHref, TYPE_LABEL } from '../features/record-links/record-links-format';
 
 const linkClass = 'inline-flex min-h-11 items-center font-medium text-primary-text underline underline-offset-4';
 const roles = { PATIENT: 'Paciente', PSICOLOGIA: 'Psicóloga', PSIQUIATRIA: 'Psiquiatra' };
@@ -25,7 +28,7 @@ export function MessagesPage({ settings = false }: { settings?: boolean }) {
   if (!user.privacyAreas.messages) {
     return <PrivacyConsentGate area="messages" audience={user.profiles.patient ? 'patient' : 'therapist'} />;
   }
-  if (settings) return <MessageSettings key={user.id} userId={user.id} />;
+  if (settings) return <MessageSettings key={user.id} userId={user.id} professional={user.profiles.therapist} />;
   return <Conversations key={user.id} userId={user.id} linkId={linkId} />;
 }
 
@@ -97,9 +100,21 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
   const [body, setBody] = useState('');
   const [newTopic, setNewTopic] = useState<MessageTopic | null>(null);
   const [replyTopic, setReplyTopic] = useState<MessageTopic | null>(null);
+  // "Sobre um registro" (DEC-128): o registro escolhido para uma mensagem nova.
+  const [pickedRecord, setPickedRecord] = useState<RecordSummary | null>(null);
+  // Ao escolher, o foco vai para "Trocar registro"; ao cancelar, para o assunto (o seletor some).
+  const topicSelect = useRef<HTMLSelectElement>(null);
+  const changeRecord = useRef<HTMLButtonElement>(null);
+  const focusNext = useRef<'change' | 'topic' | null>(null);
+  useEffect(() => {
+    if (focusNext.current === 'change') changeRecord.current?.focus();
+    // Sem o seletor de assunto na tela (voltou ao assunto anterior), o foco vai para a mensagem.
+    if (focusNext.current === 'topic') (topicSelect.current ?? composer.current?.querySelector('textarea'))?.focus();
+    focusNext.current = null;
+  }, [pickedRecord, newTopic]);
   const [fieldError, setFieldError] = useState('');
   const exportRequest = useRef<AbortController | null>(null);
-  const composer = useRef<HTMLFormElement>(null);
+  const composer = useRef<HTMLDivElement>(null);
   const cache = useQueryClient();
   const id = conversation.id;
   const queryKey = ['messages', userId, 'thread', id];
@@ -113,13 +128,20 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
     refetchInterval: 15000,
   });
   // A primeira página vem do mais recente para o mais antigo.
-  const previousTopic = thread.data?.pages[0]?.messages[0]?.topic;
+  const latest = thread.data?.pages[0]?.messages[0];
+  // Responder "Sobre um registro" segue o mesmo registro, se ele ainda está disponível; senão, a
+  // resposta vira uma dúvida breve.
+  const latestRecord = latest?.topic === 'REGISTRO' && latest.record && !('unavailable' in latest.record) ? latest.record : null;
+  const previousTopic: MessageTopic | undefined = latest?.topic === 'REGISTRO' && !latestRecord ? 'DUVIDA' : latest?.topic;
   const topic = newTopic ?? replyTopic ?? previousTopic ?? 'LOGISTICA';
   const choosingTopic = previousTopic === undefined || newTopic !== null;
   const send = useMutation({
-    mutationFn: (input: { topic: MessageTopic; body: string }) => sendMessage(id, input),
+    mutationFn: (input: Parameters<typeof sendMessage>[1]) => sendMessage(id, input),
     gcTime: 0,
-    onSuccess: () => setBody(''),
+    onSuccess: () => {
+      setBody('');
+      setPickedRecord(null);
+    },
     onSettled: async (_data, error) => {
       await cache.invalidateQueries({ queryKey });
       if (!error) {
@@ -159,6 +181,7 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
       const file = new Blob([JSON.stringify({ mensagens: rows.reverse().map((row) => ({
         remetente: row.mine ? 'Você' : conversation.name,
         assunto: messageTopics[row.topic],
+        ...(row.record && { registro: 'unavailable' in row.record ? 'Registro indisponível' : `${TYPE_LABEL[row.record.type]} de ${formatRecordDate(row.record.date)}` }),
         texto: row.body,
         enviadoEmUtc: row.createdAt,
       })) }, null, 2)], { type: 'application/json' });
@@ -177,6 +200,15 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
     const length = body.trim().length;
     if (!length || length > MESSAGE_LIMIT) {
       setFieldError(length ? 'A mensagem pode ter até 2.000 caracteres.' : 'Escreva uma mensagem antes de enviar.');
+      return;
+    }
+    if (topic === 'REGISTRO') {
+      const record = choosingTopic ? pickedRecord : latestRecord;
+      if (!record) {
+        setFieldError('Escolha o registro antes de enviar.');
+        return;
+      }
+      send.mutate({ topic, body: body.trim(), record: { type: record.type, id: record.id } });
       return;
     }
     send.mutate({ topic, body: body.trim() });
@@ -204,14 +236,18 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
                   {message.mine ? 'Você' : conversation.name} · {messageTopics[message.topic]} ·{' '}
                   <time dateTime={message.createdAt}>{formatDateTime(message.createdAt)}</time>
                 </p>
+                {message.record && <RecordCard record={message.record} patientId={conversation.patientId} />}
                 <p className="whitespace-pre-wrap wrap-anywhere">{message.body}</p>
               </li>
             ))}
           </ol>
-          <form ref={composer} className="flex flex-col gap-3" onSubmit={submit} noValidate>
+          {/* O assunto e o seletor de registro ficam fora do formulário da mensagem: o seletor tem a
+              própria busca, e um formulário dentro do outro dispararia o envio (revisor-telas). */}
+          <div ref={composer} className="flex flex-col gap-3">
             {previousTopic && (
               <div className="flex flex-wrap items-center gap-x-2">
-                {!choosingTopic && <p className="text-muted">Respondendo sobre <strong>{messageTopics[topic]}</strong></p>}
+                {!choosingTopic && <p className="text-muted">Respondendo sobre <strong>{topic === 'REGISTRO' ? 'o registro' : messageTopics[topic]}</strong></p>}
+                {!choosingTopic && topic === 'REGISTRO' && latestRecord && <RecordCard record={latestRecord} patientId={conversation.patientId} />}
                 <Button variant="ghost" disabled={send.isPending} aria-expanded={choosingTopic}
                   onClick={() => setNewTopic(choosingTopic ? null : topic)}>
                   {choosingTopic ? 'Manter assunto anterior' : 'Mudar de assunto'}
@@ -221,13 +257,38 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
             {choosingTopic && (
               <label className="flex flex-col gap-1.5 font-medium">
                 Assunto
-                <select className={`${fieldClasses} min-h-11`} value={topic} disabled={send.isPending}
-                  onChange={(event) => setNewTopic(event.target.value === 'DUVIDA' ? 'DUVIDA' : 'LOGISTICA')}>
+                <select ref={topicSelect} className={`${fieldClasses} min-h-11`} value={topic} disabled={send.isPending}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setNewTopic(value === 'DUVIDA' || value === 'REGISTRO' ? value : 'LOGISTICA');
+                    setPickedRecord(null);
+                  }}>
                   <option value="LOGISTICA">{messageTopics.LOGISTICA}</option>
                   <option value="DUVIDA">{messageTopics.DUVIDA}</option>
+                  {conversation.recordTopics && <option value="REGISTRO">{messageTopics.REGISTRO}</option>}
                 </select>
               </label>
             )}
+            {choosingTopic && topic === 'REGISTRO' && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-muted">
+                  Use para uma dúvida breve sobre o registro. O conteúdo em si vocês conversam na consulta.
+                </p>
+                {pickedRecord
+                  ? <div className="flex flex-wrap items-center gap-2">
+                    <RecordCard record={pickedRecord} />
+                    <Button ref={changeRecord} variant="ghost" disabled={send.isPending} onClick={() => setPickedRecord(null)}>Trocar registro</Button>
+                  </div>
+                  : <section aria-labelledby={`${id}-qual-registro`} className="flex flex-col gap-2">
+                    <h3 id={`${id}-qual-registro`} className="font-medium">Qual registro?</h3>
+                    <RecordLinkPicker linkedKeys={NO_KEYS} busy={send.isPending} allowedTypes={conversation.recordTypes}
+                      legend="Registros disponíveis" confirmLabel="Escolher"
+                      onLink={(record) => { focusNext.current = 'change'; setPickedRecord(record); }}
+                      onCancel={() => { focusNext.current = 'topic'; setNewTopic(previousTopic ?? 'LOGISTICA'); }} />
+                  </section>}
+              </div>
+            )}
+          <form className="flex flex-col gap-3" onSubmit={submit} noValidate>
             <TextAreaField label="Mensagem" value={body} limit={MESSAGE_LIMIT} error={fieldError}
               disabled={send.isPending} onChange={(event) => {
                 const value = event.target.value;
@@ -239,11 +300,27 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
             <p role="status">{send.isSuccess ? 'Mensagem enviada.' : ''}</p>
             <Button type="submit" disabled={send.isPending} className="self-start">Enviar mensagem</Button>
           </form>
+          </div>
           {canDownload && <Button variant="secondary" disabled={download.isPending}
             onClick={() => download.mutate()} className="self-start">Baixar cópia da conversa</Button>}
           {download.isError && <Alert tone="attention">{getApiError(download.error).message}</Alert>}
         </>
       )}
     </section>
+  );
+}
+
+const NO_KEYS = new Set<string>();
+
+// Cartão do registro apontado (DEC-128): tipo, data e começo do título, com o link para abrir. Sem
+// acesso, ou registro apagado, só "Registro indisponível".
+function RecordCard({ record, patientId }: { record: MessageRecord | RecordSummary; patientId?: string }) {
+  if ('unavailable' in record) return <p className="text-sm text-muted">Registro indisponível</p>;
+  return (
+    <p className="text-sm wrap-anywhere">
+      <span className="text-muted">Sobre: {TYPE_LABEL[record.type]} · {formatRecordDate(record.date)}</span>{' — '}
+      <span>{record.title}</span>{' '}
+      <Link className="font-medium text-primary-text underline underline-offset-4" to={recordLinkHref(record as RecordSummary, patientId)}>Abrir registro</Link>
+    </p>
   );
 }
