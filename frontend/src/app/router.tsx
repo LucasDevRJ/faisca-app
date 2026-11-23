@@ -5,6 +5,7 @@ import { ActionsPage } from '../pages/actions-page';
 import { CheckEmailPage } from '../pages/check-email-page';
 import { AppointmentsPage } from '../pages/appointments-page';
 import { AccountPage } from '../pages/account-page';
+import { AccountSettingsPage } from '../pages/account-settings-page';
 import { AnnouncementsPage } from '../pages/announcements-page';
 import { ConfirmEmailPage } from '../pages/confirm-email-page';
 import { InvitePage } from '../pages/invite-page';
@@ -54,6 +55,9 @@ export const routes = [
             element: <AppLayout />,
             children: [
               { path: 'conta', element: <AccountPage /> },
+              { path: 'conta/personalizacao', element: <AccountSettingsPage section="personalizacao" /> },
+              { path: 'conta/acessibilidade', element: <AccountSettingsPage section="acessibilidade" /> },
+              { path: 'conta/notificacoes', element: <AccountSettingsPage section="notificacoes" /> },
               { path: 'mensagens', element: <MessagesPage /> },
               { path: 'mensagens/avisos', element: <MessagesPage settings /> },
               { path: 'mensagens/:linkId', element: <MessagesPage /> },

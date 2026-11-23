@@ -18,7 +18,7 @@ describe('preferência de novidades por e-mail (DEC-119)', () => {
       }),
     );
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const checkbox = await screen.findByRole('checkbox', {
       name: 'Quero receber por e-mail avisos sobre novidades importantes do Faísca',

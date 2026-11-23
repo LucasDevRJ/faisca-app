@@ -43,8 +43,13 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
   vê a da terapeuta vinculada. Dá para trocar ou remover a foto a qualquer momento, e ela sai com a
   conta. O celular entra com as notificações (#82), confirmado por código.
 - **Paleta de cores** (DEC-063, DEC-068): Sálvia (padrão), Lavanda, Oceano, Areia ou Alto contraste, salva na
-  conta e combinada com o tema claro, escuro ou automático. Escolhida em **Conta → Seu perfil**, junto
-  com o nome completo: ao tocar numa paleta, as cores mudam na hora, como prévia, e só ficam ao salvar.
+  conta e combinada com o tema claro, escuro ou automático. Escolhida em **Conta → Personalização**:
+  ao tocar numa paleta, as cores mudam na hora, como prévia, e só ficam ao salvar.
+- **Preferências da conta** (DEC-133): Conta oferece links para **Personalização**
+  (`/conta/personalizacao`), **Acessibilidade** (`/conta/acessibilidade`) e **Notificações**
+  (`/conta/notificacoes`). Cada página oferece um caminho de volta para Conta. Notificações reúne
+  as novidades por e-mail, o acesso aos avisos de mensagens e os lembretes de quem usa o perfil de
+  paciente. Os links antigos de lembretes e novidades por e-mail continuam levando à seção certa.
 - **Foto de perfil** (DEC-069): em Seu perfil, escolhida e recortada num círculo antes de enviar; sem
   foto, um círculo com as iniciais. Aparece no cartão do vínculo (a da terapeuta, para o paciente) e na
   lista e na página do paciente (para a terapeuta).
@@ -223,16 +228,16 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   funcionam com registros finais. Apagar qualquer registro também apaga suas ligações.
 
 ## Cor de destaque (DEC-132)
-- Em **Conta → Cor de destaque**, a pessoa pode experimentar e salvar uma cor para botões e links
+- Em **Conta → Personalização → Cor de destaque**, a pessoa pode experimentar e salvar uma cor para botões e links
   ou restaurar a cor da paleta. A escolha é local ao navegador e separada por conta. A paleta
   Alto contraste continua usando suas próprias cores.
 
 ## Meus atalhos (DEC-130)
-- Em **Conta → Personalizar início**, o paciente pode fixar até três atalhos em **Meus registros**
+- Em **Conta → Personalização → Personalizar início**, o paciente pode fixar até três atalhos em **Meus registros**
   e voltar ao padrão sem atalhos. A escolha fica neste navegador, separada por conta.
 
 ## Cartões do início (DEC-131)
-- Em **Conta → Cartões do início**, o paciente pode mostrar, esconder e ordenar Avisos, Consultas
+- Em **Conta → Personalização → Cartões do início**, o paciente pode mostrar, esconder e ordenar Avisos, Consultas
   e Sono e humor de hoje em **Meus registros**. Pode começar com o gráfico de atividades recolhido
   e restaurar a organização padrão. A escolha fica no navegador, separada por conta.
 
@@ -584,12 +589,12 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - O histórico pode ser baixado enquanto o vínculo estiver ativo. Revogar o vínculo suspende todo
   acesso dos dois lados. O histórico não aparece num novo vínculo. Excluir qualquer uma das contas
   apaga a conversa do banco ativo.
-- Os avisos por e-mail e push são neutros e começam ligados. Cada parte escolhe os canais em Conta.
+- Os avisos por e-mail e push são neutros e começam ligados. Cada parte escolhe os canais em Conta → Notificações → Configurar avisos de mensagens.
   Push depende de permissão e inscrição do aparelho. As mensagens ficam disponíveis no app mesmo
   quando os dois canais estão desligados.
 
 ## Lembretes (somente perfil paciente)
-- O paciente escolhe **um canal único** na conta (DEC-089): **E-mail** (padrão) ou **Notificação no aparelho** (Web Push). Se o envio por notificação falhar ou não houver mais aparelho inscrito, o lembrete **cai automaticamente para o e-mail** e grava `lastFallbackAt` para avisar no app.
+- Em Conta → Notificações, o paciente escolhe **um canal único** (DEC-089): **E-mail** (padrão) ou **Notificação no aparelho** (Web Push). Se o envio por notificação falhar ou não houver mais aparelho inscrito, o lembrete **cai automaticamente para o e-mail** e grava `lastFallbackAt` para avisar no app.
 - Existem dois tipos de lembrete, ligados por padrão para novos perfis de paciente (DEC-125),
   cada um com liga/desliga e horário próprio. Contas existentes mantêm as escolhas anteriores:
   - **Manhã** (padrão `08:00`): enviado se houver **Atividade `PLANEJADA`** ou **Ação `PLANEJADA`** para hoje.
@@ -655,7 +660,7 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - **O que há de novo:** uma página reúne todas as novidades da pessoa, da mais nova para a mais
   antiga, com a data, inclusive as já vistas; abrir a página não fecha o card (DEC-060).
 - **Avisos por e-mail de novidades importantes (DEC-119):** a pessoa pode desligar separadamente
-  os avisos por e-mail em Conta. Eles começam ligados, conforme a preferência do produto para
+  os avisos por e-mail em Conta → Notificações. Eles começam ligados, conforme a preferência do produto para
   notificações; desligar não afeta mensagens transacionais, lembretes nem avisos de segurança.
   Enviamos um e-mail individual até cinco minutos depois da publicação, apenas para novidades
   importantes cadastradas para e-mail; correções pequenas e mudanças internas ficam no app. O

@@ -32,7 +32,8 @@ function profileApi(profile = { fullName: 'Ana Fictícia da Silva', palette: 'SA
 }
 
 describe('/conta: Seu perfil', () => {
-  it('mostra o nome completo salvo e as cinco paletas, com a da conta marcada', async () => {
+  it('mostra o nome completo salvo em Conta e a paleta da conta em Personalização', async () => {
+    const user = userEvent.setup();
     profileApi();
     renderRoute('/conta');
 
@@ -40,7 +41,10 @@ describe('/conta: Seu perfil', () => {
     expect(await within(section).findByRole('textbox', { name: 'Nome completo (opcional)' })).toHaveValue(
       'Ana Fictícia da Silva',
     );
-    const palettes = within(section).getByRole('group', { name: 'Paleta de cores' });
+    expect(screen.queryByRole('radio', { name: /Sálvia/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Personalização' }));
+    const palettes = await screen.findByRole('group', { name: 'Escolher paleta de cores' });
+    expect(screen.queryByRole('textbox', { name: 'Nome completo (opcional)' })).not.toBeInTheDocument();
     expect(within(palettes).getAllByRole('radio').map((r) => r.getAttribute('value'))).toEqual([
       'SALVIA',
       'LAVANDA',
@@ -56,32 +60,33 @@ describe('/conta: Seu perfil', () => {
   it('a paleta muda na hora como prévia e só fica no aparelho ao salvar', async () => {
     const patches = profileApi();
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/personalizacao');
 
-    const section = await screen.findByRole('region', { name: 'Seu perfil' });
+    const section = await screen.findByRole('region', { name: 'Paleta de cores' });
     await user.click(await within(section).findByRole('radio', { name: /Lavanda/ }));
     expect(document.documentElement.dataset.palette).toBe('lavanda');
     expect(localStorage.getItem('faisca:palette')).toBeNull();
 
-    await user.click(within(section).getByRole('button', { name: 'Salvar perfil' }));
-    await waitFor(() => expect(patches).toEqual([{ fullName: 'Ana Fictícia da Silva', palette: 'LAVANDA' }]));
+    await user.click(within(section).getByRole('button', { name: 'Salvar paleta' }));
+    await waitFor(() => expect(patches).toEqual([{ palette: 'LAVANDA' }]));
     await waitFor(() =>
-      expect(within(section).getAllByRole('status').map((status) => status.textContent)).toContain('Pronto, perfil salvo.'),
+      expect(within(section).getByRole('status')).toHaveTextContent('Paleta salva.'),
     );
     expect(document.documentElement.dataset.palette).toBe('lavanda');
     expect(localStorage.getItem('faisca:palette')).toBe('lavanda');
   });
 
-  it('sair de Conta sem salvar volta para a paleta da conta', async () => {
+  it('sair de Personalização sem salvar volta para a paleta da conta', async () => {
     profileApi();
     const user = userEvent.setup();
-    const { router } = renderRoute('/conta');
+    renderRoute('/conta/personalizacao');
 
-    const section = await screen.findByRole('region', { name: 'Seu perfil' });
+    const section = await screen.findByRole('region', { name: 'Paleta de cores' });
     await user.click(await within(section).findByRole('radio', { name: /Alto contraste/ }));
     expect(document.documentElement.dataset.palette).toBe('alto-contraste');
 
-    await router.navigate('/novidades');
+    await user.click(screen.getByRole('link', { name: /Voltar para Conta/ }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Conta' })).toBeInTheDocument();
     await waitFor(() => expect(document.documentElement.dataset.palette).toBeUndefined());
   });
 
@@ -119,7 +124,7 @@ describe('/conta: Seu perfil', () => {
     await user.type(field, '   ');
     await user.click(within(section).getByRole('button', { name: 'Salvar perfil' }));
 
-    await waitFor(() => expect(patches).toEqual([{ fullName: null, palette: 'SALVIA' }]));
+    await waitFor(() => expect(patches).toEqual([{ fullName: null }]));
     expect(await within(section).findByText('O nome completo pode ter até 120 caracteres.')).toBeInTheDocument();
     expect(field).toHaveAttribute('aria-invalid', 'true');
   });

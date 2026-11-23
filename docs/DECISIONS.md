@@ -2982,6 +2982,15 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a paleta Alto contraste mantém suas cores. A escolha não altera as cores
   dos alertas e a escala de notas.
 
+## DEC-133 — Preferências em páginas próprias na Conta (#278)
+
+- **Decisão:** Conta dá acesso a Personalização, Acessibilidade e Notificações, cada uma com página
+  própria. Perfil, vínculos e segurança continuam na página principal. Os links antigos de
+  lembretes e novidades por e-mail levam à seção correspondente de Notificações.
+- **Motivo:** facilitar a localização dos ajustes e reduzir a rolagem na página Conta.
+- **Limite conhecido:** os ajustes usam as preferências e permissões existentes. As opções de
+  organizar o início e configurar lembretes continuam disponíveis para quem tem perfil de paciente.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

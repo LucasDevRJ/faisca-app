@@ -10,30 +10,28 @@ import { applyPalette, PALETTE_OPTIONS, type Palette } from './palettes';
 import { FULL_NAME_MAX, type Profile } from './profile-api';
 import { useProfile, useUpdateProfile } from './use-profile';
 
-// "Seu perfil", em Conta (DEC-061, DEC-063, DEC-068, DEC-069): foto, nome completo e paleta de
-// cores, tudo opcional. A foto salva na hora; nome e paleta, no "Salvar perfil".
-export function ProfileSection() {
+export function ProfileSection({ appearance = false }: { appearance?: boolean }) {
   const profile = useProfile();
   const { data: user } = useSession();
 
   return (
     <section aria-labelledby="profile-title" className="flex flex-col gap-3">
       <h2 id="profile-title" className="text-2xl font-semibold">
-        Seu perfil
+        {appearance ? 'Paleta de cores' : 'Seu perfil'}
       </h2>
-      {profile.isPending && <p className="text-muted">Carregando seu perfil…</p>}
+      {profile.isPending && <p className="text-muted">{appearance ? 'Carregando a paleta…' : 'Carregando seu perfil…'}</p>}
       {profile.isError && <Alert tone="attention">{getApiError(profile.error).message}</Alert>}
       {profile.data && (
         <div className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-4 shadow-soft sm:p-6">
-          <AvatarEditor profile={profile.data} name={user?.name ?? ''} />
-          <ProfileForm profile={profile.data} />
+          {!appearance && <AvatarEditor profile={profile.data} name={user?.name ?? ''} />}
+          <ProfileForm profile={profile.data} appearance={appearance} />
         </div>
       )}
     </section>
   );
 }
 
-function ProfileForm({ profile }: { profile: Profile }) {
+function ProfileForm({ profile, appearance }: { profile: Profile; appearance: boolean }) {
   const { data: user } = useSession();
   const update = useUpdateProfile();
   const [fullName, setFullName] = useState(profile.fullName ?? '');
@@ -45,23 +43,24 @@ function ProfileForm({ profile }: { profile: Profile }) {
   // Prévia: a paleta escolhida aparece na hora, mas só fica no aparelho e na conta ao salvar. Ao
   // sair da tela sem salvar, volta a salva.
   useEffect(() => {
+    if (!appearance) return;
     applyPalette(palette, { persist: false });
     return () => applyPalette(savedPalette);
-  }, [palette, savedPalette]);
+  }, [appearance, palette, savedPalette]);
 
   const nameError = getApiError(update.error).fields.fullName;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaved(false);
-    update.mutate({ fullName: fullName.trim() || null, palette }, { onSuccess: () => setSaved(true) });
+    update.mutate(appearance ? { palette } : { fullName: fullName.trim() || null }, { onSuccess: () => setSaved(true) });
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 border-t border-border pt-5">
+    <form onSubmit={handleSubmit} noValidate className={appearance ? 'flex flex-col gap-5' : 'flex flex-col gap-5 border-t border-border pt-5'}>
       {update.isError && !nameError && <Alert tone="attention">{getApiError(update.error).message}</Alert>}
 
-      <TextField
+      {!appearance && <TextField
         label="Nome completo (opcional)"
         hint="Só aparece para você. No app, continuamos te chamando pelo nome do cadastro."
         value={fullName}
@@ -72,10 +71,10 @@ function ProfileForm({ profile }: { profile: Profile }) {
           setSaved(false);
           setFullName(e.target.value);
         }}
-      />
+      />}
 
-      <fieldset aria-describedby={paletteHintId} className="flex flex-col gap-2">
-        <legend className="mb-1 font-medium">Paleta de cores</legend>
+      {appearance && <fieldset aria-describedby={paletteHintId} className="flex flex-col gap-2">
+        <legend className="sr-only">Escolher paleta de cores</legend>
         <p id={paletteHintId} className="text-sm text-muted">
           Muda as cores do app neste aparelho e nos outros em que você entrar. O tema claro ou escuro continua no rodapé.
         </p>
@@ -100,14 +99,14 @@ function ProfileForm({ profile }: { profile: Profile }) {
             </label>
           ))}
         </div>
-      </fieldset>
+      </fieldset>}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={update.isPending}>
-          {update.isPending ? 'Salvando…' : 'Salvar perfil'}
+          {update.isPending ? 'Salvando…' : appearance ? 'Salvar paleta' : 'Salvar perfil'}
         </Button>
         <p role="status" className="text-sm text-muted">
-          {saved ? 'Pronto, perfil salvo.' : ''}
+          {saved ? appearance ? 'Paleta salva.' : 'Pronto, perfil salvo.' : ''}
         </p>
       </div>
     </form>

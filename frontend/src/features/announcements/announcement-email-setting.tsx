@@ -15,7 +15,7 @@ export function AnnouncementEmailSetting() {
   const apiError = update.error ? getApiError(update.error) : null;
 
   return (
-    <section id="novidades-email" aria-labelledby="announcement-email-title" className="flex flex-col gap-3">
+    <section id="novidades-email" tabIndex={-1} aria-labelledby="announcement-email-title" className="flex flex-col gap-3">
       <h2 id="announcement-email-title" className="text-2xl font-semibold">
         Novidades por e-mail
       </h2>

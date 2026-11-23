@@ -20,6 +20,36 @@ beforeEach(() => {
   server.use(loggedIn);
 });
 
+describe('/conta: preferências', () => {
+  it.each([
+    ['Acessibilidade', 'Preferências de acessibilidade'],
+    ['Notificações', 'Novidades por e-mail'],
+  ])('abre %s e volta para Conta', async (title, content) => {
+    const user = userEvent.setup();
+    renderRoute('/conta');
+
+    const nav = await screen.findByRole('navigation', { name: 'Preferências da conta' });
+    expect(screen.queryByRole('region', { name: content })).not.toBeInTheDocument();
+    await user.click(within(nav).getByRole('link', { name: title }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: content })).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: /Voltar para Conta/ }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Conta' })).toBeInTheDocument();
+  });
+
+  it('redireciona links antigos para o ajuste do e-mail de novidades', async () => {
+    const { router } = renderRoute('/conta#novidades-email');
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Notificações' })).toBeInTheDocument();
+    expect(router.state.location).toMatchObject({
+      pathname: '/conta/notificacoes',
+      hash: '#novidades-email',
+    });
+    expect(document.getElementById('novidades-email')).toHaveFocus();
+  });
+});
+
 describe('/conta: quem me acompanha', () => {
   it('mostra o guia Como funciona na Conta e no rodapé', async () => {
     renderRoute('/conta');
