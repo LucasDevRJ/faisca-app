@@ -124,3 +124,69 @@ describe('autorização (regra 1)', () => {
     expect(pushSender.sent).toHaveLength(1);
   });
 });
+
+describe('mensagem nova e prévia (DEC-127)', () => {
+  it('cada pessoa tem o próprio "visto"; quem enviou não vê o "visto" da outra', async () => {
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    const url = `/messages/${linkId}`;
+    expect((await patient.get('/messages/unread')).body).toEqual({ unread: false });
+
+    const sent = await professional.post(url).send({ topic: 'LOGISTICA', body: '  Podemos   mudar para 15h?  ' });
+    expect((await patient.get('/messages/unread')).body).toEqual({ unread: true });
+    expect((await professional.get('/messages/unread')).body).toEqual({ unread: false });
+    const [conversation] = (await patient.get('/messages')).body;
+    expect(conversation).toMatchObject({ unread: true, lastMessage: { preview: 'Podemos mudar para 15h?', mine: false } });
+
+    expect((await patient.put(`${url}/seen`).send({ lastMessageId: sent.body.id })).status).toBe(204);
+    expect((await patient.get('/messages/unread')).body).toEqual({ unread: false });
+    expect((await patient.get('/messages')).body[0]).toMatchObject({ unread: false });
+
+    // Quem enviou nunca recebe o "visto" da outra pessoa (sem recibo de leitura, DEC-125).
+    const forProfessional = (await professional.get('/messages')).body[0];
+    expect(forProfessional).toMatchObject({ unread: false, lastMessage: { mine: true } });
+    expect(JSON.stringify(forProfessional)).not.toMatch(/seen/i);
+    expect(JSON.stringify((await professional.get(url)).body)).not.toMatch(/seen/i);
+  });
+
+  it('o "visto" só avança e só aceita mensagem da própria conversa', async () => {
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    const url = `/messages/${linkId}`;
+    const first = (await professional.post(url).send(input)).body.id as string;
+    const second = (await professional.post(url).send({ topic: 'DUVIDA', body: 'Mais uma dúvida fictícia.' })).body.id as string;
+    expect((await patient.put(`${url}/seen`).send({ lastMessageId: second })).status).toBe(204);
+    expect((await patient.put(`${url}/seen`).send({ lastMessageId: first })).status).toBe(204);
+    expect((await patient.get('/messages/unread')).body).toEqual({ unread: false });
+
+    expect((await patient.put(`${url}/seen`).send({ lastMessageId: '00000000-0000-4000-8000-000000000000' })).status).toBe(400);
+    expect((await patient.put(`${url}/seen`).send({ lastMessageId: first, extra: true })).status).toBe(400);
+    const link = await prisma.therapistLink.findUniqueOrThrow({ where: { id: linkId } });
+    expect(link.therapistMessagesSeenAt).toBeNull();
+  });
+
+  it('autorização: sem sessão, outra profissional e vínculo revogado não marcam nem leem', async () => {
+    const professional = await login(professionalEmail);
+    const stranger = await login(strangerEmail);
+    const url = `/messages/${linkId}`;
+    const id = (await professional.post(url).send(input)).body.id as string;
+    expect((await request(app).put(`${url}/seen`).send({ lastMessageId: id })).status).toBe(401);
+    expect((await request(app).get('/messages/unread')).status).toBe(401);
+    expect((await stranger.put(`${url}/seen`).send({ lastMessageId: id })).status).toBe(403);
+    expect((await stranger.get('/messages/unread')).body).toEqual({ unread: false });
+
+    const patient = await login(patientEmail);
+    await prisma.therapistLink.update({ where: { id: linkId }, data: { revokedAt: new Date() } });
+    expect((await patient.put(`${url}/seen`).send({ lastMessageId: id })).status).toBe(403);
+    expect((await patient.get('/messages/unread')).body).toEqual({ unread: false });
+  });
+
+  it('sem o aceite das Mensagens: nem prévia, nem selo', async () => {
+    const professional = await login(professionalEmail);
+    await professional.post(`/messages/${linkId}`).send(input);
+    await prisma.user.updateMany({ where: { email: patientEmail }, data: { privacyVersion: '2026-11.10' } });
+    const patient = await login(patientEmail);
+    expect((await patient.get('/messages/unread')).status).toBe(403);
+    expect((await professional.get('/messages')).body[0]).toMatchObject({ available: false, unread: false, lastMessage: null });
+  });
+});

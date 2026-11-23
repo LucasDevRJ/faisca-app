@@ -4,7 +4,7 @@ import { AppError } from '../../errors/app-error.js';
 import type { RunAfterResponse } from '../../lib/background.js';
 import { logger } from '../../lib/logger.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
-import { messagePageSchema, messagePreferencesSchema, messageSchema } from './messages.schema.js';
+import { messagePageSchema, messagePreferencesSchema, messageSchema, messageSeenSchema } from './messages.schema.js';
 import type { MessagesService } from './messages.service.js';
 
 function conversationId(input: unknown): string {
@@ -30,6 +30,14 @@ export function createMessagesController(service: MessagesService, runAfterRespo
       .catch(() => logger.warn('Falha ao preparar aviso de mensagem'));
     res.status(201).json(message);
   };
+  const unread: RequestHandler = async (req, res) => {
+    res.json(await service.unreadSummary(getAuthUser(req).id));
+  };
+  const seen: RequestHandler = async (req, res) => {
+    const { lastMessageId } = messageSeenSchema.parse(req.body);
+    await service.markSeen(getAuthUser(req).id, conversationId(req.params.linkId), lastMessageId);
+    res.sendStatus(204);
+  };
   const preferences: RequestHandler = async (req, res) => {
     res.json(await service.preferences(getAuthUser(req).id));
   };
@@ -37,5 +45,5 @@ export function createMessagesController(service: MessagesService, runAfterRespo
     await service.updatePreferences(getAuthUser(req).id, messagePreferencesSchema.parse(req.body));
     res.sendStatus(204);
   };
-  return { conversations, page, send, preferences, updatePreferences };
+  return { conversations, unread, page, send, seen, preferences, updatePreferences };
 }

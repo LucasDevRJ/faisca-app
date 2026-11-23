@@ -49,6 +49,27 @@ function toPublic(row: PrivateMessage, viewerIsPatient: boolean) {
   };
 }
 
+// Prévia da última mensagem na lista de conversas (DEC-127): só dentro do app, para quem participa
+// da conversa. Avisos por e-mail e push continuam neutros (regra 3).
+const PREVIEW_LENGTH = 80;
+function previewOf(body: string) {
+  const text = body.replace(/\s+/g, ' ').trim();
+  return text.length > PREVIEW_LENGTH ? `${text.slice(0, PREVIEW_LENGTH).trimEnd()}…` : text;
+}
+
+type SeenLink = { id: string; patientId: string; patientMessagesSeenAt: Date | null; therapistMessagesSeenAt: Date | null };
+
+// "Nova" para quem vê: chegou mensagem da outra pessoa depois do "visto" de quem vê. O "visto" da
+// outra pessoa nunca entra na resposta (sem recibo de leitura, DEC-125).
+async function hasUnread(link: SeenLink, viewerId: string) {
+  const viewerIsPatient = link.patientId === viewerId;
+  const seenAt = viewerIsPatient ? link.patientMessagesSeenAt : link.therapistMessagesSeenAt;
+  const count = await prisma.privateMessage.count({
+    where: { linkId: link.id, sentByPatient: !viewerIsPatient, ...(seenAt ? { createdAt: { gt: seenAt } } : {}) },
+  });
+  return count > 0;
+}
+
 export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
   return {
     async conversations(userId: string) {
@@ -57,14 +78,46 @@ export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
         include: participants,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       });
-      return links.map((link) => {
+      return Promise.all(links.map(async (link) => {
         const isPatient = link.patientId === userId;
+        const available = canTalk(link);
+        const last = available
+          ? await prisma.privateMessage.findFirst({ where: { linkId: link.id }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] })
+          : null;
         return {
           id: link.id,
           name: isPatient ? link.therapist.name : link.patient.name,
           counterpart: isPatient ? link.kind : 'PATIENT',
-          available: canTalk(link),
+          available,
+          unread: available ? await hasUnread(link, userId) : false,
+          lastMessage: last
+            ? { preview: previewOf(last.body), mine: last.sentByPatient === isPatient, createdAt: last.createdAt }
+            : null,
         };
+      }));
+    },
+
+    // Selo do menu (DEC-127): há alguma conversa com mensagem nova para quem pergunta?
+    async unreadSummary(userId: string) {
+      const links = await prisma.therapistLink.findMany({ where: activeLinks(userId), include: participants });
+      for (const link of links) {
+        if (canTalk(link) && await hasUnread(link, userId)) return { unread: true };
+      }
+      return { unread: false };
+    },
+
+    // Marca até que mensagem a pessoa viu a conversa. Só avança (abrir uma aba antiga não desfaz o
+    // "visto") e só grava a coluna de quem pede, na linha do próprio vínculo (DEC-127).
+    markSeen(userId: string, linkId: string, lastMessageId: string) {
+      return prisma.$transaction(async (tx) => {
+        const link = await requireConversation(tx, linkId, userId);
+        const message = await tx.privateMessage.findFirst({ where: { id: lastMessageId, linkId }, select: { createdAt: true } });
+        if (!message) throw new AppError(400, 'INVALID_MESSAGE', 'Atualize a conversa e tente de novo.');
+        const column = link.patientId === userId ? 'patientMessagesSeenAt' : 'therapistMessagesSeenAt';
+        await tx.therapistLink.updateMany({
+          where: { id: linkId, OR: [{ [column]: null }, { [column]: { lt: message.createdAt } }] },
+          data: { [column]: message.createdAt },
+        });
       });
     },
 

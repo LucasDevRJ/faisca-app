@@ -595,6 +595,11 @@ model TherapistLink {
   readReceiptsRequestedAt DateTime?
   readReceiptsSharedAt    DateTime?
   readReceiptsNotNowAt    DateTime?
+  // Mensagens (DEC-127): até que mensagem cada pessoa viu a conversa (hora da mais recente que ela
+  // abriu), só para o selo "Nova" dela. A API nunca mostra o "visto" de um ao outro (sem recibo de
+  // leitura, DEC-125).
+  patientMessagesSeenAt   DateTime?
+  therapistMessagesSeenAt DateTime?
 
   patient   User @relation("LinkPatient", fields: [patientId], references: [id], onDelete: Cascade)
   therapist User @relation("LinkTherapist", fields: [therapistId], references: [id], onDelete: Cascade)
