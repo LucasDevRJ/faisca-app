@@ -167,7 +167,9 @@ Na prática clínica tradicional:
 - **Mensagens privadas:** paciente e psicóloga ou psiquiatra com vínculo ativo podem trocar
   mensagens de texto sobre logística da consulta e dúvidas breves. As duas pessoas precisam
   aceitar o aviso de privacidade. Os avisos por e-mail e no aparelho são opcionais e sem conteúdo
-  da conversa. O canal não atende urgências.
+  da conversa. Um selo discreto no menu ("Mensagens •") e o aviso "Nova" na conversa mostram que
+  chegou mensagem, com uma prévia só dentro do app; a outra pessoa nunca fica sabendo se você leu.
+  O canal não atende urgências e deixa à mão o **CVV (188)** e o **SAMU (192)**, com toque para ligar.
 
 - **Foto de perfil e 5 paletas de cores:**
   - Foto de perfil com recorte circular no próprio navegador antes de enviar (e iniciais quando não há foto).

@@ -10,7 +10,7 @@ import { PrivacyConsentGate } from '../features/auth/privacy-consent';
 import { useSession } from '../features/auth/use-session';
 import { formatDateTime } from '../features/links/link-format';
 import {
-  fetchConversations, fetchMessages, MESSAGE_LIMIT, messageTopics, sendMessage,
+  fetchConversations, fetchMessages, markConversationSeen, MESSAGE_LIMIT, messageTopics, sendMessage,
   type Conversation, type Message, type MessageTopic,
 } from '../features/messages/messages-api';
 import { MessageSettings } from '../features/messages/message-settings';
@@ -48,7 +48,13 @@ function Conversations({ userId, linkId }: { userId: string; linkId?: string }) 
         Use este espaço para combinar detalhes da consulta e tirar dúvidas breves. Combinem entre vocês
         os horários de contato. A resposta depende da disponibilidade de cada pessoa.
       </p>
-      <Alert tone="attention">Este canal não atende urgências. Em uma emergência, procure atendimento de urgência.</Alert>
+      {/* Urgência (DEC-127): os números ficam à mão; no celular, um toque liga. */}
+      <Alert tone="attention">
+        Este canal não atende urgências. Se precisar de ajuda agora, ligue para o{' '}
+        <a className="font-semibold underline underline-offset-4" href="tel:188">CVV, no 188</a>{' '}
+        (apoio emocional, 24 horas, gratuito), ou para o{' '}
+        <a className="font-semibold underline underline-offset-4" href="tel:192">SAMU, no 192</a>.
+      </Alert>
       {linkId ? <Link className={linkClass} to="/mensagens">Voltar às conversas</Link>
         : <Link className={linkClass} to="/mensagens/avisos">Configurar avisos de mensagens</Link>}
       {list.isPending && <p role="status">Carregando conversas…</p>}
@@ -63,10 +69,21 @@ function Conversations({ userId, linkId }: { userId: string; linkId?: string }) 
               <ul className="flex flex-col gap-2">
                 {list.data.map((item) => (
                   <li key={item.id} className="min-w-0 rounded-lg border border-border bg-surface p-3 wrap-anywhere">
-                    {item.available
-                      ? <Link className={linkClass} to={`/mensagens/${item.id}`}>{item.name}</Link>
-                      : <p className="font-medium">{item.name}</p>}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {item.available
+                        ? <Link className={linkClass} to={`/mensagens/${item.id}`}>
+                          {item.name}{item.unread && <span className="sr-only">, mensagem nova</span>}
+                        </Link>
+                        : <p className="font-medium">{item.name}</p>}
+                      {item.unread && <span aria-hidden="true" className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-on-primary">Nova</span>}
+                    </div>
                     <p className="text-sm text-muted">{roles[item.counterpart]}</p>
+                    {item.lastMessage && (
+                      <p className="text-sm text-muted wrap-anywhere">
+                        {item.lastMessage.mine ? 'Você: ' : ''}{item.lastMessage.preview}{' · '}
+                        <time dateTime={item.lastMessage.createdAt}>{formatDateTime(item.lastMessage.createdAt)}</time>
+                      </p>
+                    )}
                     {!item.available && <p className="text-sm text-muted">A conversa abre quando os dois aceitarem o aviso de privacidade.</p>}
                   </li>
                 ))}
@@ -112,6 +129,17 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
     },
   });
   useEffect(() => () => exportRequest.current?.abort(), []);
+  // Abrir a conversa marca o "visto" até a mensagem mais recente (DEC-127), de novo quando chega
+  // outra enquanto ela está aberta. Depois, o selo do menu e a lista se atualizam.
+  const newestId = thread.data?.pages[0]?.messages[0]?.id;
+  const seenId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!newestId || seenId.current === newestId) return;
+    seenId.current = newestId;
+    markConversationSeen(id, newestId)
+      .then(() => cache.invalidateQueries({ queryKey: ['messages', userId] }))
+      .catch(() => { seenId.current = null; });
+  }, [newestId, id, userId, cache]);
   const canDownload = thread.isSuccess && thread.data.pages.some((page) => page.messages.length > 0);
   useEffect(() => {
     if (!canDownload) exportRequest.current?.abort();
@@ -162,9 +190,10 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
       {thread.isError && <Alert tone="attention">{getApiError(thread.error).message}</Alert>}
       {thread.isSuccess && (
         <>
-          <Button variant="secondary" className="self-start" onClick={() => composer.current?.querySelector('textarea')?.focus()}>
+          {/* Só em conversa longa: com poucas mensagens, o campo já está à vista. */}
+          {messages.length > 4 && <Button variant="secondary" className="self-start" onClick={() => composer.current?.querySelector('textarea')?.focus()}>
             Ir para escrever mensagem
-          </Button>
+          </Button>}
           {thread.hasNextPage && <Button variant="secondary" disabled={thread.isFetching}
             onClick={() => void thread.fetchNextPage()} className="self-start">Ver mensagens anteriores</Button>}
           {messages.length === 0 && <p className="text-muted">Ainda não há mensagens nesta conversa.</p>}
