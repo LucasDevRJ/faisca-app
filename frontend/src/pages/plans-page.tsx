@@ -1,3 +1,4 @@
+import { todayInAppZone } from '../features/activities/week';
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Alert } from '../components/ui/alert';
@@ -211,7 +212,7 @@ function PlanCard({ plan, onArchive, onDelete }: { plan: Plan; onArchive: () => 
           Ver registros<span className="sr-only"> do plano {plan.title}</span>
         </Link>
       </div>
-      <RecordLinksPanel type="PLAN" id={plan.id} />
+      <RecordLinksPanel type="PLAN" id={plan.id} date={todayInAppZone(new Date(plan.createdAt))} />
       <div className="flex flex-wrap gap-1">
         <Link to={`/planos/${plan.id}/editar`} className={buttonClasses('ghost', 'px-3')}>
           Editar plano<span className="sr-only"> {plan.title}</span>

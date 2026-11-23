@@ -2884,6 +2884,23 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   urgência. A falha de um aviso externo não afeta a mensagem salva. O download em JSON cobre a
   conversa acessível. A exportação geral da conta continua na #88.
 
+## DEC-126 — Seletor das ligações por ciclos, com filtros e busca (#260)
+
+- **Decisão:** ao ligar registros, o seletor passa a mostrar uma janela de **4 ciclos da consulta**
+  (ou, sem agenda, 4 semanas de segunda a domingo), começando no ciclo do registro aberto, com setas
+  para os 4 anteriores ou seguintes, até o ciclo de hoje. Os registros aparecem numa **lista de
+  cartões** agrupada por ciclo (tipo, data e até 2 linhas do texto), no lugar do menu suspenso, como
+  um grupo de opções acessível. Filtros por tipo ("Plano" junta o plano e os registros dele), "Ir
+  para uma data" e os registros já ligados escondidos. A **busca no texto** reaproveita a busca da
+  #152 (termo no corpo do POST, fora dos logs) e olha os últimos 12 meses, por data, com "Ver mais";
+  enquanto ela está ativa, as setas somem.
+- **Motivo:** com meses de uso, a lista de 14 dias para cada lado num menu suspenso cresce demais e
+  corta o texto. O ciclo é a unidade da terapia (DEC-049/050), e a busca da #152 já resolve o termo
+  sensível e a paginação. Sem mudança na API.
+- **Limite conhecido:** na busca, "Plano" encontra os registros do plano (que incluem o título), não
+  o plano sozinho; "Sobre mim" não entra, porque não é ligável. Se os textos forem criptografados no
+  banco (#138), a busca precisa ser revista.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

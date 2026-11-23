@@ -112,6 +112,12 @@ Na prática clínica tradicional:
   - **Remédios e o que sinto:** quem quiser liga em Conta "Anotar meus remédios e o que sinto". Na aba Sono e humor aparecem os remédios (nome, dose e horário, em texto livre), as mudanças com data (mudou a dose, parou, voltou a tomar) e o que a pessoa tem sentido, com a intensidade de 0 a 10, a evolução ("como está agora") e quando passou. O app mostra quantos dias depois da mudança do remédio o sintoma começou, para separar o começo do uso contínuo, e marca as mudanças no gráfico de sono e humor. O Faísca **não avalia** remédios nem sintomas e lembra que mudanças no remédio são só com quem receitou.
   - A aba **Sono e humor** mostra um gráfico das horas de sono e do humor no período. Dá para registrar e editar os últimos 7 dias.
 
+- **Ligar registros entre si:**
+  - O paciente liga dois registros próprios de qualquer área (por exemplo, a atividade "Café com a Ana" ao pensamento que veio depois). A ligação não altera nenhum dos dois e pode ser desfeita.
+  - Para escolher, uma lista em cartões mostra **4 ciclos da consulta por vez** (ou 4 semanas, sem agenda), com setas para voltar ou avançar, filtros por tipo, "Ir para uma data" e **busca no texto** nos últimos 12 meses, com a palavra encontrada em destaque.
+  - "Tive esse pensamento de novo" e "Isso aconteceu de novo" criam uma nova ocorrência sem mexer na anterior e mostram a evolução da crença, das emoções e da tensão.
+  - A psicóloga só vê a ligação quando as duas áreas estão liberadas para ela.
+
 - **Lembretes de manhã e de noite:**
   - Por e-mail ou como notificação no aparelho (Web Push), quando há atividades ou ações planejadas, sempre com **texto 100% neutro** (nunca mostram o que a pessoa escreveu), horário de silêncio e opção de pausar.
 
@@ -190,16 +196,6 @@ Na prática clínica tradicional:
 ---
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
-
-**Em desenvolvimento — Ligações entre registros (#207) e repetição de pensamentos (#166):** o
-paciente poderá relacionar registros de diferentes áreas. A psicóloga só verá a ligação se as duas
-áreas estiverem compartilhadas e cobertas pelos aceites de privacidade. Pensamentos e episódios de
-tensão terão atalhos para criar uma nova ocorrência sem alterar a anterior; o histórico mostrará a
-evolução de crença, emoções e tensão. No seletor, as datas aparecerão no padrão brasileiro e os
-títulos longos terão uma prévia local, mantendo o texto integral acessível. A ligação também mostrará
-a anotação opcional da Atividade, quando existir, e permitirá abrir diretamente o registro relacionado.
-Ainda não publicado.
-
 
 **Em desenvolvimento — Busca nos registros (#152):** paciente e psicóloga poderão localizar registros
 por texto, período e filtros. Para a psicóloga, os resultados respeitam vínculo, áreas compartilhadas

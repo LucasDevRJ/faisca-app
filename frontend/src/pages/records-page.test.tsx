@@ -211,31 +211,6 @@ describe('RecordsPage: ações por estado', () => {
 });
 
 describe('RecordsPage: seletor de registros ligados', () => {
-  it('formata a data, pré-visualiza títulos longos e mostra o título inteiro ao selecionar', async () => {
-    const title = 'Uma situação longa que descreve o contexto deste registro com bastante detalhe';
-    const targetId = '00000000-0000-4000-9000-000000000099';
-    weekHandler([fakeActivity({ name: 'Caminhada' })]);
-    server.use(
-      http.get('*/api/record-links/candidates', () =>
-        HttpResponse.json({
-          records: [{ type: 'THOUGHT_RECORD', id: targetId, date: '2026-09-23', title }],
-        }),
-      ),
-    );
-    const user = userEvent.setup();
-    renderRoute('/registros');
-
-    const card = await findCard('Caminhada');
-    await user.click(within(card).getByRole('button', { name: 'Ligar a outro registro' }));
-    const selector = await within(card).findByRole('combobox', { name: 'Registro para ligar' });
-    const option = within(selector).getByRole('option', { name: `Pensamento · 23/09/2026 · ${title}` });
-
-    expect(option.textContent).toBe('Pensamento · 23/09/2026 · Uma situação longa que descreve o contexto deste…');
-    await user.selectOptions(selector, `THOUGHT_RECORD:${targetId}`);
-    expect(within(card).getByText('Texto completo do registro:')).toBeInTheDocument();
-    expect(within(card).getByText(title)).toBeInTheDocument();
-  });
-
   it('mostra a anotação da atividade na ligação e abre o pensamento relacionado', async () => {
     const observation = 'Foi bom perceber que consegui aproveitar a atividade.';
     const activity = fakeActivity({ name: 'Academia', observation });
