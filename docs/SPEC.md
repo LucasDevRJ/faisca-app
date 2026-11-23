@@ -550,6 +550,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   As duas pessoas precisam aceitar o aviso de privacidade `2026-11.11` para consultar ou enviar.
   A conversa tem texto de até 2.000 caracteres, assunto (logística ou dúvida breve) e data, sem
   anexos nem recibos de leitura. O canal não atende urgências e a resposta depende da disponibilidade.
+- O assunto é escolhido na primeira mensagem. A resposta segue o assunto da mensagem mais recente
+  quando a pessoa começa a digitar. Para iniciar outro assunto, ela usa **Mudar de assunto** antes de enviar.
 - O histórico pode ser baixado enquanto o vínculo estiver ativo. Revogar o vínculo suspende todo
   acesso dos dois lados. O histórico não aparece num novo vínculo. Excluir qualquer uma das contas
   apaga a conversa do banco ativo.

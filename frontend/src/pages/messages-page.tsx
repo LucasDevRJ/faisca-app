@@ -78,7 +78,8 @@ function Conversations({ userId, linkId }: { userId: string; linkId?: string }) 
 
 function ConversationThread({ conversation, userId }: { conversation: Conversation; userId: string }) {
   const [body, setBody] = useState('');
-  const [topic, setTopic] = useState<MessageTopic>('LOGISTICA');
+  const [newTopic, setNewTopic] = useState<MessageTopic | null>(null);
+  const [replyTopic, setReplyTopic] = useState<MessageTopic | null>(null);
   const [fieldError, setFieldError] = useState('');
   const exportRequest = useRef<AbortController | null>(null);
   const composer = useRef<HTMLFormElement>(null);
@@ -94,11 +95,21 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
     retry: false,
     refetchInterval: 15000,
   });
+  // A primeira página vem do mais recente para o mais antigo.
+  const previousTopic = thread.data?.pages[0]?.messages[0]?.topic;
+  const topic = newTopic ?? replyTopic ?? previousTopic ?? 'LOGISTICA';
+  const choosingTopic = previousTopic === undefined || newTopic !== null;
   const send = useMutation({
-    mutationFn: () => sendMessage(id, { topic, body: body.trim() }),
+    mutationFn: (input: { topic: MessageTopic; body: string }) => sendMessage(id, input),
     gcTime: 0,
     onSuccess: () => setBody(''),
-    onSettled: () => cache.invalidateQueries({ queryKey }),
+    onSettled: async (_data, error) => {
+      await cache.invalidateQueries({ queryKey });
+      if (!error) {
+        setNewTopic(null);
+        setReplyTopic(null);
+      }
+    },
   });
   useEffect(() => () => exportRequest.current?.abort(), []);
   const canDownload = thread.isSuccess && thread.data.pages.some((page) => page.messages.length > 0);
@@ -140,7 +151,7 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
       setFieldError(length ? 'A mensagem pode ter até 2.000 caracteres.' : 'Escreva uma mensagem antes de enviar.');
       return;
     }
-    send.mutate();
+    send.mutate({ topic, body: body.trim() });
   }
 
   const messages = thread.data?.pages.flatMap((page) => page.messages).reverse() ?? [];
@@ -169,16 +180,32 @@ function ConversationThread({ conversation, userId }: { conversation: Conversati
             ))}
           </ol>
           <form ref={composer} className="flex flex-col gap-3" onSubmit={submit} noValidate>
-            <label className="flex flex-col gap-1.5 font-medium">
-              Assunto
-              <select className={fieldClasses} value={topic} disabled={send.isPending}
-                onChange={(event) => setTopic(event.target.value === 'DUVIDA' ? 'DUVIDA' : 'LOGISTICA')}>
-                <option value="LOGISTICA">{messageTopics.LOGISTICA}</option>
-                <option value="DUVIDA">{messageTopics.DUVIDA}</option>
-              </select>
-            </label>
+            {previousTopic && (
+              <div className="flex flex-wrap items-center gap-x-2">
+                {!choosingTopic && <p className="text-muted">Respondendo sobre <strong>{messageTopics[topic]}</strong></p>}
+                <Button variant="ghost" disabled={send.isPending} aria-expanded={choosingTopic}
+                  onClick={() => setNewTopic(choosingTopic ? null : topic)}>
+                  {choosingTopic ? 'Manter assunto anterior' : 'Mudar de assunto'}
+                </Button>
+              </div>
+            )}
+            {choosingTopic && (
+              <label className="flex flex-col gap-1.5 font-medium">
+                Assunto
+                <select className={`${fieldClasses} min-h-11`} value={topic} disabled={send.isPending}
+                  onChange={(event) => setNewTopic(event.target.value === 'DUVIDA' ? 'DUVIDA' : 'LOGISTICA')}>
+                  <option value="LOGISTICA">{messageTopics.LOGISTICA}</option>
+                  <option value="DUVIDA">{messageTopics.DUVIDA}</option>
+                </select>
+              </label>
+            )}
             <TextAreaField label="Mensagem" value={body} limit={MESSAGE_LIMIT} error={fieldError}
-              disabled={send.isPending} onChange={(event) => { setBody(event.target.value); setFieldError(''); }} />
+              disabled={send.isPending} onChange={(event) => {
+                const value = event.target.value;
+                setBody(value);
+                setReplyTopic(value.trim() ? replyTopic ?? previousTopic ?? 'LOGISTICA' : null);
+                setFieldError('');
+              }} />
             {send.isError && <Alert tone="attention">{getApiError(send.error).message}</Alert>}
             <p role="status">{send.isSuccess ? 'Mensagem enviada.' : ''}</p>
             <Button type="submit" disabled={send.isPending} className="self-start">Enviar mensagem</Button>
