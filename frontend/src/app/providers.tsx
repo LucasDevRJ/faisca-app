@@ -3,10 +3,12 @@ import { useState, type ReactNode } from 'react';
 import { useAccessibilityFromSession, usePaletteFromSession } from '../features/profile/use-profile';
 import { createQueryClient } from '../lib/query-client';
 import { ThemeProvider } from './theme-provider';
+import { useHighlightFromSession } from '../features/profile/highlight';
 
 // Antes das telas: assim a prévia da paleta e da acessibilidade no perfil (que roda depois) prevalece enquanto aberta.
 function PaletteSync() {
   usePaletteFromSession();
+  useHighlightFromSession();
   useAccessibilityFromSession();
   return null;
 }

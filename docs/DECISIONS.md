@@ -2973,6 +2973,15 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Motivo:** deixar o início mais fácil de consultar conforme a rotina de cada pessoa.
 - **Limite conhecido:** a preferência é local ao navegador e separada por conta, como na DEC-130.
 
+## DEC-132 — Cor de destaque com prévia (#271)
+
+- **Decisão:** em Conta, a pessoa pode escolher Azul oceano, Roxo lavanda, Terracota ou a cor da
+  paleta. A prévia afeta os botões e links e é descartada ao sair sem salvar. A escolha salva fica
+  neste navegador, separada por conta.
+- **Motivo:** ampliar a personalização com opções de contraste conferido em claro e escuro.
+- **Limite conhecido:** a paleta Alto contraste mantém suas cores. A escolha não altera as cores
+  dos alertas e a escala de notas.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

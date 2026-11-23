@@ -12,6 +12,7 @@ import { useAddProfile, useSession } from '../features/auth/use-session';
 import { TherapistLinkSection } from '../features/links/therapist-link-section';
 import { AccessibilitySection } from '../features/profile/accessibility-section';
 import { ProfileSection } from '../features/profile/profile-section';
+import { HighlightSetting } from '../features/profile/highlight-setting';
 import { RemindersSection } from '../features/reminders/reminders-section';
 import { MedicationSettingSection } from '../features/daily-check-ins/medication-setting-section';
 import { ProfessionalSection } from '../features/profile/professional-section';
@@ -59,6 +60,7 @@ export function AccountPage() {
       </section>
 
       <ProfileSection />
+      <HighlightSetting key={`highlight:${user.id}`} userId={user.id} highContrast={user.palette === 'ALTO_CONTRASTE'} />
       {user.profiles.patient && <HomeShortcutSettings key={user.id} userId={user.id} />}
       {user.profiles.patient && <HomeLayoutSettings key={`layout:${user.id}`} userId={user.id} />}
 

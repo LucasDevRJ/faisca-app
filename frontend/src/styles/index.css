@@ -178,6 +178,25 @@
   --faisca-score-10: light-dark(#623926, #f1d4c5);
 }
 
+/* Destaque do perfil (DEC-132). Alto contraste mantém os tokens da própria paleta. */
+:root:not([data-palette='alto-contraste']):is([data-highlight-preview='ocean'], [data-highlight='ocean']:not([data-highlight-preview])) {
+  --faisca-primary: light-dark(#28617b, #8cc3dd);
+  --faisca-primary-text: var(--faisca-primary);
+  --faisca-on-primary: light-dark(#ffffff, #111b24);
+}
+
+:root:not([data-palette='alto-contraste']):is([data-highlight-preview='lavender'], [data-highlight='lavender']:not([data-highlight-preview])) {
+  --faisca-primary: light-dark(#5e4f88, #c3b5ea);
+  --faisca-primary-text: var(--faisca-primary);
+  --faisca-on-primary: light-dark(#ffffff, #111b24);
+}
+
+:root:not([data-palette='alto-contraste']):is([data-highlight-preview='terracotta'], [data-highlight='terracotta']:not([data-highlight-preview])) {
+  --faisca-primary: light-dark(#8a4f33, #e6ad91);
+  --faisca-primary-text: var(--faisca-primary);
+  --faisca-on-primary: light-dark(#ffffff, #111b24);
+}
+
 :root[data-palette='alto-contraste'] {
   --faisca-bg: light-dark(#ffffff, #000000);
   --faisca-surface: light-dark(#ffffff, #0d0d0d);

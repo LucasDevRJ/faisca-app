@@ -187,7 +187,7 @@ export function PrivacyPage() {
             </li>
             <li>
               No seu aparelho: só o cookie de sessão, a preferência de tema claro ou escuro, a paleta de cores e os
-              ajustes de leitura confortável, de menos movimento e as preferências de atalhos e cartões do início.
+              ajustes de leitura confortável, de menos movimento, a cor de destaque e as preferências de atalhos e cartões do início.
               Essas escolhas do início ficam neste navegador, separadas por conta, sem o conteúdo dos registros.
             </li>
             <li>

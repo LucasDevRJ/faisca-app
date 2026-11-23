@@ -170,6 +170,10 @@ Na prática clínica tradicional:
 
 ### 4.3. Para Todos (Personalização, Acessibilidade e Segurança da Conta)
 
+- **Cor de destaque:** em Conta, experimente Azul oceano, Roxo lavanda ou Terracota nos botões
+  e links, ou restaure a cor da paleta. A escolha salva fica neste navegador, separada por conta.
+  A paleta Alto contraste mantém suas próprias cores.
+
 - **Mensagens privadas:** paciente e psicóloga ou psiquiatra com vínculo ativo podem trocar
   mensagens de texto sobre logística da consulta e dúvidas breves. As duas pessoas precisam
   aceitar o aviso de privacidade. Os avisos por e-mail e no aparelho são opcionais e sem conteúdo
