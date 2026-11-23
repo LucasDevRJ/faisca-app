@@ -166,7 +166,7 @@ describe('Conta → Lembretes (paciente)', () => {
   it('mostra padrões desligados e salva horários de manhã, de noite e de silêncio', async () => {
     const { saved } = remindersApi();
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     expect(await within(section).findByRole('radio', { name: /E-mail/ })).toBeChecked();
@@ -200,7 +200,7 @@ describe('Conta → Lembretes (paciente)', () => {
   it('barra horário de silêncio com início igual ao fim sem chamar a API', async () => {
     const { saved } = remindersApi();
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     const endSelect = await within(section).findByLabelText('Termina às');
@@ -218,7 +218,7 @@ describe('Conta → Lembretes (paciente)', () => {
     const { saved, subscriptions } = remindersApi();
     const { subscribeSpy } = mockBrowserPush('default', 'granted');
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     await user.click(await within(section).findByRole('radio', { name: /Notificação neste aparelho/ }));
@@ -245,7 +245,7 @@ describe('Conta → Lembretes (paciente)', () => {
     const { saved } = remindersApi();
     mockBrowserPush('default', 'denied');
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     await user.click(await within(section).findByRole('radio', { name: /Notificação neste aparelho/ }));
@@ -261,7 +261,7 @@ describe('Conta → Lembretes (paciente)', () => {
 
   it('mostra o aviso quando o último push caiu para e-mail (lastFallbackAt)', async () => {
     remindersApi({ channel: 'PUSH', lastFallbackAt: '2026-11-07T11:00:00.000Z' });
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     expect(
@@ -272,7 +272,7 @@ describe('Conta → Lembretes (paciente)', () => {
   it('pausa os lembretes até uma data e permite retomar agora, mantendo o foco no botão', async () => {
     const { paused, wasResumed } = remindersApi();
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     await user.click(await within(section).findByRole('button', { name: 'Pausar lembretes' }));
@@ -302,7 +302,7 @@ describe('Conta → Lembretes (paciente)', () => {
     );
     remindersApi({ pausedUntil: '2026-12-20' });
 
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     expect(
@@ -335,15 +335,15 @@ describe('Conta → Lembretes (paciente)', () => {
         }),
       ),
     );
-    renderRoute('/conta');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Conta' })).toBeInTheDocument();
+    renderRoute('/conta/notificacoes');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Notificações' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Lembretes' })).not.toBeInTheDocument();
     expect(screen.queryByText('Novidade: lembretes de manhã e de noite')).not.toBeInTheDocument();
   });
 
   it('mostra erro da API quando falha ao carregar ou salvar', async () => {
     server.use(http.get('*/api/reminders', () => apiError(500, 'INTERNAL', 'Não foi possível carregar os lembretes.')));
-    renderRoute('/conta');
+    renderRoute('/conta/notificacoes');
 
     const section = await screen.findByRole('region', { name: 'Lembretes' });
     expect(await within(section).findByText('Não foi possível carregar os lembretes.')).toBeInTheDocument();

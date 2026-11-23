@@ -24,9 +24,9 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
     title: 'Avisos por e-mail sobre novidades',
     icon: '✉️',
     date: '2026-11-20',
-    patient: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta e pode ser alterada quando quiser.</p>,
-    therapist: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta e pode ser alterada quando quiser.</p>,
-    link: { to: '/conta#novidades-email', label: 'Ver preferência' },
+    patient: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta → Notificações e pode ser alterada quando quiser.</p>,
+    therapist: <p>Agora você pode receber por e-mail um aviso breve quando uma novidade importante do Faísca entrar no ar. A preferência fica em Conta → Notificações e pode ser alterada quando quiser.</p>,
+    link: { to: '/conta/notificacoes#novidades-email', label: 'Ver preferência' },
   },
   '2026-11-lido-paciente': {
     title: 'Ver quando a profissional leu',
@@ -224,7 +224,7 @@ export const ANNOUNCEMENT_TEXTS: Record<string, AnnouncementText> = {
         </p>
       </>
     ),
-    link: { to: '/conta#lembretes', label: 'Configurar lembretes' },
+    link: { to: '/conta/notificacoes#lembretes', label: 'Configurar lembretes' },
   },
   // Meus Planos (DEC-095): para paciente e terapeuta.
   '2026-11-meus-planos': {

@@ -23,7 +23,7 @@ export function AccessibilitySection() {
   return (
     <section aria-labelledby="accessibility-title" className="flex flex-col gap-3">
       <h2 id="accessibility-title" className="text-2xl font-semibold">
-        Acessibilidade
+        Preferências de acessibilidade
       </h2>
       {profile.isPending && <p className="text-muted">Carregando ajustes de acessibilidade…</p>}
       {profile.isError && <Alert tone="attention">{getApiError(profile.error).message}</Alert>}

@@ -60,9 +60,9 @@ Na prática clínica tradicional:
 
 ### 4.1. Para o Paciente
 
-- **Meus atalhos:** em Conta → Personalizar início, o paciente pode fixar até três atalhos
+- **Meus atalhos:** em Conta → Personalização → Personalizar início, o paciente pode fixar até três atalhos
   em Meus registros. A escolha fica neste navegador, separada por conta.
-- **Cartões do início:** em Conta, o paciente pode ordenar ou esconder Avisos, Consultas e Sono e
+- **Cartões do início:** em Conta → Personalização, o paciente pode ordenar ou esconder Avisos, Consultas e Sono e
   humor de hoje, e começar Meus registros com o gráfico de atividades recolhido. Pode restaurar
   o padrão. A organização fica neste navegador, separada por conta.
 
@@ -170,7 +170,7 @@ Na prática clínica tradicional:
 
 ### 4.3. Para Todos (Personalização, Acessibilidade e Segurança da Conta)
 
-- **Cor de destaque:** em Conta, experimente Azul oceano, Roxo lavanda ou Terracota nos botões
+- **Cor de destaque:** em Conta → Personalização, experimente Azul oceano, Roxo lavanda ou Terracota nos botões
   e links, ou restaure a cor da paleta. A escolha salva fica neste navegador, separada por conta.
   A paleta Alto contraste mantém suas próprias cores.
 

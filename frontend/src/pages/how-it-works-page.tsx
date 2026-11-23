@@ -117,7 +117,7 @@ export function HowItWorksPage() {
           privacidade. Você pode consultá-lo a qualquer momento.
         </p>
         <p>
-          Em <strong>Conta → Personalizar início</strong>, quem usa o perfil de paciente pode fixar até três atalhos
+          Em <strong>Conta → Personalização → Personalizar início</strong>, quem usa o perfil de paciente pode fixar até três atalhos
           em Meus registros. Em <strong>Cartões do início</strong>, pode escolher quais cartões aparecem e em
           que ordem, além de começar com o gráfico recolhido. Essas escolhas ficam salvas neste navegador.
         </p>
@@ -213,7 +213,7 @@ export function HowItWorksPage() {
 
       <Section id="mensagens" title="Mensagens privadas">
         <p>Abra Mensagens no topo para combinar detalhes da consulta ou tirar dúvidas breves com a profissional vinculada. Combine com ela os horários de contato. Para urgências, procure atendimento de urgência.</p>
-        <p><strong>Quem vê:</strong> só as duas pessoas do vínculo ativo, depois que ambas aceitarem o aviso de privacidade. Em Conta, você pode escolher se quer receber avisos de mensagens.</p>
+        <p><strong>Quem vê:</strong> só as duas pessoas do vínculo ativo, depois que ambas aceitarem o aviso de privacidade. Em <strong>Conta → Notificações</strong>, você pode escolher se quer receber avisos de mensagens.</p>
       </Section>
 
       <Section id="profissionais" title="Para psicólogas e psiquiatras">

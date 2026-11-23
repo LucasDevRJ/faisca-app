@@ -33,11 +33,11 @@ function withAccessibility(overrides: Partial<AccessibilitySettings>) {
   return accessibility;
 }
 
-describe('/conta: Acessibilidade', () => {
+describe('/conta/acessibilidade', () => {
   it('mostra os cinco ajustes desligados por padrão, com descrição acessível no grupo', async () => {
-    renderRoute('/conta');
+    renderRoute('/conta/acessibilidade');
 
-    const section = await screen.findByRole('region', { name: 'Acessibilidade' });
+    const section = await screen.findByRole('region', { name: 'Preferências de acessibilidade' });
     const group = await within(section).findByRole('group', { name: 'Ajustes de acessibilidade' });
     expect(group).toHaveAccessibleDescription(/Valem neste aparelho e nos outros/);
 
@@ -71,9 +71,9 @@ describe('/conta: Acessibilidade', () => {
     );
 
     const user = userEvent.setup();
-    renderRoute('/conta');
+    renderRoute('/conta/acessibilidade');
 
-    const section = await screen.findByRole('region', { name: 'Acessibilidade' });
+    const section = await screen.findByRole('region', { name: 'Preferências de acessibilidade' });
     await user.click(await within(section).findByRole('checkbox', { name: /Leitura confortável/ }));
     await user.click(within(section).getByRole('checkbox', { name: /Menos movimento/ }));
 
@@ -104,9 +104,9 @@ describe('/conta: Acessibilidade', () => {
 
   it('sair de Conta sem salvar desfaz a prévia de leitura confortável e menos movimento', async () => {
     const user = userEvent.setup();
-    const { router } = renderRoute('/conta');
+    const { router } = renderRoute('/conta/acessibilidade');
 
-    const section = await screen.findByRole('region', { name: 'Acessibilidade' });
+    const section = await screen.findByRole('region', { name: 'Preferências de acessibilidade' });
     await user.click(await within(section).findByRole('checkbox', { name: /Leitura confortável/ }));
     expect(document.documentElement.dataset.comfortableReading).toBe('true');
 
