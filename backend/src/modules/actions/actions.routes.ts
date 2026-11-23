@@ -21,6 +21,7 @@ export function createActionsRoutes() {
   router.post('/actions', ...patient, writeLimit, controller.create);
   router.patch('/actions/:id', ...patient, writeLimit, controller.update);
   router.post('/actions/:id/evaluate', ...patient, writeLimit, controller.evaluate);
+  router.patch('/actions/:id/evaluation', ...patient, writeLimit, controller.correct);
   router.post('/actions/:id/not-done', ...patient, writeLimit, controller.notDone);
   router.delete('/actions/:id', ...patient, writeLimit, controller.remove);
 

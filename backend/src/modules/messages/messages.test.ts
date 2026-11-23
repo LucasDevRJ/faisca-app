@@ -189,4 +189,37 @@ describe('mensagem nova e prévia (DEC-127)', () => {
     expect((await patient.get('/messages/unread')).status).toBe(403);
     expect((await professional.get('/messages')).body[0]).toMatchObject({ available: false, unread: false, lastMessage: null });
   });
+
+  it('a profissional grava só o próprio "visto"; os dois abrindo juntos não travam', async () => {
+    const patient = await login(patientEmail);
+    const professional = await login(professionalEmail);
+    const url = `/messages/${linkId}`;
+    const fromPatient = (await patient.post(url).send(input)).body.id as string;
+    expect((await professional.get('/messages/unread')).body).toEqual({ unread: true });
+    expect((await professional.put(`${url}/seen`).send({ lastMessageId: fromPatient })).status).toBe(204);
+    let link = await prisma.therapistLink.findUniqueOrThrow({ where: { id: linkId } });
+    expect(link.therapistMessagesSeenAt).not.toBeNull();
+    expect(link.patientMessagesSeenAt).toBeNull();
+    expect((await professional.get('/messages/unread')).body).toEqual({ unread: false });
+
+    const fromProfessional = (await professional.post(url).send({ topic: 'DUVIDA', body: 'Resposta fictícia.' })).body.id as string;
+    const both = await Promise.all([
+      patient.put(`${url}/seen`).send({ lastMessageId: fromProfessional }),
+      professional.put(`${url}/seen`).send({ lastMessageId: fromProfessional }),
+    ]);
+    expect(both.map((res) => res.status)).toEqual([204, 204]);
+    link = await prisma.therapistLink.findUniqueOrThrow({ where: { id: linkId } });
+    expect(link.patientMessagesSeenAt).not.toBeNull();
+  });
+
+  it('mensagem de outra conversa da mesma pessoa não marca o "visto"', async () => {
+    const other = await createConfirmedUser({ email: 'mensagens-outro-paciente@faisca.test', privacyVersion: MESSAGES_PRIVACY_VERSION });
+    const otherLink = await createTestLink({ patientId: other.id, therapistId: professionalId, kind: 'PSIQUIATRIA', sharedAreas: [] });
+    const otherPatient = await login('mensagens-outro-paciente@faisca.test');
+    const foreign = (await otherPatient.post(`/messages/${otherLink.id}`).send(input)).body.id as string;
+    const professional = await login(professionalEmail);
+    expect((await professional.put(`/messages/${linkId}/seen`).send({ lastMessageId: foreign })).status).toBe(400);
+    const link = await prisma.therapistLink.findUniqueOrThrow({ where: { id: linkId } });
+    expect(link.therapistMessagesSeenAt).toBeNull();
+  });
 });

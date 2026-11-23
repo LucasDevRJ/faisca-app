@@ -23,8 +23,9 @@ import { AppError } from '../../errors/app-error.js';
 // - 2026-11.9: entram os remédios, as mudanças e o que o paciente sente (DEC-114), com área própria.
 // - 2026-11.10: o paciente pode pedir para ver quando a profissional leu, e ela pode ativar (DEC-117).
 //   A área cobre o pedido, a resposta dela e o que o paciente vê.
-// - 2026-11.12: as Mensagens guardam também até quando cada pessoa viu a conversa (DEC-127) e o
-//   registro apontado no assunto "Sobre um registro" (DEC-128). Sem área nova: nada é bloqueado.
+// - 2026-11.12: as Mensagens guardam também até quando cada pessoa viu a conversa (DEC-127). Sem área
+//   nova: nada é bloqueado. O registro apontado em "Sobre um registro" (DEC-128) terá versão própria,
+//   para o aviso não citar algo que ainda não está no ar (revisor-regras).
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',

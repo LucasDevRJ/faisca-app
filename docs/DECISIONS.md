@@ -2909,7 +2909,8 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   menu ("Mensagens •", `GET /messages/unread`) e "Nova" na conversa, mais uma prévia de até 80
   caracteres e a data da última mensagem na lista, só dentro do app e só para quem participa. O aviso
   de urgência passa a citar o CVV (188) e o SAMU (192). O aviso de privacidade ganha a versão
-  `2026-11.12`, sem área nova, que cita o "visto" e o registro apontado (DEC-128).
+  `2026-11.12`, sem área nova, que cita o "visto". O registro apontado (DEC-128) entra numa versão
+  própria, junto com a #264, para o aviso nunca descrever algo que ainda não está no ar.
 - **Motivo:** quem desliga e-mail e push não sabia que tinha mensagem. Selo não é recibo de leitura:
   a API nunca devolve o "visto" de uma pessoa para a outra (DEC-125 continua valendo), e os testes
   conferem isso. A profissional grava só a própria coluna no vínculo, como as marcas de "Lido"
@@ -2924,10 +2925,21 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   pelos aceites dos dois. A mensagem guarda só a referência (tipo e id), nunca uma cópia do texto; a
   API confere o acesso a cada leitura e, sem ele, mostra "Registro indisponível". A profissional
   escolhe em Conta se recebe esse assunto ("Receber mensagens sobre registros", ligado por padrão).
-  Push e e-mail continuam neutros.
+  Push e e-mail continuam neutros. O aviso de privacidade ganha uma versão própria (a próxima livre,
+  reservada no PR da #264) citando o registro apontado.
 - **Motivo:** apontar o registro evita explicar "aquele pensamento da quinta". A opção da
   profissional e uma dica na tela ajudam a manter o conteúdo clínico na consulta (motivo da DEC-125).
 - **Limite conhecido:** detalhes de implementação e testes no PR da #264.
+## DEC-129 — Corrigir uma Ação no dia da avaliação (#233)
+
+- **Decisão:** a pessoa pode corrigir a própria Ação avaliada até a meia-noite do dia de
+  `evaluatedAt`, no fuso America/Sao_Paulo. A data da Ação pode ser mantida ou corrigida dentro
+  da janela usada para registrar uma ação já feita. A nova rota `PATCH /actions/:id/evaluation`
+  preserva estado, data da avaliação e prazo das fotos. Exclusão continua bloqueada, assim como
+  a edição de uma Ação não realizada. A profissional só lê. Exceção de edição à DEC-051.
+- **Motivo:** permitir corrigir um toque acidental ou um detalhe percebido depois de avaliar.
+- **Limite conhecido:** a correção atualiza `updatedAt` e segue a indicação de registro atualizado
+  da DEC-057. A janela curta é suficiente nesta etapa e não há cópia do conteúdo anterior.
 
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.

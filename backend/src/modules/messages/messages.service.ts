@@ -25,14 +25,23 @@ function canTalk(link: { patient: { privacyVersion: string | null; hasPatientPro
     && coversArea(link.patient.privacyVersion, 'messages') && coversArea(link.therapist.privacyVersion, 'messages');
 }
 
-async function requireConversation(tx: Prisma.TransactionClient, linkId: string, userId: string) {
+// lock: 'share' para ler ou enviar; 'update' para gravar na própria linha do vínculo (o "visto"):
+// dois FOR SHARE que depois sobem para UPDATE na mesma linha podem travar um ao outro (revisor-regras).
+async function requireConversation(tx: Prisma.TransactionClient, linkId: string, userId: string, lock: 'share' | 'update' = 'share') {
   // A revogação atualiza esta mesma linha. O bloqueio mantém a verificação e a operação juntas.
-  const rows = await tx.$queryRaw<{ id: string }[]>`
-    SELECT id FROM "TherapistLink"
-    WHERE id = ${linkId}::uuid AND "revokedAt" IS NULL
-      AND ("patientId" = ${userId}::uuid OR "therapistId" = ${userId}::uuid)
-    FOR SHARE
-  `;
+  const rows = lock === 'share'
+    ? await tx.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "TherapistLink"
+      WHERE id = ${linkId}::uuid AND "revokedAt" IS NULL
+        AND ("patientId" = ${userId}::uuid OR "therapistId" = ${userId}::uuid)
+      FOR SHARE
+    `
+    : await tx.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "TherapistLink"
+      WHERE id = ${linkId}::uuid AND "revokedAt" IS NULL
+        AND ("patientId" = ${userId}::uuid OR "therapistId" = ${userId}::uuid)
+      FOR NO KEY UPDATE
+    `;
   if (!rows.length) throw unavailable();
   const link = await tx.therapistLink.findUniqueOrThrow({ where: { id: linkId }, include: participants });
   if (!canTalk(link)) throw unavailable();
@@ -65,7 +74,8 @@ async function hasUnread(link: SeenLink, viewerId: string) {
   const viewerIsPatient = link.patientId === viewerId;
   const seenAt = viewerIsPatient ? link.patientMessagesSeenAt : link.therapistMessagesSeenAt;
   const count = await prisma.privateMessage.count({
-    where: { linkId: link.id, sentByPatient: !viewerIsPatient, ...(seenAt ? { createdAt: { gt: seenAt } } : {}) },
+    // O vínculo ativo é relido na mesma consulta: revogou, não há "Nova" (revisor-seguranca).
+    where: { linkId: link.id, link: { revokedAt: null }, sentByPatient: !viewerIsPatient, ...(seenAt ? { createdAt: { gt: seenAt } } : {}) },
   });
   return count > 0;
 }
@@ -82,7 +92,7 @@ export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
         const isPatient = link.patientId === userId;
         const available = canTalk(link);
         const last = available
-          ? await prisma.privateMessage.findFirst({ where: { linkId: link.id }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] })
+          ? await prisma.privateMessage.findFirst({ where: { linkId: link.id, link: { revokedAt: null } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] })
           : null;
         return {
           id: link.id,
@@ -110,7 +120,7 @@ export function createMessagesService(mailer: Mailer, pushSender: PushSender) {
     // "visto") e só grava a coluna de quem pede, na linha do próprio vínculo (DEC-127).
     markSeen(userId: string, linkId: string, lastMessageId: string) {
       return prisma.$transaction(async (tx) => {
-        const link = await requireConversation(tx, linkId, userId);
+        const link = await requireConversation(tx, linkId, userId, 'update');
         const message = await tx.privateMessage.findFirst({ where: { id: lastMessageId, linkId }, select: { createdAt: true } });
         if (!message) throw new AppError(400, 'INVALID_MESSAGE', 'Atualize a conversa e tente de novo.');
         const column = link.patientId === userId ? 'patientMessagesSeenAt' : 'therapistMessagesSeenAt';
