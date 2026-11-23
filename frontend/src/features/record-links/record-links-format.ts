@@ -1,6 +1,12 @@
 import { startOfWeek } from '../activities/week';
 import type { LinkedRecordType, RecordSummary } from './record-links-api';
 
+// Nome de cada tipo de registro nas ligações.
+export const TYPE_LABEL: Record<LinkedRecordType, string> = {
+  ACTIVITY: 'Atividade', THOUGHT_RECORD: 'Pensamento', TENSION_EPISODE: 'Episódio de tensão', ACTION: 'Ação',
+  PLAN: 'Plano', PLAN_ENTRY: 'Registro de plano', TASK: 'Tarefa', SLEEP_MOOD: 'Sono e humor', MEDICATION: 'Remédio do dia',
+};
+
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 export function recordAnchorId(id: string): string {

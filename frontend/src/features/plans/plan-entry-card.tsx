@@ -71,7 +71,7 @@ export function PlanEntryCard(props: PlanEntryCardProps) {
           </Button>
         </div>
       )}
-      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="PLAN_ENTRY" id={entry.id} readOnly={props.readOnly} patientId={linkPatientId} />}
+      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="PLAN_ENTRY" id={entry.id} date={entry.entryDate} readOnly={props.readOnly} patientId={linkPatientId} />}
     </article>
   );
 }

@@ -121,7 +121,7 @@ export function ActivityCard(props: ActivityCardProps) {
         activity={activity}
         viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
       />
-      {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTIVITY" id={activity.id} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
+      {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTIVITY" id={activity.id} date={activity.activityDate} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
     </article>
   );
 }

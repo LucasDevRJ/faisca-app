@@ -211,10 +211,12 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   evolução mostra crença e intensidades das emoções no RPD e intensidade da tensão em cada episódio.
   A nova ocorrência continua aparecendo como não lida para a profissional. Ao apagar a raiz, a
   ocorrência sobrevivente mais antiga vira a nova raiz; apagar uma filha remove só sua ligação.
-- O seletor começa com registros próximos à data do registro aberto e permite ampliar o período.
-  Mostra as datas no padrão brasileiro (DD/MM/AAAA) e uma prévia curta para títulos longos; o texto
-  integral continua acessível e é mostrado após selecionar o registro. A prévia é local e
-  determinística, sem serviço de IA. Na ligação com uma Atividade, o campo opcional “Quer anotar
+- O seletor (DEC-126) mostra uma janela de 4 ciclos da consulta, ou 4 semanas sem agenda, que
+  começa no ciclo do registro aberto, com setas para os 4 anteriores ou seguintes (até o ciclo de
+  hoje) e "Ir para uma data". Os registros aparecem em cartões agrupados por ciclo, com tipo, data
+  (DD/MM/AAAA) e até 2 linhas do texto; os já ligados ficam de fora. Filtros por tipo e busca no
+  texto, que usa a busca da #152 nos últimos 12 meses (termo enviado no corpo, fora dos logs) e
+  realça a palavra encontrada. A prévia é local e determinística, sem serviço de IA. Na ligação com uma Atividade, o campo opcional “Quer anotar
   algo?” também aparece quando preenchido. O título do registro ligado é um link interno que abre a
   área e o período correspondentes e leva ao próprio registro. Na visão da profissional, essa
   navegação mantém as abas e períodos sujeitos às permissões e áreas já compartilhadas. Ligações

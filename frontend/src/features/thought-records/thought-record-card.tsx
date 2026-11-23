@@ -117,7 +117,7 @@ export function ThoughtRecordCard(props: ThoughtRecordCardProps) {
       {!props.readOnly && <Link to={`/pensamentos/novo?repetir=${record.id}`} className={buttonClasses('secondary', 'self-start')}>
         Tive esse pensamento de novo
       </Link>}
-      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="THOUGHT_RECORD" id={record.id} readOnly={props.readOnly} patientId={linkPatientId} />}
+      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="THOUGHT_RECORD" id={record.id} date={record.situationDate} readOnly={props.readOnly} patientId={linkPatientId} />}
     </article>
   );
 }

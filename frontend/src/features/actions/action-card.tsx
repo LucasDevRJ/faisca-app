@@ -112,7 +112,7 @@ export function ActionCard(props: ActionCardProps) {
           </div>
         </div>
       )}
-      {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTION" id={action.id} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
+      {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTION" id={action.id} date={action.actionDate} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
     </article>
   );
 }

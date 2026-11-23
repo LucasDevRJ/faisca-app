@@ -1,3 +1,4 @@
+import { todayInAppZone } from '../activities/week';
 import type { ReactNode } from 'react';
 import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 import { LongText } from '../../components/ui/long-text';
@@ -18,6 +19,6 @@ export function TaskCard({ task, children, footer, patientId, readOnly = false }
     {footer}
     {/* Só na visão do paciente, com a tarefa respondida, e se a profissional ativou (DEC-118). */}
     {!readOnly && task.respondedAt && <ReadReceiptLine type="TASK" id={task.id} />}
-    {(!readOnly || patientId) && <RecordLinksPanel type="TASK" id={task.id} readOnly={readOnly} patientId={patientId} />}
+    {(!readOnly || patientId) && <RecordLinksPanel type="TASK" id={task.id} date={todayInAppZone(new Date(task.createdAt))} readOnly={readOnly} patientId={patientId} />}
   </article>;
 }

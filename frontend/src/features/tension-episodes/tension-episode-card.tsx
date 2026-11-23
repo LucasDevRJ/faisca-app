@@ -66,7 +66,7 @@ export function TensionEpisodeCard(props: TensionEpisodeCardProps) {
       {!props.readOnly && <Link to={`/tensao/novo?repetir=${episode.id}`} className={buttonClasses('secondary', 'self-start')}>
         Isso aconteceu de novo
       </Link>}
-      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="TENSION_EPISODE" id={episode.id} readOnly={props.readOnly} patientId={linkPatientId} />}
+      {(!props.readOnly || linkPatientId) && <RecordLinksPanel type="TENSION_EPISODE" id={episode.id} date={episode.episodeDate} readOnly={props.readOnly} patientId={linkPatientId} />}
     </article>
   );
 }
