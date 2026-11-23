@@ -9,6 +9,10 @@ import { env } from '../config/env.js';
 const SENSITIVE_KEYS = [
   // Busca em registros (Issue #152): termos podem revelar informação sobre saúde e nunca ficam no log.
   'term',
+  // Mensagens (DEC-127): a prévia da última mensagem é conteúdo privado da conversa (o texto já está
+  // abaixo, em 'body').
+  'preview',
+  'lastMessage',
   // Sono, humor e remédio (DEC-107): a palavra do dia é texto do paciente, e as notas, os horários e
   // o remédio são dado de saúde (achado do revisor-regras).
   'moodWord',

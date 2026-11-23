@@ -23,6 +23,9 @@ import { AppError } from '../../errors/app-error.js';
 // - 2026-11.9: entram os remédios, as mudanças e o que o paciente sente (DEC-114), com área própria.
 // - 2026-11.10: o paciente pode pedir para ver quando a profissional leu, e ela pode ativar (DEC-117).
 //   A área cobre o pedido, a resposta dela e o que o paciente vê.
+// - 2026-11.12: as Mensagens guardam também até quando cada pessoa viu a conversa (DEC-127). Sem área
+//   nova: nada é bloqueado. O registro apontado em "Sobre um registro" (DEC-128) terá versão própria,
+//   para o aviso não citar algo que ainda não está no ar (revisor-regras).
 export const PRIVACY_VERSIONS = [
   '2026-10',
   '2026-10.2',
@@ -42,6 +45,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.9',
   '2026-11.10',
   '2026-11.11',
+  '2026-11.12',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -79,7 +83,7 @@ export function versionToRecord(shownVersion: string | undefined, current: strin
   const shown = shownVersion ?? LEGACY_SHOWN_VERSION;
   // A Vercel e o Railway publicam separadamente. Preserve o aceite mais novo e grave
   // apenas a versão enviada pelo app, inclusive quando o PWA ainda mostra a anterior.
-  if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION) {
+  if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION || shown === '2026-11.12') {
     const kept = PRIVACY_VERSIONS.indexOf(current as PrivacyVersion);
     const displayed = PRIVACY_VERSIONS.indexOf(shown as PrivacyVersion);
     return PRIVACY_VERSIONS[Math.max(kept, displayed)]!;

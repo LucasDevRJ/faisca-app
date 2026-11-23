@@ -43,6 +43,8 @@
 - Mensagens (DEC-125) usa `/messages` para consulta e envio privado pelos dois participantes do
   vínculo ativo após aceite da área `messages` por ambos. Usa dados da própria conversa e nunca
   acessa ou altera registros clínicos. Configurações de canais e aparelhos são da própria conta.
+  O "visto" de cada pessoa (`PUT /messages/:linkId/seen`, DEC-127) grava só a coluna dela no vínculo
+  (`patientMessagesSeenAt` ou `therapistMessagesSeenAt`), só avança e nunca aparece para a outra.
 
 ## Regras de domínio
 - Transições de estado da atividade ficam centralizadas no service de atividades. Nenhum outro

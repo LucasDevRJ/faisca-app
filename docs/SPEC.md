@@ -557,6 +557,10 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   anexos nem recibos de leitura. O canal não atende urgências e a resposta depende da disponibilidade.
 - O assunto é escolhido na primeira mensagem. A resposta segue o assunto da mensagem mais recente
   quando a pessoa começa a digitar. Para iniciar outro assunto, ela usa **Mudar de assunto** antes de enviar.
+- **Mensagem nova (DEC-127):** cada pessoa tem o próprio "visto" da conversa. Chegou mensagem da
+  outra pessoa depois dele, o menu mostra "Mensagens •" e a conversa aparece com "Nova" na lista, com
+  uma prévia da última mensagem (até 80 caracteres) e a data. O "visto" de uma pessoa nunca aparece
+  para a outra (sem recibo de leitura). O aviso de urgência cita o CVV (188) e o SAMU (192).
 - O histórico pode ser baixado enquanto o vínculo estiver ativo. Revogar o vínculo suspende todo
   acesso dos dois lados. O histórico não aparece num novo vínculo. Excluir qualquer uma das contas
   apaga a conversa do banco ativo.

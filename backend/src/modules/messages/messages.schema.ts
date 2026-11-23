@@ -6,6 +6,7 @@ export const messageSchema = z.strictObject({
 });
 
 export const messagePageSchema = z.strictObject({ before: z.uuid().optional() });
+export const messageSeenSchema = z.strictObject({ lastMessageId: z.uuid() });
 export const messagePreferencesSchema = z.strictObject({ email: z.boolean(), push: z.boolean() });
 
 export type MessageInput = z.infer<typeof messageSchema>;

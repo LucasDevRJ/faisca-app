@@ -70,6 +70,8 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    alterar registros, e mantém as mesmas verificações de vínculo, área e aceite de cada resultado.
    As rotas próprias `/messages` (DEC-125) permitem ler e enviar mensagens privadas somente entre
    as duas pessoas do vínculo ativo após aceite de ambas. Esse acesso é separado dos registros.
+   Cada uma grava também o próprio "visto" da conversa (`PUT /messages/:linkId/seen`, DEC-127), só a
+   própria coluna no vínculo; o "visto" de uma nunca é mostrado à outra (sem recibo de leitura).
    No contexto de paciente, só os próprios dados.
    Toda rota nova com dado de paciente precisa de teste de autorização (caso permitido e negado).
 2. **Registros finais são imutáveis.** Editar ou excluir atividade CONCLUIDA ou NAO_REALIZADA retorna 409.
