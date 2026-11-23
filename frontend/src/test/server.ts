@@ -204,6 +204,9 @@ export const handlers = [
   // Remédios e o que sinto (DEC-115): nada anotado e a seção desligada, por padrão.
   http.get('*/api/medications', () => HttpResponse.json({ medications: [], symptoms: [], listsMedications: false })),
   http.get('*/api/therapist/patients/:patientId/medications', () => HttpResponse.json({ medications: [], symptoms: [] })),
+  // Mensagens (DEC-127): sem mensagem nova e "visto" aceito, por padrão.
+  http.get('*/api/messages/unread', () => HttpResponse.json({ unread: false })),
+  http.put('*/api/messages/:linkId/seen', () => new HttpResponse(null, { status: 204 })),
   http.get('*/api/record-links', () => HttpResponse.json({ links: [] })),
   http.get('*/api/record-links/candidates', () => HttpResponse.json({ records: [] })),
   http.get('*/api/therapist/patients/:patientId/record-links', () => HttpResponse.json({ links: [] })),

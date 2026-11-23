@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
 import { Button } from '../components/ui/button';
 import { AnnouncementCard } from '../features/announcements/announcement-card';
 import { useLogout, useSession } from '../features/auth/use-session';
+import { fetchUnread } from '../features/messages/messages-api';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-2 font-medium ${isActive ? 'bg-surface text-primary-text shadow-soft' : 'text-muted hover:text-text'}`;
+  `rounded-md px-2 py-2 font-medium sm:px-3 ${isActive ? 'bg-surface text-primary-text shadow-soft' : 'text-muted hover:text-text'}`;
 
 // Moldura das telas de quem entrou: marca e sair no topo, alternância de perfil e tema no rodapé.
 export function AppLayout() {
@@ -14,6 +16,17 @@ export function AppLayout() {
   const logout = useLogout();
   const navigate = useNavigate();
   const bothProfiles = user?.profiles.patient && user.profiles.therapist;
+  // Selo de mensagem nova no menu (DEC-127). Só com o aceite das Mensagens; consulta ao trocar de
+  // tela e a cada minuto. Não é recibo de leitura: só quem recebe sabe.
+  const canMessage = Boolean(user?.privacyAreas.messages);
+  const unread = useQuery({
+    queryKey: ['messages', user?.id, 'unread'],
+    queryFn: ({ signal }) => fetchUnread(signal),
+    enabled: canMessage,
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  const hasUnread = canMessage && unread.data === true;
   // "Meus registros" segue marcado nas telas de Pensamentos, Tensão, Ação, Consultas e Avisos, que são do
   // mesmo perfil; "Meus pacientes", no Mural.
   const { pathname, hash } = useLocation();
@@ -42,6 +55,11 @@ export function AppLayout() {
     }
     return stop;
   }, [hash, pathname]);
+  // Ao trocar de tela, confere de novo se chegou mensagem.
+  const refetchUnread = unread.refetch;
+  useEffect(() => {
+    if (canMessage) void refetchUnread();
+  }, [pathname, canMessage, refetchUnread]);
   const inPatientArea = ['/registros', '/pensamentos', '/tensao', '/acao', '/consultas', '/avisos', '/comunidade'].some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
@@ -54,22 +72,24 @@ export function AppLayout() {
           <img src="/icon.svg" alt="" className="size-10" />
           <span className="font-heading text-2xl font-bold">Faísca</span>
         </Link>
-        <div className="ml-auto flex items-center gap-1">
-          <NavLink to="/mensagens" className={(state) => `inline-flex min-h-11 items-center ${navLinkClass(state)}`}>
+        {/* Em 320 px, com o selo de mensagem nova, os quatro itens ainda cabem numa linha (revisor-telas). */}
+        <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
+          <NavLink to="/mensagens" className={(state) => `inline-flex min-h-11 items-center gap-1.5 ${navLinkClass(state)}`}>
             Mensagens
+            {hasUnread && <>
+              <span aria-hidden="true" className="size-2 rounded-full bg-primary" />
+              <span className="sr-only">, há mensagem nova</span>
+            </>}
           </NavLink>
-          <Link
-            to="/como-funciona"
-            aria-label="Ajuda: Como funciona o Faísca"
-            className="inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-primary-text underline underline-offset-4 hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
+          <NavLink to="/como-funciona" aria-label="Ajuda: Como funciona o Faísca" className={(state) => `inline-flex min-h-11 items-center ${navLinkClass(state)}`}>
             Ajuda
-          </Link>
-          <NavLink to="/conta" className={navLinkClass}>
+          </NavLink>
+          <NavLink to="/conta" className={(state) => `inline-flex min-h-11 items-center ${navLinkClass(state)}`}>
             Conta
           </NavLink>
           <Button
             variant="ghost"
+            className="px-2! sm:px-5!"
             disabled={logout.isPending}
             onClick={() => logout.mutate(undefined, { onSettled: () => navigate('/entrar', { replace: true }) })}
           >
