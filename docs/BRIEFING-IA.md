@@ -170,6 +170,9 @@ Na prática clínica tradicional:
 
 ### 4.3. Para Todos (Personalização, Acessibilidade e Segurança da Conta)
 
+- **Compartilhar o Faísca:** em Conta, envie uma mensagem sobre o app e o link público do guia
+  Como funciona pelo menu do aparelho ou copie o convite. A mensagem não traz dados de quem a compartilha.
+
 - **Cor de destaque:** em Conta → Personalização, experimente Azul oceano, Roxo lavanda ou Terracota nos botões
   e links, ou restaure a cor da paleta. A escolha salva fica neste navegador, separada por conta.
   A paleta Alto contraste mantém suas próprias cores.

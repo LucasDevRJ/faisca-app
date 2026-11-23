@@ -2991,6 +2991,17 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** os ajustes usam as preferências e permissões existentes. As opções de
   organizar o início e configurar lembretes continuam disponíveis para quem tem perfil de paciente.
 
+## DEC-134 — Convite para conhecer o Faísca pela Conta (#227)
+
+- **Decisão:** em Conta, qualquer pessoa autenticada pode abrir o menu de compartilhamento do aparelho
+  ou copiar um convite para conhecer o Faísca. O convite usa texto fixo e o endereço público
+  `https://minhafaisca.com.br/como-funciona`, sem dados da conta ou rastreamento individual. O app
+  não registra nem envia o compartilhamento ao servidor. O aviso de privacidade mantém a versão atual.
+- **Motivo:** facilitar a divulgação do app e explicar como ele pode apoiar conversas na terapia
+  entre consultas, sem expor quem fez o convite.
+- **Limite conhecido:** cada aparelho oferece seus próprios destinos. Onde a cópia automática não
+  estiver disponível, a mensagem pode ser selecionada e copiada manualmente.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

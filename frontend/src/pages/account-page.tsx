@@ -11,6 +11,7 @@ import { TherapistLinkSection } from '../features/links/therapist-link-section';
 import { ProfileSection } from '../features/profile/profile-section';
 import { MedicationSettingSection } from '../features/daily-check-ins/medication-setting-section';
 import { ProfessionalSection } from '../features/profile/professional-section';
+import { ShareFaiscaSection } from '../features/profile/share-faisca-section';
 
 const settings: ReadonlyArray<{ path: string; title: string; description: string; patientExtra?: string }> = [
   { path: 'personalizacao', title: 'Personalização', description: 'Paleta e cor de destaque', patientExtra: 'organização do início' },
@@ -80,6 +81,8 @@ export function AccountPage() {
           Abrir o guia Como funciona
         </Link>
       </section>
+
+      <ShareFaiscaSection />
 
       <ProfileSection />
 
