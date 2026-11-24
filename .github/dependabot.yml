@@ -1,0 +1,51 @@
+# Atualizações automáticas do Dependabot (DEC-136). Uma vez por semana, com as versões menores e de
+# correção agrupadas num PR por pasta, para não encher a fila. Versão maior vem em PR próprio.
+# Cada versão nova espera 7 dias antes de virar PR (cooldown), para dar tempo de uma versão
+# maliciosa ser retirada do npm. Todo PR do Dependabot passa pelo CI e pela revisão de sempre
+# (revisor-seguranca, AGENTS.md) antes do merge; nada entra sozinho. Os alertas de segurança abrem
+# PR na hora, fora desta agenda.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule: { interval: weekly, day: tuesday, time: "06:00", timezone: America/Sao_Paulo }
+    open-pull-requests-limit: 3
+    cooldown: { default-days: 7 }
+    groups:
+      menores:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly, day: tuesday, time: "06:00", timezone: America/Sao_Paulo }
+    open-pull-requests-limit: 3
+    cooldown: { default-days: 7 }
+    groups:
+      menores:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /tests
+    schedule: { interval: weekly, day: tuesday, time: "06:00", timezone: America/Sao_Paulo }
+    open-pull-requests-limit: 2
+    cooldown: { default-days: 7 }
+    groups:
+      menores:
+        update-types: [minor, patch]
+
+  # As ações dos workflows ficam fixadas pelo SHA do commit; o Dependabot troca o SHA e o comentário
+  # da versão juntos.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: tuesday, time: "06:00", timezone: America/Sao_Paulo }
+    cooldown: { default-days: 7 }
+    groups:
+      acoes:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # Imagem do serviço de cópia de segurança (DEC-075).
+  - package-ecosystem: docker
+    directory: /backup
+    schedule: { interval: weekly, day: tuesday, time: "06:00", timezone: America/Sao_Paulo }
+    cooldown: { default-days: 7 }
