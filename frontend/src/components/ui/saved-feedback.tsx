@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SaveSoundOffer } from '../../features/sounds/save-sound-offer';
 
 // Retorno calmo ao concluir uma atividade ou avaliar uma Ação (issue #93): o cartão assenta e um ✓
 // se desenha uma vez num círculo sálvia. Reconhece o esforço sem virar prêmio: nada de confete,
@@ -27,6 +28,8 @@ export function SavedFeedback({ saved, children }: { saved: boolean; children: R
           </svg>
         </span>
       )}
+      {/* Convite da primeira vez para o som ao salvar (DEC-135). */}
+      {saved && <SaveSoundOffer />}
       {/* Região viva sempre montada, para o leitor de tela anunciar quando o texto chega. */}
       <span role="status" className="sr-only">
         {saved ? 'Registro guardado.' : ''}

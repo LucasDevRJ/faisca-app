@@ -9,6 +9,7 @@ import { AccessibilitySection } from '../features/profile/accessibility-section'
 import { HighlightSetting } from '../features/profile/highlight-setting';
 import { ProfileSection } from '../features/profile/profile-section';
 import { RemindersSection } from '../features/reminders/reminders-section';
+import { SaveSoundSettings } from '../features/sounds/save-sound-settings';
 
 const accountSettingTitles = {
   personalizacao: 'Personalização',
@@ -44,7 +45,12 @@ export function AccountSettingsPage({ section }: { section: keyof typeof account
           {user.profiles.patient && <HomeLayoutSettings key={`layout:${user.id}`} userId={user.id} />}
         </>
       )}
-      {section === 'acessibilidade' && <AccessibilitySection />}
+      {section === 'acessibilidade' && (
+        <>
+          <AccessibilitySection />
+          <SaveSoundSettings key={`sound:${user.id}`} userId={user.id} />
+        </>
+      )}
       {section === 'notificacoes' && (
         <>
           <AnnouncementEmailSetting />

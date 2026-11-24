@@ -15,7 +15,7 @@ import { ShareFaiscaSection } from '../features/profile/share-faisca-section';
 
 const settings: ReadonlyArray<{ path: string; title: string; description: string; patientExtra?: string }> = [
   { path: 'personalizacao', title: 'Personalização', description: 'Paleta e cor de destaque', patientExtra: 'organização do início' },
-  { path: 'acessibilidade', title: 'Acessibilidade', description: 'Leitura, linguagem, movimento e formulários' },
+  { path: 'acessibilidade', title: 'Acessibilidade', description: 'Leitura, linguagem, movimento, sons e formulários' },
   { path: 'notificacoes', title: 'Notificações', description: 'Novidades por e-mail e avisos de mensagens', patientExtra: 'lembretes' },
 ];
 

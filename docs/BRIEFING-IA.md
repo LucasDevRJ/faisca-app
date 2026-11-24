@@ -72,6 +72,7 @@ Na prática clínica tradicional:
   - Também permite criar registro retroativo de algo já feito.
   - **Fotos das atividades:** o paciente pode adicionar **até 10 fotos** a uma atividade, como lembrança do que fez: enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta. Numa atividade que não aconteceu, dá para tirar as fotos que já estavam lá. Elas aparecem só para a profissional a quem o paciente liberar.
   - **Retorno calmo ao concluir:** ao contar como foi uma atividade (ou avaliar uma Ação), o cartão assenta e um ✓ se desenha uma vez num círculo verde-sálvia; o leitor de tela ouve *"Registro guardado."*. É reconhecimento do esforço, sem confete, "parabéns" ou pontos. Com **Menos movimento** ligado, o ✓ aparece pronto, sem animação.
+  - **Som e vibração ao salvar (opcional):** um som curto e suave (Gota, Sino suave ou Madeira, com volume e "Ouvir" antes de ligar) e uma vibração leve no Android. Começam desligados e valem só no aparelho, para não chamar atenção em público; na primeira vez, o app pergunta com delicadeza se a pessoa quer ouvir.
   - Exibe um **gráfico comparativo** (*Vontade antes × Prazer × Realização*) em barras horizontais no celular e colunas lado a lado no tablet/computador, usando uma única cor em três intensidades (nunca vermelho/verde).
 
 - **Registro de Pensamentos (RPD):**

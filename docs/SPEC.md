@@ -657,6 +657,10 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   confete, "parabéns", contador ou movimento contínuo. O ✓ some ao abrir outra ação ou sair da tela.
   Com **Menos movimento** (conta ou sistema), nada se move e o ✓ aparece pronto. Só no contexto do
   paciente; "Não aconteceu" e o registro direto em "Já fiz" não ganham o retorno.
+- **Som e vibração ao salvar** (DEC-135): nos mesmos momentos do ✓, um som curto (Gota, Sino suave ou
+  Madeira; duas notas subindo ao concluir uma atividade) e uma vibração leve, escolhidos em
+  `Conta › Acessibilidade › Sons e vibração`, com volume e prévia. Começam desligados e ficam só no
+  aparelho. Na primeira vez que o ✓ aparece, um convite discreto oferece Ouvir, Ligar som e Agora não.
 - **Datas com o ano quando são de outro ano** (DEC-120): no app inteiro, uma data deste ano aparece
   como "15/09" ou "segunda-feira, 21/09"; de outro ano, no passado ou no futuro, ganha o ano
   ("15/09/2025", "21 a 27 de set. de 2025"). Os rótulos dos eixos dos gráficos ficam sem o ano. Os
