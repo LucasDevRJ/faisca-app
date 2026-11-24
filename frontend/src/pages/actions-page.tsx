@@ -20,6 +20,8 @@ import { cycleQuery } from '../features/cycle/use-cycle';
 import { usePeriod } from '../features/cycle/use-period';
 import { daysInRange } from '../features/therapist/period';
 import { SavedFeedback } from '../components/ui/saved-feedback';
+import { playSaveFeedback } from '../features/sounds/save-sound';
+import { useSaveSoundUnlock } from '../features/sounds/use-save-sound-unlock';
 import { needsPrivacyConsent } from '../features/thought-records/use-thought-records';
 
 // Aviso vindo de outra página (ex.: "Ação salva."), por navigate(..., { state }).
@@ -94,6 +96,7 @@ export function ActionsPage() {
   const [notice, setNotice] = useState<string | null>((location.state as ActionsPageState)?.notice ?? null);
   // Ação que a pessoa acabou de avaliar: o cartão dela ganha o retorno calmo (issue #93).
   const [savedId, setSavedId] = useState<string | null>(null);
+  useSaveSoundUnlock();
 
   const consented = Boolean(user?.privacyAreas.actions);
   const today = todayInAppZone();
@@ -248,7 +251,10 @@ export function ActionsPage() {
           onClose={() => setDialog(null)}
           onDone={(message) => {
             done(message);
-            if (!message) setSavedId(dialog.action.id);
+            if (!message) {
+              setSavedId(dialog.action.id);
+              if (user) playSaveFeedback(user.id, 'record');
+            }
           }}
         />
       )}

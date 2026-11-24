@@ -32,6 +32,8 @@ import { daysInRange } from '../features/therapist/period';
 import { MyPeriodSummaryCard } from '../features/summary/period-summary-card';
 import { AREA_TITLE, summaryLinkClass, type SummaryArea } from '../features/summary/summary-format';
 import { SavedFeedback } from '../components/ui/saved-feedback';
+import { playSaveFeedback } from '../features/sounds/save-sound';
+import { useSaveSoundUnlock } from '../features/sounds/use-save-sound-unlock';
 
 type OpenDialog = { kind: 'create'; date: string } | { kind: ActivityAction; activity: Activity } | null;
 
@@ -97,6 +99,8 @@ function PeriodRecords({ period, today, currentMonday, collapseChart, onCycle, o
   const [notice, setNotice] = useState<string | null>(null);
   // Atividade que a pessoa acabou de concluir: o cartão dela ganha o retorno calmo (issue #93).
   const [savedId, setSavedId] = useState<string | null>(null);
+  const { data: user } = useSession();
+  useSaveSoundUnlock();
   const days = daysInRange(period);
   const inCycle = period.mode === 'cycle';
   const here = inCycle ? 'neste ciclo' : 'nesta semana';
@@ -252,7 +256,10 @@ function PeriodRecords({ period, today, currentMonday, collapseChart, onCycle, o
           onDone={(message) => {
             done(message);
             // Com aviso, só parte gravou (DEC-029): sem o retorno de concluído.
-            if (!message) setSavedId(dialog.activity.id);
+            if (!message) {
+              setSavedId(dialog.activity.id);
+              if (user) playSaveFeedback(user.id, 'complete');
+            }
           }}
         />
       )}

@@ -3002,6 +3002,29 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** cada aparelho oferece seus próprios destinos. Onde a cópia automática não
   estiver disponível, a mensagem pode ser selecionada e copiada manualmente.
 
+## DEC-135 — Som e vibração ao salvar, desligados e guardados no aparelho (#93, #272) (23/11/2026)
+
+- **Decisão:** em `Conta › Acessibilidade`, a seção **Sons e vibração** oferece um som curto ao salvar,
+  com três opções para o registro (Gota, Sino suave e Madeira), volume Baixo, Médio ou Alto e um
+  "Ouvir" para cada som antes de ligar. Ao concluir uma atividade, o som é sempre o das duas notas
+  subindo (mi e si, #93). A vibração leve é uma escolha separada, só oferecida no aparelho que vibra
+  pelo navegador. Tudo começa **desligado** (revê a escolha "ligado por padrão" da #93) e fica
+  guardado **só neste aparelho**, por conta, sem passar pela API. Na primeira vez que o ✓ aparece,
+  um convite discreto embaixo do cartão pergunta "Quer ouvir um som suave ao salvar?", com Ouvir,
+  Ligar som e Agora não. Ele volta nos próximos registros até a pessoa responder, uma vez por
+  aparelho, e não rouba o foco. Os sons são gerados pelo
+  navegador (Web Audio), sem arquivo de áudio, têm menos de 1 s e tocam nos mesmos momentos do ✓
+  (concluir uma atividade e avaliar uma Ação). O **Menos movimento** não desliga o som: são escolhas
+  diferentes.
+- **Motivo:** o Faísca é um app de saúde mental, e um som inesperado no trabalho ou numa sala de espera
+  chama atenção para o celular da pessoa. Guardar no aparelho permite som no celular e silêncio no
+  computador, e a escolha não é dado de saúde, por isso o aviso de privacidade mantém a versão atual.
+  As opções seguem o pedido da #272 (escolher e ouvir antes).
+- **Limite conhecido:** o iPhone não vibra pelo navegador e respeita o modo silencioso. O navegador só
+  toca som depois de um gesto na página, então o áudio é preparado nos toques da página até rodar. Os outros
+  registros (Pensamentos, Tensão, "Não aconteceu") ganham o som quando ganharem o ✓ (#93). Em outro
+  aparelho a pessoa escolhe de novo.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

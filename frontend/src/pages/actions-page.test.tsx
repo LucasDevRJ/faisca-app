@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Action } from '../features/actions/actions-api';
+import { installFakeAudio } from '../test/fake-audio';
 import { renderRoute } from '../test/render';
 import { fakeUser, loggedIn, server } from '../test/server';
 
@@ -201,6 +202,31 @@ describe('/acao', () => {
     expect(await screen.findByText('Registro guardado.')).toHaveAttribute('role', 'status');
     const evaluated = await screen.findByRole('article', { name: 'Caminhar' });
     expect(evaluated.parentElement!.querySelector('[data-saved-check]')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('avaliar com o som ligado toca o som escolhido (DEC-135)', async () => {
+    const audio = installFakeAudio();
+    localStorage.setItem(`faisca:save-sound:${fakeUser.id}`, JSON.stringify({ enabled: true, sound: 'madeira', volume: 'baixo', vibration: false }));
+    try {
+      const action = fakeAction({ name: 'Caminhar' });
+      actionsApi([action]);
+      recordWrites();
+      const user = userEvent.setup();
+      renderRoute('/acao');
+      const card = await screen.findByRole('article', { name: 'Caminhar' });
+      await user.click(within(card).getByRole('button', { name: 'Conta como foi?' }));
+      const dialog = screen.getByRole('dialog', { name: 'Conta como foi?' });
+      fireEvent.change(within(dialog).getByLabelText('Prazer'), { target: { value: '7' } });
+      fireEvent.change(within(dialog).getByLabelText('Realização'), { target: { value: '6' } });
+      await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+      await screen.findByText('Registro guardado.');
+      await waitFor(() => expect(audio.tones).toEqual([740, 1180]));
+      expect(audio.vibrations).not.toHaveBeenCalled();
+    } finally {
+      audio.restore();
+      localStorage.clear();
+    }
   });
 
   it('"Não deu desta vez" não ganha o retorno de avaliada', async () => {
