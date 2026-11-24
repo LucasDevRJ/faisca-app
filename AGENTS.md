@@ -140,6 +140,21 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
   Dentro do mesmo agente, a suíte do backend e o Playwright continuam sem rodar juntos, porque usam o
   mesmo banco.
 
+## Segurança do repositório (DEC-136)
+- A `main` só recebe PR com o CI verde, **sem exceção para administradores**. O GitHub barra push
+  direto e force push; os hooks barram force push e pedem confirmação em todo push.
+- **Ações dos workflows** sempre fixadas pelo SHA do commit, com a versão num comentário
+  (`actions/checkout@<sha> # v4.4.0`), e o checkout com `persist-credentials: false`. Ação nova
+  entra do mesmo jeito.
+- **PRs do Dependabot:** quem os pega coloca a etiqueta do agente.
+  - Rode o `revisor-seguranca` no modo diff.
+  - Rode os testes do pacote.
+  - Se o PR mexer no `vite-plugin-pwa` ou no `workbox-build`, confira que o `npm run build` do
+    front continua com o mesmo número de arquivos no precache (#283).
+  - Nunca faça merge sem o CI.
+- **Alertas do CodeQL, do Dependabot e da varredura de segredos:** quem encontrar avisa o usuário.
+  Dispensar um alerta, ou mudar as proteções do repositório, é decisão do usuário.
+
 ## Convenções
 - Identificadores de código em inglês (`Activity`, `activityDate`); valores de estado do domínio
   como na SPEC (`PLANEJADA`, `CONCLUIDA`...); textos de interface em pt-BR.

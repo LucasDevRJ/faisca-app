@@ -3025,6 +3025,33 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   registros (Pensamentos, Tensão, "Não aconteceu") ganham o som quando ganharem o ✓ (#93). Em outro
   aparelho a pessoa escolhe de novo.
 
+## DEC-136 — Proteções do repositório no GitHub e atualizações do Dependabot (23/11/2026)
+
+- **Decisão:**
+  - A `main` exige PR e os 5 testes do CI (backend, frontend, playwright, migrations e números),
+    **também para administradores**. Força e exclusão da `main` ficam bloqueadas.
+  - Ficam ligados:
+    - a varredura de segredos com proteção no push;
+    - o CodeQL (configuração padrão: JavaScript/TypeScript e Actions);
+    - os PRs de correção do Dependabot.
+  - O `.github/dependabot.yml` atualiza `backend/`, `frontend/`, `tests/`, as ações dos workflows e
+    a imagem do `backup/` toda terça. Versões menores e de correção vêm agrupadas num PR por pasta.
+  - As ações dos workflows são fixadas pelo SHA do commit, com a versão num comentário, e o checkout
+    não guarda o token (`persist-credentials: false`).
+  - Cada versão nova espera 7 dias antes de virar PR (`cooldown`). Versão maior vem em PR próprio,
+    também nas ações.
+  - PR do Dependabot passa pelo CI e pelo `revisor-seguranca`, como os outros, e nunca entra
+    sozinho.
+- **Motivo:**
+  - Três agentes trabalham com o login do dono do repositório. Sem a regra para administradores,
+    qualquer um podia mandar código para a `main` sem CI.
+  - Fixar as ações pelo SHA impede que uma ação comprometida rode no nosso CI.
+  - Atualizar em lotes semanais evita que as dependências envelheçam e acumulem falhas.
+- **Limite conhecido:**
+  - Risco aceito, acompanhado na #283: o `workbox-build` (só no build) ainda traz um `minimatch`
+    antigo.
+  - Mudar essas configurações no GitHub é só com o usuário.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
