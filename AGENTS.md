@@ -150,6 +150,20 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
   Dentro do mesmo agente, a suíte do backend e o Playwright continuam sem rodar juntos, porque usam o
   mesmo banco.
 
+## Discussions (DEC-138)
+O repositório é público, e as Discussions também: **nunca dado real**, de paciente ou de
+profissional (regra 5), nem e-mail pessoal, segredo ou falha de segurança ainda aberta.
+- **Categorias:** Ideias (todos escrevem), Perguntas (resposta marcada), Avisos e Exploração (só
+  mantenedores abrem). Criar, renomear e apagar categorias é com o usuário, pela página do GitHub.
+- **Ideia nova**, que o usuário ainda não escolheu, vai para **Ideias**, e não vira issue.
+- **Aprovada:** vira issue com o link da discussão (e entra no quadro como Ideia, DEC-137); a
+  discussão é fechada como resolvida, com o link da issue.
+- **Recusada:** a discussão é fechada como desatualizada, com um comentário "Recusada: <motivo>".
+  Antes de sugerir algo, procure também nas discussões fechadas.
+- **Exploração semanal:** uma discussão por mês na categoria Exploração (skill `explorar-app`).
+- **Comandos:** o `gh` não tem comandos de Discussions; use `gh api graphql` (exemplos na skill
+  `explorar-app`).
+
 ## Segurança do repositório (DEC-136)
 - A `main` só recebe PR com o CI verde, **sem exceção para administradores**. O GitHub barra push
   direto e force push; os hooks barram force push e pedem confirmação em todo push.
