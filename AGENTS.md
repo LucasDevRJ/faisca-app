@@ -163,6 +163,9 @@ profissional (regra 5), nem e-mail pessoal, segredo ou falha de segurança ainda
   discussão é fechada como resolvida, com o link da issue.
 - **Recusada:** a discussão é fechada como desatualizada, com um comentário "Recusada: <motivo>".
   Antes de sugerir algo, procure também nas discussões fechadas.
+- **Opinião de agente:** quando o usuário pede, o agente comenta na discussão e **assina** no fim
+  ("— Claude", "— Codex", "— Antigravity"), porque todos usam o login do usuário. Ele só opina e
+  pode responder a outro agente; quem decide é sempre o usuário.
 - **Exploração semanal:** uma discussão por mês na categoria Exploração (skill `explorar-app`).
 - **Formulários de issue** (`.github/ISSUE_TEMPLATE/`): Defeito e Ideia aprovada, sem issue em
   branco. A tela de escolha leva ideias e perguntas para as Discussions e falhas de segurança para
