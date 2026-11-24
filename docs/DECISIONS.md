@@ -3052,6 +3052,30 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
     antigo.
   - Mudar essas configurações no GitHub é só com o usuário.
 
+## DEC-137 — Quadro da fila no GitHub Projects (24/11/2026)
+
+- **Decisão:**
+  - A fila de trabalho fica no quadro
+    [Faísca — fila](https://github.com/users/LucasDevRJ/projects/1), ligado ao repositório.
+  - **Campos:**
+    - **Status:** Ideia, Na fila, Fazendo, Em revisão e No ar;
+    - **Agente:** Claude, Codex, Antigravity e Usuário (o que só ele pode fazer);
+    - **Prioridade:** Alta, Média e Baixa;
+    - **Área:** Paciente, Profissional, Segurança, Infra e Comunidade.
+  - **Automação do GitHub:** issue nova entra em Ideia; fechada ou com PR mesclado, vai para No ar.
+  - **O que cada agente faz:** move o próprio cartão para Fazendo ao começar e para Em revisão ao
+    abrir o PR (AGENTS.md).
+  - **O que o usuário decide:** o que vai para Na fila e a prioridade.
+  - As etiquetas `agente:*` continuam valendo nas issues.
+- **Motivo:**
+  - A ordem da fila ficava espalhada em conversas e na memória de cada agente.
+  - Com três agentes ao mesmo tempo, o quadro mostra a todos o que está em andamento e a ordem
+    decidida pelo usuário.
+- **Limite conhecido:**
+  - As visões e as automações do quadro se configuram só pela página do GitHub; o `gh` cuida dos
+    cartões.
+  - Sem o escopo `project` no `gh`, o agente não mexe no quadro e avisa o usuário.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
