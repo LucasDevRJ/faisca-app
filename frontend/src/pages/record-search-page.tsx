@@ -6,6 +6,7 @@ import { TextField } from '../components/ui/text-field';
 import { getApiError } from '../features/auth/auth-api';
 import { SEARCH_TYPES, searchPatientRecords, searchTherapistPatientRecords, type RecordSearchInput, type SearchResult, type SearchType } from '../features/record-search/record-search-api';
 import { todayInAppZone } from '../features/activities/week';
+import { cropAround } from '../features/record-search/crop-around';
 
 const TITLES: Record<SearchType, string> = {
   ACTIVITY: 'Atividades', THOUGHT_RECORD: 'Pensamentos', TENSION_EPISODE: 'Tensão', ACTION: 'Ação',
@@ -58,6 +59,21 @@ function fieldLabel(key: string) {
   return labels[key] ?? key;
 }
 
+// No trecho aparece um item só, então alguns rótulos vão para o singular.
+const EXCERPT_LABELS: Record<string, string> = { answers: 'Resposta', questions: 'Pergunta' };
+
+function Highlighted({ text, start, length }: { text: string; start: number; length: number }) {
+  const from = Math.max(0, Math.min(start, text.length));
+  const to = Math.max(from, Math.min(from + length, text.length));
+  if (to === from) return <>{text}</>;
+  return <>{text.slice(0, from)}<mark className="rounded-sm bg-primary/20 text-text">{text.slice(from, to)}</mark>{text.slice(to)}</>;
+}
+
+function TitleHighlight({ title, match }: { title: string; match: { start: number; length: number } }) {
+  const cropped = cropAround(title, match);
+  return <Highlighted text={cropped.text} start={cropped.start} length={match.length} />;
+}
+
 // Os resultados vêm do mais novo para o mais antigo. Quando são de mais de um ano, um título com o
 // ano separa cada grupo (DEC-120); de um ano só, a lista segue sem título.
 function ResultsByYear({ results }: { results: SearchResult[] }) {
@@ -89,8 +105,7 @@ function ResultsByYear({ results }: { results: SearchResult[] }) {
 
 function ResultCard({ result, nested = false }: { result: SearchResult; nested?: boolean }) {
   const Heading = nested ? 'h4' : 'h2';
-  const start = Math.max(0, Math.min(result.matchStart, result.excerpt.length));
-  const end = Math.max(start, Math.min(start + result.matchLength, result.excerpt.length));
+  const field = result.excerptField ? EXCERPT_LABELS[result.excerptField] ?? fieldLabel(result.excerptField) : null;
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -98,10 +113,13 @@ function ResultCard({ result, nested = false }: { result: SearchResult; nested?:
         <span className="text-sm text-muted">{dateLabel(result.date)}</span>
         {result.unread && <span className="rounded-full border border-border px-2 py-0.5 text-sm text-primary-text">Para ler</span>}
       </div>
-      <p className="font-medium break-words">{result.title}</p>
-      <p className="break-words text-muted">
-        {result.excerpt.slice(0, start)}<mark className="rounded-sm bg-primary/20 text-text">{result.excerpt.slice(start, end)}</mark>{result.excerpt.slice(end)}
+      <p className="line-clamp-3 font-medium break-words">
+        {result.titleMatch ? <TitleHighlight title={result.title} match={result.titleMatch} /> : result.title}
       </p>
+      {result.excerpt && <p className="break-words text-muted">
+        {field && <span className="font-medium text-text">{field}: </span>}
+        <Highlighted text={result.excerpt} start={result.matchStart} length={result.matchLength} />
+      </p>}
       <details className="rounded-md border border-border px-3 py-2">
         <summary className="min-h-11 cursor-pointer py-2 font-medium text-primary-text">Abrir registro completo</summary>
         <dl className="grid gap-3 pt-2 sm:grid-cols-2">
