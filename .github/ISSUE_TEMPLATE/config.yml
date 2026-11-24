@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💡 Tenho uma ideia
+    url: https://github.com/LucasDevRJ/faisca-app/discussions/categories/ideias
+    about: Ideias novas vão para as Discussions, na categoria Ideias.
+  - name: ❓ Tenho uma pergunta
+    url: https://github.com/LucasDevRJ/faisca-app/discussions/categories/perguntas
+    about: Dúvidas vão para as Discussions, na categoria Perguntas.
+  - name: 🔒 Encontrei uma falha de segurança
+    url: https://github.com/LucasDevRJ/faisca-app/security/advisories/new
+    about: Relate em particular. Nunca abra issue pública sobre uma falha.

@@ -161,6 +161,9 @@ profissional (regra 5), nem e-mail pessoal, segredo ou falha de segurança ainda
 - **Recusada:** a discussão é fechada como desatualizada, com um comentário "Recusada: <motivo>".
   Antes de sugerir algo, procure também nas discussões fechadas.
 - **Exploração semanal:** uma discussão por mês na categoria Exploração (skill `explorar-app`).
+- **Formulários de issue** (`.github/ISSUE_TEMPLATE/`): Defeito e Ideia aprovada, sem issue em
+  branco. A tela de escolha leva ideias e perguntas para as Discussions e falhas de segurança para
+  o relato privado. Pelo `gh issue create`, siga os mesmos títulos do formulário no corpo.
 - **Comandos:** o `gh` não tem comandos de Discussions; use `gh api graphql` (exemplos na skill
   `explorar-app`).
 

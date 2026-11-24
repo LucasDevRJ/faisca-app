@@ -1,0 +1,93 @@
+name: Defeito
+description: Algo no Faísca não funciona como deveria.
+title: "Defeito: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **O repositório é público.** Não coloque nomes reais, e-mails, conteúdo de registros nem
+        capturas de tela com dados de verdade. Use as contas fictícias do seed.
+
+        **Falha de segurança não entra aqui:** use o relato privado, na tela anterior
+        ("Encontrei uma falha de segurança").
+  - type: input
+    id: onde
+    attributes:
+      label: Onde acontece
+      description: A tela ou a área.
+      placeholder: "Ex.: Atividades → Nova atividade"
+    validations:
+      required: true
+  - type: dropdown
+    id: perfil
+    attributes:
+      label: Perfil
+      options:
+        - Paciente
+        - Profissional (psicóloga ou psiquiatra)
+        - Sem login
+        - Todos
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para repetir
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: aconteceu
+    attributes:
+      label: O que aconteceu
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que era esperado
+    validations:
+      required: true
+  - type: input
+    id: aparelho
+    attributes:
+      label: Aparelho e navegador
+      placeholder: "Ex.: Android, Chrome, app instalado"
+  - type: checkboxes
+    id: ajustes
+    attributes:
+      label: Tema e ajustes ligados
+      options:
+        - label: Tema escuro
+        - label: Fonte grande
+        - label: Linguagem direta
+        - label: Uma coisa por vez
+        - label: Leitura confortável
+        - label: Menos movimento
+  - type: input
+    id: versao
+    attributes:
+      label: Commit ou versão
+      description: O `/health` da API mostra o commit que está no ar.
+  - type: checkboxes
+    id: regras
+    attributes:
+      label: Regra que toca
+      description: Veja as regras invioláveis no AGENTS.md.
+      options:
+        - label: Autorização (regra 1)
+        - label: Registro final imutável (regra 2)
+        - label: Notificação neutra (regra 3)
+        - label: Logs sem dado sensível (regra 7)
+        - label: Acessibilidade
+  - type: checkboxes
+    id: confirmacao
+    attributes:
+      label: Confirmação
+      options:
+        - label: Não há dado real nesta issue.
+          required: true
