@@ -10,7 +10,7 @@ const searchResult = {
   id: '00000000-0000-4000-9000-000000000001', type: 'THOUGHT_RECORD', date: '2026-11-18', title: 'Pensamento',
   titleMatch: null, excerpt: 'Fiquei ansioso antes da conversa.', excerptField: 'situation', matchStart: 7, matchLength: 7,
   content: { situation: 'Fiquei ansioso antes da conversa.', automaticThought: 'Não vou conseguir conversar.', beliefLevel: 7,
-    emotions: [{ emotion: 'ANSIEDADE', label: null, intensity: 8, intensityAfter: null }], behavior: 'Fiquei em silêncio.', consequence: 'A conversa foi adiada.', alternativeExplanation: null },
+    emotions: [{ emotion: 'ANSIEDADE', label: null, intensity: 8, intensityAfter: null }, { emotion: 'OUTRA', label: 'Saudade', intensity: 4, intensityAfter: 2 }], behavior: 'Fiquei em silêncio.', consequence: 'A conversa foi adiada.', alternativeExplanation: null },
 };
 
 beforeEach(() => server.use(loggedIn));
@@ -31,7 +31,10 @@ describe('buscar nos registros', () => {
     expect(await screen.findByRole('heading', { name: 'Resultados' })).toBeInTheDocument();
     expect(screen.getByText('Abrir registro completo').closest('details')).not.toHaveAttribute('open');
     await user.click(screen.getByText('Abrir registro completo'));
-    expect(await screen.findByText('Não vou conseguir conversar.')).toBeVisible();
+    expect(await screen.findByText('Não vou conseguir conversar.', { selector: 'dd' })).toBeVisible();
+    // A emoção aparece pelo nome, nunca pelo código interno.
+    expect(screen.getByText('Ansiedade · intensidade 8; Saudade · intensidade 4 · depois 2')).toBeVisible();
+    expect(screen.queryByText(/ANSIEDADE/)).not.toBeInTheDocument();
     expect(bodies).toHaveLength(1);
     expect(bodies[0]).toMatchObject({ url: 'http://localhost:3000/api/records/search', body: { term: 'ansiosa', page: 1 } });
   });

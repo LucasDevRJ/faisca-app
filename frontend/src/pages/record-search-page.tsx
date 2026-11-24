@@ -7,6 +7,8 @@ import { getApiError } from '../features/auth/auth-api';
 import { SEARCH_TYPES, searchPatientRecords, searchTherapistPatientRecords, type RecordSearchInput, type SearchResult, type SearchType } from '../features/record-search/record-search-api';
 import { todayInAppZone } from '../features/activities/week';
 import { cropAround } from '../features/record-search/crop-around';
+import { EMOTION_LABEL } from '../features/thought-records/thought-record-labels';
+import type { Emotion } from '../features/thought-records/thought-records-api';
 
 const TITLES: Record<SearchType, string> = {
   ACTIVITY: 'Atividades', THOUGHT_RECORD: 'Pensamentos', TENSION_EPISODE: 'Tensão', ACTION: 'Ação',
@@ -30,7 +32,11 @@ function contentValue(value: unknown): string {
     return value.map((item) => {
       if (item && typeof item === 'object') {
         const emotion = item as Record<string, unknown>;
-        return `${String(emotion.label ?? emotion.emotion)} · intensidade ${String(emotion.intensity)}${emotion.intensityAfter === null || emotion.intensityAfter === undefined ? '' : ` · depois ${String(emotion.intensityAfter)}`}`;
+        // O nome da emoção em texto ("Tristeza"), nunca o código; "Outra" com o nome que a pessoa escreveu.
+        const name = typeof emotion.label === 'string' && emotion.label
+          ? emotion.label
+          : EMOTION_LABEL[emotion.emotion as Emotion] ?? String(emotion.emotion);
+        return `${name} · intensidade ${String(emotion.intensity)}${emotion.intensityAfter === null || emotion.intensityAfter === undefined ? '' : ` · depois ${String(emotion.intensityAfter)}`}`;
       }
       return String(item);
     }).join('; ');
