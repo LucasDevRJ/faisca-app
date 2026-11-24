@@ -120,6 +120,9 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
   - Não pegue cartão com outro agente em **Agente**.
   - Comandos: `gh project item-list 1 --owner LucasDevRJ` e `gh project item-edit` (o `gh` precisa
     do escopo `project`).
+- **Sub-issues:** issue com mais de uma entrega se divide em sub-issues (ex.: #93), cada uma com a
+  etiqueta do agente e um PR próprio. O PR cita a sub-issue (`Closes #N`), e não a mãe. A mãe fica
+  aberta e fecha quando todas as sub-issues fecharem.
 - **Números à mão** (DEC, versão do aviso de privacidade, novidade): reserve com um PR em
   rascunho assim que escolher, e confira os PRs abertos, inclusive rascunhos, antes de escolher.
   O CI `Números únicos` (`scripts/check-unique-ids.mjs`) barra repetição.
