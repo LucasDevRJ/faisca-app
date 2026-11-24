@@ -1,0 +1,67 @@
+name: Ideia aprovada
+description: Uma ideia já aprovada nas Discussions, para virar trabalho.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Ideia nova vai para as Discussions → Ideias** (DEC-138). Este formulário é só para
+        ideia já aprovada pelo responsável pelo Faísca.
+
+        O repositório é público: nada de dado real, e-mail pessoal ou segredo.
+  - type: input
+    id: discussao
+    attributes:
+      label: Discussão de origem
+      description: O link da discussão em que a ideia foi aprovada.
+      placeholder: https://github.com/LucasDevRJ/faisca-app/discussions/...
+    validations:
+      required: true
+  - type: textarea
+    id: porque
+    attributes:
+      label: Por quê
+      description: O problema de quem usa o Faísca.
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Proposta aprovada
+      description: O que entra e, se houver, as ideias descartadas.
+    validations:
+      required: true
+  - type: checkboxes
+    id: para-quem
+    attributes:
+      label: Para quem
+      options:
+        - label: Paciente
+        - label: Psicóloga
+        - label: Psiquiatra
+        - label: Comunidade
+        - label: Infra (quem desenvolve)
+  - type: textarea
+    id: regras
+    attributes:
+      label: Regras e decisões que toca
+      placeholder: "Ex.: regra 1 (autorização), DEC-097, aviso de privacidade"
+  - type: checkboxes
+    id: acompanha
+    attributes:
+      label: Acompanha
+      options:
+        - label: revisor-regras
+        - label: revisor-telas
+        - label: revisor-seguranca
+        - label: SPEC
+        - label: DEC nova
+        - label: Versão nova do aviso de privacidade
+        - label: Página Como funciona
+  - type: checkboxes
+    id: confirmacao
+    attributes:
+      label: Confirmação
+      options:
+        - label: Não há dado real nesta issue.
+          required: true

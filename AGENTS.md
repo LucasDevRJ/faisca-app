@@ -120,6 +120,9 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
   - Não pegue cartão com outro agente em **Agente**.
   - Comandos: `gh project item-list 1 --owner LucasDevRJ` e `gh project item-edit` (o `gh` precisa
     do escopo `project`).
+- **Sub-issues:** issue com mais de uma entrega se divide em sub-issues (ex.: #93), cada uma com a
+  etiqueta do agente e um PR próprio. O PR cita a sub-issue (`Closes #N`), e não a mãe. A mãe fica
+  aberta e fecha quando todas as sub-issues fecharem.
 - **Números à mão** (DEC, versão do aviso de privacidade, novidade): reserve com um PR em
   rascunho assim que escolher, e confira os PRs abertos, inclusive rascunhos, antes de escolher.
   O CI `Números únicos` (`scripts/check-unique-ids.mjs`) barra repetição.
@@ -161,6 +164,9 @@ profissional (regra 5), nem e-mail pessoal, segredo ou falha de segurança ainda
 - **Recusada:** a discussão é fechada como desatualizada, com um comentário "Recusada: <motivo>".
   Antes de sugerir algo, procure também nas discussões fechadas.
 - **Exploração semanal:** uma discussão por mês na categoria Exploração (skill `explorar-app`).
+- **Formulários de issue** (`.github/ISSUE_TEMPLATE/`): Defeito e Ideia aprovada, sem issue em
+  branco. A tela de escolha leva ideias e perguntas para as Discussions e falhas de segurança para
+  o relato privado. Pelo `gh issue create`, siga os mesmos títulos do formulário no corpo.
 - **Comandos:** o `gh` não tem comandos de Discussions; use `gh api graphql` (exemplos na skill
   `explorar-app`).
 
