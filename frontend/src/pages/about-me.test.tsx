@@ -71,6 +71,11 @@ describe('Conta → Sobre mim (paciente)', () => {
     await user.click(within(suggestions).getByRole('button', { name: 'Inserir: Sono' }));
     expect(goals).toHaveValue('Ansiedade, Sono');
     expect(within(suggestions).queryByRole('button', { name: 'Inserir: Ansiedade' })).not.toBeInTheDocument();
+    // O foco vai para a próxima sugestão no quadro seguinte (requestAnimationFrame). Sem esperar, num CI
+    // lento ele chegava depois do clique no campo, e o espaço digitado apertava "Tristeza ou desânimo".
+    await waitFor(() =>
+      expect(within(suggestions).getByRole('button', { name: 'Inserir: Tristeza ou desânimo' })).toHaveFocus(),
+    );
 
     await user.type(goals, ' e cansaço');
     expect(goals).toHaveValue('Ansiedade, Sono e cansaço');
