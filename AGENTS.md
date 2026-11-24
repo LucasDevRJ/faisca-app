@@ -110,6 +110,16 @@ Mais de um agente de IA trabalha no projeto ao mesmo tempo, cada um na sua pasta
 - **Divisão pelas issues:** cada issue tem a etiqueta do agente que cuida dela (`agente:claude`,
   `agente:antigravity`, `agente:codex`). Não pegue issue com a etiqueta de outro agente, e evite
   mexer nos mesmos arquivos de um PR aberto dele.
+- **Quadro da fila** ([Faísca — fila](https://github.com/users/LucasDevRJ/projects/1), DEC-137):
+  toda issue aberta fica no quadro. Status: Ideia → Na fila → Fazendo → Em revisão → No ar.
+  - **Começou uma issue:** mova o cartão para **Fazendo** e marque o seu nome em **Agente**.
+  - **Abriu o PR:** mova para **Em revisão**.
+  - **Issue fechada ou PR com merge:** o GitHub move para **No ar**.
+  - **Issue nova:** entra em **Ideia**. Quem decide a fila e a **Prioridade** é o usuário.
+  - **Na fila:** a ordem de trabalho é a visão "Fila" (só "Na fila", por prioridade).
+  - Não pegue cartão com outro agente em **Agente**.
+  - Comandos: `gh project item-list 1 --owner LucasDevRJ` e `gh project item-edit` (o `gh` precisa
+    do escopo `project`).
 - **Números à mão** (DEC, versão do aviso de privacidade, novidade): reserve com um PR em
   rascunho assim que escolher, e confira os PRs abertos, inclusive rascunhos, antes de escolher.
   O CI `Números únicos` (`scripts/check-unique-ids.mjs`) barra repetição.
