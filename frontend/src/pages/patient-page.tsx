@@ -654,6 +654,8 @@ function ToReadView({
   onBack: () => void;
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+  const focusFromIndexRef = useRef<number | null>(null);
   const data = query.data;
   const pendingCount = data
     ? (data.thoughtRecords ?? []).length +
@@ -664,9 +666,17 @@ function ToReadView({
     : 0;
   const previousCount = useRef(pendingCount);
   // Marcar tira o registro da lista e, com ele, o botão que tinha o foco. Sem isso o foco cairia no
-  // começo da página; vai para o título da visão, de onde dá para seguir lendo.
+  // começo da página; vai para o título da visão, de onde dá para seguir lendo. Quando "Carregar mais"
+  // traz uma página nova (e na última página o próprio botão some), o foco vai para o primeiro item novo.
   useEffect(() => {
-    if (pendingCount < previousCount.current && (!document.activeElement || document.activeElement === document.body)) {
+    if (focusFromIndexRef.current !== null && pendingCount > focusFromIndexRef.current) {
+      const items = listRef.current?.querySelectorAll<HTMLLIElement>(':scope > li');
+      items?.[focusFromIndexRef.current]?.focus();
+      focusFromIndexRef.current = null;
+    } else if (
+      pendingCount < previousCount.current &&
+      (!document.activeElement || document.activeElement === document.body)
+    ) {
       titleRef.current?.focus();
     }
     previousCount.current = pendingCount;
@@ -689,7 +699,7 @@ function ToReadView({
     );
   }
 
-  if (query.isError) {
+  if (query.isError && !query.data) {
     return (
       <>
         {back}
@@ -807,16 +817,54 @@ function ToReadView({
           Você já leu todos os registros de {firstName}.
         </p>
       ) : (
-        <ol className="flex flex-col gap-4 sm:gap-6">
-          {entries.map((entry) => (
-            <li key={entry.key} className="flex flex-col gap-2">
-              <p className="text-sm font-medium text-muted first-letter:uppercase">
-                {entry.area} · {formatShortDay(entry.date)}
-              </p>
-              {entry.card}
-            </li>
-          ))}
-        </ol>
+        <>
+          <ol ref={listRef} className="flex flex-col gap-4 sm:gap-6">
+            {entries.map((entry) => (
+              <li
+                key={entry.key}
+                tabIndex={-1}
+                className="flex flex-col gap-2 focus:outline-none"
+              >
+                <p className="text-sm font-medium text-muted first-letter:uppercase">
+                  {entry.area} · {formatShortDay(entry.date)}
+                </p>
+                {entry.card}
+              </li>
+            ))}
+          </ol>
+          {query.isFetchNextPageError ? (
+            <Alert tone="attention">
+              <div className="flex flex-col gap-3">
+                <p>Não conseguimos carregar mais registros. Confira sua conexão e tente de novo.</p>
+                <div>
+                  <Button
+                    variant="secondary"
+                    disabled={query.isFetchingNextPage}
+                    onClick={() => {
+                      focusFromIndexRef.current = entries.length;
+                      void query.fetchNextPage();
+                    }}
+                  >
+                    {query.isFetchingNextPage ? 'Carregando mais…' : 'Tentar de novo'}
+                  </Button>
+                </div>
+              </div>
+            </Alert>
+          ) : query.hasNextPage ? (
+            <div>
+              <Button
+                variant="secondary"
+                disabled={query.isFetchingNextPage}
+                onClick={() => {
+                  focusFromIndexRef.current = entries.length;
+                  void query.fetchNextPage();
+                }}
+              >
+                {query.isFetchingNextPage ? 'Carregando mais…' : 'Carregar mais'}
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
     </section>
   );

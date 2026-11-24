@@ -309,6 +309,89 @@ describe('registros para ler', () => {
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Para ler' })).toHaveFocus());
   });
+
+  it('"Carregar mais" busca a página seguinte pelo cursor, move o foco para o primeiro novo e some no fim (DEC-139)', async () => {
+    therapistApi();
+    const cursors: (string | null)[] = [];
+    server.use(
+      http.get(`${BASE}/unread`, ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get('cursor');
+        cursors.push(cursor);
+        if (!cursor) {
+          return HttpResponse.json({
+            ...emptyUnread,
+            thoughtRecords: [withRead(old, 'NAO_LIDO')],
+            counts: { ...emptyUnread.counts, thoughtRecords: 1, tensionEpisodes: 1 },
+            nextCursor: 'cursor-p2',
+          });
+        }
+        return HttpResponse.json({
+          ...emptyUnread,
+          tensionEpisodes: [withRead(episode, 'ATUALIZADO', '2026-09-02T12:00:00.000Z')],
+          counts: { ...emptyUnread.counts, thoughtRecords: 1, tensionEpisodes: 1 },
+          nextCursor: null,
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderRoute(`/pacientes/${PATIENT_ID}?aba=para-ler`);
+
+    const region = await screen.findByRole('region', { name: 'Para ler' });
+    expect(within(region).getAllByRole('article')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Marcar todos como lidos (1)' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Carregar mais' }));
+
+    await waitFor(() => expect(within(region).getAllByRole('article')).toHaveLength(2));
+    expect(cursors).toEqual([null, 'cursor-p2']);
+    expect(screen.queryByRole('button', { name: 'Carregar mais' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Marcar todos como lidos (2)' })).toBeInTheDocument();
+    expect(screen.getByText('Tensão · ter, 01/09').closest('li')).toHaveFocus();
+  });
+
+  it('se "Carregar mais" falhar, mantém a lista já carregada e permite tentar de novo', async () => {
+    therapistApi();
+    let failNext = true;
+    server.use(
+      http.get(`${BASE}/unread`, ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get('cursor');
+        if (!cursor) {
+          return HttpResponse.json({
+            ...emptyUnread,
+            thoughtRecords: [withRead(old, 'NAO_LIDO')],
+            counts: { ...emptyUnread.counts, thoughtRecords: 1, tensionEpisodes: 1 },
+            nextCursor: 'cursor-p2',
+          });
+        }
+        if (failNext) {
+          return HttpResponse.json({ error: { code: 'ERR', message: 'Falha' } }, { status: 500 });
+        }
+        return HttpResponse.json({
+          ...emptyUnread,
+          tensionEpisodes: [withRead(episode, 'NAO_LIDO')],
+          counts: { ...emptyUnread.counts, thoughtRecords: 1, tensionEpisodes: 1 },
+          nextCursor: null,
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderRoute(`/pacientes/${PATIENT_ID}?aba=para-ler`);
+
+    const region = await screen.findByRole('region', { name: 'Para ler' });
+    expect(await within(region).findAllByRole('article')).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'Carregar mais' }));
+
+    expect(
+      await screen.findByText('Não conseguimos carregar mais registros. Confira sua conexão e tente de novo.'),
+    ).toBeInTheDocument();
+    expect(within(region).getAllByRole('article')).toHaveLength(1);
+
+    failNext = false;
+    await user.click(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+    await waitFor(() => expect(within(region).getAllByRole('article')).toHaveLength(2));
+  });
 });
 
 describe('lista de pacientes e Novidades', () => {

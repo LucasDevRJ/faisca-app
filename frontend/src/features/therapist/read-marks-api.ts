@@ -35,14 +35,17 @@ export type UnreadResponse = {
     planEntries: number | null;
     tasks: number | null;
   };
+  nextCursor?: string | null;
 };
 
 export function isPending(record: ReadInfo): boolean {
   return record.readStatus !== 'LIDO';
 }
 
-export async function fetchPatientUnread(patientId: string): Promise<UnreadResponse> {
-  const { data } = await api.get<UnreadResponse>(`/therapist/patients/${patientId}/unread`);
+export async function fetchPatientUnread(patientId: string, cursor?: string): Promise<UnreadResponse> {
+  const { data } = await api.get<UnreadResponse>(`/therapist/patients/${patientId}/unread`, {
+    params: cursor ? { cursor } : undefined,
+  });
   return data;
 }
 

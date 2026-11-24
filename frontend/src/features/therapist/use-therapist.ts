@@ -1,8 +1,15 @@
-import { skipToken, useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  skipToken,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import { fetchPatientAboutMe } from '../about-me/about-me-api';
 import { PATIENTS_KEY } from '../links/use-links';
 import { fetchPatientPeriodSummary } from '../summary/summary-api';
-import { fetchPatientUnread, markRead, unmarkRead, type ReadItem } from './read-marks-api';
+import { fetchPatientUnread, markRead, unmarkRead, type ReadItem, type UnreadResponse } from './read-marks-api';
 import { cycleRefreshInterval, type CycleResponse } from '../cycle/cycle-api';
 import { getApiError } from '../auth/auth-api';
 import {
@@ -30,13 +37,47 @@ export function isForbidden(error: unknown): boolean {
   return getApiError(error).status === 403;
 }
 
-// Os registros para ler (DEC-058). enabled = false quando a terapeuta não aceitou nenhuma das
-// três áreas: nem pergunta.
+type UnreadListKey = 'thoughtRecords' | 'tensionEpisodes' | 'actions' | 'aboutMe' | 'planEntries' | 'tasks';
+
+function mergeUnreadList<K extends UnreadListKey>(pages: UnreadResponse[], key: K): UnreadResponse[K] {
+  const first = pages[0]?.[key];
+  if (first === null || first === undefined) return null;
+  const seen = new Set<string>();
+  const merged: { id: string }[] = [];
+  for (const page of pages) {
+    for (const item of page[key] ?? []) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        merged.push(item);
+      }
+    }
+  }
+  return merged as UnreadResponse[K];
+}
+
+// Os registros para ler (DEC-058, DEC-123, DEC-139). enabled = false quando a terapeuta não aceitou
+// nenhuma das áreas: nem pergunta. Paginado por cursor (50 por página), juntando as páginas carregadas.
 export function usePatientUnread(patientId: string, enabled: boolean) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: [...THERAPIST_KEY, patientId, 'unread'],
-    queryFn: enabled ? () => fetchPatientUnread(patientId) : skipToken,
+    queryFn: ({ pageParam }) => fetchPatientUnread(patientId, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled,
     retry: retryUnlessForbidden,
+    select: (data): UnreadResponse => {
+      const last = data.pages[data.pages.length - 1]!;
+      return {
+        thoughtRecords: mergeUnreadList(data.pages, 'thoughtRecords'),
+        tensionEpisodes: mergeUnreadList(data.pages, 'tensionEpisodes'),
+        actions: mergeUnreadList(data.pages, 'actions'),
+        aboutMe: mergeUnreadList(data.pages, 'aboutMe'),
+        planEntries: mergeUnreadList(data.pages, 'planEntries'),
+        tasks: mergeUnreadList(data.pages, 'tasks'),
+        counts: last.counts,
+        nextCursor: last.nextCursor ?? null,
+      };
+    },
   });
 }
 
