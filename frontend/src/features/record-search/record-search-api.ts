@@ -22,7 +22,12 @@ export type SearchResult = {
   type: SearchType;
   date: string;
   title: string;
+  // Onde a palavra cai no título, para realçar ali; null quando ela não está no título.
+  titleMatch?: { start: number; length: number } | null;
+  // Trecho de um campo só (sem repetir o título); vazio quando a palavra só aparece no título.
   excerpt: string;
+  // Nome do campo de onde veio o trecho, para o rótulo ("Resposta: …").
+  excerptField?: string | null;
   matchStart: number;
   matchLength: number;
   content: Record<string, unknown>;

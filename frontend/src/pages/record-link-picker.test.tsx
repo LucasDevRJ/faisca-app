@@ -47,7 +47,7 @@ function setup(activities: Activity[]) {
     http.post('*/api/records/search', async ({ request }) => {
       searches.push(await request.json());
       return HttpResponse.json({ results: [{
-        id: ACTION, type: 'ACTION', date: '2026-03-02', title: 'Caminhar', excerpt: 'Café com a Ana depois do trabalho',
+        id: ACTION, type: 'ACTION', date: '2026-03-02', title: 'Caminhar', titleMatch: null, excerpt: 'Café com a Ana depois do trabalho', excerptField: 'observation',
         matchStart: 0, matchLength: 4, content: {},
       }], page: 1, pageSize: 20, total: 1, hasMore: false });
     }),
@@ -112,12 +112,30 @@ describe('seletor de ligações', () => {
 
     expect(await within(card).findByRole('radio', { name: /Café com a Ana/ })).toBeInTheDocument();
     expect(within(card).getByText('Café', { selector: 'mark' })).toBeInTheDocument();
+    // Título e trecho em linhas separadas (#305).
+    expect(within(card).getByText('Caminhar')).toBeInTheDocument();
+    expect(within(card).getByText(/com a Ana depois do trabalho/)).toHaveClass('text-muted');
     expect(searches[0]).toMatchObject({ term: 'café', from: '2025-09-24', to: '2026-09-24', page: 1 });
     expect((searches[0] as { types: string[] }).types).not.toContain('ABOUT_ME');
     expect(within(card).queryByRole('button', { name: 'Semanas anteriores' })).not.toBeInTheDocument();
 
     await user.click(within(card).getByRole('button', { name: 'Limpar busca' }));
     expect(await within(card).findByRole('button', { name: 'Semanas anteriores' })).toBeInTheDocument();
+  });
+
+  it('palavra só no título: o cartão mostra o título realçado, sem trecho vazio (#305)', async () => {
+    setup([fakeActivity({ name: 'Caminhada', activityDate: '2026-09-24' })]);
+    server.use(http.post('*/api/records/search', () => HttpResponse.json({ results: [{
+      id: THOUGHT, type: 'THOUGHT_RECORD', date: '2026-09-20', title: 'Ninguém vai gostar de mim', titleMatch: { start: 12, length: 6 },
+      excerpt: '', excerptField: null, matchStart: 0, matchLength: 0, content: {},
+    }], page: 1, pageSize: 20, total: 1, hasMore: false })));
+    const { user, card } = await openPicker('Caminhada');
+
+    await user.type(within(card).getByRole('searchbox', { name: 'Buscar no texto' }), 'gostar');
+    await user.click(within(card).getByRole('button', { name: 'Buscar' }));
+
+    expect(await within(card).findByRole('radio', { name: /Ninguém vai gostar de mim/ })).toBeInTheDocument();
+    expect(within(card).getByText('gostar', { selector: 'mark' })).toBeInTheDocument();
   });
 
   it('busca sem resultado avisa sem culpa', async () => {

@@ -62,10 +62,57 @@ describe('busca de registros', () => {
     const result = await patient.post('/records/search').send({ term: 'ANSÍOSA' });
     expect(result.status).toBe(200);
     expect(result.body.results).toHaveLength(1);
-    expect(result.body.results[0]).toMatchObject({ id: own.id, type: 'THOUGHT_RECORD', title: 'Pensamento' });
+    // O título do Pensamento é o pensamento automático, como no "Sobre um registro" (DEC-128).
+    expect(result.body.results[0]).toMatchObject({ id: own.id, type: 'THOUGHT_RECORD', title: 'Não vou conseguir conversar.', titleMatch: null });
     expect(result.body.results[0].content).toMatchObject({ automaticThought: 'Não vou conseguir conversar.', beliefLevel: 7 });
     expect(result.body.results[0]).not.toHaveProperty('userId');
-    expect(result.body.results[0].excerpt).toContain('ansioso');
+    expect(result.body.results[0]).toMatchObject({ excerptField: 'situation', excerpt: 'Fiquei ansioso antes da conversa.' });
+  });
+
+  it('o trecho vem de um campo só, com a palavra inteira realçada e sem código interno (#305)', async () => {
+    await prisma.homeworkTask.create({ data: {
+      userId: patientId, title: 'Tarefa fictícia', description: 'Anotar uma observação fictícia.',
+      responseText: 'Primeira linha.\nAinda estou pensando sobre o assunto fictício.', responseStatus: 'NAO_CONSEGUI', respondedAt: new Date(),
+    } });
+    const patient = await login('busca@faisca.test');
+    const highlighted = (body: { excerpt: string; matchStart: number; matchLength: number }) =>
+      body.excerpt.slice(body.matchStart, body.matchStart + body.matchLength);
+
+    const byAnswer = (await patient.post('/records/search').send({ term: 'pensando' })).body.results[0];
+    expect(byAnswer).toMatchObject({ type: 'TASK', title: 'Tarefa fictícia', titleMatch: null, excerptField: 'responseText' });
+    expect(byAnswer.excerpt).toBe('Primeira linha. Ainda estou pensando sobre o assunto fictício.');
+    expect(highlighted(byAnswer)).toBe('pensando');
+
+    // A aproximação de gênero acha "fictícia" no título e "fictício" no campo; os dois realces cobrem a palavra inteira.
+    const byGender = (await patient.post('/records/search').send({ term: 'fictício' })).body.results[0];
+    expect(byGender.titleMatch).toEqual({ start: 7, length: 8 });
+    expect(byGender.excerptField).toBe('description');
+    expect(highlighted(byGender)).toBe('fictícia');
+
+    const byStatus = (await patient.post('/records/search').send({ term: 'consegui' })).body.results[0];
+    expect(byStatus).toMatchObject({ excerptField: 'responseStatus', excerpt: 'Não consegui fazer' });
+    expect(JSON.stringify((await patient.post('/records/search').send({ term: 'fictício' })).body.results.map((r: { excerpt: string }) => r.excerpt))).not.toContain('NAO_CONSEGUI');
+  });
+
+  it('palavra só no título não repete o título no trecho; trecho longo não corta palavras', async () => {
+    await prisma.activity.create({ data: { userId: patientId, name: 'Ligar para uma amiga', activityDate: dateOnlyToDate(todayInAppZone()), status: 'PLANEJADA' } });
+    const long = `${'palavra '.repeat(30)}encontrada ${'depois '.repeat(40)}`.trim();
+    await prisma.activity.create({ data: { userId: patientId, name: 'Atividade fictícia', activityDate: dateOnlyToDate(todayInAppZone()), status: 'NAO_REALIZADA', observation: long } });
+    const patient = await login('busca@faisca.test');
+    const onlyTitle = (await patient.post('/records/search').send({ term: 'amigo' })).body.results[0];
+    expect(onlyTitle).toMatchObject({ title: 'Ligar para uma amiga', titleMatch: { start: 15, length: 5 }, excerpt: '', excerptField: null });
+
+    const inLong = (await patient.post('/records/search').send({ term: 'encontrada' })).body.results[0];
+    expect(inLong.excerptField).toBe('observation');
+    expect(inLong.excerpt.startsWith('…palavra ')).toBe(true);
+    expect(inLong.excerpt.endsWith(' depois…')).toBe(true);
+    expect(inLong.excerpt.slice(inLong.matchStart, inLong.matchStart + inLong.matchLength)).toBe('encontrada');
+
+    // Campo que começa com quebra de linha: o realce continua na palavra certa.
+    await prisma.activity.create({ data: { userId: patientId, name: 'Outra atividade', activityDate: dateOnlyToDate(todayInAppZone()), status: 'NAO_REALIZADA', observation: '\n  procurada no começo' } });
+    const leading = (await patient.post('/records/search').send({ term: 'procurada' })).body.results[0];
+    expect(leading.excerpt).toBe('procurada no começo');
+    expect(leading.excerpt.slice(leading.matchStart, leading.matchStart + leading.matchLength)).toBe('procurada');
   });
 
   it('aplica filtros de emoção, intensidade, tipo, período e paginação', async () => {

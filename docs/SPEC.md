@@ -220,8 +220,8 @@ Registro de episódios de tensão, independente das atividades e do RPD. O pacie
   começa no ciclo do registro aberto, com setas para os 4 anteriores ou seguintes (até o ciclo de
   hoje) e "Ir para uma data". Os registros aparecem em cartões agrupados por ciclo, com tipo, data
   (DD/MM/AAAA) e até 2 linhas do texto; os já ligados ficam de fora. Filtros por tipo e busca no
-  texto, que usa a busca da #152 nos últimos 12 meses (termo enviado no corpo, fora dos logs) e
-  realça a palavra encontrada. A prévia é local e determinística, sem serviço de IA. Na ligação com uma Atividade, o campo opcional “Quer anotar
+  texto, que usa a busca da #152 nos últimos 12 meses (termo enviado no corpo, fora dos logs),
+  mostra o título e o trecho de um campo e realça a palavra encontrada (#305). A prévia é local e determinística, sem serviço de IA. Na ligação com uma Atividade, o campo opcional “Quer anotar
   algo?” também aparece quando preenchido. O título do registro ligado é um link interno que abre a
   área e o período correspondentes e leva ao próprio registro. Na visão da profissional, essa
   navegação mantém as abas e períodos sujeitos às permissões e áreas já compartilhadas. Ligações
@@ -423,8 +423,13 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   textual no SQL, mantendo compatibilidade com futura criptografia dos registros.
 - Sem período informado, busca os últimos 90 dias. É possível escolher um intervalo de até 367 dias
   e filtrar por tipo, emoção e intensidade mínima (quando o registro tem esse campo). Resultados são
-  paginados, 20 por página (máximo 50), do mais novo ao mais antigo; a interface mostra um trecho
-  com a correspondência destacada e permite expandir o registro completo no contexto da busca.
+  paginados, 20 por página (máximo 50), do mais novo ao mais antigo. Cada resultado mostra o tipo,
+  a data, o título do registro (no Pensamento, o pensamento automático; na Tensão, a situação) e um
+  trecho de **um campo só**, com o nome do campo ("Resposta: …"), sem repetir o título e com os
+  valores fixos em texto ("Não consegui fazer"), nunca o código interno (#305). O realce cobre a
+  palavra inteira, no título ou no trecho; quando a palavra só aparece no título, não há trecho. O
+  trecho corta só entre palavras. A interface permite expandir o registro completo no contexto da
+  busca.
   Quando os resultados são de mais de um ano, um título com o ano separa cada grupo (DEC-120).
 - A comparação ignora caixa e acentos. Também aproxima flexões comuns de gênero terminadas em “a”
   ou “o” (por exemplo, “ansiosa” encontra “ansioso”), sem IA nem envio a serviço externo.

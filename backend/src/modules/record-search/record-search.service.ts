@@ -6,8 +6,8 @@ import type { SharedArea } from '../../generated/prisma/client.js';
 
 type Access = { sharedAreas: SharedArea[]; patientPrivacyVersion: string | null; therapistPrivacyVersion: string | null };
 type SearchResult = {
-  id: string; type: SearchType; date: string; title: string; excerpt: string;
-  matchStart: number; matchLength: number; content: Record<string, unknown>;
+  id: string; type: SearchType; date: string; title: string; titleMatch: { start: number; length: number } | null;
+  excerpt: string; excerptField: string | null; matchStart: number; matchLength: number; content: Record<string, unknown>;
   intensity: number[]; emotions: string[]; updatedAt: Date; unread?: boolean; unreadEligible?: boolean;
 };
 
@@ -32,8 +32,23 @@ function termsOf(value: string) {
   return (normalize(value).match(/[\p{L}\p{N}]+/gu) ?? []).map(stem);
 }
 
-// Mantém o índice no texto original para a interface realçar a ocorrência sem inserir HTML.
-function excerptOf(text: string, terms: string[]) {
+type Field = { key: string; text: string };
+type Match = { start: number; length: number };
+
+const EMOTION_LABELS: Record<string, string> = {
+  TRISTEZA: 'Tristeza', ANSIEDADE: 'Ansiedade', MEDO: 'Medo', RAIVA: 'Raiva', CULPA: 'Culpa', VERGONHA: 'Vergonha',
+  FRUSTRACAO: 'Frustração', SOLIDAO: 'Solidão', ALEGRIA: 'Alegria', ALIVIO: 'Alívio', OUTRA: 'Outra',
+};
+const RESPONSE_LABELS: Record<string, string> = {
+  RESPONDIDA: 'Respondida', NAO_CONSEGUI: 'Não consegui fazer', NAO_FAZ_SENTIDO: 'Não faz sentido para mim agora',
+};
+const WORD_CHAR = /[\p{L}\p{N}]/u;
+const EXCERPT_BEFORE = 60;
+const EXCERPT_SIZE = 160;
+
+// Acha a primeira ocorrência de um dos termos e devolve a palavra inteira em que ela cai, com o
+// índice no texto original, para a interface realçar sem inserir HTML.
+function findWord(text: string, terms: string[]): Match | null {
   let normalized = '';
   const offsets: number[] = [];
   for (let index = 0; index < text.length; index += 1) {
@@ -41,28 +56,71 @@ function excerptOf(text: string, terms: string[]) {
     normalized += fragment;
     for (let n = 0; n < fragment.length; n += 1) offsets.push(index);
   }
-  const hit = terms.map((term) => ({ index: normalized.indexOf(term), length: term.length }))
-    .filter((item) => item.index >= 0).sort((a, b) => a.index - b.index)[0] ?? { index: 0, length: 1 };
-  const originalHit = offsets[hit.index] ?? 0;
-  const start = Math.max(0, originalHit - 55);
-  const end = Math.min(text.length, start + 180);
-  const excerpt = text.slice(start, end);
-  const matchStart = Math.max(0, originalHit - start);
-  const matchLength = Math.min(hit.length, excerpt.length - matchStart);
-  return { excerpt: `${start > 0 ? '…' : ''}${excerpt}${end < text.length ? '…' : ''}`, matchStart: matchStart + (start > 0 ? 1 : 0), matchLength };
+  // Só vale a ocorrência no começo de uma palavra, como na comparação da busca ("ana" não acha "banana").
+  const firstAtWordStart = (term: string) => {
+    for (let index = normalized.indexOf(term); index >= 0; index = normalized.indexOf(term, index + 1)) {
+      if (index === 0 || !WORD_CHAR.test(normalized[index - 1]!)) return index;
+    }
+    return -1;
+  };
+  const hits = terms.map(firstAtWordStart).filter((index) => index >= 0).sort((a, b) => a - b);
+  if (!hits.length) return null;
+  let start = offsets[hits[0]!] ?? 0;
+  let end = start;
+  while (start > 0 && WORD_CHAR.test(text[start - 1]!)) start -= 1;
+  while (end < text.length && WORD_CHAR.test(text[end]!)) end += 1;
+  return { start, length: Math.max(1, end - start) };
+}
+
+// Trecho de um campo só, em volta da palavra encontrada, sem cortar palavras no meio. As quebras de
+// linha viram espaço (um caractere por outro, para o índice do realce continuar valendo).
+function excerptOf(text: string, word: Match) {
+  const flat = text.replace(/\s/g, ' ');
+  let start = Math.max(0, word.start - EXCERPT_BEFORE);
+  let end = Math.min(flat.length, Math.max(start + EXCERPT_SIZE, word.start + word.length));
+  if (start > 0) {
+    const space = flat.indexOf(' ', start);
+    start = space >= 0 && space < word.start ? space + 1 : start;
+  }
+  if (end < flat.length) {
+    const space = flat.lastIndexOf(' ', end);
+    end = space > word.start + word.length ? space : end;
+  }
+  // Tira os espaços das pontas mexendo nos índices (e não com trim), para o realce não se deslocar.
+  while (start < word.start && flat[start] === ' ') start += 1;
+  while (end > word.start + word.length && flat[end - 1] === ' ') end -= 1;
+  // As reticências só aparecem quando ficou texto de fora (e não só espaço).
+  const prefix = flat.slice(0, start).trim() ? '…' : '';
+  return {
+    excerpt: `${prefix}${flat.slice(start, end)}${flat.slice(end).trim() ? '…' : ''}`,
+    matchStart: word.start - start + prefix.length,
+    matchLength: word.length,
+  };
 }
 
 function makeResult(input: {
-  id: string; type: SearchType; date: string; title: string; values: string[]; content: Record<string, unknown>;
+  id: string; type: SearchType; date: string; title: string; titleKey?: string; fields: Field[]; content: Record<string, unknown>;
   intensity?: number[]; emotions?: string[]; updatedAt: Date;
   unreadEligible?: boolean;
 }, terms: string[]): SearchResult | null {
-  const fullText = input.values.filter(Boolean).join('\n');
-  const normalized = termsOf(fullText);
+  const fields = input.fields.filter((field) => field.text);
+  const normalized = termsOf(fields.map((field) => field.text).join('\n'));
   if (!terms.every((term) => normalized.some((value) => value === term || (value.length > 4 && value.startsWith(term))))) return null;
-  const match = excerptOf(fullText, terms);
-  return { id: input.id, type: input.type, date: input.date, title: input.title, content: input.content,
-    excerpt: match.excerpt, matchStart: match.matchStart, matchLength: match.matchLength,
+  // O título já aparece no cartão: o trecho vem do primeiro outro campo com a palavra, com o nome dele.
+  const titleMatch = input.titleKey ? findWord(input.title, terms) : null;
+  let excerpt = { excerpt: '', matchStart: 0, matchLength: 0 };
+  let excerptField: string | null = null;
+  for (const field of fields) {
+    if (field.key === input.titleKey) continue;
+    const word = findWord(field.text, terms);
+    if (word) {
+      excerpt = excerptOf(field.text, word);
+      excerptField = field.key;
+      break;
+    }
+  }
+  return { id: input.id, type: input.type, date: input.date, title: input.title, titleMatch, content: input.content,
+    excerpt: excerpt.excerpt, excerptField, matchStart: excerpt.matchStart, matchLength: excerpt.matchLength,
     intensity: input.intensity ?? [], emotions: input.emotions ?? [], updatedAt: input.updatedAt, unreadEligible: input.unreadEligible ?? true };
 }
 
@@ -89,51 +147,54 @@ export function createRecordSearchService() {
 
     if (enabled('ACTIVITY')) {
       const rows = await prisma.activity.findMany({ where: { userId: patientId, activityDate: dateFilter }, select: { id: true, name: true, activityDate: true, createdAt: true, updatedAt: true, status: true, observation: true, wantBefore: true, pleasure: true, achievement: true }, orderBy: [{ activityDate: 'desc' }, { createdAt: 'desc' }] });
-      for (const row of rows) add(makeResult({ id: row.id, type: 'ACTIVITY', date: dateToDateOnly(row.activityDate), title: row.name,
-        values: [row.name, row.observation ?? ''], content: { name: row.name, status: row.status, observation: row.observation, wantBefore: row.wantBefore, pleasure: row.pleasure, achievement: row.achievement },
+      for (const row of rows) add(makeResult({ id: row.id, type: 'ACTIVITY', date: dateToDateOnly(row.activityDate), title: row.name, titleKey: 'name',
+        fields: [{ key: 'name', text: row.name }, { key: 'observation', text: row.observation ?? '' }], content: { name: row.name, status: row.status, observation: row.observation, wantBefore: row.wantBefore, pleasure: row.pleasure, achievement: row.achievement },
         intensity: [row.wantBefore, row.pleasure, row.achievement].filter((value): value is number => value !== null), updatedAt: row.updatedAt }, terms));
     }
     if (enabled('THOUGHT_RECORD')) {
       const rows = await prisma.thoughtRecord.findMany({ where: { userId: patientId, situationDate: dateFilter }, select: { id: true, situationDate: true, situation: true, automaticThought: true, beliefLevel: true, behavior: true, consequence: true, alternativeExplanation: true, updatedAt: true, createdAt: true, emotions: { select: { emotion: true, otherLabel: true, intensity: true, intensityAfter: true } } }, orderBy: [{ situationDate: 'desc' }, { createdAt: 'desc' }] });
-      for (const row of rows) add(makeResult({ id: row.id, type: 'THOUGHT_RECORD', date: dateToDateOnly(row.situationDate), title: 'Pensamento',
-        values: [row.situation, row.automaticThought, row.behavior, row.consequence, row.alternativeExplanation ?? '', ...row.emotions.map((e) => e.otherLabel ?? e.emotion)],
+      for (const row of rows) add(makeResult({ id: row.id, type: 'THOUGHT_RECORD', date: dateToDateOnly(row.situationDate), title: row.automaticThought, titleKey: 'automaticThought',
+        fields: [{ key: 'automaticThought', text: row.automaticThought }, { key: 'situation', text: row.situation }, { key: 'behavior', text: row.behavior },
+          { key: 'consequence', text: row.consequence }, { key: 'alternativeExplanation', text: row.alternativeExplanation ?? '' },
+          { key: 'emotions', text: row.emotions.map((e) => e.otherLabel ?? EMOTION_LABELS[e.emotion] ?? e.emotion).join(', ') }],
         content: { situation: row.situation, automaticThought: row.automaticThought, beliefLevel: row.beliefLevel, emotions: row.emotions.map((e) => ({ emotion: e.emotion, label: e.otherLabel, intensity: e.intensity, intensityAfter: e.intensityAfter })), behavior: row.behavior, consequence: row.consequence, alternativeExplanation: row.alternativeExplanation },
         intensity: [row.beliefLevel, ...row.emotions.flatMap((e) => [e.intensity, e.intensityAfter].filter((value): value is number => value !== null))], emotions: row.emotions.map((e) => e.otherLabel ?? e.emotion), updatedAt: row.updatedAt }, terms));
     }
     if (enabled('TENSION_EPISODE')) {
       const rows = await prisma.tensionEpisode.findMany({ where: { userId: patientId, episodeDate: dateFilter }, select: { id: true, episodeDate: true, situation: true, behavior: true, consequence: true, tensionLevel: true, vocalizeUrge: true, createdAt: true, updatedAt: true }, orderBy: [{ episodeDate: 'desc' }, { createdAt: 'desc' }] });
-      for (const row of rows) add(makeResult({ id: row.id, type: 'TENSION_EPISODE', date: dateToDateOnly(row.episodeDate), title: 'Episódio de tensão',
-        values: [row.situation, row.behavior, row.consequence], content: { situation: row.situation, behavior: row.behavior, consequence: row.consequence, tensionLevel: row.tensionLevel, vocalizeUrge: row.vocalizeUrge },
+      for (const row of rows) add(makeResult({ id: row.id, type: 'TENSION_EPISODE', date: dateToDateOnly(row.episodeDate), title: row.situation, titleKey: 'situation',
+        fields: [{ key: 'situation', text: row.situation }, { key: 'behavior', text: row.behavior }, { key: 'consequence', text: row.consequence }], content: { situation: row.situation, behavior: row.behavior, consequence: row.consequence, tensionLevel: row.tensionLevel, vocalizeUrge: row.vocalizeUrge },
         intensity: [row.tensionLevel, row.vocalizeUrge], updatedAt: row.updatedAt }, terms));
     }
     if (enabled('ACTION')) {
       const rows = await prisma.behavioralAction.findMany({ where: { userId: patientId, actionDate: dateFilter }, select: { id: true, name: true, actionDate: true, category: true, status: true, observation: true, expectation: true, pleasure: true, achievement: true, createdAt: true, updatedAt: true }, orderBy: [{ actionDate: 'desc' }, { createdAt: 'desc' }] });
-      for (const row of rows) add(makeResult({ id: row.id, type: 'ACTION', date: dateToDateOnly(row.actionDate), title: row.name,
-        values: [row.name, row.observation ?? ''], content: { name: row.name, category: row.category, status: row.status, observation: row.observation, expectation: row.expectation, pleasure: row.pleasure, achievement: row.achievement },
+      for (const row of rows) add(makeResult({ id: row.id, type: 'ACTION', date: dateToDateOnly(row.actionDate), title: row.name, titleKey: 'name',
+        fields: [{ key: 'name', text: row.name }, { key: 'observation', text: row.observation ?? '' }], content: { name: row.name, category: row.category, status: row.status, observation: row.observation, expectation: row.expectation, pleasure: row.pleasure, achievement: row.achievement },
         intensity: [row.expectation, row.pleasure, row.achievement].filter((value): value is number => value !== null), updatedAt: row.updatedAt }, terms));
     }
     if (enabled('ABOUT_ME')) {
       const row = await prisma.patientAbout.findUnique({ where: { userId: patientId }, select: { id: true, aboutMe: true, goals: true, habits: true, updatedAt: true } });
       if (row && row.updatedAt >= timestampFilter.gte && row.updatedAt < timestampFilter.lt) add(makeResult({ id: row.id, type: 'ABOUT_ME', date: todayInAppZone(row.updatedAt), title: 'Sobre mim',
-        values: [row.aboutMe ?? '', row.goals ?? '', row.habits ?? ''], content: { aboutMe: row.aboutMe, goals: row.goals, habits: row.habits }, updatedAt: row.updatedAt }, terms));
+        fields: [{ key: 'aboutMe', text: row.aboutMe ?? '' }, { key: 'goals', text: row.goals ?? '' }, { key: 'habits', text: row.habits ?? '' }], content: { aboutMe: row.aboutMe, goals: row.goals, habits: row.habits }, updatedAt: row.updatedAt }, terms));
     }
     if (enabled('PLAN_ENTRY')) {
       const rows = await prisma.planEntry.findMany({ where: { userId: patientId, entryDate: dateFilter }, select: { id: true, planId: true, entryDate: true, entryTime: true, questions: true, answers: true, updatedAt: true, createdAt: true, plan: { select: { title: true } } }, orderBy: [{ entryDate: 'desc' }, { createdAt: 'desc' }] });
-      for (const row of rows) add(makeResult({ id: row.id, type: 'PLAN_ENTRY', date: dateToDateOnly(row.entryDate), title: row.plan.title,
-        values: [row.plan.title, ...row.questions, ...row.answers], content: { planId: row.planId, questions: row.questions, answers: row.answers, entryTime: row.entryTime }, updatedAt: row.updatedAt }, terms));
+      for (const row of rows) add(makeResult({ id: row.id, type: 'PLAN_ENTRY', date: dateToDateOnly(row.entryDate), title: row.plan.title, titleKey: 'planTitle',
+        fields: [{ key: 'planTitle', text: row.plan.title }, ...row.answers.map((text) => ({ key: 'answers', text })), ...row.questions.map((text) => ({ key: 'questions', text }))], content: { planId: row.planId, questions: row.questions, answers: row.answers, entryTime: row.entryTime }, updatedAt: row.updatedAt }, terms));
     }
     if (enabled('TASK')) {
       const rows = await prisma.homeworkTask.findMany({ where: { userId: patientId, createdAt: timestampFilter }, select: { id: true, createdAt: true, title: true, description: true, responseText: true, responseStatus: true, respondedAt: true, updatedAt: true }, orderBy: { createdAt: 'desc' } });
-      for (const row of rows) add(makeResult({ id: row.id, type: 'TASK', date: todayInAppZone(row.createdAt), title: row.title ?? 'Tarefa',
-        values: [row.title ?? '', row.description, row.responseText ?? '', row.responseStatus ?? ''], content: { title: row.title, description: row.description, responseText: row.responseText, responseStatus: row.responseStatus }, updatedAt: row.updatedAt, unreadEligible: row.respondedAt !== null }, terms));
+      for (const row of rows) add(makeResult({ id: row.id, type: 'TASK', date: todayInAppZone(row.createdAt), title: row.title ?? 'Tarefa', ...(row.title && { titleKey: 'title' }),
+        fields: [{ key: 'title', text: row.title ?? '' }, { key: 'description', text: row.description }, { key: 'responseText', text: row.responseText ?? '' },
+          { key: 'responseStatus', text: row.responseStatus ? RESPONSE_LABELS[row.responseStatus] ?? '' : '' }], content: { title: row.title, description: row.description, responseText: row.responseText, responseStatus: row.responseStatus }, updatedAt: row.updatedAt, unreadEligible: row.respondedAt !== null }, terms));
     }
     if (enabled('SLEEP_MOOD') || enabled('MEDICATION')) {
       const rows = await prisma.dailyCheckIn.findMany({ where: { userId: patientId, checkInDate: dateFilter }, select: { id: true, checkInDate: true, moodWord: true, sleepQuality: true, mood: true, bedTime: true, wakeTime: true, medication: true, updatedAt: true }, orderBy: { checkInDate: 'desc' } });
       for (const row of rows) {
         if (enabled('SLEEP_MOOD')) add(makeResult({ id: row.id, type: 'SLEEP_MOOD', date: dateToDateOnly(row.checkInDate), title: 'Sono e humor',
-          values: [row.moodWord ?? ''], content: { moodWord: row.moodWord, sleepQuality: row.sleepQuality, mood: row.mood, bedTime: row.bedTime, wakeTime: row.wakeTime }, intensity: [row.sleepQuality, row.mood].filter((value): value is number => value !== null), updatedAt: row.updatedAt }, terms));
+          fields: [{ key: 'moodWord', text: row.moodWord ?? '' }], content: { moodWord: row.moodWord, sleepQuality: row.sleepQuality, mood: row.mood, bedTime: row.bedTime, wakeTime: row.wakeTime }, intensity: [row.sleepQuality, row.mood].filter((value): value is number => value !== null), updatedAt: row.updatedAt }, terms));
         if (enabled('MEDICATION') && row.medication) add(makeResult({ id: row.id, type: 'MEDICATION', date: dateToDateOnly(row.checkInDate), title: 'Remédio do dia',
-          values: [row.medication], content: { medication: row.medication }, updatedAt: row.updatedAt }, terms));
+          fields: [{ key: 'medication', text: row.medication }], content: { medication: row.medication }, updatedAt: row.updatedAt }, terms));
       }
     }
 

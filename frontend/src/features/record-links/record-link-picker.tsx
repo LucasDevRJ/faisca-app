@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { choiceCardClasses, fieldClasses } from '../../components/ui/field-styles';
 import { addDays, todayInAppZone } from '../activities/week';
 import { fetchCycle } from '../cycle/cycle-api';
+import { cropAround } from '../record-search/crop-around';
 import { searchPatientRecords, type SearchResult, type SearchType } from '../record-search/record-search-api';
 import { fetchRecordLinkCandidates, type LinkedRecordType, type RecordSummary } from './record-links-api';
 import { formatRecordDate, recordTitlePreview, TYPE_LABEL } from './record-links-format';
@@ -26,7 +27,9 @@ const FILTERS: { label: string; types: LinkedRecordType[] }[] = [
 const SEARCHABLE: SearchType[] = ['ACTIVITY', 'THOUGHT_RECORD', 'TENSION_EPISODE', 'ACTION', 'PLAN_ENTRY', 'TASK', 'SLEEP_MOOD', 'MEDICATION'];
 const SEARCH_PAGE_SIZE = 20;
 
-type Choice = { key: string; summary: RecordSummary; text: string; highlight?: { start: number; length: number } };
+type Highlight = { start: number; length: number };
+// Na busca, o título e o trecho vêm separados (#305): o trecho é de um campo só e não repete o título.
+type Choice = { key: string; summary: RecordSummary; text: string; highlight?: Highlight | null; excerpt?: { text: string; highlight: Highlight } };
 
 function keyOf(item: { type: string; id: string }) {
   return `${item.type}:${item.id}`;
@@ -34,10 +37,13 @@ function keyOf(item: { type: string; id: string }) {
 
 function fromSearch(result: SearchResult): Choice {
   const summary: RecordSummary = { type: result.type as LinkedRecordType, id: result.id, date: result.date, title: result.title };
-  return { key: keyOf(summary), summary, text: result.excerpt, highlight: { start: result.matchStart, length: result.matchLength } };
+  const title = result.titleMatch ? cropAround(result.title, result.titleMatch, 100) : null;
+  return { key: keyOf(summary), summary, text: title?.text ?? result.title,
+    highlight: title && result.titleMatch ? { start: title.start, length: result.titleMatch.length } : null,
+    ...(result.excerpt && { excerpt: { text: result.excerpt, highlight: { start: result.matchStart, length: result.matchLength } } }) };
 }
 
-function Highlighted({ text, highlight }: { text: string; highlight?: Choice['highlight'] }) {
+function Highlighted({ text, highlight }: { text: string; highlight?: Highlight | null }) {
   if (!highlight || highlight.length <= 0) return <>{text}</>;
   const end = highlight.start + highlight.length;
   return <>{text.slice(0, highlight.start)}<mark className="rounded-sm bg-primary/20 text-text">{text.slice(highlight.start, end)}</mark>{text.slice(end)}</>;
@@ -163,10 +169,10 @@ export function RecordLinkPicker({ type, id, date, linkedKeys, busy, onLink, onC
       <input type="radio" name={`${baseId}-registro`} className="mt-1" value={choice.key} checked={selected === choice.key} onChange={() => setSelected(choice.key)} />
       <span className="min-w-0 break-words">
         <span className="block text-sm text-muted">{TYPE_LABEL[choice.summary.type]} · {formatRecordDate(choice.summary.date)}</span>
-        {/* O trecho da busca junta os campos do registro com quebras de linha: cada um na sua. */}
-        <span className={`line-clamp-2 ${choice.highlight ? 'whitespace-pre-line' : ''}`}>
+        <span className="line-clamp-2">
           {choice.highlight ? <Highlighted text={choice.text} highlight={choice.highlight} /> : recordTitlePreview(choice.text, 140)}
         </span>
+        {choice.excerpt && <span className="line-clamp-2 text-sm text-muted"><Highlighted text={choice.excerpt.text} highlight={choice.excerpt.highlight} /></span>}
       </span>
     </label>;
   }
