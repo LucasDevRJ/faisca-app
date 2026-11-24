@@ -3076,6 +3076,42 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
     cartões.
   - Sem o escopo `project` no `gh`, o agente não mexe no quadro e avisa o usuário.
 
+## DEC-138 — Discussions do GitHub para ideias, perguntas, avisos e exploração (24/11/2026)
+
+- **Decisão:**
+  - As Discussions do repositório ficam com **quatro categorias**, configuradas pelo usuário na
+    página de categorias:
+    - **Ideias** (formato aberto): qualquer pessoa escreve;
+    - **Perguntas** (formato pergunta e resposta): a resposta certa fica marcada;
+    - **Avisos** (formato anúncio): só os mantenedores abrem; todos comentam;
+    - **Exploração** (formato anúncio): o relatório mensal da skill `explorar-app`.
+  - As categorias padrão General, Polls e Show and tell saem.
+  - **Caminho de uma ideia:**
+    - ideia nova, que o usuário ainda não escolheu, vai para **Ideias**, e não vira issue;
+    - aprovada pelo usuário, vira issue com o link da discussão, e a discussão é fechada como
+      resolvida, com o link da issue;
+    - recusada, a discussão é fechada como desatualizada, com um comentário que começa com
+      "Recusada:" e diz o motivo. Antes de sugerir algo, o agente procura nas discussões fechadas
+      para não sugerir de novo.
+  - A **exploração semanal** sai da issue do mês e passa para uma discussão por mês na categoria
+    Exploração. Achado aprovado pelo usuário vira issue, com o link do comentário.
+  - **Limites de interação** (interaction limits) ficam desligados. O usuário liga pela
+    configuração do repositório só se aparecer spam.
+- **Motivo:**
+  - Com ideias, relatórios e trabalho misturados nas issues, a fila (DEC-137) enchia de coisas que
+    ninguém tinha escolhido fazer. A issue passa a ser só trabalho decidido.
+  - A ideia recusada com o motivo registrado evita que um agente a sugira de novo.
+  - Na exploração, cada semana vira um comentário e o mês inteiro fica numa página só, sem ocupar
+    a fila.
+- **Limite conhecido:**
+  - O repositório é público, então as Discussions também são: nunca dado real, de paciente ou de
+    profissional (regra 5), nem e-mail pessoal, segredo ou detalhe de falha de segurança ainda
+    aberta.
+  - A API do GitHub não cria, renomeia nem apaga categorias: isso é só pela página do repositório,
+    com o usuário.
+  - O `gh` não tem comandos de Discussions: os agentes usam `gh api graphql` (a skill
+    `explorar-app` traz os comandos).
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
