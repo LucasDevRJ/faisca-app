@@ -458,7 +458,8 @@ apagar ou criar registros. A psiquiatra continua com acesso de leitura (DEC-102)
   que muda depois de lido (edição no dia, explicação alternativa adicionada, ação avaliada, resposta de tarefa editada) volta
   a contar, como **atualizado**. A visão **Para ler** junta as áreas liberadas fora do ciclo, do mais
   antigo ao mais novo, paginada na API em blocos de **50 registros por vez** com cursor (`nextCursor`),
-  mantendo os contadores (`counts`) sempre com o total geral de cada área (DEC-123); a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
+  mantendo os contadores (`counts`) sempre com o total geral de cada área (DEC-123), e com o botão
+  **"Carregar mais"** na tela quando houver página seguinte (DEC-139); a lista de pacientes mostra quantos faltam ler de cada um, com quem tem
   algo para ler no topo, e o total de todos ("12 registros para ler, de 2 pacientes"). As marcas são da
   terapeuta: o paciente não as vê, salvo o "Lido para o paciente" abaixo, e uma terapeuta nova começa
   sem nenhuma. Nas telas, o texto fala em **"para ler"** (DEC-058).

@@ -3112,6 +3112,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   - O `gh` não tem comandos de Discussions: os agentes usam `gh api graphql` (a skill
     `explorar-app` traz os comandos).
 
+## DEC-139 — Botão "Carregar mais" na visão "Para ler" da profissional (#181)
+- **Decisão (#181, sobre a API da DEC-123):**
+  - `usePatientUnread` passa a usar `useInfiniteQuery` enviando `cursor` (`nextCursor` da página
+    anterior) para `GET /therapist/patients/:patientId/unread` e juntando os registros das páginas já
+    carregadas sem duplicar ids, enquanto `counts` continua refletindo o total geral de cada área;
+  - na visão **Para ler** (`ToReadView`, em `pages/patient-page.tsx`), quando `hasNextPage` é
+    verdadeiro, aparece no fim da lista o botão **"Carregar mais"** (`"Carregando mais…"` enquanto
+    busca). Ao chegar a página nova, o foco vai para o primeiro item recém-carregado (evitando que o
+    foco caia no início da página quando o botão some na última página). Se a busca da página seguinte
+    falhar, os registros já abertos continuam na tela e um alerta no fim da lista oferece **"Tentar de
+    novo"**;
+  - **"Marcar todos como lidos"** continua marcando os registros abertos na lista e, ao invalidar a
+    consulta, recarrega automaticamente os próximos pendentes.
+- **Motivo:** fechar a #181 com a paginação da API da DEC-123 já no ar (DEC-056), permitindo que a
+  profissional carregue páginas adicionais sob demanda sem baixar dezenas de MB de uma vez.
+- **Limite conhecido:** ao marcar um registro individual ou recarregar a página, o TanStack Query
+  revalida as páginas abertas na ordem do cursor.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
