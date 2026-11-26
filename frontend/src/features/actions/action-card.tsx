@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react';
 import { ReadReceiptLine } from '../read-receipts/read-receipt-line';
 import { Link } from 'react-router';
 import { Button } from '../../components/ui/button';
+import { buttonClasses } from '../../components/ui/button-styles';
 import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { useAccessibility } from '../profile/use-profile';
@@ -109,12 +110,12 @@ export function ActionCard(props: ActionCardProps) {
           <div className="flex gap-1">
             <Link
               to={`/acao/${action.id}/editar`}
-              className="rounded-md px-3 py-2 font-medium text-primary-text hover:bg-bg"
+              className={buttonClasses('ghost', 'px-3!')}
               aria-label={`Editar ${action.name}`}
             >
               Editar
             </Link>
-            <Button variant="ghost" className="px-3" onClick={() => props.onAction('delete', action)}>
+            <Button variant="ghost" className="px-3!" onClick={() => props.onAction('delete', action)}>
               Excluir
             </Button>
           </div>
