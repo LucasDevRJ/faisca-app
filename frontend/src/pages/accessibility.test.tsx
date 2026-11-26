@@ -155,10 +155,17 @@ describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
     expect(await screen.findByText(/Use "Novo registro" para anotar uma situação\./)).toBeInTheDocument();
   });
 
-  it('Sem pressão de tempo esconde contagem regressiva do ciclo, distância em dias e prazo de alternativa', async () => {
+  it('Sem pressão de tempo esconde contagens regressivas, distâncias em dias e prazos em todas as telas aplicáveis', async () => {
     withAccessibility({ noTimePressure: true });
     const nextSession = fakeSession('2026-09-28', { time: '14:00' });
     const lastSession = fakeSession('2026-09-21', { time: '14:00' });
+    const thoughtRecord = fakeThoughtRecord({
+      id: '00000000-0000-4000-9000-000000000099',
+      situationDate: '2026-09-22',
+      editable: false,
+      canAddAlternative: true,
+      alternativeDeadline: { date: '2026-09-28', time: '14:00' },
+    });
     server.use(
       http.get('*/api/appointments', () =>
         HttpResponse.json(
@@ -179,32 +186,93 @@ describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
             from: '2026-09-22',
             to: '2026-09-28',
             session: { date: '2026-09-28', time: '14:00' },
-            previous: null,
+            previous: '2025-09-14',
             next: null,
             truncated: false,
           },
         }),
       ),
-      http.get('*/api/thought-records', () =>
+      http.get('*/api/activities', () =>
         HttpResponse.json({
-          thoughtRecords: [
-            fakeThoughtRecord({
-              situationDate: '2026-09-22',
-              editable: false,
-              canAddAlternative: true,
-              alternativeDeadline: { date: '2026-09-28', time: '14:00' },
+          activities: [
+            fakeActivity({
+              name: 'Caminhada no parque',
+              activityDate: '2026-09-22',
+              status: 'CONCLUIDA',
+              pleasure: 8,
+              achievement: 7,
+              photos: [],
+              photosOpen: true,
+              photosDeadline: { date: '2026-09-28', time: '14:00' },
             }),
           ],
         }),
       ),
+      http.get('*/api/thought-records', () =>
+        HttpResponse.json({
+          thoughtRecords: [thoughtRecord],
+        }),
+      ),
+      http.get('*/api/thought-records/:id', () => HttpResponse.json({ thoughtRecord })),
+      http.get('*/api/reminders', () =>
+        HttpResponse.json({
+          settings: {
+            channel: 'EMAIL',
+            morningEnabled: false,
+            morningTime: '08:00',
+            eveningEnabled: false,
+            eveningTime: '20:00',
+            quietHoursEnabled: true,
+            quietStart: '22:00',
+            quietEnd: '07:00',
+            pausedUntil: '2026-09-30',
+            lastFallbackAt: null,
+          },
+          push: {
+            configured: true,
+            vapidPublicKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+            hasSubscription: false,
+            subscriptionCount: 0,
+          },
+        }),
+      ),
     );
 
-    renderRoute('/pensamentos');
+    const { router } = renderRoute('/pensamentos');
 
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
     expect(screen.queryByText(/Sua consulta é/)).not.toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Adicionar explicação alternativa' })).toBeInTheDocument();
     expect(screen.queryByText(/até seg, 28\/09/)).not.toBeInTheDocument();
+
+    // Página de adicionar explicação alternativa: oculta o prazo na instrução.
+    await router.navigate(`/pensamentos/${thoughtRecord.id}/alternativa`);
+    expect(
+      await screen.findByText('Você pode adicionar a explicação alternativa uma vez. Depois de salva, ela fica como está.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/até seg, 28\/09/)).not.toBeInTheDocument();
+
+    // Meus registros: card de consultas sem distância relativa e fotos de atividade sem prazo.
+    await router.navigate('/registros');
+    const appointmentsRegion = await screen.findByRole('region', { name: 'Consultas' });
+    expect(within(appointmentsRegion).getByText(/28\/09 às 14:00/)).toBeInTheDocument();
+    expect(within(appointmentsRegion).queryByText(/·/)).not.toBeInTheDocument();
+    expect(await screen.findByText('Até 10 fotos.')).toBeInTheDocument();
+    expect(screen.queryByText(/Dá para adicionar ou remover/)).not.toBeInTheDocument();
+
+    // Orientação neutra de período antigo ("há 1 ano", DEC-120) continua visível mesmo com Sem pressão de tempo.
+    await router.navigate('/registros?semana=2024-09-16');
+    expect(await screen.findByText(/há \d+ anos?/)).toBeInTheDocument();
+
+    // Página de Consultas: lista de sessões sem distância relativa nem separador "·" órfão.
+    await router.navigate('/consultas');
+    const upcomingSection = await screen.findByRole('region', { name: 'Próximas' });
+    expect(within(upcomingSection).getByText(/28\/09 às 14:00/)).toBeInTheDocument();
+    expect(within(upcomingSection).queryByText(/·/)).not.toBeInTheDocument();
+
+    // Notificações: lembretes pausados mostram apenas a data final, sem contagem relativa entre parênteses.
+    await router.navigate('/conta/notificacoes');
+    expect(await screen.findByText('Lembretes pausados até 30/09.')).toBeInTheDocument();
   });
 
   it('Uma coisa por vez divide o formulário de Pensamentos em 5 passos e valida antes de avançar', async () => {
