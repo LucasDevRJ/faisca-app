@@ -114,7 +114,7 @@ describe('/conta/acessibilidade', () => {
     await waitFor(() => expect(document.documentElement.dataset.comfortableReading).toBeUndefined());
   });
 
-  it('aplica leitura confortável e menos movimento da sessão ao abrir qualquer tela', async () => {
+  it('aplica leitura confortável e menos movimento da sessão ao abrir qualquer tela e mantém a navegação do topo acessível', async () => {
     withAccessibility({ comfortableReading: true, reducedMotion: true });
     renderRoute('/novidades');
 
@@ -122,6 +122,12 @@ describe('/conta/acessibilidade', () => {
     expect(document.documentElement.dataset.reducedMotion).toBe('true');
     expect(localStorage.getItem('faisca:comfortable-reading')).toBe('true');
     expect(localStorage.getItem('faisca:reduced-motion')).toBe('true');
+
+    const banner = await screen.findByRole('banner');
+    expect(within(banner).getByRole('link', { name: 'Mensagens' })).toBeInTheDocument();
+    expect(within(banner).getByRole('link', { name: 'Ajuda: Como funciona o Faísca' })).toBeInTheDocument();
+    expect(within(banner).getByRole('link', { name: 'Conta' })).toBeInTheDocument();
+    expect(within(banner).getByRole('button', { name: 'Sair' })).toBeInTheDocument();
   });
 });
 
