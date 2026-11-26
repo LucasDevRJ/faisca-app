@@ -9,6 +9,7 @@ import { createPrivateFileStore, readPrivateFileStorageConfig } from './lib/priv
 import type { ActionVideoProcessingStore } from './lib/action-video-processing.js';
 import { createResendMailer, type Mailer } from './lib/mailer.js';
 import { createWebPushSender, type PushSender } from './lib/web-push.js';
+import { createSecurityAlerts, securityAlertsMiddleware, type SecurityAlerts } from './lib/security-alerts.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { notFound } from './middlewares/not-found.js';
 import { createActivitiesRoutes } from './modules/activities/activities.routes.js';
@@ -46,6 +47,8 @@ export type AppDependencies = {
   runAfterResponse?: RunAfterResponse;
   actionVideoStorage?: ActionVideoProcessingStore;
   activityVideoStorage?: ActionVideoProcessingStore;
+  // Os testes passam contadores com relógio próprio; em dev e produção, um por app (DEC-141).
+  securityAlerts?: SecurityAlerts;
 };
 
 // O app fica separado do server.ts para os testes usarem o Supertest sem abrir porta.
@@ -59,6 +62,7 @@ export function createApp({
   activityVideoStorage = env.ACTIVITY_VIDEOS_ENABLED === 'true'
     ? actionVideoStorage ?? createPrivateFileStore(readPrivateFileStorageConfig(process.env))
     : undefined,
+  securityAlerts,
 }: AppDependencies = {}) {
   const app = express();
   const actionVideos = actionVideoStorage ? createActionVideosService(actionVideoStorage) : undefined;
@@ -78,6 +82,8 @@ export function createApp({
     next();
   });
 
+  // Alertas de segurança (DEC-141): contam 401 do login, 403, 429 e 500 depois de cada resposta.
+  app.use(securityAlertsMiddleware(securityAlerts ?? createSecurityAlerts({ mailer })));
   app.use(helmet());
   // As respostas trazem registros de terapia: nada fica guardado no aparelho nem em proxies
   // (DEC-073). Quem precisa de outro valor, como a foto de perfil, troca na própria rota.

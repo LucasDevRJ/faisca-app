@@ -33,6 +33,9 @@ const envSchema = z.object({
     .string()
     .min(1)
     .refine((value) => !value.includes('seu-dominio.com')),
+  // Quem recebe os alertas de segurança (DEC-141): o dono do Faísca. Vazio desliga o e-mail, e o
+  // alerta fica só no log (dev e testes).
+  SECURITY_ALERT_EMAIL: z.preprocess((value) => (value === '' ? undefined : value), z.email().optional()),
   // Commit em produção, preenchido sozinho pelo Railway em cada deploy. O /health o devolve para
   // conferir qual versão da API está no ar (DEC-056). Fora do Railway, fica vazio.
   RAILWAY_GIT_COMMIT_SHA: z.string().optional(),

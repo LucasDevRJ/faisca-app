@@ -17,6 +17,8 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
 - Quem tem os dois perfis alterna entre "Meus registros" e "Meus pacientes".
   Quem tem um perfil só nunca vê telas do outro.
 - Cadastro aberto, com rate limit no cadastro, no login e na recuperação de senha.
+- Alertas de segurança (DEC-141): muitos logins errados, 403 de uma mesma conta, 429 ou erros 500
+  em 10 minutos geram um e-mail neutro (só o tipo e o número) para quem cuida do Faísca.
 - As telas de entrar e de cadastro têm "Por que Faísca?", fechado por padrão, que explica o nome
   pela ativação comportamental (o mesmo texto do `docs/BRIEFING-IA.md`).
 - Recuperação de senha por e-mail.
