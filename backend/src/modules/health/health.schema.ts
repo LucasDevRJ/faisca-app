@@ -9,3 +9,11 @@ export const healthResponseSchema = z.object({
 });
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+
+// Prontidão (DEC-141): o monitor de queda confere se a API alcança o banco. Sem detalhe do erro.
+export const readinessResponseSchema = z.object({
+  status: z.enum(['ok', 'unavailable']),
+  version: z.string().regex(/^[0-9a-f]{7}$/).nullable(),
+});
+
+export type ReadinessResponse = z.infer<typeof readinessResponseSchema>;
