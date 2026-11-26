@@ -303,6 +303,10 @@ das próximas migrations já nascerem com leitura para o `faisca_backup`. O pape
 
 ### 5. Testar a restauração (uma vez por mês)
 
+No dia 1 de cada mês, o workflow `lembrete-restauracao.yml` abre a issue "Testar a restauração
+da cópia — <mês>/<ano>" com este roteiro (#330). Feche a issue com um comentário dizendo se deu
+certo, **sem colar dado do banco, chave ou senha** (o repositório é público).
+
 No **seu terminal**, fora da conversa com o Claude. Tudo roda num contêiner descartável, com a chave
 e o banco restaurado **só na memória** (`/dev/shm` e `--tmpfs`): nada disso vai para o disco do
 computador, e o contêiner leva tudo embora ao parar.
