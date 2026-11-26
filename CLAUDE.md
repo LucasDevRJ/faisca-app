@@ -9,9 +9,10 @@
 ## Antes de agir
 - No começo de toda sessão, siga "Antes de começar" do AGENTS.md: veja o que entrou na `main`,
   os PRs abertos e as regras novas antes da tarefa pedida.
-- No começo de cada etapa, recomende o modelo da conversa, sempre a versão mais recente de cada
-  família: Sonnet para texto, documentação e ajustes pequenos; Opus para código; Fable para desenho
-  de segurança ou mudança crítica (ex.: 2FA, criptografia no banco). Diga a versão atual e avise
+- No começo de cada etapa, recomende o modelo e o nível da conversa (tabela do AGENTS.md, DEC-144),
+  sempre a versão mais recente de cada família: Sonnet para texto, documentação e ajustes pequenos;
+  Opus para código; Fable para desenho de segurança ou mudança crítica (ex.: 2FA, criptografia no
+  banco). Diga a versão atual e avise
   quando sair uma nova. Quem troca é o usuário, no seletor de modelo do app. Os revisores usam
   apelidos no próprio arquivo, que seguem a versão mais nova sozinhos (`revisor-regras` e
   `revisor-seguranca` com `opus`, `revisor-telas` com `sonnet`); cite no relatório do PR qual
@@ -23,6 +24,9 @@
 ## Git
 - Mostre a mensagem de commit e peça confirmação antes de push, PR ou merge.
 - Nunca use `--no-verify` nem force push na `main`.
+- Todo commit termina com `Modelo:` e `Nivel:` (DEC-144). Como eu não vejo o nível escolhido no
+  seletor, escrevo `Nivel: não informado`, a menos que o usuário diga o nível na sessão. O PR mostra
+  o usado e o recomendado na linha `**IA:**`.
 
 ## Ao terminar uma mudança
 - Siga a skill `finalizar-mudanca` (passo a passo e armadilhas conhecidas).
