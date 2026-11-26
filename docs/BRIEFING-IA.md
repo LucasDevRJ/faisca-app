@@ -97,6 +97,7 @@ Na prática clínica tradicional:
   - **Repetir do ciclo passado:** ações do ciclo anterior viram atalhos de um toque para planejar de novo.
   - **Corrigir ação:** o paciente pode corrigir a avaliação até o fim do dia em que contou como foi, no fuso de São Paulo.
   - **Fotos da Ação:** em uma ação avaliada, o paciente pode adicionar **até 10 fotos** (até a próxima consulta) para guardar a memória visual daquele momento bom; a psicóloga vinculada também vê.
+  - **Vídeo da Ação:** o paciente pode anexar um MP4 ou MOV de até 60 segundos e 100 MB a uma ação avaliada, com opção de remover o áudio. O envio e a remoção seguem o prazo das fotos. A profissional pode assistir quando o vínculo está ativo, a pessoa libera **Ação** e **Vídeos da Ação** e as duas contas aceitam o aviso de privacidade da área.
 
 - **Agenda de consultas e Ciclo da consulta:**
   - O paciente configura sua agenda recorrente (**semanal** ou **quinzenal**, dia e horário), além de poder criar **consulta avulsa**, **desmarcar** (ou registrar falta) e **remarcar** informando o motivo, **pausar** a terapia (com ou sem data de volta) ou **encerrar**.
