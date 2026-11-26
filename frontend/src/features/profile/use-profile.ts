@@ -4,7 +4,14 @@ import type { SessionUser } from '../auth/auth-api';
 import { SESSION_QUERY_KEY, useSession } from '../auth/use-session';
 import { applyAccessibility, DEFAULT_ACCESSIBILITY, type AccessibilitySettings } from './accessibility';
 import { applyPalette } from './palettes';
-import { deleteAvatar, fetchProfile, updateProfile, uploadAvatar, type Profile } from './profile-api';
+import {
+  deleteAvatar,
+  fetchProfile,
+  sendTeamContact,
+  updateProfile,
+  uploadAvatar,
+  type Profile,
+} from './profile-api';
 
 export const PROFILE_KEY = ['profile'] as const;
 
@@ -47,6 +54,12 @@ export function useDeleteAvatar() {
     mutationFn: deleteAvatar,
     onSuccess: () =>
       queryClient.setQueryData<Profile>(PROFILE_KEY, (profile) => (profile ? { ...profile, avatarVersion: null } : profile)),
+  });
+}
+
+export function useSendTeamContact() {
+  return useMutation({
+    mutationFn: sendTeamContact,
   });
 }
 

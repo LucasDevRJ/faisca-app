@@ -58,3 +58,18 @@ export const avatarUrls = {
   patient: (patientId: string, version: string) =>
     `/api/therapist/patients/${patientId}/avatar?v=${encodeURIComponent(version)}`,
 };
+
+// Contato da profissional com a equipe do Faísca (#332, DEC-142).
+export const TEAM_CONTACT_TOPICS = ['SUGESTAO', 'PROBLEMA', 'DUVIDA', 'REVISAO_TEXTOS'] as const;
+export type TeamContactTopic = (typeof TEAM_CONTACT_TOPICS)[number];
+export const TEAM_CONTACT_MESSAGE_MIN = 10;
+export const TEAM_CONTACT_MESSAGE_MAX = 2000;
+
+export type TeamContactInput = {
+  topic: TeamContactTopic;
+  message: string;
+};
+
+export async function sendTeamContact(input: TeamContactInput): Promise<void> {
+  await api.post('/profile/team-contact', input);
+}

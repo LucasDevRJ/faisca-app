@@ -16,15 +16,17 @@ const THERAPIST = 'terapeuta@faisca.test';
 const OTHER_THERAPIST = 'outra-terapeuta@faisca.test';
 
 let app: ReturnType<typeof createApp>;
+let mailer: FakeMailer;
 let patientId: string;
 let therapistId: string;
 
 beforeEach(async () => {
   await resetDatabase();
-  app = createApp({ mailer: new FakeMailer() });
+  mailer = new FakeMailer();
+  app = createApp({ mailer });
   patientId = (await createConfirmedUser({ name: 'Paula Fictícia', email: PATIENT })).id;
   await createConfirmedUser({ email: OTHER_PATIENT });
-  therapistId = (await createConfirmedUser({ email: THERAPIST, patient: false, therapist: true })).id;
+  therapistId = (await createConfirmedUser({ name: 'Tereza Fictícia', email: THERAPIST, patient: false, therapist: true })).id;
   await createConfirmedUser({ email: OTHER_THERAPIST, patient: false, therapist: true });
   await createTestLink({ patientId, therapistId, method: 'CODE' });
 });
@@ -324,5 +326,69 @@ describe('autorização (regra 1)', () => {
     const therapistOnly = await loginAgent(OTHER_THERAPIST);
     expect((await therapistOnly.get('/link/therapist/avatar')).status).toBe(403);
     expect((await request(app).get('/link/therapist/avatar')).status).toBe(401);
+  });
+
+  it('fale com a equipe (#332): só profissional logada envia; paciente ou sem sessão não envia', async () => {
+    const payload = { topic: 'REVISAO_TEXTOS', message: 'Sugiro ajustar o texto da tela de planos.' };
+
+    expect((await request(app).post('/profile/team-contact').send(payload)).status).toBe(401);
+
+    const patient = await loginAgent(PATIENT);
+    const forbidden = await patient.post('/profile/team-contact').send(payload);
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error.code).toBe('THERAPIST_PROFILE_REQUIRED');
+    expect(mailer.sent).toHaveLength(0);
+
+    const therapist = await loginAgent(THERAPIST);
+    expect((await therapist.post('/profile/team-contact').send({ ...payload, userId: patientId })).status).toBe(400);
+    expect(mailer.sent).toHaveLength(0);
+
+    const allowed = await therapist.post('/profile/team-contact').send(payload);
+    expect(allowed.status).toBe(204);
+    expect(mailer.sent).toHaveLength(1);
+    expect(mailer.sent[0]).toMatchObject({
+      to: 'suporte@minhafaisca.com.br',
+      replyTo: THERAPIST,
+      subject: '[Faísca · Equipe] Revisão de textos — Tereza Fictícia',
+    });
+    expect(mailer.sent[0]?.text).toContain('De: Tereza Fictícia (Psicóloga) · terapeuta@faisca.test');
+    expect(mailer.sent[0]?.text).toContain('Sugiro ajustar o texto da tela de planos.');
+  });
+});
+
+describe('fale com a equipe (#332, DEC-142)', () => {
+  it('valida assunto e tamanho da mensagem (10 a 2000 caracteres) e escapa HTML', async () => {
+    const therapist = await loginAgent(THERAPIST);
+
+    expect((await therapist.post('/profile/team-contact').send({ topic: 'OUTRO', message: 'Mensagem válida aqui.' })).status).toBe(400);
+    expect((await therapist.post('/profile/team-contact').send({ topic: 'DUVIDA', message: '   curta   ' })).status).toBe(400);
+    expect((await therapist.post('/profile/team-contact').send({ topic: 'DUVIDA', message: 'a'.repeat(2001) })).status).toBe(400);
+
+    const res = await therapist.post('/profile/team-contact').send({
+      topic: 'SUGESTAO',
+      message: '  Olá <script>alert(1)</script> & equipe!  ',
+    });
+    expect(res.status).toBe(204);
+    expect(mailer.sent).toHaveLength(1);
+    expect(mailer.sent[0]?.html).toContain('Olá &lt;script&gt;alert(1)&lt;/script&gt; &amp; equipe!');
+    expect(mailer.sent[0]?.html).not.toContain('<script>');
+  });
+
+  it('limita a 5 envios por hora por conta e retorna 502 se o envio de e-mail falhar', async () => {
+    const therapist = await loginAgent(THERAPIST);
+    const payload = { topic: 'PROBLEMA', message: 'O botão de carregar mais demorou para responder.' };
+
+    mailer.sendError = new Error('Falha simulada');
+    const failed = await therapist.post('/profile/team-contact').send(payload);
+    expect(failed.status).toBe(502);
+    expect(failed.body.error.code).toBe('EMAIL_SEND_FAILED');
+
+    mailer.sendError = null;
+    for (let i = 0; i < 4; i++) {
+      expect((await therapist.post('/profile/team-contact').send(payload)).status).toBe(204);
+    }
+    const limited = await therapist.post('/profile/team-contact').send(payload);
+    expect(limited.status).toBe(429);
+    expect(limited.body.error.code).toBe('TOO_MANY_REQUESTS');
   });
 });

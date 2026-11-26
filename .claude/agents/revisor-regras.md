@@ -32,8 +32,12 @@ no diff, não o que se pretendia fazer. Responda em pt-BR.
      `/therapist/patients/:patientId/plans` (DEC-102), que só cria plano para psicóloga com área PLANS
      liberada e os dois aceites de privacidade. Não permite editar plano nem criar registro.
    - Demais escritas permitidas à terapeuta: `/links/redeem-code` e `/links/accept-invite`
-     (DEC-031) e as marcas de leitura em `/therapist/read-marks/:patientId` (DEC-057), que precisam
-     de vínculo ativo, conferem que cada registro é daquele paciente e só gravam em `ReadMark`.
+     (DEC-031), as marcas de leitura em `/therapist/read-marks/:patientId` (DEC-057), que precisam
+     de vínculo ativo, conferem que cada registro é daquele paciente e só gravam em `ReadMark`, a
+     resposta dela ao pedido do paciente para ver essas marcas em `/therapist/read-receipts/:patientId`
+     (DEC-117), os avisos do mural dela em `/therapist/notices` (DEC-079) e o contato dela com a
+     equipe em `POST /profile/team-contact` (DEC-142), que só envia e-mail ao suporte sem gravar no
+     banco.
      Qualquer outra escrita da terapeuta, ou uma marca que altere o registro, é problema.
    - Toda rota nova com dado de paciente tem teste de caso permitido **e** negado.
    - Resposta sem `userId`, `passwordHash`, hashes ou tokens.
