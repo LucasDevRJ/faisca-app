@@ -1,4 +1,5 @@
 import { AppError } from '../../errors/app-error.js';
+import { env } from '../../config/env.js';
 
 // Versões do aviso de privacidade (DEC-036), da mais antiga para a mais nova. A última é a atual,
 // gravada no cadastro e no novo aceite. Muda junto com o texto da página /privacidade no front
@@ -49,6 +50,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.11',
   '2026-11.12',
   '2026-11.13',
+  '2026-11.14',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -70,7 +72,10 @@ export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
 export const MESSAGES_PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
 // A 2026-11.12 (DEC-127, o "visto" das Mensagens) virou a atual no PR das telas, com o texto.
 // A 2026-11.13 (DEC-128, o registro apontado nas Mensagens) virou a atual no PR das telas, com o texto.
-export const PRIVACY_VERSION: PrivacyVersion = '2026-11.13';
+export const ACTION_VIDEOS_PRIVACY_VERSION: PrivacyVersion = '2026-11.14';
+export const PRIVACY_VERSION: PrivacyVersion = env.ACTION_VIDEOS_ENABLED === 'true'
+  ? ACTION_VIDEOS_PRIVACY_VERSION
+  : '2026-11.13';
 
 export function privacyUpToDate(acceptedVersion: string | null): boolean {
   return PRIVACY_VERSIONS.indexOf(acceptedVersion as PrivacyVersion) >= PRIVACY_VERSIONS.indexOf(PRIVACY_VERSION);
@@ -113,6 +118,7 @@ export const PRIVACY_AREAS = {
   actions: '2026-10.5',
   // Fotos da Ação (DEC-064): fazem parte do registro de saúde e podem mostrar outras pessoas.
   actionPhotos: '2026-10.6',
+  actionVideos: ACTION_VIDEOS_PRIVACY_VERSION,
   // "Sobre mim" (DEC-081): o que o paciente conta sobre si, o que quer trabalhar e os hábitos.
   aboutMe: '2026-11',
   // Meus Planos (DEC-094): os planos de ação, as perguntas e cada registro com as respostas.
@@ -143,13 +149,16 @@ export function coversArea(acceptedVersion: string | null, area: PrivacyArea): b
   return accepted >= 0 && accepted >= PRIVACY_VERSIONS.indexOf(PRIVACY_AREAS[area]);
 }
 
-export function privacyAreas(acceptedVersion: string | null): Record<PrivacyArea, boolean> {
+export function privacyAreas(
+  acceptedVersion: string | null,
+): Record<Exclude<PrivacyArea, 'actionVideos'>, boolean> & { actionVideos?: boolean } {
   return {
     thoughtRecords: coversArea(acceptedVersion, 'thoughtRecords'),
     tensionEpisodes: coversArea(acceptedVersion, 'tensionEpisodes'),
     appointmentSchedule: coversArea(acceptedVersion, 'appointmentSchedule'),
     actions: coversArea(acceptedVersion, 'actions'),
     actionPhotos: coversArea(acceptedVersion, 'actionPhotos'),
+    ...(env.ACTION_VIDEOS_ENABLED === 'true' && { actionVideos: coversArea(acceptedVersion, 'actionVideos') }),
     aboutMe: coversArea(acceptedVersion, 'aboutMe'),
     plans: coversArea(acceptedVersion, 'plans'),
     activityPhotos: coversArea(acceptedVersion, 'activityPhotos'),

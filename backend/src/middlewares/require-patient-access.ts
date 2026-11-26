@@ -96,7 +96,9 @@ export function requirePatientPrivacy(area: PrivacyArea): RequestHandler {
       throw new AppError(
         403,
         'PATIENT_PRIVACY_CONSENT_REQUIRED',
-        'O paciente precisa aceitar a versão do aviso de privacidade que inclui o Meus Planos.',
+        area === 'plans'
+          ? 'O paciente precisa aceitar a versão do aviso de privacidade que inclui o Meus Planos.'
+          : 'O paciente precisa aceitar a versão do aviso de privacidade que inclui esta área.',
       );
     }
     next();

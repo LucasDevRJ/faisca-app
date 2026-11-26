@@ -22,7 +22,7 @@ import {
 } from './auth.emails.js';
 import type { AddProfileInput, ChangePasswordInput, LoginInput, ResetPasswordInput, SignupInput } from './auth.schema.js';
 import { CURRENT_ANNOUNCEMENT, pendingAnnouncement, type Announcement } from './announcements.js';
-import { PRIVACY_VERSION, privacyAreas, privacyUpToDate, versionToRecord, type PrivacyArea, type PrivacyVersion } from './privacy.js';
+import { PRIVACY_VERSION, privacyAreas, privacyUpToDate, versionToRecord, type PrivacyVersion } from './privacy.js';
 
 // A versão atual do aviso e as áreas que dependem dele ficam em ./privacy.ts (DEC-042).
 export { PRIVACY_VERSION };
@@ -43,7 +43,7 @@ export type PublicUser = {
   privacyUpToDate: boolean;
   // Áreas liberadas pela versão aceita (DEC-042). Sem a delas, o RPD e os episódios de tensão
   // ficam bloqueados; o resto do app funciona.
-  privacyAreas: Record<PrivacyArea, boolean>;
+  privacyAreas: ReturnType<typeof privacyAreas>;
   // Novidade que a pessoa ainda não viu, para o card de Novidades; null quando não há (DEC-054).
   pendingAnnouncement: Announcement | null;
   // Paleta de cores da conta (DEC-063): vem no /auth/me para o app aplicar as cores ao abrir.

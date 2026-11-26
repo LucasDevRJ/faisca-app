@@ -8,6 +8,7 @@ import { Dialog } from '../components/ui/dialog';
 import { buttonClasses } from '../components/ui/button-styles';
 import type { Activity } from '../features/activities/activities-api';
 import { ActionCard } from '../features/actions/action-card';
+import { ACTION_VIDEOS_ENABLED } from '../features/actions/action-video-api';
 import { ActionChart } from '../features/actions/action-chart';
 import { CycleGoal } from '../features/actions/cycle-goal';
 import { ActivityCard } from '../features/activities/activity-card';
@@ -396,14 +397,20 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
                   canCreate={canCreatePlans && plansConsented}
                 />
               ) : tab === 'acao' ? (
-                <ActionsTab
-                  patientId={patientId}
-                  consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
-                  query={actions}
-                  range={range}
-                  scope={scope}
-                  today={today}
-                />
+                <>
+                  {ACTION_VIDEOS_ENABLED && shared.has('ACTION_VIDEOS') && shared.has('ACTIONS') &&
+                    actionsConsented && !user?.privacyAreas.actionVideos && (
+                      <PrivacyConsentGate area="actionVideos" audience="therapist" />
+                    )}
+                  <ActionsTab
+                    patientId={patientId}
+                    consented={actionsConsented && !(actions.isError && needsPrivacyConsent(actions.error))}
+                    query={actions}
+                    range={range}
+                    scope={scope}
+                    today={today}
+                  />
+                </>
               ) : tab === 'tensao' ? (
                 <TensionTab
                   patientId={patientId}

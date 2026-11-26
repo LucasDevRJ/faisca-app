@@ -10,6 +10,7 @@ import { useCancelInvite, useGenerateLinkCode, useLinkStatus, useSetSharedAreas 
 import { Avatar } from '../profile/avatar';
 import { avatarUrls } from '../profile/profile-api';
 import { ReadReceiptsSetting } from '../read-receipts/read-receipts-setting';
+import { ACTION_VIDEOS_ENABLED } from '../actions/action-video-api';
 
 // "Quem me acompanha" em /conta (SPEC, "Vínculo"; DEC-097, DEC-098): um cartão por profissional
 // vinculada, com o que cada uma pode ver, e o caminho para vincular mais uma enquanto houver vaga
@@ -161,12 +162,15 @@ type SharedAreasFormProps = {
 };
 
 // As fotos de cada área têm caixa própria e dependem dela (DEC-098, DEC-104).
-const PHOTOS_OF: Partial<Record<SharedArea, SharedArea>> = { ACTIONS: 'ACTION_PHOTOS', ACTIVITIES: 'ACTIVITY_PHOTOS' };
-const PARENT_OF: Partial<Record<SharedArea, SharedArea>> = { ACTION_PHOTOS: 'ACTIONS', ACTIVITY_PHOTOS: 'ACTIVITIES' };
+const PARENT_OF: Partial<Record<SharedArea, SharedArea>> = {
+  ACTION_PHOTOS: 'ACTIONS', ACTION_VIDEOS: 'ACTIONS', ACTIVITY_PHOTOS: 'ACTIVITIES',
+};
 
 function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormProps) {
   const save = useSetSharedAreas();
   const [areas, setAreas] = useState<SharedArea[]>(link.sharedAreas);
+  const available = SHARED_AREAS.filter((area) =>
+    area !== 'ACTION_VIDEOS' || ACTION_VIDEOS_ENABLED || link.sharedAreas.includes(area));
   const name = firstName(link.therapist.name);
   const hintId = useId();
   const dirty = areas.length !== link.sharedAreas.length || areas.some((area) => !link.sharedAreas.includes(area));
@@ -178,27 +182,26 @@ function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormP
       const next = checked ? [...current, area] : current.filter((item) => item !== area);
       // Sem a Ação ou as atividades, as fotos delas também saem (DEC-098, DEC-104).
       if (checked) return next;
-      const photos = PHOTOS_OF[area];
-      return photos ? next.filter((item) => item !== photos) : next;
+      return next.filter((item) => PARENT_OF[item] !== area);
     });
   }
 
-  const allChecked = SHARED_AREAS.every((area) => areas.includes(area));
+  const allChecked = available.every((area) => areas.includes(area));
 
   function checkAll() {
     onEdit();
     save.reset();
-    setAreas([...SHARED_AREAS]);
+    setAreas(available);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const ordered = SHARED_AREAS.filter((area) => areas.includes(area));
+    const ordered = available.filter((area) => areas.includes(area));
     save.mutate({ linkId: link.id, areas: ordered }, { onSuccess: onSaved, onError: () => setAreas(link.sharedAreas) });
   }
 
   // A caixa das fotos só aparece com a área delas marcada.
-  const visible = SHARED_AREAS.filter((area) => {
+  const visible = available.filter((area) => {
     const parent = PARENT_OF[area];
     return !parent || areas.includes(parent);
   });

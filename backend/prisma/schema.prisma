@@ -505,6 +505,7 @@ enum SharedArea {
   TENSION_EPISODES
   ACTIONS
   ACTION_PHOTOS
+  ACTION_VIDEOS
   ABOUT_ME
   APPOINTMENTS
   PLANS
@@ -721,6 +722,7 @@ model BehavioralAction {
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   readMarks ReadMark[]
   photos    ActionPhoto[]
+  video     ActionVideo?
 
   @@index([userId, actionDate])
 }
@@ -738,6 +740,32 @@ model ActionPhoto {
   action BehavioralAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   @@index([actionId, createdAt])
+}
+
+enum ActionVideoState {
+  UPLOADING
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+// Vídeo em armazenamento privado (#143). Quando a Ação é apagada, a fila ainda precisa
+// remover os objetos. Por isso a relação fica nula até o processamento da exclusão.
+model ActionVideo {
+  id        String           @id @default(uuid()) @db.Uuid
+  actionId  String?          @unique @db.Uuid
+  state     ActionVideoState @default(UPLOADING)
+  keepAudio Boolean          @default(true)
+  cleanupPending Boolean     @default(true)
+  outputVersion String?      @db.Uuid
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  action BehavioralAction? @relation(fields: [actionId], references: [id], onDelete: SetNull)
+
+  @@index([state, cleanupPending, updatedAt])
+  @@index([actionId, updatedAt])
 }
 
 // Marca de leitura da terapeuta (SPEC, "Visão da terapeuta"; DEC-057): "lido" num Pensamento, num

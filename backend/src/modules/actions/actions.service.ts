@@ -191,12 +191,14 @@ function assertDate(error: string | null) {
   if (error) throw new AppError(400, 'DATE_OUT_OF_RANGE', error);
 }
 
-async function findOwned(userId: string, id: string, db: Prisma.TransactionClient = prisma): Promise<BehavioralAction> {
+export async function findOwnedAction(userId: string, id: string, db: Prisma.TransactionClient = prisma): Promise<BehavioralAction> {
   const action = await db.behavioralAction.findUnique({ where: { id } });
   if (!action) throw notFound();
   if (action.userId !== userId) throw forbidden();
   return action;
 }
+
+const findOwned = findOwnedAction;
 
 async function findPlanned(userId: string, id: string): Promise<BehavioralAction> {
   const action = await findOwned(userId, id);
@@ -231,17 +233,21 @@ async function writePlanned(userId: string, id: string, data: Prisma.BehavioralA
 }
 
 // As fotos só mudam na ação avaliada e antes do prazo (a próxima consulta depois da avaliação).
-async function assertPhotosOpen(userId: string, action: BehavioralAction) {
+export async function assertActionMediaOpen(userId: string, action: BehavioralAction, type: 'photo' | 'video' = 'photo') {
   if (action.status !== 'AVALIADA') {
+    if (type === 'video') throw new AppError(409, 'VIDEO_NOT_ALLOWED', 'Adicione o vídeo depois de contar como foi a ação.');
     throw new AppError(409, 'PHOTOS_NOT_ALLOWED', 'As fotos entram depois de contar como foi a ação.');
   }
   const withPhotoRefs = { ...action, photos: [] };
   const sessions = await sessionsFor(userId, [action]);
   await freezeMissingDeadlines([withPhotoRefs], sessions);
   if (!arePhotosOpen(withPhotoRefs, sessions)) {
+    if (type === 'video') throw new AppError(409, 'VIDEO_CLOSED', 'O prazo para alterar o vídeo da ação já passou.');
     throw photosClosed();
   }
 }
+
+const assertPhotosOpen = assertActionMediaOpen;
 
 // A foto nova (ou removida) conta como mudança da ação: a terapeuta que já a leu vê "atualizado"
 // (DEC-057). Dentro da transação que mexe na foto.

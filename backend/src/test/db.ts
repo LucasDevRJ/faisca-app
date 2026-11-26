@@ -16,6 +16,7 @@ export async function resetDatabase() {
   await prisma.plan.deleteMany();
   await prisma.homeworkTask.deleteMany();
   await prisma.actionPhoto.deleteMany();
+  await prisma.actionVideo.deleteMany();
   await prisma.behavioralAction.deleteMany();
   await prisma.appointment.deleteMany();
   // As exceções saem em cascata com a regra.

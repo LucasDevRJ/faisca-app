@@ -1,15 +1,17 @@
 import express, { Router } from 'express';
 import { createPhotoUploadLimit, PHOTO_CONTENT_TYPES, PHOTO_MAX_BYTES } from '../../lib/photos.js';
-import { createRecordWriteLimit } from '../../middlewares/rate-limit.js';
+import { createRateLimit, createRecordWriteLimit } from '../../middlewares/rate-limit.js';
 import { requireAuth } from '../../middlewares/require-auth.js';
 import { requirePatient } from '../../middlewares/require-patient.js';
 import { requirePrivacy } from '../../middlewares/require-privacy.js';
 import { createActionsController } from './actions.controller.js';
 import { createActionsService } from './actions.service.js';
+import { createActionVideosController } from './action-videos.controller.js';
+import type { createActionVideosService } from './action-videos.service.js';
 
 // Ação do próprio paciente (DEC-051). A leitura pela terapeuta fica em
 // /therapist/patients/:patientId/actions (só GET e só com vínculo ativo).
-export function createActionsRoutes() {
+export function createActionsRoutes(actionVideos?: ReturnType<typeof createActionVideosService>) {
   const controller = createActionsController(createActionsService());
   const router = Router();
   // Sem o aceite de uma versão do aviso que cite a Ação, só esta área fica bloqueada.
@@ -33,6 +35,16 @@ export function createActionsRoutes() {
   router.post('/actions/:id/photos', ...photos, photoLimit, imageBody, controller.addPhoto);
   router.get('/actions/:id/photos/:photoId', ...photos, controller.photo);
   router.delete('/actions/:id/photos/:photoId', ...photos, controller.removePhoto);
+
+  if (actionVideos) {
+    const videos = [...patient, requirePrivacy('actionVideos')];
+    const video = createActionVideosController(actionVideos);
+    router.get('/actions/:id/video', ...videos, video.status);
+    const uploadLimit = createRateLimit({ windowMinutes: 10, limit: 3, key: 'user' });
+    router.post('/actions/:id/video', ...videos, uploadLimit, video.upload);
+    router.get('/actions/:id/video/play', ...videos, video.playback);
+    router.delete('/actions/:id/video', ...videos, writeLimit, video.remove);
+  }
 
   return router;
 }

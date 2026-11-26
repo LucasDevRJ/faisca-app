@@ -24,6 +24,7 @@ export type SessionUser = {
     appointmentSchedule: boolean;
     actions: boolean;
     actionPhotos: boolean;
+    actionVideos?: boolean;
     aboutMe: boolean;
     // Meus Planos (DEC-094, DEC-095).
     plans: boolean;

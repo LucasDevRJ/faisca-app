@@ -368,6 +368,44 @@ Depois, num Postgres novo do Railway:
 
 5. troque o `DATABASE_URL` e o `MIGRATION_DATABASE_URL` da API para o banco novo e faça o deploy.
 
+## Armazenamento privado de mídia em desenvolvimento (#143)
+
+- Use um bucket R2 privado e dedicado a testes. Mantenha a URL pública de desenvolvimento e
+  domínios públicos desligados. Use um token de leitura e escrita limitado ao bucket de mídia.
+  Use credenciais diferentes das da cópia de segurança.
+- No backend, preencha `PRIVATE_FILES_R2_ENDPOINT` com o endpoint S3 da conta e
+  `PRIVATE_FILES_R2_BUCKET`, `PRIVATE_FILES_R2_ACCESS_KEY_ID` e
+  `PRIVATE_FILES_R2_SECRET_ACCESS_KEY` com o nome do bucket e as credenciais correspondentes.
+  Copie o endereço S3 da Cloudflare até `.r2.cloudflarestorage.com`. O endereço usa o ID da conta.
+  O Access Key ID entra no campo próprio.
+- Em `backend/`, rode `npm run media:check-storage`. O comando grava um objeto fictício com
+  chave aleatória em `probe/`, verifica leitura parcial e remove o objeto. Confira o acesso público
+  separadamente no painel do R2. Uma regra de expiração para o prefixo `probe/` pode limpar objetos
+  de verificações interrompidas.
+- O conversor local requer `ffmpeg` com `libx264` e `ffprobe`. Rode `npm run media:check-video`
+  para testar o processamento de vídeos fictícios, inclusive a leitura e gravação em fluxo,
+  áudio ligado por padrão e remoção escolhida pela pessoa. Antes de ligar o fluxo no app,
+  instale essas ferramentas em um serviço de processamento isolado, com limites de CPU e memória,
+  um vídeo por vez e limpeza dos arquivos temporários mesmo em caso de falha. Antes de aceitar
+  vídeos reais, verifique a expiração e a limpeza de originais e saídas órfãs após interrupções do
+  serviço. O original pode conter áudio mesmo quando a pessoa escolhe removê-lo da versão final.
+  Verifique também a restauração de mídias. O serviço de cópia atual cobre o Postgres (DEC-075).
+- A fila persiste no Postgres. Para teste isolado, `npm run media:worker` roda o serviço que
+  pega um vídeo de cada vez, converte e remove os objetos de trabalhos concluídos ou descartados.
+  Em teste, use a conexão DML do banco isolado. Em produção, prepare uma conta de banco com acesso
+  mínimo à fila e credenciais limitadas ao bucket de mídia. O worker não usa os segredos de
+  autenticação ou e-mail da API. Não publique o worker como serviço web nem o habilite em produção
+  antes da validação da restauração.
+- As rotas de vídeo só são montadas com `ACTION_VIDEOS_ENABLED=true`. A tela só é mostrada quando o
+  frontend é iniciado ou construído com `VITE_ACTION_VIDEOS_ENABLED=true`. Para a prévia, ative os
+  dois e rode o worker com o mesmo banco e o mesmo bucket de teste usados pela API.
+- Com as duas opções desligadas, o aviso continua na versão `2026-11.13`. Na ativação, configure
+  primeiro o worker e a API, que passa a aceitar a versão `2026-11.14`. Depois publique o frontend
+  com o novo texto. Até o frontend novo entrar no ar, a API ainda aceita a versão anterior quando
+  ela é a que o aplicativo mostrou.
+- Antes da publicação, teste um envio próximo do limite pelo proxy da produção, inclusive em uma
+  conexão móvel mais lenta. O proxy de destinos externos da Vercel tem prazo máximo de 120 segundos.
+
 ## Trocar os segredos (incidente de segurança)
 
 Use quando um segredo pode ter vazado: um incidente no Railway (como o de 21/10/2026, DEC-062), um

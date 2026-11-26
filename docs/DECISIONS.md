@@ -3130,6 +3130,20 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** ao marcar um registro individual ou recarregar a página, o TanStack Query
   revalida as páginas abertas na ordem do cursor.
 
+## DEC-140 — Vídeo curto na Ação e escolha de áudio (#143)
+
+- **Decisão:** ao anexar um vídeo a uma Ação, a opção de manter o áudio começa ligada. A pessoa
+  pode desligá-la antes de enviar. Nesse caso, o arquivo convertido não contém faixa de áudio.
+  A fila persiste no Postgres e o worker converte um vídeo por vez. Os objetos ficam em bucket R2
+  privado. Cada tentativa tem uma chave de saída distinta, e a API serve somente a versão pronta.
+  A reprodução passa pela API em vez de entregar um endereço que continua válido após revogar o
+  vínculo. A profissional só lê com a nova permissão **Vídeos da Ação**, **Ação** liberada,
+  vínculo ativo e aceite de ambas as contas na versão `2026-11.14`.
+- **Motivo:** preservar o som quando ele faz parte do que a pessoa quer mostrar e permitir que ela
+  envie o vídeo sem as vozes ou sons gravados.
+- **Limite conhecido:** a ativação em produção depende de validar o worker isolado, a remoção de
+  mídias e a política de cópias e restauração do bucket. As fotos continuam usando o fluxo atual.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

@@ -14,6 +14,7 @@ export const AREA_LABEL: Record<SharedArea, string> = {
   TENSION_EPISODES: 'Tensão',
   ACTIONS: 'Ação',
   ACTION_PHOTOS: 'Fotos da Ação',
+  ACTION_VIDEOS: 'Vídeos da Ação',
   ABOUT_ME: '“Sobre mim”',
   APPOINTMENTS: 'Agenda de consultas (com os motivos)',
   PLANS: 'Meus Planos',
