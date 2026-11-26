@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { AnnouncementCard } from '../features/announcements/announcement-card';
 import { useLogout, useSession } from '../features/auth/use-session';
 import { fetchUnread } from '../features/messages/messages-api';
+import { prefersReducedMotion } from '../features/profile/accessibility';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-2 py-2 font-medium sm:px-3 ${isActive ? 'bg-surface text-primary-text shadow-soft' : 'text-muted hover:text-text'}`;
@@ -42,7 +43,7 @@ export function AppLayout() {
     const reveal = () => {
       const target = document.getElementById(targetId);
       if (!target) return false;
-      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      const reducedMotion = prefersReducedMotion(user?.accessibility?.reducedMotion);
       target.scrollIntoView?.({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
       if (target instanceof HTMLElement && target.tabIndex === -1) target.focus({ preventScroll: true });
       stop();
@@ -54,7 +55,7 @@ export function AppLayout() {
       timeout = window.setTimeout(stop, 10_000);
     }
     return stop;
-  }, [hash, pathname]);
+  }, [hash, pathname, user?.accessibility?.reducedMotion]);
   // Ao trocar de tela, confere de novo se chegou mensagem.
   const refetchUnread = unread.refetch;
   useEffect(() => {
