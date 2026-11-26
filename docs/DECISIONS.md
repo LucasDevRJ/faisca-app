@@ -3166,6 +3166,52 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   contaria sozinha (como o rate limit). Um ataque lento, abaixo dos limites, não avisa. Os limites
   podem mudar com o uso real.
 
+## DEC-144 — Modelo e nível da IA em cada commit e PR
+
+- **Decisão:** todo commit, de qualquer agente, termina com duas linhas no bloco final (os trailers
+  do Git), antes do `Co-Authored-By`:
+  ```
+  Modelo: Opus 5.5
+  Nivel: alto
+  ```
+  - **Modelo:** o nome e a versão da IA que escreveu a mudança (ex.: `Opus 5.5`, `Sonnet 5.5`, o
+    modelo do Codex ou do Antigravity).
+  - **Nivel:** o nível de raciocínio escolhido no seletor (`baixo`, `médio`, `alto`, `muito alto`,
+    `máximo`). Quando o agente não sabe o próprio nível com certeza, escreve `não informado`, e não
+    chuta. Se o usuário disser o nível no começo da sessão, o agente usa esse.
+  - Commit feito só pelo usuário, sem IA: `Modelo: nenhum` e `Nivel: não se aplica`.
+  - A chave é `Nivel`, **sem acento**: o Git não reconhece trailer com letra acentuada na chave
+    (o valor pode ter acento).
+- **Recomendado × usado:** a recomendação vale para a tarefa, e não para cada commit, então fica
+  na issue e no PR, e não no commit.
+  - **Issue:** os formulários têm o campo opcional "Modelo e nível recomendados", preenchido
+    quando a issue entra na fila.
+  - **PR:** a descrição leva uma linha com os dois lados, junto com o modelo dos revisores:
+    `**IA:** usado Opus 5.5, nível não informado · recomendado Opus 5.5, nível alto`.
+  - **Tabela de recomendação** (no `AGENTS.md`; a coluna do modelo vale para o Claude, a do nível
+    para todos):
+
+    | Tipo de mudança | Modelo | Nível |
+    |---|---|---|
+    | Texto, documentação, ajuste pequeno | Sonnet | médio |
+    | Código comum (tela, rota, teste) | Opus | alto |
+    | Regra inviolável, migration, autorização | Opus | muito alto |
+    | Segurança crítica (2FA, criptografia) | Fable | máximo |
+
+  - No começo de cada etapa, o Claude recomenda o modelo **e o nível**, para o usuário escolher
+    os dois no seletor antes de começar.
+- **Aviso no CI:** o workflow "Modelo e nível nos commits" (`scripts/check-commit-trailers.mjs`)
+  avisa quando um commit do PR vem sem as duas linhas e quando a descrição do PR vem sem a linha
+  `**IA:**` com "usado" e "recomendado". Só avisa: não falha nem barra o merge. Commits de robô
+  (Dependabot) e de merge ficam de fora, e PR de robô não é conferido.
+- **Motivo:** saber, quando aparecer um defeito ou ao comparar o trabalho dos agentes, qual IA fez
+  cada parte e com que nível, e se foi abaixo do recomendado (sinal para revisar com mais cuidado e
+  para calibrar a tabela). O `Co-Authored-By` mostrava o modelo só nos commits do Claude, e sem o
+  nível.
+- **Limite conhecido:** o nível é declarado pelo próprio agente e nem sempre é conhecido; vale como
+  registro honesto, não como prova. Commits antigos não são reescritos.
+
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
