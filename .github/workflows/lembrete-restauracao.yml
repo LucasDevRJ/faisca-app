@@ -1,0 +1,50 @@
+name: Lembrete do teste de restauração
+
+# Parte da #117 (issue #330): no dia 1 de cada mês, abre a issue que lembra de testar a
+# restauração da cópia de segurança do banco (docs/DEPLOY.md, "Cópia de segurança do banco",
+# seção 5). Quem faz o teste é o usuário, no próprio terminal; o workflow só abre o lembrete.
+# Usa o `gh` que já vem no runner: nenhuma ação de terceiros (DEC-136) nem checkout.
+on:
+  schedule:
+    # 12h UTC = 9h em São Paulo.
+    - cron: '0 12 1 * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  lembrete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Abrir a issue do mês
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          meses=(janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro)
+          mes=$(TZ=America/Sao_Paulo date +%-m)
+          ano=$(TZ=America/Sao_Paulo date +%Y)
+          titulo="Testar a restauração da cópia — ${meses[$((mes - 1))]}/${ano}"
+
+          # Rodar de novo no mesmo mês (ex.: à mão) não abre outra issue.
+          if gh issue list --state all --limit 50 --json title --jq '.[].title' | grep -Fxq "$titulo"; then
+            echo "A issue \"$titulo\" já existe."
+            exit 0
+          fi
+
+          roteiro="https://github.com/${GH_REPO}/blob/main/docs/DEPLOY.md#5-testar-a-restaura%C3%A7%C3%A3o-uma-vez-por-m%C3%AAs"
+          corpo=$(cat <<TEXTO
+          Lembrete mensal (#117): testar se a cópia de segurança do banco volta de verdade.
+
+          Roteiro: [DEPLOY, "Testar a restauração"](${roteiro}). Rode no seu terminal, fora da conversa com a IA.
+
+          - [ ] Baixar a cópia mais recente de \`daily/\` no R2 e conferir o SHA-256 com o log do Railway
+          - [ ] Restaurar no contêiner descartável e conferir as contagens
+          - [ ] Parar o contêiner (leva tudo embora)
+          - [ ] Fechar esta issue com um comentário: deu certo ou o que falhou
+
+          Não cole aqui nenhum dado do banco, chave ou senha: o repositório é público.
+          TEXTO
+          )
+          gh issue create --title "$titulo" --body "$corpo" --assignee "${{ github.repository_owner }}"
