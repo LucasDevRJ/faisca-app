@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_ACCESSIBILITY, type AccessibilitySettings } from '../features/profile/accessibility';
+import type { Action } from '../features/actions/actions-api';
 import { renderRoute } from '../test/render';
 import { fakeActivity, fakeAgenda, fakeSession, fakeThoughtRecord, fakeUser, loggedIn, server } from '../test/server';
 
@@ -126,33 +127,105 @@ describe('/conta/acessibilidade', () => {
 });
 
 describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
-  it('Linguagem direta troca expressões figuradas por textos literais em atividades e pensamentos', async () => {
+  it('Linguagem direta troca expressões figuradas por textos literais em atividades, pensamentos, ação, planos e tarefas', async () => {
     withAccessibility({ directLanguage: true });
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    let activities = [fakeActivity({ name: 'Leitura fictícia', activityDate: today, status: 'PLANEJADA' })];
+    const plannedAction: Action = {
+      id: '00000000-0000-4000-8000-0000000000b1',
+      name: 'Caminhada fictícia',
+      actionDate: today,
+      category: 'PRAZER',
+      status: 'PLANEJADA',
+      expectation: 5,
+      pleasure: null,
+      achievement: null,
+      observation: null,
+      evaluationEditableUntil: null,
+      photos: [],
+      photosDeadline: null,
+      photosOpen: false,
+      createdAt: '2026-09-20T12:00:00.000Z',
+      updatedAt: '2026-09-20T12:00:00.000Z',
+    };
+    let actions = [plannedAction];
     server.use(
-      http.get('*/api/activities', () =>
+      http.get('*/api/activities', () => HttpResponse.json({ activities })),
+      http.get('*/api/actions', () => HttpResponse.json({ actions })),
+      http.get('*/api/plans', () => HttpResponse.json({ plans: [] })),
+      http.get('*/api/tasks', () =>
         HttpResponse.json({
-          activities: [fakeActivity({ name: 'Leitura fictícia', activityDate: today, status: 'PLANEJADA' })],
+          tasks: [
+            {
+              id: '00000000-0000-4000-8000-0000000000a1',
+              title: 'Reflexão fictícia',
+              description: 'Observar momentos de calma.',
+              agreedWith: null,
+              agreedLinkId: null,
+              responseStatus: null,
+              responseText: null,
+              respondedAt: null,
+              responseDeadline: null,
+              responseEditable: true,
+              createdAt: '2026-09-20T12:00:00.000Z',
+              updatedAt: '2026-09-20T12:00:00.000Z',
+            },
+          ],
         }),
       ),
     );
 
     const user = userEvent.setup();
-    const { router } = renderRoute('/registros');
+    const { router, queryClient } = renderRoute('/registros');
 
     expect(await screen.findByRole('button', { name: 'Avaliar atividade' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Conta como foi?' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Criar um plano de ação' })).toBeInTheDocument();
+    expect(screen.queryByText(/Combinou um plano de ação/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Não aconteceu' }));
     const dialog = await screen.findByRole('dialog', { name: 'Registrar que não realizou' });
     expect(dialog).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
+    activities = [];
+    await queryClient.invalidateQueries({ queryKey: ['activities'] });
+    expect(await screen.findByText('Nenhuma atividade registrada nesta semana.')).toBeInTheDocument();
+
     await router.navigate('/pensamentos');
     expect(
       await screen.findByText(/Quando uma situação causar emoção ou pensamento forte/),
     ).toBeInTheDocument();
     expect(await screen.findByText(/Use "Novo registro" para anotar uma situação\./)).toBeInTheDocument();
+
+    await router.navigate('/pensamentos/novo');
+    expect(await screen.findByText('O que você pensou naquele momento?')).toBeInTheDocument();
+
+    await router.navigate('/acao');
+    expect(await screen.findByRole('button', { name: 'Avaliar ação' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Não realizada' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Não realizada' }));
+    const actionNotDoneDialog = await screen.findByRole('dialog', { name: 'Registrar que não realizou' });
+    await user.click(within(actionNotDoneDialog).getByRole('button', { name: 'Cancelar' }));
+
+    actions = [];
+    await queryClient.invalidateQueries({ queryKey: ['actions'] });
+    expect(await screen.findByText('Nenhuma ação registrada nesta semana.')).toBeInTheDocument();
+
+    await router.navigate('/planos');
+    expect(
+      await screen.findByText(
+        'Cada plano tem perguntas. Quando a situação do plano acontecer, faça um registro e responda às perguntas.',
+      ),
+    ).toBeInTheDocument();
+
+    await router.navigate('/tarefas');
+    await user.click(await screen.findByRole('button', { name: /Responder.*Reflexão fictícia/ }));
+    const taskDialog = await screen.findByRole('dialog', { name: 'Responder à tarefa' });
+    await user.click(within(taskDialog).getByRole('radio', { name: 'Não consegui fazer' }));
+    expect(within(taskDialog).getByLabelText('O que aconteceu?')).toBeInTheDocument();
+    await user.click(within(taskDialog).getByRole('radio', { name: 'Não faz sentido para mim agora' }));
+    expect(within(taskDialog).getByLabelText('Comentário')).toBeInTheDocument();
   });
 
   it('Sem pressão de tempo esconde contagem regressiva do ciclo, distância em dias e prazo de alternativa', async () => {
