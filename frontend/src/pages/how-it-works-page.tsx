@@ -226,6 +226,7 @@ export function HowItWorksPage() {
           <li><strong>Ciclo da consulta:</strong> para a psicóloga, organiza o período entre sessões quando a agenda está liberada.</li>
           <li><strong>Para ler:</strong> reúne registros que ainda não foram marcados como lidos ou que mudaram depois da leitura.</li>
           <li><strong>Mural:</strong> permite publicar avisos gerais para pacientes vinculados.</li>
+          <li><strong>Fale com a equipe:</strong> em Conta, permite enviar sugestões, relatar problemas, tirar dúvidas ou sugerir revisão de textos para a equipe do Faísca, sem incluir dados de pacientes.</li>
         </ul>
         <p>O Faísca não envia à profissional o texto de cada registro por e-mail ou push.</p>
       </Section>

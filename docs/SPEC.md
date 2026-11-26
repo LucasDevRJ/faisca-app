@@ -551,6 +551,13 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Sem notificação por enquanto: o push e o e-mail de lembrete (#32) ainda não existem. Quando
   entrarem, o aviso novo gera um texto neutro ("Você tem um aviso novo no Faísca"), com
   liga/desliga.
+- **Fale com a equipe** (DEC-142, #332): em **Conta**, quem tem o perfil de profissional encontra a
+  seção **Fale com a equipe**, que abre uma janela para enviar sugestões, relatar problemas, tirar
+  dúvidas ou revisar textos do app (10 a 2000 caracteres, até 5 envios por hora por conta). O topo
+  da janela traz o aviso fixo *"Não escreva nomes nem dados dos seus pacientes. Para falar de um
+  registro, descreva a tela, sem o conteúdo."* e informa o e-mail da conta onde a resposta chegará.
+  A mensagem vai por e-mail pelo Resend para `SUPPORT_EMAIL` (`suporte@minhafaisca.com.br`), com
+  `replyTo` da profissional, e não fica guardada no banco nem nos logs.
 
 ## Comunidade de apoio (DEC-113)
 - Uma psicóloga pode criar uma comunidade opcional. Só pacientes adultos com vínculo ativo de psicologia podem pedir entrada; a psicóloga aprova ou recusa. A pessoa confirma ter 18 anos ou mais e aceita as regras. A data de nascimento não é coletada.
@@ -568,7 +575,8 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
   As exceções não alteram registros clínicos: os dois pedidos que criam o vínculo (digitar o código e
   aceitar o convite, DEC-031), as marcas de leitura da própria terapeuta (DEC-057), a resposta dela
   ao pedido do "Lido para o paciente", que grava só a preferência dela no vínculo (DEC-117), os avisos do
-  mural dela (DEC-079) e as rotas próprias da Comunidade (DEC-113), que só leem ou alteram conteúdo
+  mural dela (DEC-079), o formulário "Fale com a equipe" em Conta (`POST /profile/team-contact`,
+  DEC-142, que só envia e-mail para o suporte sem guardar no banco) e as rotas próprias da Comunidade (DEC-113), que só leem ou alteram conteúdo
   publicado para esse grupo, mediante aceite específico de privacidade. A psicóloga pode moderar
   somente conteúdo de pacientes da própria comunidade, com 2FA ativo; conteúdo escrito por ela e
   denúncias correspondentes continuam com a plataforma. A moderação da plataforma exige e-mail

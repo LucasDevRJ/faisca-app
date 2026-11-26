@@ -3144,6 +3144,35 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a ativação em produção depende de validar o worker isolado, a remoção de
   mídias e a política de cópias e restauração do bucket. As fotos continuam usando o fluxo atual.
 
+## DEC-142 — "Fale com a equipe": formulário de contato da profissional por e-mail (#183, #332) (26/11/2026)
+
+- **Decisão:**
+  - em **Conta** (`/conta`), para quem tem o perfil de profissional (`therapist`), a seção
+    **Fale com a equipe** abre uma janela com formulário para enviar mensagem à equipe do Faísca;
+  - **aviso fixo em destaque no topo do formulário:** *"Não escreva nomes nem dados dos seus
+    pacientes. Para falar de um registro, descreva a tela, sem o conteúdo."*, e indicação de que a
+    resposta chega por e-mail no endereço da conta;
+  - **assuntos (`topic`):** `SUGESTAO` (*Sugestão*), `PROBLEMA` (*Problema*), `DUVIDA` (*Dúvida*) e
+    `REVISAO_TEXTOS` (*Revisão de textos*);
+  - **mensagem (`message`):** texto obrigatório de 10 a 2000 caracteres (com contador perto do
+    limite);
+  - **API:** `POST /profile/team-contact` exige `requireAuth` e `requireTherapist` (conta só de
+    paciente recebe `403 THERAPIST_PROFILE_REQUIRED`), com rate limit de **5 envios por hora por
+    conta** (`key: 'user'`);
+  - **sem gravar no banco:** a API envia o e-mail pelo Resend (`Mailer`) para `SUPPORT_EMAIL`
+    (padrão `suporte@minhafaisca.com.br`, Zoho Mail, DEC-093) com `replyTo` do e-mail da
+    profissional, nome e tipo (`Psicóloga` ou `Psiquiatra`), escapando HTML e removendo quebras de
+    linha do assunto;
+  - **logs e privacidade:** `message`, `topic`, `subject` e `replyTo` entram em `SENSITIVE_KEYS` do
+    pino (regra 7). O aviso de privacidade mantém a versão atual porque a `2026-11.3` (DEC-096) já
+    cobre as mensagens enviadas ao suporte e a caixa no Zoho Mail.
+- **Motivo:** organizar o retorno das psicólogas e psiquiatras (sugestões, problemas, dúvidas e
+  revisão de textos clínicos do app) num canal oficial dentro do Faísca, evitando que dados de
+  pacientes sejam enviados por engano (1ª etapa da #183).
+- **Limite conhecido:** a conversa segue por e-mail (não há histórico da troca dentro do app); o
+  mural da equipe para as profissionais (etapa B) e a conversa dentro do app (etapa C) ficam para as
+  próximas entregas da #183.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

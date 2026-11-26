@@ -25,7 +25,9 @@
   DEC-117), com a mesma cadeia e o aceite da área `readReceipts`, que só grava a preferência dela
   nas colunas `readReceipts*` do vínculo. A terceira são os
   avisos do mural dela (`POST`/`PATCH`/`DELETE /therapist/notices`, DEC-079), com sessão e perfil
-  de terapeuta: só gravam o próprio aviso (`TherapistNotice`), sem dado de paciente. A exceção em
+  de terapeuta: só gravam o próprio aviso (`TherapistNotice`), sem dado de paciente, e o formulário
+  "Fale com a equipe" (`POST /profile/team-contact`, DEC-142), que só envia e-mail para o suporte
+  sem gravar no banco. A exceção em
   `/therapist/patients` só cria um `Plan` sob o paciente e não permite editar planos existentes ou
   criar registros. Além das exceções descritas aqui, nada fora de
   `/therapist/patients/...` devolve dado de paciente além de nome, e-mail, o número de não lidos, o estado do pedido do

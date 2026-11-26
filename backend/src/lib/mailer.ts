@@ -6,6 +6,7 @@ export type EmailMessage = {
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
 };
 
 // Interface para os testes trocarem o Resend por um mailer em memória (FakeMailer).

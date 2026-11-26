@@ -55,7 +55,9 @@ Testes de API e E2E (rodar dentro de `tests/`; precisa do Postgres ligado):
    (`PUT`/`DELETE /therapist/read-marks/:patientId`, com vínculo ativo, DEC-057), a resposta dela ao
    pedido do paciente para ver essas marcas (`PUT /therapist/read-receipts/:patientId`, com vínculo
    ativo; grava só a preferência dela no vínculo, DEC-117), os avisos do mural
-   dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079) e **somente a
+   dela (`POST`/`PATCH`/`DELETE /therapist/notices`, só o próprio aviso, DEC-079), o contato dela com
+   a equipe do Faísca (`POST /profile/team-contact`, que só envia e-mail ao suporte sem gravar no
+   banco, DEC-142) e **somente a
    psicóloga** criando um plano para o paciente (`POST /therapist/patients/:patientId/plans`, DEC-102).
    As rotas específicas da Comunidade (DEC-113), fora de `/therapist/patients`, podem ler e alterar
    apenas conteúdo criado para o grupo e exigem aceite da área; a psicóloga responsável não ganha

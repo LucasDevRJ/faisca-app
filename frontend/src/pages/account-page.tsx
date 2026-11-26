@@ -12,6 +12,7 @@ import { ProfileSection } from '../features/profile/profile-section';
 import { MedicationSettingSection } from '../features/daily-check-ins/medication-setting-section';
 import { ProfessionalSection } from '../features/profile/professional-section';
 import { ShareFaiscaSection } from '../features/profile/share-faisca-section';
+import { TeamContactSection } from '../features/profile/team-contact-section';
 
 const settings: ReadonlyArray<{ path: string; title: string; description: string; patientExtra?: string }> = [
   { path: 'personalizacao', title: 'Personalização', description: 'Paleta e cor de destaque', patientExtra: 'organização do início' },
@@ -96,6 +97,9 @@ export function AccountPage() {
 
       {/* Tipo de profissional e conselho (DEC-099): só para quem acompanha pacientes. */}
       {user.profiles.therapist && <ProfessionalSection />}
+
+      {/* Canal direto com a equipe do Faísca (#332, DEC-142): só para quem acompanha pacientes. */}
+      {user.profiles.therapist && <TeamContactSection email={user.email} />}
 
       <ProfilesSection profiles={user.profiles} />
 

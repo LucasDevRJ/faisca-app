@@ -169,6 +169,9 @@ Na prática clínica tradicional:
   - Permite publicar avisos de até 2.000 caracteres para **todos os pacientes vinculados de uma só vez** (ex.: recesso de fim de ano, feriado, mudança na agenda).
   - É **de mão única e privado**: sem caixa de comentários, nenhum paciente sabe quem mais é paciente daquela psicóloga, e a psicóloga não vê lista de quem visualizou (evitando cobrança).
 
+- **Fale com a equipe (em Conta):**
+  - Canal direto para a psicóloga ou psiquiatra enviar sugestões, relatar problemas, tirar dúvidas ou sugerir revisão de textos do app para a equipe do Faísca, com aviso fixo para não incluir nomes nem dados de pacientes. A mensagem vai por e-mail para o suporte com resposta para o e-mail da profissional, sem ficar guardada no banco.
+
 ### 4.3. Para Todos (Personalização, Acessibilidade e Segurança da Conta)
 
 - **Compartilhar o Faísca:** em Conta, envie uma mensagem sobre o app e o link público do guia

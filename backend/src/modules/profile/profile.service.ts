@@ -1,8 +1,10 @@
 import type { Palette, ProfessionalKind, User } from '../../generated/prisma/client.js';
 import { AppError } from '../../errors/app-error.js';
 import { processImage } from '../../lib/images.js';
+import type { Mailer } from '../../lib/mailer.js';
 import { prisma } from '../../lib/prisma.js';
-import type { UpdateProfileInput } from './profile.schema.js';
+import { teamContactEmail } from './profile.emails.js';
+import type { TeamContactInput, UpdateProfileInput } from './profile.schema.js';
 
 // Perfil básico (DEC-061) e ajustes de acessibilidade (DEC-076): de paciente e de terapeuta.
 
@@ -70,7 +72,7 @@ export function avatarVersion(avatar: { updatedAt: Date } | null): string | null
   return avatar ? avatar.updatedAt.toISOString() : null;
 }
 
-export function createProfileService() {
+export function createProfileService(mailer?: Mailer) {
   return {
     async get(userId: string): Promise<PublicProfile> {
       const user = await prisma.user.findUniqueOrThrow({
@@ -168,6 +170,33 @@ export function createProfileService() {
         select: { therapistId: true },
       });
       return link?.therapistId ?? null;
+    },
+
+    // Envia mensagem da profissional para a equipe do Faísca por e-mail, sem gravar no banco (#332, DEC-142).
+    async sendTeamContact(userId: string, input: TeamContactInput): Promise<void> {
+      if (!mailer) throw new AppError(503, 'EMAIL_UNAVAILABLE', 'O envio de mensagens está temporariamente indisponível.');
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { name: true, email: true, hasTherapistProfile: true, professionalKind: true },
+      });
+      if (!user.hasTherapistProfile) throw notProfessional();
+      try {
+        await mailer.send(
+          teamContactEmail({
+            name: user.name,
+            email: user.email,
+            professionalKind: user.professionalKind,
+            topic: input.topic,
+            message: input.message,
+          }),
+        );
+      } catch {
+        throw new AppError(
+          502,
+          'EMAIL_SEND_FAILED',
+          'Não foi possível enviar a mensagem agora. Tente de novo daqui a alguns minutos.',
+        );
+      }
     },
   };
 }

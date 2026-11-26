@@ -2,7 +2,7 @@ import type { RequestHandler, Response } from 'express';
 import { AppError } from '../../errors/app-error.js';
 import { getAuthUser } from '../../middlewares/require-auth.js';
 import { linkIdSchema } from '../links/links.schema.js';
-import { updateProfileSchema } from './profile.schema.js';
+import { teamContactSchema, updateProfileSchema } from './profile.schema.js';
 import type { Avatar, ProfileService } from './profile.service.js';
 
 function noAvatar() {
@@ -62,7 +62,15 @@ export function createProfileController(service: ProfileService) {
     sendAvatar(res, await service.avatarOf(String(req.params.patientId)));
   };
 
-  return { get, update, putAvatar, deleteAvatar, ownAvatar, therapistAvatar, patientAvatar };
+  // ——— Contato da profissional com a equipe do Faísca (#332, DEC-142) ———
+
+  const sendTeamContact: RequestHandler = async (req, res) => {
+    const input = teamContactSchema.parse(req.body);
+    await service.sendTeamContact(getAuthUser(req).id, input);
+    res.status(204).end();
+  };
+
+  return { get, update, putAvatar, deleteAvatar, ownAvatar, therapistAvatar, patientAvatar, sendTeamContact };
 }
 
 export type ProfileController = ReturnType<typeof createProfileController>;

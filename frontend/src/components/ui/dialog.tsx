@@ -90,10 +90,12 @@ export function DialogForm({
 // Cancelar e o botão de envio, no rodapé fixo.
 export function DialogActions({
   submitLabel,
+  pendingLabel = 'Salvando…',
   pending,
   onCancel,
 }: {
   submitLabel: string;
+  pendingLabel?: string;
   pending: boolean;
   onCancel: () => void;
 }) {
@@ -103,7 +105,7 @@ export function DialogActions({
         Cancelar
       </Button>
       <Button type="submit" disabled={pending}>
-        {pending ? 'Salvando…' : submitLabel}
+        {pending ? pendingLabel : submitLabel}
       </Button>
     </DialogFooter>
   );

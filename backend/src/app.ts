@@ -104,7 +104,7 @@ export function createApp({
   app.use(createMessagesRoutes(mailer, pushSender, runAfterResponse));
   app.use(createSummaryRoutes());
   app.use(createLinksRoutes(mailer));
-  app.use(createProfileRoutes());
+  app.use(createProfileRoutes(mailer));
   app.use(createRemindersRoutes(mailer, pushSender));
   app.use(createTherapistRoutes(actionVideos));
   // Marcas de leitura da terapeuta (DEC-057), num prefixo próprio, fora do só leitura.

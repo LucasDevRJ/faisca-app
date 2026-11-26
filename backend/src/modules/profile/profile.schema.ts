@@ -57,3 +57,21 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 // pelo conteúdo, no service; o Content-Type só decide se o corpo é lido como imagem.
 export const AVATAR_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const AVATAR_MAX_BYTES = '5mb';
+
+// Contato da profissional com a equipe do Faísca (#332, DEC-142). A mensagem segue por e-mail
+// para o suporte e não é guardada no banco.
+export const TEAM_CONTACT_TOPICS = ['SUGESTAO', 'PROBLEMA', 'DUVIDA', 'REVISAO_TEXTOS'] as const;
+export type TeamContactTopic = (typeof TEAM_CONTACT_TOPICS)[number];
+export const TEAM_CONTACT_MESSAGE_MIN = 10;
+export const TEAM_CONTACT_MESSAGE_MAX = 2000;
+
+export const teamContactSchema = z.strictObject({
+  topic: z.enum(TEAM_CONTACT_TOPICS, { error: 'Escolha o assunto da mensagem.' }),
+  message: z
+    .string({ error: 'Escreva a sua mensagem.' })
+    .trim()
+    .min(TEAM_CONTACT_MESSAGE_MIN, `Escreva pelo menos ${TEAM_CONTACT_MESSAGE_MIN} caracteres.`)
+    .max(TEAM_CONTACT_MESSAGE_MAX, `A mensagem pode ter até ${TEAM_CONTACT_MESSAGE_MAX} caracteres.`),
+});
+
+export type TeamContactInput = z.infer<typeof teamContactSchema>;

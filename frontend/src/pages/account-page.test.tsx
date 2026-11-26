@@ -446,3 +446,83 @@ describe('/conta: excluir conta, pausa em vez de excluir (DEC-078)', () => {
     expect(dialog).toHaveTextContent('Se quiser só dar um tempo, desfaça o vínculo em Conta');
   });
 });
+
+describe('/conta: fale com a equipe (#332, DEC-142)', () => {
+  const therapistUser = { ...fakeUser, email: 'tereza@faisca.test', profiles: { patient: false, therapist: true } };
+
+  it('não aparece para quem é só paciente', async () => {
+    renderRoute('/conta');
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Conta' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Fale com a equipe' })).not.toBeInTheDocument();
+  });
+
+  it('mostra o aviso fixo, valida campos, envia a mensagem da profissional e confirma na tela', async () => {
+    const user = userEvent.setup();
+    const sent: unknown[] = [];
+    server.use(
+      http.get('*/api/auth/me', () => HttpResponse.json({ user: therapistUser })),
+      http.post('*/api/profile/team-contact', async ({ request }) => {
+        sent.push(await request.json());
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderRoute('/conta');
+
+    const section = await screen.findByRole('region', { name: 'Fale com a equipe' });
+    const openBtn = within(section).getByRole('button', { name: 'Escrever para a equipe' });
+    await user.click(openBtn);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Fale com a equipe' });
+    expect(dialog).toHaveTextContent(
+      'Não escreva nomes nem dados dos seus pacientes. Para falar de um registro, descreva a tela, sem o conteúdo.',
+    );
+    expect(dialog).toHaveTextContent('A resposta vai por e-mail para tereza@faisca.test.');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Enviar mensagem' }));
+    expect(within(dialog).getByText('Escolha o assunto da mensagem.')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Sua mensagem')).toHaveAccessibleDescription(
+      'Escreva pelo menos 10 caracteres.',
+    );
+    expect(sent).toHaveLength(0);
+
+    await user.click(within(dialog).getByRole('radio', { name: 'Revisão de textos' }));
+    await user.type(within(dialog).getByLabelText('Sua mensagem'), 'Gostaria de sugerir um ajuste no texto dos planos.');
+    await user.click(within(dialog).getByRole('button', { name: 'Enviar mensagem' }));
+
+    expect(sent).toEqual([
+      {
+        topic: 'REVISAO_TEXTOS',
+        message: 'Gostaria de sugerir um ajuste no texto dos planos.',
+      },
+    ]);
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(within(section).getByRole('status')).toHaveTextContent(
+      'Mensagem enviada. A equipe responderá por e-mail em tereza@faisca.test.',
+    );
+    expect(openBtn).toHaveFocus();
+  });
+
+  it('mostra erro da API quando o envio falha', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get('*/api/auth/me', () => HttpResponse.json({ user: therapistUser })),
+      http.post('*/api/profile/team-contact', () =>
+        apiError(502, 'EMAIL_SEND_FAILED', 'Não foi possível enviar a mensagem agora. Tente de novo daqui a alguns minutos.'),
+      ),
+    );
+    renderRoute('/conta');
+
+    const section = await screen.findByRole('region', { name: 'Fale com a equipe' });
+    await user.click(within(section).getByRole('button', { name: 'Escrever para a equipe' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Fale com a equipe' });
+
+    await user.click(within(dialog).getByRole('radio', { name: 'Problema' }));
+    await user.type(within(dialog).getByLabelText('Sua mensagem'), 'O botão de carregar mais não respondeu.');
+    await user.click(within(dialog).getByRole('button', { name: 'Enviar mensagem' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'Não foi possível enviar a mensagem agora. Tente de novo daqui a alguns minutos.',
+    );
+  });
+});

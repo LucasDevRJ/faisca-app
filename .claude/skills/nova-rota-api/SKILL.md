@@ -23,8 +23,10 @@ em caso de dúvida, eles prevalecem sobre esta skill.
   escritas permitidas são os POSTs que criam o vínculo (DEC-031), as marcas de leitura dela em
   `/therapist/read-marks` (DEC-057, `src/modules/read-marks/`), que não tocam no registro, a resposta
   dela ao pedido do paciente para ver essas marcas em `/therapist/read-receipts` (DEC-117,
-  `src/modules/read-receipts/`), que só grava a preferência dela no vínculo, e os avisos
-  do mural dela em `/therapist/notices` (DEC-079, `src/modules/notices/`), que são conteúdo dela.
+  `src/modules/read-receipts/`), que só grava a preferência dela no vínculo, os avisos
+  do mural dela em `/therapist/notices` (DEC-079, `src/modules/notices/`), que são conteúdo dela,
+  e o contato dela com a equipe em `POST /profile/team-contact` (DEC-142, `src/modules/profile/`),
+  que só envia e-mail ao suporte sem gravar no banco.
   Qualquer outra escrita exige decisão explícita e alteração desta regra.
 - Exceção isolada da Comunidade (DEC-113): rotas fora de `/therapist/patients` podem acessar ou
   alterar apenas conteúdo publicado para aquela comunidade, nunca registros clínicos. A psicóloga
