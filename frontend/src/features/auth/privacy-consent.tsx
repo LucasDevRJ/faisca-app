@@ -17,6 +17,7 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   appointmentSchedule: 'a agenda de consultas',
   actions: 'a Ação',
   actionPhotos: 'as fotos da Ação',
+  actionVideos: 'os vídeos da Ação',
   aboutMe: 'o “Sobre mim”',
   plans: 'o Meus Planos',
   activityPhotos: 'as fotos das atividades',
@@ -94,6 +95,16 @@ const CONSENT_TEXT: Record<PrivacyArea, { patient: ConsentCopy; therapist: Conse
     therapist: {
       intro: 'Para ver as fotos das ações dos seus pacientes, leia o que mudou e confirme.',
       scope: 'inclusive com o acesso às fotos das ações dos meus pacientes como dados de saúde.',
+    },
+  },
+  actionVideos: {
+    patient: {
+      intro: 'Para anexar vídeos às suas ações, leia o que mudou e confirme.',
+      scope: 'inclusive com o armazenamento dos vídeos que eu anexar às minhas ações como dados de saúde.',
+    },
+    therapist: {
+      intro: 'Para assistir aos vídeos que seus pacientes liberarem, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso aos vídeos das ações que meus pacientes liberarem.',
     },
   },
   // Fotos das atividades (DEC-103, DEC-104): as fotos que o paciente adiciona a uma atividade.
@@ -310,6 +321,7 @@ export function PrivacyUpdateBanner({ gatedArea }: { gatedArea?: PrivacyArea }) 
   // um app desatualizado não conhece a área nova e mostraria o aceite de uma versão sem área nova,
   // com um texto que não é o da versão atual.
   const missing = Object.entries(user.privacyAreas)
+    .filter(([area]) => area !== 'actionVideos' || import.meta.env.VITE_ACTION_VIDEOS_ENABLED === 'true')
     .filter(([, allowed]) => !allowed)
     .map(([area]) => area);
   if (missing.some((area) => !(area in AREA_NAME))) {

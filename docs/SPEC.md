@@ -269,6 +269,11 @@ Ações que a pessoa escolhe fazer no ciclo, de três tipos, independentes das a
   marcada, sem prazo). As fotos pedem o aceite da versão do aviso que as cita. No cartão, as fotos
   aparecem como miniaturas e abrem maiores ao tocar, com anterior e próxima (DEC-065); a terapeuta
   só vê.
+- **Vídeo curto na Ação (#143, DEC-140):** um vídeo opcional por ação avaliada, em MP4 ou MOV, de
+  até 60 segundos e 100 MB. O envio e a remoção seguem o prazo das fotos. A opção de manter o áudio
+  começa ligada. A conversão produz MP4 sem metadados de origem e sem faixa de áudio quando a pessoa
+  desliga a opção. O paciente libera **Vídeos da Ação** por profissional, além da área **Ação**.
+  A reprodução passa pela API, que verifica o vínculo, as áreas e os aceites das duas contas.
 - A aba **Ação** fica ao lado de Atividades, Pensamentos e Tensão (no celular, as quatro em grade
   2×2), com a explicação dos três tipos, a meta do ciclo, os dias com ação, o cartão com a
   expectativa ao lado do resultado ("Esperava 3 · Prazer 7 · Realização 6") e um gráfico de

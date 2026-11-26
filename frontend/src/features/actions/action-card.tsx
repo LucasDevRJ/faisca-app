@@ -6,6 +6,8 @@ import { LongText } from '../../components/ui/long-text';
 import { formatDateTime } from '../links/link-format';
 import { useAccessibility } from '../profile/use-profile';
 import { ActionPhotos } from './action-photos';
+import { ActionVideo } from './action-video';
+import { ACTION_VIDEOS_ENABLED } from './action-video-api';
 import { CATEGORY_TEXT, SCORE_TEXT } from './action-labels';
 import type { Action } from './actions-api';
 import { useActionCorrectionOpen } from './use-actions';
@@ -81,6 +83,10 @@ export function ActionCard(props: ActionCardProps) {
         action={action}
         viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
       />
+      {ACTION_VIDEOS_ENABLED && action.status === 'AVALIADA' && (
+        <ActionVideo actionId={action.id} patientId={props.readOnly ? props.patientId : undefined}
+          canChange={!props.readOnly && action.photosOpen} />
+      )}
 
       {props.readOnly && <p className="text-sm text-muted">Registrado em {formatDateTime(action.createdAt)}</p>}
       {props.readOnly && props.footer}

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
+import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 
 // Aviso de privacidade (SPEC, "Privacidade"; DEC-036). Pública: abre com ou sem sessão, pelo
 // link do cadastro, da tela de entrar, do rodapé do app e de Conta.
@@ -43,7 +44,8 @@ import { ThemeSwitcher } from '../components/theme-switcher';
 // em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
 // e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
 // "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
-const VERSION_LABEL = 'versão 19, de novembro de 2026';
+const SHOW_ACTION_VIDEOS_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.14';
+const VERSION_LABEL = SHOW_ACTION_VIDEOS_NOTICE ? 'versão de 25 de novembro de 2026' : 'versão 19, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -106,6 +108,12 @@ export function PrivacyPage() {
               Antes de guardar, tiramos os dados escondidos da foto, como o lugar onde ela foi tirada, e
               diminuímos o tamanho. Se aparecerem outras pessoas, confira se elas estão de acordo.
             </li>
+            {SHOW_ACTION_VIDEOS_NOTICE && <li>
+              Nos vídeos da Ação: o vídeo curto que você escolher anexar a uma ação avaliada. O som é mantido
+              por padrão e você pode tirá-lo da versão final antes de enviar. O original é guardado durante a
+              conversão. Retiramos metadados de origem, como a localização, da versão final. Confira se quem
+              aparece ou tem a voz gravada está de acordo.
+            </li>}
             <li>
               Nas fotos das atividades: as fotos que você escolher adicionar a uma atividade, até 10 por
               atividade, enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta.
@@ -251,6 +259,11 @@ export function PrivacyPage() {
             cópias de segurança ficam no Cloudflare R2, também <strong>fora do Brasil</strong>. As mensagens enviadas
             ao suporte ficam no Zoho Mail, nos <strong>Estados Unidos</strong>.
           </p>
+          {SHOW_ACTION_VIDEOS_NOTICE && <p>
+            Quando o recurso de vídeo está disponível, os vídeos da Ação ficam em armazenamento privado
+            no Cloudflare R2. A profissional vinculada pode assistir se você liberar a Ação e os vídeos, e
+            ambas as contas aceitarem o aviso que inclui essa área.
+          </p>}
         </Section>
 
         <Section title="Como protegemos">
@@ -271,6 +284,10 @@ export function PrivacyPage() {
             ou de concluir a atividade (numa atividade que não aconteceu, a qualquer hora), e segue o mesmo
             prazo nas cópias.
           </p>
+          {SHOW_ACTION_VIDEOS_NOTICE && <p>
+            O vídeo deixa de estar acessível quando você o remove ou exclui a conta. O app agenda a
+            remoção do arquivo armazenado. Depois da conversão, o app remove o original.
+          </p>}
         </Section>
 
         <Section title="Seus direitos (LGPD)">

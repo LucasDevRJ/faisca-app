@@ -9,6 +9,7 @@ const AREA_NAMES: Record<PrivacyArea, string> = {
   appointmentSchedule: 'a agenda de consultas',
   actions: 'a Ação',
   actionPhotos: 'as fotos da Ação',
+  actionVideos: 'os vídeos da Ação',
   aboutMe: 'o "Sobre mim"',
   tasks: 'as Tarefas',
   plans: 'o Meus Planos',

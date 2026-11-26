@@ -21,11 +21,15 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
+    "media:check-storage": "tsx --env-file-if-exists=.env scripts/check-private-files.ts",
+    "media:check-video": "tsx scripts/check-action-video.ts",
+    "media:worker": "tsx --env-file-if-exists=.env scripts/action-video-worker.ts",
     "db:seed-dev": "tsx --env-file-if-exists=.env scripts/seed-dev.ts",
     "2fa:disable": "tsx --env-file-if-exists=.env scripts/disable-two-factor.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1178.0",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "bcryptjs": "^3.0.3",

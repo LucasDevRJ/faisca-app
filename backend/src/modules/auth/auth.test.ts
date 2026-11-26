@@ -851,6 +851,7 @@ describe('POST /auth/accept-privacy (novo aceite, DEC-039)', () => {
         { ...none, thoughtRecords: true, tensionEpisodes: true, appointmentSchedule: true, actions: true, actionPhotos: true, aboutMe: true, plans: true, activityPhotos: true, tasks: true, sleepMood: true, medication: true, community: true, medications: true, readReceipts: true },
       ],
       ['2026-11.11', Object.fromEntries(Object.keys(none).map((key) => [key, true]))],
+      ['2026-11.14', Object.fromEntries(Object.keys(none).map((key) => [key, true]))],
       // Versão que não está na lista não libera nada.
       ['2099-01', none],
     ] as const) {

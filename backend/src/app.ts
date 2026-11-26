@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import { env } from './config/env.js';
 import { runDetached, type RunAfterResponse } from './lib/background.js';
 import { logger } from './lib/logger.js';
+import { createPrivateFileStore, readPrivateFileStorageConfig } from './lib/private-file-store.js';
+import type { ActionVideoProcessingStore } from './lib/action-video-processing.js';
 import { createResendMailer, type Mailer } from './lib/mailer.js';
 import { createWebPushSender, type PushSender } from './lib/web-push.js';
 import { errorHandler } from './middlewares/error-handler.js';
@@ -20,6 +22,7 @@ import { createAboutMeRoutes } from './modules/about-me/about-me.routes.js';
 import { createPlansRoutes } from './modules/plans/plans.routes.js';
 import { createSummaryRoutes } from './modules/summary/summary.routes.js';
 import { createActionsRoutes } from './modules/actions/actions.routes.js';
+import { createActionVideosService } from './modules/actions/action-videos.service.js';
 import { createTherapistRoutes } from './modules/therapist/therapist.routes.js';
 import { createNoticesRoutes } from './modules/notices/notices.routes.js';
 import { createReadMarksRoutes } from './modules/read-marks/read-marks.routes.js';
@@ -41,6 +44,7 @@ export type AppDependencies = {
   pushSender?: PushSender;
   // Os testes que leem o e-mail logo depois da requisição rodam o trabalho antes de responder (DEC-073).
   runAfterResponse?: RunAfterResponse;
+  actionVideoStorage?: ActionVideoProcessingStore;
 };
 
 // O app fica separado do server.ts para os testes usarem o Supertest sem abrir porta.
@@ -48,8 +52,12 @@ export function createApp({
   mailer = createResendMailer(),
   pushSender = createWebPushSender(),
   runAfterResponse = runDetached,
+  actionVideoStorage = env.ACTION_VIDEOS_ENABLED === 'true'
+    ? createPrivateFileStore(readPrivateFileStorageConfig(process.env))
+    : undefined,
 }: AppDependencies = {}) {
   const app = express();
+  const actionVideos = actionVideoStorage ? createActionVideosService(actionVideoStorage) : undefined;
 
   // Número de proxies na frente da API (DEC-023). Mantém req.ip, usado no rate limit,
   // com o IP real de quem fez a requisição.
@@ -84,7 +92,7 @@ export function createApp({
   app.use(createAppointmentsRoutes());
   app.use(createThoughtRecordsRoutes());
   app.use(createTensionEpisodesRoutes());
-  app.use(createActionsRoutes());
+  app.use(createActionsRoutes(actionVideos));
   app.use(createAboutMeRoutes());
   app.use(createPlansRoutes());
   app.use(createTasksRoutes());
@@ -98,7 +106,7 @@ export function createApp({
   app.use(createLinksRoutes(mailer));
   app.use(createProfileRoutes());
   app.use(createRemindersRoutes(mailer, pushSender));
-  app.use(createTherapistRoutes());
+  app.use(createTherapistRoutes(actionVideos));
   // Marcas de leitura da terapeuta (DEC-057), num prefixo próprio, fora do só leitura.
   app.use(createReadMarksRoutes());
   app.use(createReadReceiptsRoutes());
