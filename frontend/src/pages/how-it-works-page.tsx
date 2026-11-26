@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
+import { ACTION_VIDEOS_ENABLED } from '../features/actions/action-video-api';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
@@ -176,6 +177,19 @@ export function HowItWorksPage() {
         <RecordGuide id="acao" title="Ação" clinical>
           <p>Planeje uma ação de prazer, conexão ou realização e, depois, compare o que esperava com o que sentiu.</p>
           <p><strong>Quem vê:</strong> você e as profissionais a quem liberar Ação. Você pode corrigir a avaliação até o fim do dia em que contou como foi.</p>
+          {ACTION_VIDEOS_ENABLED && (
+            <>
+              <p>
+                Em uma ação avaliada, toque em <strong>Adicionar vídeo</strong>. Você pode anexar um MP4 ou MOV de até
+                60 segundos e 100 MB e escolher se mantém o áudio. O envio e a remoção ficam disponíveis até a
+                hora da próxima consulta depois da avaliação. Sem consulta marcada, continuam disponíveis.
+              </p>
+              <p>
+                A profissional vê o vídeo se o vínculo estiver ativo, você liberar <strong>Ação</strong> e
+                <strong> Vídeos da Ação</strong> e as duas contas tiverem aceitado o aviso de privacidade que inclui vídeos.
+              </p>
+            </>
+          )}
         </RecordGuide>
         <RecordGuide id="agenda" title="Consultas e ciclo da consulta" clinical>
           <p>Cadastre sua agenda para organizar o período entre sessões. O ciclo agrupa registros para você e sua psicóloga retomarem o que aconteceu nesse intervalo.</p>
