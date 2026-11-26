@@ -5,6 +5,7 @@ import type { SharedArea } from '../generated/prisma/client.js';
 export const SHARED_AREAS = [
   'ACTIVITIES',
   'ACTIVITY_PHOTOS',
+  'ACTIVITY_VIDEOS',
   'THOUGHT_RECORDS',
   'TENSION_EPISODES',
   'ACTIONS',

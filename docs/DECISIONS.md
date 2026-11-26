@@ -3144,6 +3144,17 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a ativação em produção depende de validar o worker isolado, a remoção de
   mídias e a política de cópias e restauração do bucket. As fotos continuam usando o fluxo atual.
 
+## DEC-143 — Vídeo e GIF nas Atividades (#331)
+
+- **Decisão:** Atividades é a primeira área da expansão. Aceita um MP4, MOV ou GIF opcional por
+  registro, até 60 segundos e 100 MB, no mesmo prazo dos anexos de fotos. A profissional tem
+  permissão própria e precisa, assim como o paciente, aceitar a versão `2026-11.15`. O GIF é
+  convertido para MP4 sem áudio, com reprodução manual. O vídeo mantém a escolha de áudio da Ação.
+  A fila, o armazenamento e a cópia criptografada são compartilhados com a Ação.
+- **Motivo:** guardar como foi uma atividade com o mesmo fluxo de anexos que a pessoa já conhece.
+- **Limite conhecido:** a etapa cobre Atividades. A ativação exige atualizar a API, o worker e o
+  serviço de cópia antes de publicar a tela, com as opções novas inicialmente desligadas.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

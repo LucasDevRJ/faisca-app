@@ -218,6 +218,9 @@ Na prática clínica tradicional:
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
 
+**Em desenvolvimento — Vídeos e GIFs nas Atividades (#331):** um anexo opcional por atividade,
+com acesso controlado pelas permissões de Atividades e de vídeo e GIF. O GIF toca sob demanda.
+
 **Em desenvolvimento — Busca nos registros (#152):** paciente e psicóloga poderão localizar registros
 por texto, período e filtros. Para a psicóloga, os resultados respeitam vínculo, áreas compartilhadas
 e aceites de privacidade; o termo não é guardado no histórico nem enviado pela URL. Ainda não publicado.

@@ -87,6 +87,33 @@ describe('fila de vídeo da Ação', () => {
     expect(store.delete.mock.calls).toEqual([[actionVideoSourceKey(job.id)], [outputKey]]);
     expect(await prisma.actionVideo.findUnique({ where: { id: job.id } })).toBeNull();
   });
+
+  it('processa GIF da atividade, preserva a saída e a apaga ao excluir o registro', async () => {
+    const user = await createConfirmedUser();
+    const activity = await prisma.activity.create({ data: {
+      userId: user.id, activityDate: new Date('2026-10-01'),
+      name: 'Atividade fictícia com GIF', status: 'PLANEJADA',
+    } });
+    const job = await prisma.actionVideo.create({ data: {
+      activityId: activity.id, state: 'PENDING', keepAudio: false, isGif: true,
+    } });
+    const convert = vi.fn(async () => {});
+    const worker = createActionVideoWorker(prisma, store, convert);
+    await worker.runOnce();
+    const ready = await prisma.actionVideo.findUniqueOrThrow({ where: { id: job.id } });
+    expect(ready.state).toBe('READY');
+    const sourceKey = actionVideoSourceKey(job.id);
+    const outputKey = actionVideoOutputKey(job.id, ready.outputVersion!);
+    expect(convert).toHaveBeenCalledExactlyOnceWith(store, { sourceKey, outputKey, keepAudio: false, isGif: true });
+    store.list.mockReturnValueOnce(listKeys(outputKey));
+    await worker.runOnce();
+    expect(store.delete).toHaveBeenCalledExactlyOnceWith(sourceKey);
+    await prisma.activity.delete({ where: { id: activity.id } });
+    store.list.mockReturnValueOnce(listKeys(outputKey));
+    await worker.runOnce();
+    expect(store.delete).toHaveBeenLastCalledWith(outputKey);
+    expect(await prisma.actionVideo.findUnique({ where: { id: job.id } })).toBeNull();
+  });
 });
 
 describe('envio de vídeo da Ação', () => {

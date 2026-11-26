@@ -14,6 +14,7 @@ const AREA_NAMES: Record<PrivacyArea, string> = {
   tasks: 'as Tarefas',
   plans: 'o Meus Planos',
   activityPhotos: 'as fotos das atividades',
+  activityVideos: 'os vídeos e GIFs das atividades',
   sleepMood: 'o Sono e humor',
   medication: 'o Remédio',
   community: 'a Comunidade',

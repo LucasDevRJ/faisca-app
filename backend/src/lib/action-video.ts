@@ -8,6 +8,7 @@ const run = promisify(execFile);
 export const ACTION_VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 const maxSeconds = 60;
 const movInput = ['-protocol_whitelist', 'file', '-f', 'mov', '-enable_drefs', '0', '-use_absolute_path', '0'];
+const gifInput = ['-protocol_whitelist', 'file', '-f', 'gif', '-ignore_loop', '1'];
 // As ferramentas de mídia recebem apenas as variáveis necessárias para serem localizadas.
 const toolEnv = { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, WINDIR: process.env.WINDIR };
 const probeResult = z.object({
@@ -18,7 +19,7 @@ const probeResult = z.object({
   })).length(1),
 });
 
-async function validateVideo(input: string) {
+async function validateVideo(input: string, isGif: boolean) {
   const info = await stat(input);
   if (!info.isFile() || info.size === 0 || info.size > ACTION_VIDEO_MAX_BYTES) {
     throw new Error('Envie um vídeo de até 100 MB.');
@@ -26,12 +27,15 @@ async function validateVideo(input: string) {
 
   try {
     const { stdout } = await run('ffprobe', [
-      '-v', 'error', ...movInput, '-select_streams', 'V:0',
+      '-v', 'error', ...(isGif ? gifInput : movInput), '-select_streams', 'V:0',
       '-show_entries', 'format=duration:stream=width,height', '-of', 'json', '-i', input,
     ], { timeout: 10_000, maxBuffer: 32_768, windowsHide: true, env: toolEnv });
-    probeResult.parse(JSON.parse(stdout));
+    const result = probeResult.parse(JSON.parse(stdout));
+    if (isGif && result.streams.some(({ width, height }) => width > 4096 || height > 4096)) {
+      throw new Error('Dimensões do GIF excedidas.');
+    }
   } catch {
-    throw new Error('Envie um vídeo MP4 ou MOV válido de até 60 segundos.');
+    throw new Error(isGif ? 'Envie um GIF válido de até 60 segundos.' : 'Envie um vídeo MP4 ou MOV válido de até 60 segundos.');
   }
 }
 
@@ -40,18 +44,18 @@ async function validateVideo(input: string) {
 export async function convertActionVideo(
   inputPath: string,
   outputPath: string,
-  { keepAudio = true }: { keepAudio?: boolean } = {},
+  { keepAudio = true, isGif = false }: { keepAudio?: boolean; isGif?: boolean } = {},
 ) {
   const input = resolve(inputPath);
   const output = resolve(outputPath);
-  await validateVideo(input);
+  await validateVideo(input, isGif);
 
-  const audio = keepAudio ? ['-map', '0:a:0?', '-c:a', 'aac', '-b:a', '128k'] : ['-an'];
+  const audio = keepAudio && !isGif ? ['-map', '0:a:0?', '-c:a', 'aac', '-b:a', '128k'] : ['-an'];
   const scale = "scale=w='if(gte(iw,ih),min(iw,1280),min(iw,720))':h='if(gte(iw,ih),min(ih,720),min(ih,1280))':force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1";
   try {
     await run('ffmpeg', [
       '-nostdin', '-v', 'error', '-xerror', '-n',
-      '-threads', '2', ...movInput, '-i', input,
+      '-threads', '2', ...(isGif ? gifInput : movInput), '-i', input,
       '-map', '0:V:0', ...audio, '-sn', '-dn', '-map_metadata:g', '-1', '-map_metadata:s', '-1', '-map_chapters', '-1',
       '-vf', scale, '-fpsmax', '30', '-t', String(maxSeconds),
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'fast', '-crf', '23',

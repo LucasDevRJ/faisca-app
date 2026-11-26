@@ -11,6 +11,7 @@ export const SHARED_AREAS = [
   'ACTIVITIES',
   // Fotos das atividades (DEC-103, DEC-104): logo depois das atividades, como na API.
   'ACTIVITY_PHOTOS',
+  'ACTIVITY_VIDEOS',
   'THOUGHT_RECORDS',
   'TENSION_EPISODES',
   'ACTIONS',

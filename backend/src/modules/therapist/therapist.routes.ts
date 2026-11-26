@@ -48,7 +48,10 @@ const requirePsychologistForPlanCreation: RequestHandler = (_req, res, next) => 
   next();
 };
 
-export function createTherapistRoutes(actionVideos?: ReturnType<typeof createActionVideosService>) {
+export function createTherapistRoutes(
+  actionVideos?: ReturnType<typeof createActionVideosService>,
+  activityVideos?: ReturnType<typeof createActionVideosService>,
+) {
   const activities = createActivitiesService();
   const thoughtRecords = createThoughtRecordsService();
   const tensionEpisodes = createTensionEpisodesService();
@@ -131,6 +134,16 @@ export function createTherapistRoutes(actionVideos?: ReturnType<typeof createAct
     requirePrivacy('activityPhotos'),
     createActivitiesController(activities).therapistPhoto,
   );
+  if (activityVideos) {
+    const video = createActionVideosController(activityVideos, 'activityId');
+    const access = [
+      requireSharedArea('ACTIVITIES', 'ACTIVITY_VIDEOS'),
+      requirePrivacy('activityVideos'),
+      requirePatientPrivacy('activityVideos'),
+    ];
+    router.get(`${PREFIX}/activities/:activityId/video`, ...access, video.professionalStatus);
+    router.get(`${PREFIX}/activities/:activityId/video/play`, ...access, video.professionalPlayback);
+  }
   // "Sobre mim" do paciente (DEC-081): também pede o aceite da versão do aviso que o cita.
   router.get(`${PREFIX}/about-me`, requireSharedArea('ABOUT_ME'), requirePrivacy('aboutMe'), controller.aboutMe);
   // Meus Planos (DEC-094): os planos e os registros de cada um, com o aceite da versão que os cita.

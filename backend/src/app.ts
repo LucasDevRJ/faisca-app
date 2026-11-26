@@ -45,6 +45,7 @@ export type AppDependencies = {
   // Os testes que leem o e-mail logo depois da requisição rodam o trabalho antes de responder (DEC-073).
   runAfterResponse?: RunAfterResponse;
   actionVideoStorage?: ActionVideoProcessingStore;
+  activityVideoStorage?: ActionVideoProcessingStore;
 };
 
 // O app fica separado do server.ts para os testes usarem o Supertest sem abrir porta.
@@ -55,9 +56,13 @@ export function createApp({
   actionVideoStorage = env.ACTION_VIDEOS_ENABLED === 'true'
     ? createPrivateFileStore(readPrivateFileStorageConfig(process.env))
     : undefined,
+  activityVideoStorage = env.ACTIVITY_VIDEOS_ENABLED === 'true'
+    ? actionVideoStorage ?? createPrivateFileStore(readPrivateFileStorageConfig(process.env))
+    : undefined,
 }: AppDependencies = {}) {
   const app = express();
   const actionVideos = actionVideoStorage ? createActionVideosService(actionVideoStorage) : undefined;
+  const activityVideos = activityVideoStorage ? createActionVideosService(activityVideoStorage, 'activity') : undefined;
 
   // Número de proxies na frente da API (DEC-023). Mantém req.ip, usado no rate limit,
   // com o IP real de quem fez a requisição.
@@ -88,7 +93,7 @@ export function createApp({
 
   app.use(healthRoutes);
   app.use(createAuthRoutes(mailer, runAfterResponse, pushSender));
-  app.use(createActivitiesRoutes());
+  app.use(createActivitiesRoutes(activityVideos));
   app.use(createAppointmentsRoutes());
   app.use(createThoughtRecordsRoutes());
   app.use(createTensionEpisodesRoutes());
@@ -106,7 +111,7 @@ export function createApp({
   app.use(createLinksRoutes(mailer));
   app.use(createProfileRoutes());
   app.use(createRemindersRoutes(mailer, pushSender));
-  app.use(createTherapistRoutes(actionVideos));
+  app.use(createTherapistRoutes(actionVideos, activityVideos));
   // Marcas de leitura da terapeuta (DEC-057), num prefixo próprio, fora do só leitura.
   app.use(createReadMarksRoutes());
   app.use(createReadReceiptsRoutes());

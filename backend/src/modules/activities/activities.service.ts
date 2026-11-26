@@ -231,8 +231,8 @@ function futureDateOnTransition() {
   );
 }
 
-async function findOwned(userId: string, id: string): Promise<Activity> {
-  const activity = await prisma.activity.findUnique({ where: { id } });
+export async function findOwnedActivity(userId: string, id: string, db: Pick<Prisma.TransactionClient, 'activity'> = prisma): Promise<Activity> {
+  const activity = await db.activity.findUnique({ where: { id } });
   if (!activity) throw notFound();
   if (activity.userId !== userId) throw forbidden();
   return activity;
@@ -267,11 +267,15 @@ async function guardedUpdate(
 
 // As fotos mudam com a atividade aberta e na concluída até a próxima consulta (DEC-103). Mexer nas
 // fotos não muda nenhum campo do registro: a concluída continua imutável (regra 2).
-async function assertPhotosOpen(userId: string, activity: Activity) {
-  if (activity.status === 'NAO_REALIZADA') throw photosNotAllowed();
+export async function assertActivityMediaOpen(userId: string, activity: Activity, kind: 'photos' | 'video' = 'photos') {
+  if (activity.status === 'NAO_REALIZADA') {
+    if (kind === 'video') throw new AppError(409, 'VIDEO_NOT_ALLOWED', 'Esta atividade não recebe vídeos ou GIFs.');
+    throw photosNotAllowed();
+  }
   const sessions = await sessionsFor(userId, [activity]);
   await freezeMissingDeadlines([activity], sessions);
   if (!arePhotosOpen(activity, sessions)) {
+    if (kind === 'video') throw new AppError(409, 'VIDEO_CLOSED', 'O prazo para enviar ou remover o vídeo desta atividade terminou.');
     throw photosClosed();
   }
 }
@@ -313,7 +317,7 @@ export function createActivitiesService() {
   }
 
   async function update(userId: string, id: string, input: UpdateActivityInput) {
-    const activity = await findOwned(userId, id);
+    const activity = await findOwnedActivity(userId, id);
     assertEditable(activity.status);
 
     // Dar vontade a uma PLANEJADA é a transição "start", não uma edição.
@@ -334,7 +338,7 @@ export function createActivitiesService() {
     name: TransitionName,
     data: Prisma.ActivityUpdateManyMutationInput,
   ) {
-    const activity = await findOwned(userId, id);
+    const activity = await findOwnedActivity(userId, id);
     assertTransition(activity.status, name);
 
     const target = TRANSITIONS[name].to;
@@ -360,7 +364,7 @@ export function createActivitiesService() {
     transition(userId, id, 'notDone', { observation: input.observation ?? null });
 
   async function remove(userId: string, id: string) {
-    const activity = await findOwned(userId, id);
+    const activity = await findOwnedActivity(userId, id);
     assertEditable(activity.status);
 
     // Mesmo cuidado do guardedUpdate: só apaga se ainda não for final.
@@ -374,8 +378,8 @@ export function createActivitiesService() {
   // ——— Fotos (DEC-103) ———
 
   async function addPhoto(userId: string, id: string, upload: Uint8Array) {
-    const activity = await findOwned(userId, id);
-    await assertPhotosOpen(userId, activity);
+    const activity = await findOwnedActivity(userId, id);
+    await assertActivityMediaOpen(userId, activity);
     // Confere os limites antes de tratar a imagem, que é a parte cara; a transação confere de novo.
     if ((await prisma.activityPhoto.count({ where: { activityId: id } })) >= MAX_PHOTOS) throw photoLimit();
     if ((await countAccountPhotos(prisma, userId)) >= MAX_PHOTOS_PER_ACCOUNT) throw accountPhotoLimit();
@@ -404,10 +408,10 @@ export function createActivitiesService() {
   }
 
   async function removePhoto(userId: string, id: string, photoId: string) {
-    const activity = await findOwned(userId, id);
+    const activity = await findOwnedActivity(userId, id);
     // Na não realizada, as fotos postas com ela aberta saem a qualquer hora (escolha do usuário):
     // é dado de saúde, e o paciente não pode ficar sem como tirar. Adicionar continua fechado.
-    if (activity.status !== 'NAO_REALIZADA') await assertPhotosOpen(userId, activity);
+    if (activity.status !== 'NAO_REALIZADA') await assertActivityMediaOpen(userId, activity);
     const { count } = await prisma.activityPhoto.deleteMany({ where: { id: photoId, activityId: id } });
     if (count === 0) throw photoNotFound();
   }
@@ -426,7 +430,7 @@ export function createActivitiesService() {
 
   // A foto de uma atividade do próprio paciente: atividade de outra pessoa é 403, como no resto.
   async function ownPhotoImage(userId: string, activityId: string, photoId: string, size: 'thumb' | 'full') {
-    await findOwned(userId, activityId);
+    await findOwnedActivity(userId, activityId);
     return photoImage(userId, activityId, photoId, size);
   }
 

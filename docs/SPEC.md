@@ -107,6 +107,16 @@ Cadastro aberto, para vários pacientes e profissionais (psicólogas e psiquiatr
   fotos novas e que dá para tirar as que estão lá. A profissional vê sem botões de mudança. Sem o
   aceite, "Adicionar fotos" (ou "Ver as fotos") abre o pedido de aceite numa janela.
 
+### Vídeo ou GIF (DEC-143, #331)
+- Um anexo opcional por atividade. Aceita MP4, MOV ou GIF de até 60 segundos e 100 MB. O vídeo
+  mantém o áudio por padrão e permite desligá-lo. O GIF vira um MP4 sem som, com reprodução
+  manual. A versão final deixa de incluir metadados do arquivo de origem.
+- O envio e a remoção seguem as regras das fotos da atividade. A não realizada permite remover o
+  anexo já salvo. O anexo fica em armazenamento privado e tem fila, cópia e remoção em comum com
+  os vídeos da Ação.
+- Para a profissional, a reprodução e a consulta de status exigem vínculo ativo, **Atividades** e
+  **Vídeos e GIFs das atividades** liberados e aceite a partir de `2026-11.15` nas duas contas.
+
 ## Consultas
 A terapia costuma ser semanal ou quinzenal: o paciente monta uma **agenda** que se repete, e as
 sessões são calculadas a partir dela (DEC-045). Só o paciente mexe na agenda; a terapeuta lê.

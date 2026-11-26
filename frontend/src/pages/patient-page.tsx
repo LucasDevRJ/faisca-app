@@ -8,7 +8,7 @@ import { Dialog } from '../components/ui/dialog';
 import { buttonClasses } from '../components/ui/button-styles';
 import type { Activity } from '../features/activities/activities-api';
 import { ActionCard } from '../features/actions/action-card';
-import { ACTION_VIDEOS_ENABLED } from '../features/actions/action-video-api';
+import { ACTION_VIDEOS_ENABLED, ACTIVITY_VIDEOS_ENABLED } from '../features/actions/action-video-api';
 import { ActionChart } from '../features/actions/action-chart';
 import { CycleGoal } from '../features/actions/cycle-goal';
 import { ActivityCard } from '../features/activities/activity-card';
@@ -432,6 +432,10 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
                 />
               ) : (
                 <>
+                  {ACTIVITY_VIDEOS_ENABLED && shared.has('ACTIVITIES') && shared.has('ACTIVITY_VIDEOS') &&
+                    !user?.privacyAreas.activityVideos && (
+                      <PrivacyConsentGate area="activityVideos" audience="therapist" />
+                    )}
                   {activities.isPending && (
                     <p className="text-muted" aria-busy="true">
                       Carregando os registros…
@@ -463,6 +467,7 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
 
                       <DayList
                         patientId={patientId}
+                        showVideo={shared.has('ACTIVITY_VIDEOS') && user?.privacyAreas.activityVideos === true}
                         days={
                           byMonths
                             ? daysInRange(range).filter((day) => activities.data.some((a) => a.activityDate === day))
@@ -486,13 +491,14 @@ function PatientRecords({ patientId, summary }: { patientId: string; summary: Pa
 
 type DayListProps = {
   patientId: string;
+  showVideo: boolean;
   days: string[];
   activities: Activity[];
   today: string;
   appointmentDays: Set<string>;
 };
 
-function DayList({ patientId, days, activities, today, appointmentDays }: DayListProps) {
+function DayList({ patientId, showVideo, days, activities, today, appointmentDays }: DayListProps) {
   return (
     <ol className="flex flex-col gap-2 sm:gap-6">
       {days.map((day) => {
@@ -513,7 +519,7 @@ function DayList({ patientId, days, activities, today, appointmentDays }: DayLis
             {ofDay.length > 0 && (
               <div className="flex flex-col gap-3">
                 {ofDay.map((activity) => (
-                  <ActivityCard key={activity.id} activity={activity} readOnly patientId={patientId} />
+                  <ActivityCard key={activity.id} activity={activity} readOnly patientId={patientId} showVideo={showVideo} />
                 ))}
               </div>
             )}

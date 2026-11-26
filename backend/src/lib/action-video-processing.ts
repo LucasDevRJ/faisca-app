@@ -15,7 +15,7 @@ export type ActionVideoProcessingStore = {
 // A fila mantém o original até confirmar que a saída pode ser publicada; uma falha é retomável.
 export async function processActionVideo(
   store: ActionVideoProcessingStore,
-  { sourceKey, outputKey, keepAudio }: { sourceKey: string; outputKey: string; keepAudio?: boolean },
+  { sourceKey, outputKey, keepAudio, isGif }: { sourceKey: string; outputKey: string; keepAudio?: boolean; isGif?: boolean },
 ) {
   if (sourceKey === outputKey) throw new Error('O vídeo original e o processado precisam de chaves diferentes.');
 
@@ -41,7 +41,7 @@ export async function processActionVideo(
       signal: AbortSignal.timeout(120_000),
     });
 
-    await convertActionVideo(input, output, { keepAudio });
+    await convertActionVideo(input, output, { keepAudio, isGif });
     const { size } = await stat(output);
     const body = createReadStream(output);
     try {

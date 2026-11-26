@@ -10,7 +10,7 @@ import { useCancelInvite, useGenerateLinkCode, useLinkStatus, useSetSharedAreas 
 import { Avatar } from '../profile/avatar';
 import { avatarUrls } from '../profile/profile-api';
 import { ReadReceiptsSetting } from '../read-receipts/read-receipts-setting';
-import { ACTION_VIDEOS_ENABLED } from '../actions/action-video-api';
+import { ACTION_VIDEOS_ENABLED, ACTIVITY_VIDEOS_ENABLED } from '../actions/action-video-api';
 
 // "Quem me acompanha" em /conta (SPEC, "Vínculo"; DEC-097, DEC-098): um cartão por profissional
 // vinculada, com o que cada uma pode ver, e o caminho para vincular mais uma enquanto houver vaga
@@ -163,14 +163,15 @@ type SharedAreasFormProps = {
 
 // As fotos de cada área têm caixa própria e dependem dela (DEC-098, DEC-104).
 const PARENT_OF: Partial<Record<SharedArea, SharedArea>> = {
-  ACTION_PHOTOS: 'ACTIONS', ACTION_VIDEOS: 'ACTIONS', ACTIVITY_PHOTOS: 'ACTIVITIES',
+  ACTION_PHOTOS: 'ACTIONS', ACTION_VIDEOS: 'ACTIONS', ACTIVITY_PHOTOS: 'ACTIVITIES', ACTIVITY_VIDEOS: 'ACTIVITIES',
 };
 
 function SharedAreasForm({ link, who, saved, onSaved, onEdit }: SharedAreasFormProps) {
   const save = useSetSharedAreas();
   const [areas, setAreas] = useState<SharedArea[]>(link.sharedAreas);
   const available = SHARED_AREAS.filter((area) =>
-    area !== 'ACTION_VIDEOS' || ACTION_VIDEOS_ENABLED || link.sharedAreas.includes(area));
+    (area !== 'ACTION_VIDEOS' || ACTION_VIDEOS_ENABLED || link.sharedAreas.includes(area)) &&
+    (area !== 'ACTIVITY_VIDEOS' || ACTIVITY_VIDEOS_ENABLED || link.sharedAreas.includes(area)));
   const name = firstName(link.therapist.name);
   const hintId = useId();
   const dirty = areas.length !== link.sharedAreas.length || areas.some((area) => !link.sharedAreas.includes(area));
