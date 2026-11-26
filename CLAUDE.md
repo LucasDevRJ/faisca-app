@@ -23,6 +23,8 @@
 ## Git
 - Mostre a mensagem de commit e peça confirmação antes de push, PR ou merge.
 - Nunca use `--no-verify` nem force push na `main`.
+- Todo commit termina com `Modelo:` e `Nivel:` (DEC-144). Como eu não vejo o nível escolhido no
+  seletor, escrevo `Nivel: não informado`, a menos que o usuário diga o nível na sessão.
 
 ## Ao terminar uma mudança
 - Siga a skill `finalizar-mudanca` (passo a passo e armadilhas conhecidas).

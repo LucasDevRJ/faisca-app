@@ -13,7 +13,8 @@ em `docs/DECISIONS.md`. Leia os dois antes de mudanças que envolvam regra de ne
 ## Estrutura
 - `backend/`, `frontend/` e `tests/` têm `package.json` próprios (sem workspaces).
 - `backup/`: serviço de cópia de segurança do banco (cron no Railway, DEC-075; roteiro no DEPLOY).
-- `scripts/`: `check-unique-ids.mjs` (DEC, versão do aviso e novidade sem repetição; roda no CI).
+- `scripts/`: `check-unique-ids.mjs` (DEC, versão do aviso e novidade sem repetição; roda no CI) e
+  `check-commit-trailers.mjs` (aviso de commit sem modelo e nível, DEC-144).
 - `docs/`: SPEC, DECISIONS, DEPLOY (passo a passo do deploy e da troca de segredos),
   BRIEFING-IA (documento único de divulgação, também para outras IAs; atualizar quando uma
   funcionalidade entra no ar) e IDEIAS-TCC (técnicas da TCC planejadas). A APRESENTACAO só aponta
@@ -193,6 +194,10 @@ profissional (regra 5), nem e-mail pessoal, segredo ou falha de segurança ainda
   como na SPEC (`PLANEJADA`, `CONCLUIDA`...); textos de interface em pt-BR.
 - Documentação, comentários e commits em pt-BR.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`), commits pequenos.
+- **Modelo e nível em todo commit (DEC-144):** a mensagem termina com `Modelo: <IA e versão>` e
+  `Nivel: <baixo, médio, alto, muito alto ou máximo>` (chave sem acento), antes do
+  `Co-Authored-By`. Sem saber o nível com certeza: `Nivel: não informado`. A descrição do PR
+  repete numa linha (`**IA:** Opus 5.5, nível alto`). O CI só avisa quando falta.
 - Uma branch por etapa (`feat/...`, `fix/...`, `docs/...`) e PR para a `main`.
 - Fuso America/Sao_Paulo; timestamps em UTC; `activityDate` como DATE.
 - Requisito mudou → atualize `docs/SPEC.md`. Decisão mudou → nova entrada em `docs/DECISIONS.md`.

@@ -1,0 +1,31 @@
+name: Modelo e nível nos commits
+
+# DEC-144: cada commit termina com "Modelo: ..." e "Nivel: ..." (qual IA fez e com que nível).
+# Só avisa, com um aviso amarelo no resumo do PR; nunca falha nem barra o merge.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  autoria:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Testes do script
+        run: node --test scripts/check-commit-trailers.test.mjs
+
+      - name: Commits com modelo e nível (só aviso)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/check-commit-trailers.mjs "$BASE_SHA" "$HEAD_SHA"

@@ -131,6 +131,16 @@ Depois, proponha a mensagem de commit (Conventional Commits, em pt-BR, `Closes #
 e **peça confirmação antes de commit, push, PR ou merge**. Mande a mensagem por heredoc, porque o
 hook confunde algumas palavras dentro de `-m`.
 
+Todo commit termina com as linhas de modelo e nível (DEC-144), antes do `Co-Authored-By`:
+```
+Modelo: Opus 5.5
+Nivel: não informado
+```
+Use o nível que o usuário disse na sessão; sem saber com certeza, `não informado`. A chave é
+`Nivel` sem acento (com acento, o Git não a reconhece). Na descrição do PR, a linha
+`**IA:** <modelo>, nível <nível>` vai junto com o modelo dos revisores. O CI "Modelo e nível nos
+commits" só avisa quando falta.
+
 Quando o Codex criar um commit, preserve o autor configurado para a pessoa e acrescente ao fim da
 mensagem o trailer `Co-authored-by: Codex <codex@openai.com>`. Use essa atribuição somente nos commits
 criados pelo Codex. Não reescreva commits já publicados só para adicionar coautoria.

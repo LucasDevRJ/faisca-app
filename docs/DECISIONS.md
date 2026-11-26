@@ -3144,6 +3144,33 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a ativação em produção depende de validar o worker isolado, a remoção de
   mídias e a política de cópias e restauração do bucket. As fotos continuam usando o fluxo atual.
 
+## DEC-144 — Modelo e nível da IA em cada commit e PR
+
+- **Decisão:** todo commit, de qualquer agente, termina com duas linhas no bloco final (os trailers
+  do Git), antes do `Co-Authored-By`:
+  ```
+  Modelo: Opus 5.5
+  Nivel: alto
+  ```
+  - **Modelo:** o nome e a versão da IA que escreveu a mudança (ex.: `Opus 5.5`, `Sonnet 5.5`, o
+    modelo do Codex ou do Antigravity).
+  - **Nivel:** o nível de raciocínio escolhido no seletor (`baixo`, `médio`, `alto`, `muito alto`,
+    `máximo`). Quando o agente não sabe o próprio nível com certeza, escreve `não informado`, e não
+    chuta. Se o usuário disser o nível no começo da sessão, o agente usa esse.
+  - Commit feito só pelo usuário, sem IA: `Modelo: nenhum` e `Nivel: não se aplica`.
+  - A chave é `Nivel`, **sem acento**: o Git não reconhece trailer com letra acentuada na chave
+    (o valor pode ter acento).
+  - A descrição do PR leva a mesma informação numa linha (`**IA:** Opus 5.5, nível alto`), junto
+    com o modelo dos revisores que já é citado.
+  - O CI "Modelo e nível nos commits" (`scripts/check-commit-trailers.mjs`) mostra um aviso para
+    cada commit do PR sem as duas linhas. Só avisa: não falha nem barra o merge. Commits de robô
+    (Dependabot) e de merge ficam de fora.
+- **Motivo:** saber, quando aparecer um defeito ou ao comparar o trabalho dos agentes, qual IA fez
+  cada parte e com que nível. O `Co-Authored-By` mostrava o modelo só nos commits do Claude, e sem o
+  nível.
+- **Limite conhecido:** o nível é declarado pelo próprio agente e nem sempre é conhecido; vale como
+  registro honesto, não como prova. Commits antigos não são reescritos.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.
