@@ -51,10 +51,7 @@ const envSchema = z.object({
   // Issue #220 / DEC-113: contas autorizadas a moderar somente a comunidade; exige 2FA.
   COMMUNITY_MODERATOR_EMAILS: z.string().default(''),
   // Issue #332 / DEC-142: destino das mensagens do formulário "Fale com a equipe" (Zoho Mail, DEC-093).
-  SUPPORT_EMAIL: z
-    .email()
-    .refine((value) => !value.includes('seu-dominio.com'))
-    .default('suporte@minhafaisca.com.br'),
+  SUPPORT_EMAIL: z.email().default('suporte@minhafaisca.com.br'),
   ACTION_VIDEOS_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 
