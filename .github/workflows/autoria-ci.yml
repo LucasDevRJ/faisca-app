@@ -1,9 +1,12 @@
 name: Modelo e nível nos commits
 
-# DEC-144: cada commit termina com "Modelo: ..." e "Nivel: ..." (qual IA fez e com que nível).
+# DEC-144: cada commit termina com "Modelo: ..." e "Nivel: ..." (qual IA fez e com que nível), e a
+# descrição do PR mostra o usado e o recomendado na linha "**IA:**".
 # Só avisa, com um aviso amarelo no resumo do PR; nunca falha nem barra o merge.
 on:
   pull_request:
+    # Editar a descrição do PR roda de novo, para o aviso sumir depois da correção.
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
@@ -24,8 +27,11 @@ jobs:
       - name: Testes do script
         run: node --test scripts/check-commit-trailers.test.mjs
 
-      - name: Commits com modelo e nível (só aviso)
+      - name: Commits e PR com modelo e nível (só aviso)
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # A descrição vai pelo ambiente, e não dentro do comando, para não virar código do shell.
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: node scripts/check-commit-trailers.mjs "$BASE_SHA" "$HEAD_SHA"

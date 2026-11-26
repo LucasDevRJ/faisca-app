@@ -1,7 +1,7 @@
 // Testes do scripts/check-commit-trailers.mjs. Rodar: node --test scripts/
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isBot, missing, problems, trailers } from './check-commit-trailers.mjs';
+import { hasIaLine, isBot, missing, problems, trailers } from './check-commit-trailers.mjs';
 
 const full = 'feat: algo\n\nCorpo.\n\nModelo: Opus 5.5\nNivel: não informado\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>';
 
@@ -42,4 +42,11 @@ test('commits de robô ficam de fora', () => {
     { sha: 'c'.repeat(40), author: 'Lucas', subject: 'feat: z', message: full },
   ]);
   assert.deepEqual(found, [{ sha: 'b'.repeat(40), subject: 'feat: y', missing: ['Modelo', 'Nivel'] }]);
+});
+
+test('a linha **IA:** do PR precisa do usado e do recomendado', () => {
+  assert.equal(hasIaLine('Resumo\n\n**IA:** usado Opus 5.5, nível não informado · recomendado Opus 5.5, nível alto'), true);
+  assert.equal(hasIaLine('**IA:** Opus 5.5, nível alto'), false);
+  assert.equal(hasIaLine('usado e recomendado sem o rótulo'), false);
+  assert.equal(hasIaLine(undefined), false);
 });

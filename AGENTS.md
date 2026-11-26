@@ -196,8 +196,17 @@ profissional (regra 5), nem e-mail pessoal, segredo ou falha de segurança ainda
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`), commits pequenos.
 - **Modelo e nível em todo commit (DEC-144):** a mensagem termina com `Modelo: <IA e versão>` e
   `Nivel: <baixo, médio, alto, muito alto ou máximo>` (chave sem acento), antes do
-  `Co-Authored-By`. Sem saber o nível com certeza: `Nivel: não informado`. A descrição do PR
-  repete numa linha (`**IA:** Opus 5.5, nível alto`). O CI só avisa quando falta.
+  `Co-Authored-By`. Sem saber o nível com certeza: `Nivel: não informado`. A recomendação fica na
+  issue (campo "Modelo e nível recomendados") e no PR, que mostra os dois lados numa linha:
+  `**IA:** usado Opus 5.5, nível não informado · recomendado Opus 5.5, nível alto`. O CI só avisa
+  quando falta. Recomendação (o modelo vale para o Claude; o nível, para todos):
+
+  | Tipo de mudança | Modelo | Nível |
+  |---|---|---|
+  | Texto, documentação, ajuste pequeno | Sonnet | médio |
+  | Código comum (tela, rota, teste) | Opus | alto |
+  | Regra inviolável, migration, autorização | Opus | muito alto |
+  | Segurança crítica (2FA, criptografia) | Fable | máximo |
 - Uma branch por etapa (`feat/...`, `fix/...`, `docs/...`) e PR para a `main`.
 - Fuso America/Sao_Paulo; timestamps em UTC; `activityDate` como DATE.
 - Requisito mudou → atualize `docs/SPEC.md`. Decisão mudou → nova entrada em `docs/DECISIONS.md`.

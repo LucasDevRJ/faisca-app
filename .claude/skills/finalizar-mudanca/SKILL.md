@@ -137,9 +137,13 @@ Modelo: Opus 5.5
 Nivel: não informado
 ```
 Use o nível que o usuário disse na sessão; sem saber com certeza, `não informado`. A chave é
-`Nivel` sem acento (com acento, o Git não a reconhece). Na descrição do PR, a linha
-`**IA:** <modelo>, nível <nível>` vai junto com o modelo dos revisores. O CI "Modelo e nível nos
-commits" só avisa quando falta.
+`Nivel` sem acento (com acento, o Git não a reconhece). Na descrição do PR, junto com o modelo dos
+revisores, vai a linha com o usado e o recomendado (o da issue ou, sem ele, o da tabela do
+AGENTS.md):
+```
+**IA:** usado Opus 5.5, nível não informado · recomendado Opus 5.5, nível alto
+```
+O CI "Modelo e nível nos commits" só avisa quando falta.
 
 Quando o Codex criar um commit, preserve o autor configurado para a pessoa e acrescente ao fim da
 mensagem o trailer `Co-authored-by: Codex <codex@openai.com>`. Use essa atribuição somente nos commits

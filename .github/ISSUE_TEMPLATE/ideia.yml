@@ -58,6 +58,12 @@ body:
         - label: DEC nova
         - label: Versão nova do aviso de privacidade
         - label: Página Como funciona
+  - type: input
+    id: ia-recomendada
+    attributes:
+      label: Modelo e nível recomendados
+      description: Para quem pegar a issue (DEC-144). O modelo vale para o Claude; o nível, para todos os agentes.
+      placeholder: "Ex.: Opus 5.5, nível alto"
   - type: checkboxes
     id: confirmacao
     attributes:

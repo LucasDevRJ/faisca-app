@@ -1,4 +1,5 @@
-// Confere se cada commit de um PR diz qual IA fez o código e com que nível (DEC-144).
+// Confere se cada commit de um PR diz qual IA fez o código e com que nível, e se a descrição do PR
+// mostra o usado e o recomendado (DEC-144).
 // Só avisa (::warning do GitHub Actions) e nunca falha: commit sem as linhas não barra o PR.
 // Uso: node scripts/check-commit-trailers.mjs <base> <head>
 import { execFileSync } from 'node:child_process';
@@ -35,6 +36,12 @@ export function problems(commits) {
     .filter(({ missing: absent }) => absent.length > 0);
 }
 
+// A descrição do PR mostra o usado e o recomendado numa linha:
+// **IA:** usado Opus 5.5, nível não informado · recomendado Opus 5.5, nível alto
+export function hasIaLine(body) {
+  return (body ?? '').split('\n').some((line) => /\*\*IA:\*\*.*\busado\b.*\brecomendado\b/i.test(line));
+}
+
 function readCommits(base, head) {
   const raw = execFileSync('git', ['log', '--no-merges', '--format=%H%x1f%an%x1f%s%x1f%B%x1e', `${base}..${head}`], {
     encoding: 'utf8',
@@ -62,4 +69,10 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     console.log(`::warning title=Commit sem ${absent.join(' e ')}::${sha.slice(0, 7)} ${escape(subject)} (DEC-144: termine com "Modelo: ..." e "Nivel: ...")`);
   }
   console.log(found.length === 0 ? 'Todos os commits dizem o modelo e o nível.' : `${found.length} commit(s) sem modelo ou nível (só aviso).`);
+
+  // A descrição do PR chega pelo ambiente (PR_BODY), nunca interpolada no comando.
+  if ('PR_BODY' in process.env && !isBot(process.env.PR_AUTHOR ?? '')) {
+    if (hasIaLine(process.env.PR_BODY)) console.log('A descrição do PR tem a linha **IA:**.');
+    else console.log('::warning title=PR sem a linha IA::DEC-144: a descrição precisa de "**IA:** usado <modelo>, nível <nível> · recomendado <modelo>, nível <nível>"');
+  }
 }

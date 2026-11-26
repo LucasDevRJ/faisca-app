@@ -3160,13 +3160,31 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
   - Commit feito só pelo usuário, sem IA: `Modelo: nenhum` e `Nivel: não se aplica`.
   - A chave é `Nivel`, **sem acento**: o Git não reconhece trailer com letra acentuada na chave
     (o valor pode ter acento).
-  - A descrição do PR leva a mesma informação numa linha (`**IA:** Opus 5.5, nível alto`), junto
-    com o modelo dos revisores que já é citado.
-  - O CI "Modelo e nível nos commits" (`scripts/check-commit-trailers.mjs`) mostra um aviso para
-    cada commit do PR sem as duas linhas. Só avisa: não falha nem barra o merge. Commits de robô
-    (Dependabot) e de merge ficam de fora.
+- **Recomendado × usado:** a recomendação vale para a tarefa, e não para cada commit, então fica
+  na issue e no PR, e não no commit.
+  - **Issue:** os formulários têm o campo opcional "Modelo e nível recomendados", preenchido
+    quando a issue entra na fila.
+  - **PR:** a descrição leva uma linha com os dois lados, junto com o modelo dos revisores:
+    `**IA:** usado Opus 5.5, nível não informado · recomendado Opus 5.5, nível alto`.
+  - **Tabela de recomendação** (no `AGENTS.md`; a coluna do modelo vale para o Claude, a do nível
+    para todos):
+
+    | Tipo de mudança | Modelo | Nível |
+    |---|---|---|
+    | Texto, documentação, ajuste pequeno | Sonnet | médio |
+    | Código comum (tela, rota, teste) | Opus | alto |
+    | Regra inviolável, migration, autorização | Opus | muito alto |
+    | Segurança crítica (2FA, criptografia) | Fable | máximo |
+
+  - No começo de cada etapa, o Claude recomenda o modelo **e o nível**, para o usuário escolher
+    os dois no seletor antes de começar.
+- **Aviso no CI:** o workflow "Modelo e nível nos commits" (`scripts/check-commit-trailers.mjs`)
+  avisa quando um commit do PR vem sem as duas linhas e quando a descrição do PR vem sem a linha
+  `**IA:**` com "usado" e "recomendado". Só avisa: não falha nem barra o merge. Commits de robô
+  (Dependabot) e de merge ficam de fora, e PR de robô não é conferido.
 - **Motivo:** saber, quando aparecer um defeito ou ao comparar o trabalho dos agentes, qual IA fez
-  cada parte e com que nível. O `Co-Authored-By` mostrava o modelo só nos commits do Claude, e sem o
+  cada parte e com que nível, e se foi abaixo do recomendado (sinal para revisar com mais cuidado e
+  para calibrar a tabela). O `Co-Authored-By` mostrava o modelo só nos commits do Claude, e sem o
   nível.
 - **Limite conhecido:** o nível é declarado pelo próprio agente e nem sempre é conhecido; vale como
   registro honesto, não como prova. Commits antigos não são reescritos.
