@@ -72,8 +72,8 @@ export function AppLayout() {
           <img src="/icon.svg" alt="" className="size-10" />
           <span className="font-heading text-2xl font-bold">Faísca</span>
         </Link>
-        {/* Em 320 px, com o selo de mensagem nova, os quatro itens ainda cabem numa linha (revisor-telas). */}
-        <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
+        {/* Em 320 px, com o selo de mensagem nova, os quatro itens ainda cabem numa linha (revisor-telas); com Leitura confortável (112,5%), flex-wrap evita estouro horizontal. */}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-0.5 sm:gap-1">
           <NavLink to="/mensagens" className={(state) => `inline-flex min-h-11 items-center gap-1.5 ${navLinkClass(state)}`}>
             Mensagens
             {hasUnread && <>
