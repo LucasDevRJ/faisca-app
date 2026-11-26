@@ -345,16 +345,35 @@ describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
     expect(screen.getByLabelText('O que estava acontecendo?')).toBeInTheDocument();
     expect(screen.queryByText('Tensão no corpo')).not.toBeInTheDocument();
 
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Conte o que estava acontecendo.')).toBeInTheDocument();
+    expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
+
     await user.type(screen.getByLabelText('O que estava acontecendo?'), 'Situação fictícia');
     await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
     expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '‹ Anterior' }));
     expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
+    expect(screen.getByLabelText('O que estava acontecendo?')).toHaveValue('Situação fictícia');
 
     await router.navigate('/acao/nova?dia=2026-09-24');
     expect(await screen.findByText('Passo 1 de 2')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Escolha o tipo da ação.')).toBeInTheDocument();
+    expect(screen.getByText('Passo 1 de 2')).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: 'Já fiz' }));
     expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /Prazer/ }));
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('O que você vai fazer?'), 'Ouvir álbum fictício');
+    fireEvent.change(screen.getByRole('slider', { name: 'Quanto espera gostar' }), { target: { value: '6' } });
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Passo 3 de 3')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '‹ Anterior' }));
+    expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
+    expect(screen.getByLabelText('O que você vai fazer?')).toHaveValue('Ouvir álbum fictício');
   });
 });
