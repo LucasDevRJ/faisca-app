@@ -1,8 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { DEFAULT_ACCESSIBILITY, type AccessibilitySettings } from '../features/profile/accessibility';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_ACCESSIBILITY, prefersReducedMotion, type AccessibilitySettings } from '../features/profile/accessibility';
 import type { Action } from '../features/actions/actions-api';
 import { renderRoute } from '../test/render';
 import { fakeActivity, fakeAgenda, fakeSession, fakeThoughtRecord, fakeUser, loggedIn, server } from '../test/server';
@@ -449,5 +449,38 @@ describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
     await user.click(screen.getByRole('button', { name: '‹ Anterior' }));
     expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
     expect(screen.getByLabelText('O que você vai fazer?')).toHaveValue('Ouvir álbum fictício');
+  });
+
+  it('Menos movimento ativa prefersReducedMotion e usa rolagem instantânea (auto) ao navegar para âncora #hash', async () => {
+    withAccessibility({ reducedMotion: true });
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    const activity = fakeActivity({
+      id: '00000000-0000-4000-8000-000000000077',
+      name: 'Alongamento matinal',
+      activityDate: today,
+      status: 'CONCLUIDA',
+      pleasure: 8,
+      achievement: 7,
+    });
+    server.use(
+      http.get('*/api/activities', () => HttpResponse.json({ activities: [activity] })),
+    );
+
+    const scrollSpy = vi.fn();
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = scrollSpy;
+
+    try {
+      renderRoute(`/registros#registro-${activity.id}`);
+
+      expect(await screen.findByRole('heading', { name: 'Alongamento matinal' })).toBeInTheDocument();
+      await waitFor(() => expect(document.documentElement.dataset.reducedMotion).toBe('true'));
+      expect(prefersReducedMotion()).toBe(true);
+      await waitFor(() =>
+        expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'auto', block: 'center' }),
+      );
+    } finally {
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
   });
 });
