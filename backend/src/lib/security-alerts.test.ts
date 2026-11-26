@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.js';
 import { createConfirmedUser, resetDatabase } from '../test/db.js';
 import { FakeMailer } from '../test/fake-mailer.js';
+import { logger } from './logger.js';
 import {
   ALERT_COOLDOWN_MINUTES,
   ALERT_WINDOW_MINUTES,
@@ -88,6 +89,32 @@ describe('createSecurityAlerts (DEC-141)', () => {
     expect(mailer.sent).toHaveLength(3);
   });
 
+  it('dentro da hora de silêncio, a conta seguinte do 403 ainda vai para o log', () => {
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    const { mailer, alerts } = setup();
+    const first = randomUUID();
+    const second = randomUUID();
+    repeat(alerts, 'forbidden', SECURITY_ALERT_KINDS.forbidden.limit, first);
+    repeat(alerts, 'forbidden', SECURITY_ALERT_KINDS.forbidden.limit, second);
+
+    expect(mailer.sent).toHaveLength(1);
+    const logged = warn.mock.calls.map(([fields]) => (fields as { userId?: string }).userId);
+    expect(logged).toEqual([first, second]);
+  });
+
+  it('403 sem conta não conta', () => {
+    const { mailer, alerts } = setup();
+    repeat(alerts, 'forbidden', SECURITY_ALERT_KINDS.forbidden.limit * 2);
+    expect(mailer.sent).toHaveLength(0);
+  });
+
+  it('muitos eventos seguidos não deixam a contagem lenta', () => {
+    const { alerts } = setup();
+    const start = performance.now();
+    repeat(alerts, 'rate_limited', 200_000);
+    expect(performance.now() - start).toBeLessThan(1000);
+  });
+
   it('sem destinatário, não envia e-mail (fica só no log)', () => {
     const mailer = new FakeMailer();
     const alerts = createSecurityAlerts({ mailer, to: undefined });
@@ -102,6 +129,10 @@ describe('createSecurityAlerts (DEC-141)', () => {
     await Promise.resolve();
     expect(mailer.attempts).toHaveLength(1);
   });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('securityAlertsMiddleware: o que cada resposta conta', () => {
@@ -120,6 +151,19 @@ describe('securityAlertsMiddleware: o que cada resposta conta', () => {
     expect((await request(app).post('/auth/login').send({ email: 'paciente@faisca.test', password: 'errada-123456' })).status).toBe(401);
     expect((await request(app).post('/auth/login').send({ email: 'paciente@faisca.test', password: 'senha-ficticia-123' })).status).toBe(200);
     expect(recorded).toEqual([{ kind: 'login_failed', accountId: undefined }]);
+  });
+
+  it('o login errado conta mesmo com o endereço em maiúsculas ou com barra no fim', async () => {
+    await createConfirmedUser({ email: 'paciente@faisca.test', password: 'senha-ficticia-123' });
+    for (const path of ['/AUTH/LOGIN', '/auth/login/']) {
+      expect((await request(app).post(path).send({ email: 'paciente@faisca.test', password: 'errada-123456' })).status).toBe(401);
+    }
+    expect(recorded.map(({ kind }) => kind)).toEqual(['login_failed', 'login_failed']);
+  });
+
+  it('403 sem sessão não conta', async () => {
+    expect((await request(app).post(`/therapist/patients/${randomUUID()}/tasks`)).status).toBe(403);
+    expect(recorded).toEqual([]);
   });
 
   it('401 fora do login (sem sessão) não conta', async () => {

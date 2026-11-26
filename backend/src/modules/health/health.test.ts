@@ -2,7 +2,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
 import { healthResponseSchema, readinessResponseSchema } from './health.schema.js';
-import { getReadiness, shortVersion } from './health.service.js';
+import { createReadiness, shortVersion } from './health.service.js';
 
 const app = createApp();
 
@@ -80,9 +80,24 @@ describe('GET /health/ready (DEC-141)', () => {
   });
 
   it('fica "unavailable" sem o detalhe do erro quando o banco não responde', async () => {
-    const readiness = await getReadiness(() => Promise.reject(new Error('senha do banco: segredo')));
+    const readiness = await createReadiness(() => Promise.reject(new Error('senha do banco: segredo')))();
 
     expect(readiness.status).toBe('unavailable');
     expect(JSON.stringify(readiness)).not.toContain('segredo');
+  });
+
+  it('reaproveita o resultado por 10 s: chamadas seguidas fazem uma consulta só', async () => {
+    let clock = 0;
+    let pings = 0;
+    const getReadiness = createReadiness(async () => void pings++, () => clock);
+
+    await Promise.all([getReadiness(), getReadiness(), getReadiness()]);
+    clock = 9_999;
+    await getReadiness();
+    expect(pings).toBe(1);
+
+    clock = 10_000;
+    await getReadiness();
+    expect(pings).toBe(2);
   });
 });

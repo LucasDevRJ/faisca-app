@@ -17,28 +17,43 @@ export function getHealth(): HealthResponse {
 }
 
 const READINESS_TIMEOUT_MS = 3000;
+// O resultado vale por 10 s, e chamadas ao mesmo tempo esperam a mesma consulta: a rota é pública,
+// e assim um robô não ocupa as conexões do banco (achado do revisor-seguranca).
+const READINESS_CACHE_MS = 10_000;
 
 export type DatabasePing = () => Promise<unknown>;
 
 const pingDatabase: DatabasePing = () => prisma.$queryRaw`SELECT 1`;
 
-// Prontidão (DEC-141): para o monitor de queda (UptimeRobot), que precisa saber se o banco responde.
-// Fica fora do healthcheck do deploy, que continua no /health acima.
-export async function getReadiness(ping: DatabasePing = pingDatabase): Promise<ReadinessResponse> {
-  const version = shortVersion(env.RAILWAY_GIT_COMMIT_SHA);
+async function checkDatabase(ping: DatabasePing): Promise<ReadinessResponse['status']> {
   let timer: NodeJS.Timeout | undefined;
   try {
     await Promise.race([
       ping(),
       new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error('Banco sem resposta a tempo')), READINESS_TIMEOUT_MS);
+        timer = setTimeout(() => reject(new Error('timeout')), READINESS_TIMEOUT_MS);
       }),
     ]);
-    return { status: 'ok', version };
+    return 'ok';
   } catch (err) {
-    logger.error({ err }, 'Prontidão: o banco não respondeu');
-    return { status: 'unavailable', version };
+    // Só o código do erro: a mensagem do Prisma pode trazer o endereço do banco.
+    const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : 'sem-codigo';
+    logger.error({ dbErrorCode: code }, 'Prontidão: o banco não respondeu');
+    return 'unavailable';
   } finally {
     clearTimeout(timer);
   }
 }
+
+// Prontidão (DEC-141): para o monitor de queda (UptimeRobot), que precisa saber se o banco responde.
+// Fica fora do healthcheck do deploy, que continua no /health acima.
+export function createReadiness(ping: DatabasePing = pingDatabase, now: () => number = Date.now) {
+  let cached: { at: number; result: Promise<ReadinessResponse['status']> } | undefined;
+  return async function getReadiness(): Promise<ReadinessResponse> {
+    const current = now();
+    if (!cached || current - cached.at >= READINESS_CACHE_MS) cached = { at: current, result: checkDatabase(ping) };
+    return { status: await cached.result, version: shortVersion(env.RAILWAY_GIT_COMMIT_SHA) };
+  };
+}
+
+export const getReadiness = createReadiness();

@@ -523,12 +523,12 @@ ligado os dois) e, quando existir, a recuperação com espera de 7 dias.
 ## Alertas de segurança (DEC-141)
 
 A API manda um e-mail para `SECURITY_ALERT_EMAIL` quando, em 10 minutos, vê 30 logins com senha
-errada, 15 respostas 403 para uma mesma conta, 20 respostas 429 ou 10 erros 500. Cada tipo avisa no
+ou código do 2FA errados, 15 respostas 403 para uma mesma conta logada, 20 respostas 429 ou 10 erros 500. Cada tipo avisa no
 máximo uma vez por hora. O e-mail só diz o tipo e o número.
 
 Ao receber um alerta:
 1. No Railway, abra os logs da API e procure `Alerta de segurança` (campo `securityAlert`). No 403,
-   o campo `userId` mostra a conta. Nunca copie dado de ninguém para issue ou conversa.
+   o campo `userId` mostra a conta (cada conta que passou do limite tem a sua linha). Nunca copie dado de ninguém para issue ou conversa.
 2. **Logins errados ou 429:** em geral, o rate limit já está segurando. Veja se o número continua
    subindo depois de uma hora (um novo e-mail chega).
 3. **403 de uma conta:** veja se é alguém tentando abrir dado de outra pessoa (rotas de outro

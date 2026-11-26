@@ -1,4 +1,4 @@
-import type { Request, RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 import { env } from '../config/env.js';
 import { logger } from './logger.js';
 import type { Mailer } from './mailer.js';
@@ -60,6 +60,7 @@ export function createSecurityAlerts({ mailer, to = env.SECURITY_ALERT_EMAIL, no
   // Chave: tipo, ou tipo + conta. Valor: os instantes dentro da janela.
   const hits = new Map<string, number[]>();
   const lastAlertAt = new Map<SecurityAlertKind, number>();
+  const lastLogAt = new Map<string, number>();
 
   function prune(current: number) {
     for (const [key, times] of hits) {
@@ -69,15 +70,23 @@ export function createSecurityAlerts({ mailer, to = env.SECURITY_ALERT_EMAIL, no
     }
   }
 
-  function alert(kind: SecurityAlertKind, count: number, accountId: string | undefined, current: number) {
+  function alert(kind: SecurityAlertKind, key: string, count: number, accountId: string | undefined, current: number) {
+    // O log sai por chave (cada conta do 403 aparece), no máximo uma vez por janela: assim um alerta
+    // já enviado não esconde a conta seguinte (achado do revisor-seguranca).
+    const lastLog = lastLogAt.get(key);
+    if (lastLog === undefined || current - lastLog >= windowMs) {
+      lastLogAt.set(key, current);
+      // O id da conta só vai para o log (regra 7: nada de nome, e-mail ou IP).
+      logger.warn({ securityAlert: kind, count, windowMinutes: ALERT_WINDOW_MINUTES, userId: accountId }, 'Alerta de segurança');
+    }
+
+    // O e-mail, no máximo um por tipo a cada hora, para não lotar a caixa durante um ataque.
     const last = lastAlertAt.get(kind);
     if (last !== undefined && current - last < cooldownMs) return;
     lastAlertAt.set(kind, current);
+    if (!to) return;
 
     const config = SECURITY_ALERT_KINDS[kind];
-    // O id da conta só vai para o log (regra 7: nada de nome, e-mail ou IP).
-    logger.warn({ securityAlert: kind, count, windowMinutes: ALERT_WINDOW_MINUTES, userId: accountId }, 'Alerta de segurança');
-    if (!to) return;
 
     const summary = `${count} ${config.label} em ${ALERT_WINDOW_MINUTES} minutos.`;
     const text = [
@@ -102,25 +111,36 @@ export function createSecurityAlerts({ mailer, to = env.SECURITY_ALERT_EMAIL, no
     record(kind, accountId) {
       const current = now();
       const config = SECURITY_ALERT_KINDS[kind];
-      const key = config.perAccount ? `${kind}:${accountId ?? 'sem-conta'}` : kind;
+      if (config.perAccount && !accountId) return;
+      const key = config.perAccount ? `${kind}:${accountId}` : kind;
 
-      if (!hits.has(key) && hits.size >= MAX_TRACKED_KEYS) prune(current);
+      if (!hits.has(key) && hits.size >= MAX_TRACKED_KEYS) {
+        prune(current);
+        for (const [logKey, time] of lastLogAt) if (current - time >= windowMs) lastLogAt.delete(logKey);
+      }
       if (!hits.has(key) && hits.size >= MAX_TRACKED_KEYS) return;
 
       const times = (hits.get(key) ?? []).filter((time) => current - time < windowMs);
       times.push(current);
+      // Guarda só os últimos `limit` instantes: contar além do limite não muda o alerta, e a lista
+      // sem teto deixaria cada resposta mais lenta durante um ataque (achado do revisor-seguranca).
+      if (times.length > config.limit) times.splice(0, times.length - config.limit);
       hits.set(key, times);
 
       if (times.length >= config.limit) {
-        alert(kind, times.length, config.perAccount ? accountId : undefined, current);
+        alert(kind, key, times.length, config.perAccount ? accountId : undefined, current);
       }
     },
   };
 }
 
-function isFailedLogin(req: Request, status: number) {
-  // originalUrl, e não path: no 'finish' o req.url pode ter passado por um Router.
-  return status === 401 && req.method === 'POST' && req.originalUrl.split('?')[0] === '/auth/login';
+// Marca a rota de login: a falha é reconhecida pelo status que cada rota usa, e não pelo endereço
+// (o Express aceita /AUTH/LOGIN e /auth/login/ na mesma rota; achado do revisor-seguranca).
+export function markLoginAttempt(failureStatus: number): RequestHandler {
+  return (_req, res, next) => {
+    res.locals.loginFailureStatus = failureStatus;
+    next();
+  };
 }
 
 // Conta as respostas depois de enviadas: assim pega também os 403 dos middlewares, os 429 do rate
@@ -129,9 +149,12 @@ export function securityAlertsMiddleware(alerts: SecurityAlerts): RequestHandler
   return (req, res, next) => {
     res.on('finish', () => {
       const status = res.statusCode;
-      if (isFailedLogin(req, status)) alerts.record('login_failed');
-      else if (status === 403) alerts.record('forbidden', req.user?.id);
-      else if (status === 429) alerts.record('rate_limited');
+      if (res.locals.loginFailureStatus === status) alerts.record('login_failed');
+      // 403 sem sessão é barulho barato (ex.: POST em /therapist/patients sem cookie) e poderia
+      // esconder o alerta de quem está logado: só conta 403 de conta conhecida.
+      else if (status === 403) {
+        if (req.user?.id) alerts.record('forbidden', req.user.id);
+      } else if (status === 429) alerts.record('rate_limited');
       else if (status >= 500) alerts.record('server_error');
     });
     next();
