@@ -70,6 +70,7 @@ Na prática clínica tradicional:
   - Planejar atividades para os dias da semana/ciclo (`PLANEJADA`), registrar quanta **vontade antes** tem de fazer de 0 a 10 (`PENDENTE`) e, a partir do dia da atividade, contar como foi (`CONCLUIDA`) dando notas de 0 a 10 para **prazer** e **sensação de realização**, além de uma observação opcional (até 5.000 caracteres).
   - Se não conseguiu fazer, marca **"Não aconteceu"** (`NAO_REALIZADA`) com o diálogo acolhedor *"Tudo bem, quer contar o que aconteceu?"* e observação opcional.
   - Também permite criar registro retroativo de algo já feito.
+  - No cartão, **Adicionar vídeo ou GIF** permite anexar um MP4, MOV ou GIF de até 60 segundos e 100 MB. A pessoa pode tirar o áudio antes de enviar. O GIF toca quando alguém aperta o botão de reprodução. Para a profissional ver o anexo, o paciente precisa liberar **Atividades** e **Vídeos e GIFs das atividades**, e ambos precisam aceitar o aviso de privacidade atualizado.
   - **Fotos das atividades:** o paciente pode adicionar **até 10 fotos** a uma atividade, como lembrança do que fez: enquanto ela está planejada ou pendente e, depois de concluída, até a próxima consulta. Numa atividade que não aconteceu, dá para tirar as fotos que já estavam lá. Elas aparecem só para a profissional a quem o paciente liberar.
   - **Retorno calmo ao concluir:** ao contar como foi uma atividade (ou avaliar uma Ação), o cartão assenta e um ✓ se desenha uma vez num círculo verde-sálvia; o leitor de tela ouve *"Registro guardado."*. É reconhecimento do esforço, sem confete, "parabéns" ou pontos. Com **Menos movimento** ligado, o ✓ aparece pronto, sem animação.
   - **Som e vibração ao salvar (opcional):** um som curto e suave (Gota, Sino suave ou Madeira, com volume e "Ouvir" antes de ligar) e uma vibração leve no Android. Começam desligados e valem só no aparelho, para não chamar atenção em público; na primeira vez, o app pergunta com delicadeza se a pessoa quer ouvir.
@@ -217,9 +218,6 @@ Na prática clínica tradicional:
 ---
 
 ## 5. Em breve — Roadmap (NUNCA divulgar como já existente)
-
-**Em desenvolvimento — Vídeos e GIFs nas Atividades (#331):** um anexo opcional por atividade,
-com acesso controlado pelas permissões de Atividades e de vídeo e GIF. O GIF toca sob demanda.
 
 **Em desenvolvimento — Busca nos registros (#152):** paciente e psicóloga poderão localizar registros
 por texto, período e filtros. Para a psicóloga, os resultados respeitam vínculo, áreas compartilhadas
