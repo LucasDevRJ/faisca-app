@@ -309,7 +309,20 @@ describe('acessibilidade e prazo', () => {
     expect(await screen.findByText('Passo 1 de 3')).toBeInTheDocument();
     expect(screen.queryByLabelText('O que aconteceu antes?')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
-    await user.type(await screen.findByLabelText('O que aconteceu antes?'), 'Algo fictício');
+    expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Passo 3 de 3')).toBeInTheDocument();
+
+    // Tentar salvar sem nenhuma resposta volta para a primeira pergunta com o aviso.
+    await user.click(screen.getByRole('button', { name: 'Salvar registro' }));
+    expect(screen.getByText('Responda pelo menos uma pergunta.')).toBeInTheDocument();
+    expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('O que aconteceu antes?'), 'Algo fictício');
+    await user.click(screen.getByRole('button', { name: '‹ Anterior' }));
+    expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByLabelText('O que aconteceu antes?')).toHaveValue('Algo fictício');
     await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
     expect(await screen.findByLabelText('O que fiz?')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Salvar registro' }));

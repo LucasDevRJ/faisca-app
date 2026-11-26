@@ -5,6 +5,7 @@ import { readHomeLayout } from '../features/home-layout/home-layout-storage';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { useSession } from '../features/auth/use-session';
+import { useAccessibility } from '../features/profile/use-profile';
 import type { Activity } from '../features/activities/activities-api';
 import { ActivityCard, type ActivityAction } from '../features/activities/activity-card';
 import {
@@ -100,6 +101,7 @@ function PeriodRecords({ period, today, currentMonday, collapseChart, onCycle, o
   // Atividade que a pessoa acabou de concluir: o cartão dela ganha o retorno calmo (issue #93).
   const [savedId, setSavedId] = useState<string | null>(null);
   const { data: user } = useSession();
+  const { directLanguage } = useAccessibility();
   useSaveSoundUnlock();
   const days = daysInRange(period);
   const inCycle = period.mode === 'cycle';
@@ -179,7 +181,9 @@ function PeriodRecords({ period, today, currentMonday, collapseChart, onCycle, o
           <>
             {activities.length === 0 && (
               <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-muted">
-                Nada registrado {here} ainda. Que tal planejar algo pequeno?
+                {directLanguage
+                  ? `Nenhuma atividade registrada ${here}.`
+                  : `Nada registrado ${here} ainda. Que tal planejar algo pequeno?`}
               </p>
             )}
 

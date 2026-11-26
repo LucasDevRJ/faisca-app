@@ -24,6 +24,7 @@
     "media:check-storage": "tsx --env-file-if-exists=.env scripts/check-private-files.ts",
     "media:check-video": "tsx scripts/check-action-video.ts",
     "media:worker": "tsx --env-file-if-exists=.env scripts/action-video-worker.ts",
+    "media:backup": "tsx scripts/action-video-backup.ts",
     "db:seed-dev": "tsx --env-file-if-exists=.env scripts/seed-dev.ts",
     "2fa:disable": "tsx --env-file-if-exists=.env scripts/disable-two-factor.ts",
     "postinstall": "prisma generate"

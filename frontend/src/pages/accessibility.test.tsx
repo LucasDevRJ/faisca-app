@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ACCESSIBILITY, prefersReducedMotion, type AccessibilitySettings } from '../features/profile/accessibility';
+import type { Action } from '../features/actions/actions-api';
 import { renderRoute } from '../test/render';
 import { fakeActivity, fakeAgenda, fakeSession, fakeThoughtRecord, fakeUser, loggedIn, server } from '../test/server';
 
@@ -114,7 +115,7 @@ describe('/conta/acessibilidade', () => {
     await waitFor(() => expect(document.documentElement.dataset.comfortableReading).toBeUndefined());
   });
 
-  it('aplica leitura confortável e menos movimento da sessão ao abrir qualquer tela', async () => {
+  it('aplica leitura confortável e menos movimento da sessão ao abrir qualquer tela e mantém a navegação do topo acessível', async () => {
     withAccessibility({ comfortableReading: true, reducedMotion: true });
     renderRoute('/novidades');
 
@@ -122,43 +123,128 @@ describe('/conta/acessibilidade', () => {
     expect(document.documentElement.dataset.reducedMotion).toBe('true');
     expect(localStorage.getItem('faisca:comfortable-reading')).toBe('true');
     expect(localStorage.getItem('faisca:reduced-motion')).toBe('true');
+
+    const banner = await screen.findByRole('banner');
+    expect(within(banner).getByRole('link', { name: 'Mensagens' })).toBeInTheDocument();
+    expect(within(banner).getByRole('link', { name: 'Ajuda: Como funciona o Faísca' })).toBeInTheDocument();
+    expect(within(banner).getByRole('link', { name: 'Conta' })).toBeInTheDocument();
+    expect(within(banner).getByRole('button', { name: 'Sair' })).toBeInTheDocument();
   });
 });
 
 describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
-  it('Linguagem direta troca expressões figuradas por textos literais em atividades e pensamentos', async () => {
+  it('Linguagem direta troca expressões figuradas por textos literais em atividades, pensamentos, ação, planos e tarefas', async () => {
     withAccessibility({ directLanguage: true });
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    let activities = [fakeActivity({ name: 'Leitura fictícia', activityDate: today, status: 'PLANEJADA' })];
+    const plannedAction: Action = {
+      id: '00000000-0000-4000-8000-0000000000b1',
+      name: 'Caminhada fictícia',
+      actionDate: today,
+      category: 'PRAZER',
+      status: 'PLANEJADA',
+      expectation: 5,
+      pleasure: null,
+      achievement: null,
+      observation: null,
+      evaluationEditableUntil: null,
+      photos: [],
+      photosDeadline: null,
+      photosOpen: false,
+      createdAt: '2026-09-20T12:00:00.000Z',
+      updatedAt: '2026-09-20T12:00:00.000Z',
+    };
+    let actions = [plannedAction];
     server.use(
-      http.get('*/api/activities', () =>
+      http.get('*/api/activities', () => HttpResponse.json({ activities })),
+      http.get('*/api/actions', () => HttpResponse.json({ actions })),
+      http.get('*/api/plans', () => HttpResponse.json({ plans: [] })),
+      http.get('*/api/tasks', () =>
         HttpResponse.json({
-          activities: [fakeActivity({ name: 'Leitura fictícia', activityDate: today, status: 'PLANEJADA' })],
+          tasks: [
+            {
+              id: '00000000-0000-4000-8000-0000000000a1',
+              title: 'Reflexão fictícia',
+              description: 'Observar momentos de calma.',
+              agreedWith: null,
+              agreedLinkId: null,
+              responseStatus: null,
+              responseText: null,
+              respondedAt: null,
+              responseDeadline: null,
+              responseEditable: true,
+              createdAt: '2026-09-20T12:00:00.000Z',
+              updatedAt: '2026-09-20T12:00:00.000Z',
+            },
+          ],
         }),
       ),
     );
 
     const user = userEvent.setup();
-    const { router } = renderRoute('/registros');
+    const { router, queryClient } = renderRoute('/registros');
 
     expect(await screen.findByRole('button', { name: 'Avaliar atividade' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Conta como foi?' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Criar um plano de ação' })).toBeInTheDocument();
+    expect(screen.queryByText(/Combinou um plano de ação/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Não aconteceu' }));
     const dialog = await screen.findByRole('dialog', { name: 'Registrar que não realizou' });
     expect(dialog).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
+    activities = [];
+    await queryClient.invalidateQueries({ queryKey: ['activities'] });
+    expect(await screen.findByText('Nenhuma atividade registrada nesta semana.')).toBeInTheDocument();
+
     await router.navigate('/pensamentos');
     expect(
       await screen.findByText(/Quando uma situação causar emoção ou pensamento forte/),
     ).toBeInTheDocument();
     expect(await screen.findByText(/Use "Novo registro" para anotar uma situação\./)).toBeInTheDocument();
+
+    await router.navigate('/pensamentos/novo');
+    expect(await screen.findByText('O que você pensou naquele momento?')).toBeInTheDocument();
+
+    await router.navigate('/acao');
+    expect(await screen.findByRole('button', { name: 'Avaliar ação' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Não realizada' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Não realizada' }));
+    const actionNotDoneDialog = await screen.findByRole('dialog', { name: 'Registrar que não realizou' });
+    await user.click(within(actionNotDoneDialog).getByRole('button', { name: 'Cancelar' }));
+
+    actions = [];
+    await queryClient.invalidateQueries({ queryKey: ['actions'] });
+    expect(await screen.findByText('Nenhuma ação registrada nesta semana.')).toBeInTheDocument();
+
+    await router.navigate('/planos');
+    expect(
+      await screen.findByText(
+        'Cada plano tem perguntas. Quando a situação do plano acontecer, faça um registro e responda às perguntas.',
+      ),
+    ).toBeInTheDocument();
+
+    await router.navigate('/tarefas');
+    await user.click(await screen.findByRole('button', { name: /Responder.*Reflexão fictícia/ }));
+    const taskDialog = await screen.findByRole('dialog', { name: 'Responder à tarefa' });
+    await user.click(within(taskDialog).getByRole('radio', { name: 'Não consegui fazer' }));
+    expect(within(taskDialog).getByLabelText('O que aconteceu?')).toBeInTheDocument();
+    await user.click(within(taskDialog).getByRole('radio', { name: 'Não faz sentido para mim agora' }));
+    expect(within(taskDialog).getByLabelText('Comentário')).toBeInTheDocument();
   });
 
-  it('Sem pressão de tempo esconde contagem regressiva do ciclo, distância em dias e prazo de alternativa', async () => {
+  it('Sem pressão de tempo esconde contagens regressivas, distâncias em dias e prazos em todas as telas aplicáveis', async () => {
     withAccessibility({ noTimePressure: true });
     const nextSession = fakeSession('2026-09-28', { time: '14:00' });
     const lastSession = fakeSession('2026-09-21', { time: '14:00' });
+    const thoughtRecord = fakeThoughtRecord({
+      id: '00000000-0000-4000-9000-000000000099',
+      situationDate: '2026-09-22',
+      editable: false,
+      canAddAlternative: true,
+      alternativeDeadline: { date: '2026-09-28', time: '14:00' },
+    });
     server.use(
       http.get('*/api/appointments', () =>
         HttpResponse.json(
@@ -179,32 +265,93 @@ describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
             from: '2026-09-22',
             to: '2026-09-28',
             session: { date: '2026-09-28', time: '14:00' },
-            previous: null,
+            previous: '2025-09-14',
             next: null,
             truncated: false,
           },
         }),
       ),
-      http.get('*/api/thought-records', () =>
+      http.get('*/api/activities', () =>
         HttpResponse.json({
-          thoughtRecords: [
-            fakeThoughtRecord({
-              situationDate: '2026-09-22',
-              editable: false,
-              canAddAlternative: true,
-              alternativeDeadline: { date: '2026-09-28', time: '14:00' },
+          activities: [
+            fakeActivity({
+              name: 'Caminhada no parque',
+              activityDate: '2026-09-22',
+              status: 'CONCLUIDA',
+              pleasure: 8,
+              achievement: 7,
+              photos: [],
+              photosOpen: true,
+              photosDeadline: { date: '2026-09-28', time: '14:00' },
             }),
           ],
         }),
       ),
+      http.get('*/api/thought-records', () =>
+        HttpResponse.json({
+          thoughtRecords: [thoughtRecord],
+        }),
+      ),
+      http.get('*/api/thought-records/:id', () => HttpResponse.json({ thoughtRecord })),
+      http.get('*/api/reminders', () =>
+        HttpResponse.json({
+          settings: {
+            channel: 'EMAIL',
+            morningEnabled: false,
+            morningTime: '08:00',
+            eveningEnabled: false,
+            eveningTime: '20:00',
+            quietHoursEnabled: true,
+            quietStart: '22:00',
+            quietEnd: '07:00',
+            pausedUntil: '2026-09-30',
+            lastFallbackAt: null,
+          },
+          push: {
+            configured: true,
+            vapidPublicKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+            hasSubscription: false,
+            subscriptionCount: 0,
+          },
+        }),
+      ),
     );
 
-    renderRoute('/pensamentos');
+    const { router } = renderRoute('/pensamentos');
 
     expect(await screen.findByRole('heading', { name: 'Consulta de 28/09' })).toBeInTheDocument();
     expect(screen.queryByText(/Sua consulta é/)).not.toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Adicionar explicação alternativa' })).toBeInTheDocument();
     expect(screen.queryByText(/até seg, 28\/09/)).not.toBeInTheDocument();
+
+    // Página de adicionar explicação alternativa: oculta o prazo na instrução.
+    await router.navigate(`/pensamentos/${thoughtRecord.id}/alternativa`);
+    expect(
+      await screen.findByText('Você pode adicionar a explicação alternativa uma vez. Depois de salva, ela fica como está.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/até seg, 28\/09/)).not.toBeInTheDocument();
+
+    // Meus registros: card de consultas sem distância relativa e fotos de atividade sem prazo.
+    await router.navigate('/registros');
+    const appointmentsRegion = await screen.findByRole('region', { name: 'Consultas' });
+    expect(within(appointmentsRegion).getByText(/28\/09 às 14:00/)).toBeInTheDocument();
+    expect(within(appointmentsRegion).queryByText(/·/)).not.toBeInTheDocument();
+    expect(await screen.findByText('Até 10 fotos.')).toBeInTheDocument();
+    expect(screen.queryByText(/Dá para adicionar ou remover/)).not.toBeInTheDocument();
+
+    // Orientação neutra de período antigo ("há 1 ano", DEC-120) continua visível mesmo com Sem pressão de tempo.
+    await router.navigate('/registros?semana=2024-09-16');
+    expect(await screen.findByText(/há \d+ anos?/)).toBeInTheDocument();
+
+    // Página de Consultas: lista de sessões sem distância relativa nem separador "·" órfão.
+    await router.navigate('/consultas');
+    const upcomingSection = await screen.findByRole('region', { name: 'Próximas' });
+    expect(within(upcomingSection).getByText(/28\/09 às 14:00/)).toBeInTheDocument();
+    expect(within(upcomingSection).queryByText(/·/)).not.toBeInTheDocument();
+
+    // Notificações: lembretes pausados mostram apenas a data final, sem contagem relativa entre parênteses.
+    await router.navigate('/conta/notificacoes');
+    expect(await screen.findByText('Lembretes pausados até 30/09.')).toBeInTheDocument();
   });
 
   it('Uma coisa por vez divide o formulário de Pensamentos em 5 passos e valida antes de avançar', async () => {
@@ -272,17 +419,36 @@ describe('Efeitos dos ajustes de acessibilidade nas telas', () => {
     expect(screen.getByLabelText('O que estava acontecendo?')).toBeInTheDocument();
     expect(screen.queryByText('Tensão no corpo')).not.toBeInTheDocument();
 
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Conte o que estava acontecendo.')).toBeInTheDocument();
+    expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
+
     await user.type(screen.getByLabelText('O que estava acontecendo?'), 'Situação fictícia');
     await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
     expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '‹ Anterior' }));
     expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
+    expect(screen.getByLabelText('O que estava acontecendo?')).toHaveValue('Situação fictícia');
 
     await router.navigate('/acao/nova?dia=2026-09-24');
     expect(await screen.findByText('Passo 1 de 2')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Escolha o tipo da ação.')).toBeInTheDocument();
+    expect(screen.getByText('Passo 1 de 2')).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: 'Já fiz' }));
     expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /Prazer/ }));
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('O que você vai fazer?'), 'Ouvir álbum fictício');
+    fireEvent.change(screen.getByRole('slider', { name: 'Quanto espera gostar' }), { target: { value: '6' } });
+    await user.click(screen.getByRole('button', { name: 'Próximo ›' }));
+    expect(screen.getByText('Passo 3 de 3')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '‹ Anterior' }));
+    expect(screen.getByText('Passo 2 de 3')).toBeInTheDocument();
+    expect(screen.getByLabelText('O que você vai fazer?')).toHaveValue('Ouvir álbum fictício');
   });
 
   it('Menos movimento ativa prefersReducedMotion e usa rolagem instantânea (auto) ao navegar para âncora #hash', async () => {

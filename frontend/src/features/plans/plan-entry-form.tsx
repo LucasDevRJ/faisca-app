@@ -97,7 +97,14 @@ export function PlanEntryForm({
     const next = { ...momentErrors, ...validateAnswers() };
     setErrors(next);
     if (Object.values(next).some(Boolean)) {
-      if (oneThingAtATime && Object.values(momentErrors).some(Boolean)) setStep(0);
+      if (oneThingAtATime) {
+        if (Object.values(momentErrors).some(Boolean)) setStep(0);
+        else {
+          const answerKey = Object.keys(next).find((k) => k.startsWith('answer-') && next[k]);
+          if (answerKey) setStep(Number(answerKey.slice('answer-'.length)) + 1);
+          else if (next.answers) setStep(Math.min(1, lastStep));
+        }
+      }
       return;
     }
     onSubmit({ entryDate: date, entryTime: time || null, answers: answers.map((answer) => answer.trim()) });

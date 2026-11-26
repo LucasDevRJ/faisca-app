@@ -1,12 +1,39 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdtemp, rm, rmdir, stat } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, rmdir, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { processActionVideo } from '../src/lib/action-video-processing.js';
 import { ACTION_VIDEO_MAX_BYTES } from '../src/lib/action-video.js';
+import { createPrivateFileStore, readPrivateFileStorageConfig } from '../src/lib/private-file-store.js';
+
+async function checkR2(input: string, downloaded: string) {
+  const store = createPrivateFileStore(readPrivateFileStorageConfig(process.env));
+  const prefix = `probe/${randomUUID()}/`;
+  const sourceKey = `${prefix}entrada.mov`;
+  const outputKey = `${prefix}convertido.mp4`;
+  try {
+    const body = await readFile(input);
+    await store.put(sourceKey, { body, contentType: 'video/quicktime', contentLength: body.length }, { ifMissing: true });
+    await processActionVideo(store, { sourceKey, outputKey, keepAudio: false });
+    const file = await store.get(outputKey);
+    await pipeline(file.body, createWriteStream(downloaded, { flags: 'wx' }), { signal: AbortSignal.timeout(120_000) });
+    assert.equal(file.contentType, 'video/mp4');
+    assert.equal((await stat(downloaded)).size, file.contentLength);
+  } finally {
+    const keys = [sourceKey, outputKey];
+    try {
+      const deleted = await Promise.allSettled(keys.map((key) => store.delete(key)));
+      assert.ok(deleted.every(({ status }) => status === 'fulfilled'));
+      assert.deepEqual(await Promise.all(keys.map((key) => store.exists(key))), [false, false]);
+    } finally {
+      store.close();
+    }
+  }
+}
 
 const root = await mkdtemp(join(tmpdir(), 'faisca-video-'));
 const input = join(root, 'entrada.mov');
@@ -14,6 +41,7 @@ const silent = join(root, 'sem-audio.mp4');
 const audible = join(root, 'com-audio.mp4');
 const long = join(root, 'longo.mp4');
 const rejected = join(root, 'rejeitado.mp4');
+const fromR2 = join(root, 'recebido-do-r2.mp4');
 try {
   const commandOptions = { timeout: 30_000, windowsHide: true };
   const trackLabel = 'Faixa fictícia';
@@ -48,8 +76,7 @@ try {
     },
   };
 
-  async function checkOutput(output: string, keepAudio?: boolean) {
-    await processActionVideo(store, { sourceKey: input, outputKey: output, keepAudio });
+  function checkOutput(output: string, keepAudio?: boolean) {
     const data = probe(output);
     const result = JSON.parse(data);
     const video = result.streams.find((stream: { codec_type: string }) => stream.codec_type === 'video');
@@ -62,8 +89,10 @@ try {
     assert.ok(!data.includes(trackLabel));
   }
 
-  await checkOutput(silent, false);
-  await checkOutput(audible);
+  await processActionVideo(store, { sourceKey: input, outputKey: silent, keepAudio: false });
+  checkOutput(silent, false);
+  await processActionVideo(store, { sourceKey: input, outputKey: audible });
+  checkOutput(audible);
 
   execFileSync('ffmpeg', [
     '-v', 'error', '-f', 'lavfi', '-i', 'color=blue:s=64x64:r=1:d=61',
@@ -78,7 +107,18 @@ try {
   };
   await assert.rejects(processActionVideo(oversizedStore, { sourceKey: input, outputKey: rejected }), /100 MB/);
   process.stdout.write('Vídeo da Ação: MP4 vertical, áudio ligado por padrão, remoção de áudio e metadados e limites conferidos.\n');
+  if (process.argv.includes('--r2')) {
+    try {
+      await checkR2(input, fromR2);
+      checkOutput(fromR2, false);
+      process.stdout.write('R2: vídeo fictício convertido, conferido e removido.\n');
+    } catch {
+      // Erros do provedor podem conter detalhes da requisição autenticada.
+      process.stderr.write('Falha ao converter, conferir ou limpar o vídeo fictício no R2. Confira a configuração do serviço.\n');
+      process.exitCode = 1;
+    }
+  }
 } finally {
-  await Promise.all([input, silent, audible, long, rejected].map((path) => rm(path, { force: true })));
+  await Promise.all([input, silent, audible, long, rejected, fromR2].map((path) => rm(path, { force: true })));
   await rmdir(root);
 }

@@ -389,7 +389,8 @@ Depois, num Postgres novo do Railway:
   um vídeo por vez e limpeza dos arquivos temporários mesmo em caso de falha. Antes de aceitar
   vídeos reais, verifique a expiração e a limpeza de originais e saídas órfãs após interrupções do
   serviço. O original pode conter áudio mesmo quando a pessoa escolhe removê-lo da versão final.
-  Verifique também a restauração de mídias. O serviço de cópia atual cobre o Postgres (DEC-075).
+  Verifique também a restauração de mídias conforme a seção seguinte. O serviço de cópia do
+  Postgres (DEC-075) roda separadamente.
 - A fila persiste no Postgres. Para teste isolado, `npm run media:worker` roda o serviço que
   pega um vídeo de cada vez, converte e remove os objetos de trabalhos concluídos ou descartados.
   Em teste, use a conexão DML do banco isolado. Em produção, prepare uma conta de banco com acesso
@@ -405,6 +406,47 @@ Depois, num Postgres novo do Railway:
   ela é a que o aplicativo mostrou.
 - Antes da publicação, teste um envio próximo do limite pelo proxy da produção, inclusive em uma
   conexão móvel mais lenta. O proxy de destinos externos da Vercel tem prazo máximo de 120 segundos.
+- Com as opções de vídeo ainda desligadas, execute `npm run media:check-video -- --r2` no
+  serviço de processamento. O comando cria, converte, confere e remove um vídeo fictício em
+  `probe/`, usando as credenciais do próprio serviço. Esse teste cobre o conversor e o R2.
+
+## Cópia e restauração dos vídeos da Ação (#143)
+
+O serviço de cópia do Postgres guarda as referências dos vídeos. Para guardar os arquivos MP4
+prontos, use um bucket R2 privado separado, inclusive do bucket de cópia do banco. Use
+credenciais distintas, restritas a cada bucket. Configure expiração para todo o prefixo
+`action-video-backup/v1/`, incluindo cópias interrompidas. A cópia de mídia deve expirar em
+até 28 dias, alinhada à retenção máxima da cópia do banco (DEC-075).
+
+- **Cópia.** Num ambiente isolado com Node, dependências do backend e `age`, preencha
+  `PRIVATE_FILES_R2_*` com acesso de leitura à mídia e `VIDEO_BACKUP_R2_*` com acesso de
+  gravação ao bucket de cópias. Passe a conexão de leitura do Postgres em
+  `VIDEO_BACKUP_DATABASE_URL` e a chave pública do `age` em `VIDEO_BACKUP_AGE_RECIPIENT`.
+  Em `backend/`, rode `npm run media:backup -- copy`. Registre o identificador e o horário
+  em que a cópia terminou, junto das informações sobre a cópia correspondente do Postgres.
+  Uma execução que falhou gera uma nova cópia em uma nova tentativa. Sem a mensagem de sucesso,
+  confira o inventário antes de considerar uma cópia completa.
+- **Restauração.** Suspenda gravações, exclusões e o worker até concluir a conferência.
+  Se só o armazenamento falhou, use o Postgres atual saudável em `VIDEO_BACKUP_DATABASE_URL`
+  e rode `npm run media:backup -- restore-storage <id-da-cópia>`. Em caso de reversão do
+  Postgres, use `VIDEO_BACKUP_DATABASE_URL` para o Postgres recuperado e
+  `VIDEO_RESTORE_SOURCE_DATABASE_URL` para um banco separado e atualizado, com as exclusões
+  posteriores à cópia. Rode `npm run media:backup -- restore-database <id-da-cópia>`.
+  Se a referência atual se perdeu, mantenha o vídeo desativado até reconciliar as exclusões.
+- No ambiente isolado de recuperação, configure leitura do bucket de cópias, escrita no bucket
+  de mídia e a chave privada em `VIDEO_RESTORE_AGE_IDENTITY_FILE` como caminho de um arquivo
+  temporário protegido no ambiente de recuperação. Remova esse arquivo após o uso. Só entram
+  vídeos presentes no inventário e com a mesma versão nas duas
+  referências. O comando preserva arquivos existentes e interrompe a operação se encontrar
+  no destino um vídeo ausente das referências atuais.
+- Antes de reativar o app, confira os totais, reproduza vídeos de teste e reconcilie
+  as referências ignoradas ou ausentes. Ao recuperar o banco, comece com um bucket de mídia
+  vazio. Siga os passos de exclusão de contas da restauração do Postgres e reconcilie
+  vínculos, permissões de área e aceites de privacidade. Mantenha a opção de vídeo da API
+  desligada enquanto essas autorizações não puderem ser confirmadas.
+- Valide cópia e restauração com mídias fictícias antes de ligar a funcionalidade em produção.
+  Programe cópias periódicas e acompanhe as falhas. Guarde a chave de restauração fora do
+  ambiente que faz as cópias.
 
 ## Trocar os segredos (incidente de segurança)
 
