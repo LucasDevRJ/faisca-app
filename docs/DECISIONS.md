@@ -3144,6 +3144,24 @@ O Faísca entrou no ar em `minhafaisca.com.br` em 30/09/2026. O que o deploy rea
 - **Limite conhecido:** a ativação em produção depende de validar o worker isolado, a remoção de
   mídias e a política de cópias e restauração do bucket. As fotos continuam usando o fluxo atual.
 
+## DEC-141 — Alertas de segurança por e-mail e prontidão com o banco (#117, #329)
+
+- **Decisão:** a API conta, numa janela de 10 minutos e só em memória, quatro sinais: logins com
+  senha errada (30, somando todas as contas), 403 de uma mesma conta (15), 429 (20) e respostas
+  500 ou mais (10). Ao chegar no limite, manda um e-mail para `SECURITY_ALERT_EMAIL` (o dono do
+  Faísca), com no máximo um e-mail por tipo a cada hora. O e-mail diz só o tipo e o número: sem
+  nome, e-mail, IP ou conteúdo. Para investigar, o log do Railway guarda o tipo, o número e, no
+  403, o id da conta (sem IP, que é dado pessoal). A contagem é feita por um middleware no
+  `finish` da resposta, que vê também os 403 dos middlewares e os 429 do rate limit. A nova rota
+  `GET /health/ready` responde 200 se o banco responde em até 3 s, e 503 (`unavailable`, sem o
+  erro) se não; ela é a rota do monitor de queda. O `/health` continua sem consultar o banco,
+  porque é o healthcheck do deploy no Railway.
+- **Motivo:** até aqui, ninguém ficaria sabendo de um ataque em andamento nem do banco fora do ar,
+  a não ser quem usa o app. Contar em memória não precisa de tabela nem guarda dado de ninguém.
+- **Limite conhecido:** reiniciar a API zera a contagem, e com mais de uma instância cada uma
+  contaria sozinha (como o rate limit). Um ataque lento, abaixo dos limites, não avisa. Os limites
+  podem mudar com o uso real.
+
 ## Adiado
 - **Exportação CSV/PDF:** os dados são consultados direto no app.
 - **Modo demo:** quando existir, terá deploy e banco próprios, só com dados fictícios.

@@ -1,8 +1,8 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../../app.js';
-import { healthResponseSchema } from './health.schema.js';
-import { shortVersion } from './health.service.js';
+import { healthResponseSchema, readinessResponseSchema } from './health.schema.js';
+import { getReadiness, shortVersion } from './health.service.js';
 
 const app = createApp();
 
@@ -67,5 +67,22 @@ describe('JSON malformado', () => {
     expect(JSON.stringify(res.body)).not.toContain('segredo');
     // O no-store vem antes do express.json (DEC-073).
     expect(res.headers['cache-control']).toBe('no-store');
+  });
+});
+
+describe('GET /health/ready (DEC-141)', () => {
+  it('responde 200 quando o banco responde', async () => {
+    const res = await request(app).get('/health/ready');
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+    expect(readinessResponseSchema.safeParse(res.body).success).toBe(true);
+  });
+
+  it('fica "unavailable" sem o detalhe do erro quando o banco não responde', async () => {
+    const readiness = await getReadiness(() => Promise.reject(new Error('senha do banco: segredo')));
+
+    expect(readiness.status).toBe('unavailable');
+    expect(JSON.stringify(readiness)).not.toContain('segredo');
   });
 });
