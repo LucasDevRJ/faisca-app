@@ -9,6 +9,7 @@ import { createAuthController } from './auth.controller.js';
 import { createAuthService } from './auth.service.js';
 import { createTwoFactorController } from '../two-factor/two-factor.controller.js';
 import { createTwoFactorService } from '../two-factor/two-factor.service.js';
+import { markLoginAttempt } from '../../lib/security-alerts.js';
 
 // O proxy remove o /api (DEC-023): o front chama /api/auth/login e aqui chega /auth/login.
 export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterResponse, pushSender?: PushSender) {
@@ -62,7 +63,8 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
   router.post('/auth/signup', ...signupEmailLimits, signupLimit, controller.signup);
   router.post('/auth/confirm-email', confirmLimit, controller.confirmEmail);
   router.post('/auth/resend-confirmation', ...emailLimits(), controller.resendConfirmation);
-  router.post('/auth/login', loginEmailLimit, loginLimit, controller.login);
+  // markLoginAttempt: senha errada (401) e código errado (400) contam nos alertas (DEC-141).
+  router.post('/auth/login', markLoginAttempt(401), loginEmailLimit, loginLimit, controller.login);
   router.post('/auth/logout', controller.logout);
   router.get('/auth/me', requireAuth, controller.me);
   router.post('/auth/profiles', requireAuth, controller.addProfile);
@@ -85,7 +87,7 @@ export function createAuthRoutes(mailer: Mailer, runAfterResponse: RunAfterRespo
   // O passo do login: o desafio já limita 5 tentativas e 3 envios; o limite por IP pega quem abre
   // desafio atrás de desafio.
   router.post('/auth/2fa/login/email', twoFactorLoginLimit, loginCodeEmailLimit, twoFactor.sendLoginEmailCode);
-  router.post('/auth/2fa/login/verify', twoFactorLoginLimit, twoFactor.verifyLogin);
+  router.post('/auth/2fa/login/verify', markLoginAttempt(400), twoFactorLoginLimit, twoFactor.verifyLogin);
   router.post('/auth/forgot-password', ...emailLimits(), controller.forgotPassword);
   router.post('/auth/reset-password', controller.resetPassword);
 

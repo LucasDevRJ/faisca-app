@@ -93,6 +93,7 @@ Gere quatro: a senha do `faisca_migrator`, a senha do `faisca_app`, o `JWT_SECRE
    | `ANNOUNCEMENT_EMAIL_RELEASES` | IDs de novidades com e-mail liberado, separados por vírgula. Deixe vazia até o front publicar a novidade; depois inclua o ID, por exemplo `2026-11-novidades-email` (DEC-119). |
    | `TRUST_PROXY_HOPS` | `2` (Vercel + borda do Railway; confirmado no passo 7) |
    | `TWO_FACTOR_SECRET` | outro segredo do passo 1, diferente dos demais (verificação em duas etapas, DEC-092; sem ela, o 2FA fica indisponível). **Nunca troque:** os apps autenticadores e os códigos de recuperação deixariam de funcionar. Guarde no cofre de senhas |
+   | `SECURITY_ALERT_EMAIL` | e-mail de quem cuida do Faísca, que recebe os alertas de segurança (DEC-141). Vazia, o alerta fica só no log |
    | `COMMUNITY_MODERATOR_EMAILS` | lista separada por vírgulas dos e-mails das contas autorizadas a revisar conteúdo da comunidade (DEC-113). Cada conta precisa ter verificação em duas etapas ativa. Deixe vazia até escolher e configurar a pessoa moderadora. |
 
    - Sem o `PORT`, o Railway põe a API na 8080. O healthcheck passa, mas o domínio (3333) responde
@@ -522,6 +523,28 @@ ligado os dois) e, quando existir, a recuperação com espera de 7 dias.
    O script desliga o 2FA, apaga os códigos de recuperação, **derruba as sessões abertas** e manda
    o e-mail neutro "A verificação em duas etapas foi desligada". Ele escreve só o id da conta.
 3. Peça para a pessoa entrar, criar uma senha nova em "Esqueci minha senha" e ligar o 2FA de novo.
+
+## Alertas de segurança (DEC-141)
+
+A API manda um e-mail para `SECURITY_ALERT_EMAIL` quando, em 10 minutos, vê 30 logins com senha
+ou código do 2FA errados, 15 respostas 403 para uma mesma conta logada, 20 respostas 429 ou 10 erros 500. Cada tipo avisa no
+máximo uma vez por hora. O e-mail só diz o tipo e o número.
+
+Ao receber um alerta:
+1. No Railway, abra os logs da API e procure `Alerta de segurança` (campo `securityAlert`). No 403,
+   o campo `userId` mostra a conta (cada conta que passou do limite tem a sua linha). Nunca copie dado de ninguém para issue ou conversa.
+2. **Logins errados ou 429:** em geral, o rate limit já está segurando. Veja se o número continua
+   subindo depois de uma hora (um novo e-mail chega).
+3. **403 de uma conta:** veja se é alguém tentando abrir dado de outra pessoa (rotas de outro
+   paciente) ou só um defeito do front. Se for tentativa, encerre as sessões da conta e, se preciso,
+   siga "Trocar os segredos".
+4. **500:** procure `Erro não tratado` nos logs e confira o `/health/ready`.
+
+### Monitor de queda (#330)
+O UptimeRobot (plano grátis) confere a cada 5 minutos e avisa por e-mail e pelo app do celular:
+- **API:** `https://api.minhafaisca.com.br/health/ready`, tipo HTTP(s), esperando o código 200.
+  Essa rota confere também o banco; o `/health` não confere, porque é o healthcheck do deploy.
+- **Site:** `https://minhafaisca.com.br`.
 
 ## Site fora do ar com a API funcionando
 
