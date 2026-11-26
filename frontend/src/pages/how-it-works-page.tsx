@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
-import { ACTION_VIDEOS_ENABLED } from '../features/actions/action-video-api';
+import { ACTION_VIDEOS_ENABLED, ACTIVITY_VIDEOS_ENABLED } from '../features/actions/action-video-api';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
 
@@ -165,6 +165,11 @@ export function HowItWorksPage() {
         <RecordGuide id="atividades-area" title="Atividades" clinical>
           <p>Registre o que planejou fazer e, se quiser, como foi. Por exemplo, uma caminhada, uma tarefa de casa ou um encontro.</p>
           <p><strong>Quem vê:</strong> você e as profissionais a quem liberar Atividades. Atividades finalizadas não podem ser editadas nem apagadas.</p>
+          {ACTIVITY_VIDEOS_ENABLED && <p>
+            No cartão da atividade, você pode anexar um vídeo MP4 ou MOV ou um GIF de até 60 segundos e 100 MB.
+            O envio e a remoção seguem o prazo das fotos. A profissional só vê o anexo se você liberar
+            Atividades e Vídeos e GIFs das atividades e as duas contas aceitarem o aviso de privacidade.
+          </p>}
         </RecordGuide>
         <RecordGuide id="pensamentos" title="Pensamentos — Registro de Pensamentos (RPD)" clinical>
           <p>Organize uma situação, o pensamento que veio, as emoções, o que fez e o que aconteceu depois. Se quiser, acrescente uma explicação alternativa.</p>

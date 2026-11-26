@@ -412,10 +412,20 @@ Depois, num Postgres novo do Railway:
 - Antes da publicação, teste um envio próximo do limite pelo proxy da produção, inclusive em uma
   conexão móvel mais lenta. O proxy de destinos externos da Vercel tem prazo máximo de 120 segundos.
 - Com as opções de vídeo ainda desligadas, execute `npm run media:check-video -- --r2` no
-  serviço de processamento. O comando cria, converte, confere e remove um vídeo fictício em
+  serviço de processamento. O comando cria, converte, confere e remove um vídeo e um GIF fictícios em
   `probe/`, usando as credenciais do próprio serviço. Esse teste cobre o conversor e o R2.
 
-## Cópia e restauração dos vídeos da Ação (#143)
+### Atividades (#331)
+
+- A migração acrescenta a ligação com Atividades à fila existente. Mantenha
+  `ACTIVITY_VIDEOS_ENABLED` e `VITE_ACTIVITY_VIDEOS_ENABLED` desligadas até confirmar a versão
+  nova na API, no worker de vídeo e no serviço de cópia.
+- Depois de validar envio, remoção, cópia e restauração com anexos fictícios, habilite primeiro a API
+  e depois o frontend. A nova versão do aviso é `2026-11.15`.
+- Para interromper novos envios, desligue as opções. Depois que existirem anexos de Atividades,
+  mantenha o worker atualizado. O worker anterior interpreta uma mídia sem Ação como removida.
+
+## Cópia e restauração dos vídeos da Ação e das Atividades (#143, #331)
 
 O serviço de cópia do Postgres guarda as referências dos vídeos. Para guardar os arquivos MP4
 prontos, use um bucket R2 privado separado, inclusive do bucket de cópia do banco. Use
@@ -436,7 +446,9 @@ até 28 dias, alinhada à retenção máxima da cópia do banco (DEC-075).
   e rode `npm run media:backup -- restore-storage <id-da-cópia>`. Em caso de reversão do
   Postgres, use `VIDEO_BACKUP_DATABASE_URL` para o Postgres recuperado e
   `VIDEO_RESTORE_SOURCE_DATABASE_URL` para um banco separado e atualizado, com as exclusões
-  posteriores à cópia. Rode `npm run media:backup -- restore-database <id-da-cópia>`.
+  posteriores à cópia. Aplique as migrations atuais no banco recuperado e isolado, inclusive
+  quando a cópia for anterior à ligação de vídeos com Atividades (#331). Rode
+  `npm run media:backup -- restore-database <id-da-cópia>`.
   Se a referência atual se perdeu, mantenha o vídeo desativado até reconciliar as exclusões.
 - No ambiente isolado de recuperação, configure leitura do bucket de cópias, escrita no bucket
   de mídia e a chave privada em `VIDEO_RESTORE_AGE_IDENTITY_FILE` como caminho de um arquivo

@@ -5,6 +5,8 @@ import { formatDateTime } from '../links/link-format';
 import { useAccessibility } from '../profile/use-profile';
 import { isFinal, type Activity } from './activities-api';
 import { ActivityPhotos } from './activity-photos';
+import { ActionVideo } from '../actions/action-video';
+import { ACTIVITY_VIDEOS_ENABLED } from '../actions/action-video-api';
 import { SCORE_TEXT, STATUS_LABEL } from './activity-labels';
 import { RecordLinksPanel } from '../record-links/record-links-panel';
 import { recordAnchorId } from '../record-links/record-links-format';
@@ -24,7 +26,7 @@ type ActivityCardProps =
       onAction: (action: ActivityAction, activity: Activity) => void;
       readOnly?: false;
     }
-  | { activity: Activity; readOnly: true; patientId: string };
+  | { activity: Activity; readOnly: true; patientId: string; showVideo?: boolean };
 
 // Os botões seguem o estado (tabela da SPEC). Registro final não tem ações: ele é imutável
 // e o backend responderia 409. Esconder os botões é conforto, não segurança.
@@ -121,6 +123,11 @@ export function ActivityCard(props: ActivityCardProps) {
         activity={activity}
         viewer={props.readOnly ? { kind: 'therapist', patientId: props.patientId } : { kind: 'patient' }}
       />
+      {ACTIVITY_VIDEOS_ENABLED && (!props.readOnly || props.showVideo) && (
+        <ActionVideo actionId={activity.id} activity patientId={props.readOnly ? props.patientId : undefined}
+          canChange={!props.readOnly && activity.photosOpen && activity.status !== 'NAO_REALIZADA'}
+          canRemove={!props.readOnly && (activity.photosOpen || activity.status === 'NAO_REALIZADA')} />
+      )}
       {(!props.readOnly || props.patientId) && <RecordLinksPanel type="ACTIVITY" id={activity.id} date={activity.activityDate} readOnly={props.readOnly} patientId={props.readOnly ? props.patientId : undefined} />}
     </article>
   );

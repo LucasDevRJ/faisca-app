@@ -6,16 +6,20 @@ import { getAuthUser } from '../../middlewares/require-auth.js';
 import type { createActionVideosService } from './action-videos.service.js';
 
 const actionParams = z.object({ id: z.uuid() });
-const professionalParams = z.object({ patientId: z.uuid(), actionId: z.uuid() });
+const professionalParams = z.object({ patientId: z.uuid() });
+const recordId = z.uuid();
 const uploadOptions = z.strictObject({ audio: z.enum(['keep', 'remove']).default('keep') });
 
-export function createActionVideosController(service: ReturnType<typeof createActionVideosService>) {
+export function createActionVideosController(
+  service: ReturnType<typeof createActionVideosService>,
+  recordParam: 'actionId' | 'activityId' = 'actionId',
+) {
   const status: RequestHandler = async (req, res) => {
     res.json(await service.status(getAuthUser(req).id, actionParams.parse(req.params).id));
   };
   const professionalStatus: RequestHandler = async (req, res) => {
-    const { patientId, actionId } = professionalParams.parse(req.params);
-    const video = await service.status(patientId, actionId);
+    const params = professionalParams.parse(req.params);
+    const video = await service.status(params.patientId, recordId.parse(req.params[recordParam]));
     res.json(video?.state === 'READY' ? { state: 'READY' } : null);
   };
   const upload: RequestHandler = async (req, res) => {
@@ -73,8 +77,8 @@ export function createActionVideosController(service: ReturnType<typeof createAc
     await sendVideo(res, getAuthUser(req).id, actionParams.parse(req.params).id, req.header('Range'));
   };
   const professionalPlayback: RequestHandler = async (req, res) => {
-    const { patientId, actionId } = professionalParams.parse(req.params);
-    await sendVideo(res, patientId, actionId, req.header('Range'));
+    const params = professionalParams.parse(req.params);
+    await sendVideo(res, params.patientId, recordId.parse(req.params[recordParam]), req.header('Range'));
   };
 
   return { status, upload, remove, playback, professionalStatus, professionalPlayback };

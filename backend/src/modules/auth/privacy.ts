@@ -51,6 +51,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.12',
   '2026-11.13',
   '2026-11.14',
+  '2026-11.15',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -73,9 +74,12 @@ export const MESSAGES_PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
 // A 2026-11.12 (DEC-127, o "visto" das Mensagens) virou a atual no PR das telas, com o texto.
 // A 2026-11.13 (DEC-128, o registro apontado nas Mensagens) virou a atual no PR das telas, com o texto.
 export const ACTION_VIDEOS_PRIVACY_VERSION: PrivacyVersion = '2026-11.14';
-export const PRIVACY_VERSION: PrivacyVersion = env.ACTION_VIDEOS_ENABLED === 'true'
-  ? ACTION_VIDEOS_PRIVACY_VERSION
-  : '2026-11.13';
+export const ACTIVITY_VIDEOS_PRIVACY_VERSION: PrivacyVersion = '2026-11.15';
+export const PRIVACY_VERSION: PrivacyVersion = env.ACTIVITY_VIDEOS_ENABLED === 'true'
+  ? ACTIVITY_VIDEOS_PRIVACY_VERSION
+  : env.ACTION_VIDEOS_ENABLED === 'true'
+    ? ACTION_VIDEOS_PRIVACY_VERSION
+    : '2026-11.13';
 
 export function privacyUpToDate(acceptedVersion: string | null): boolean {
   return PRIVACY_VERSIONS.indexOf(acceptedVersion as PrivacyVersion) >= PRIVACY_VERSIONS.indexOf(PRIVACY_VERSION);
@@ -93,12 +97,13 @@ export function versionToRecord(shownVersion: string | undefined, current: strin
   const shown = shownVersion ?? LEGACY_SHOWN_VERSION;
   // A Vercel e o Railway publicam separadamente. Preserve o aceite mais novo e grave
   // apenas a versão enviada pelo app, inclusive quando o PWA ainda mostra a anterior.
-  if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION || shown === '2026-11.12' || shown === '2026-11.13') {
+  if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION ||
+      shown === '2026-11.12' || shown === '2026-11.13' || shown === PRIVACY_VERSION ||
+      (shown === ACTION_VIDEOS_PRIVACY_VERSION && env.ACTIVITY_VIDEOS_ENABLED === 'true')) {
     const kept = PRIVACY_VERSIONS.indexOf(current as PrivacyVersion);
     const displayed = PRIVACY_VERSIONS.indexOf(shown as PrivacyVersion);
     return PRIVACY_VERSIONS[Math.max(kept, displayed)]!;
   }
-  if (shownVersion === PRIVACY_VERSION) return PRIVACY_VERSION;
   throw new AppError(
     409,
     'PRIVACY_VERSION_OUTDATED',
@@ -125,6 +130,7 @@ export const PRIVACY_AREAS = {
   plans: '2026-11.2',
   // Fotos das atividades (DEC-103): fazem parte do registro de saúde e podem mostrar outras pessoas.
   activityPhotos: '2026-11.5',
+  activityVideos: ACTIVITY_VIDEOS_PRIVACY_VERSION,
   // Tarefas e respostas (DEC-106): conteúdo de saúde escrito pelo paciente.
   tasks: '2026-11.6',
   // Sono e humor (DEC-107): horários de deitar e acordar, notas do sono e do humor e a palavra do dia.
@@ -151,7 +157,7 @@ export function coversArea(acceptedVersion: string | null, area: PrivacyArea): b
 
 export function privacyAreas(
   acceptedVersion: string | null,
-): Record<Exclude<PrivacyArea, 'actionVideos'>, boolean> & { actionVideos?: boolean } {
+): Record<Exclude<PrivacyArea, 'actionVideos' | 'activityVideos'>, boolean> & { actionVideos?: boolean; activityVideos?: boolean } {
   return {
     thoughtRecords: coversArea(acceptedVersion, 'thoughtRecords'),
     tensionEpisodes: coversArea(acceptedVersion, 'tensionEpisodes'),
@@ -162,6 +168,7 @@ export function privacyAreas(
     aboutMe: coversArea(acceptedVersion, 'aboutMe'),
     plans: coversArea(acceptedVersion, 'plans'),
     activityPhotos: coversArea(acceptedVersion, 'activityPhotos'),
+    ...(env.ACTIVITY_VIDEOS_ENABLED === 'true' && { activityVideos: coversArea(acceptedVersion, 'activityVideos') }),
     tasks: coversArea(acceptedVersion, 'tasks'),
     sleepMood: coversArea(acceptedVersion, 'sleepMood'),
     medication: coversArea(acceptedVersion, 'medication'),

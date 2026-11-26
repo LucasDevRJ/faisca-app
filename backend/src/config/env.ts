@@ -54,6 +54,7 @@ const envSchema = z.object({
   // Issue #220 / DEC-113: contas autorizadas a moderar somente a comunidade; exige 2FA.
   COMMUNITY_MODERATOR_EMAILS: z.string().default(''),
   ACTION_VIDEOS_ENABLED: z.enum(['true', 'false']).default('false'),
+  ACTIVITY_VIDEOS_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 
 export type Env = z.infer<typeof envSchema>;

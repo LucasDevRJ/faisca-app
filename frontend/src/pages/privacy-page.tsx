@@ -44,8 +44,10 @@ import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 // em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
 // e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
 // "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
-const SHOW_ACTION_VIDEOS_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.14';
-const VERSION_LABEL = SHOW_ACTION_VIDEOS_NOTICE ? 'versão de 25 de novembro de 2026' : 'versão 19, de novembro de 2026';
+const SHOW_ACTIVITY_VIDEOS_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.15';
+const SHOW_ACTION_VIDEOS_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.14' || SHOW_ACTIVITY_VIDEOS_NOTICE;
+const VERSION_LABEL = SHOW_ACTIVITY_VIDEOS_NOTICE ? 'versão de 26 de novembro de 2026'
+  : SHOW_ACTION_VIDEOS_NOTICE ? 'versão de 25 de novembro de 2026' : 'versão 19, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -120,6 +122,12 @@ export function PrivacyPage() {
               Antes de guardar, tiramos os dados escondidos da foto, como o lugar onde ela foi tirada, e
               diminuímos o tamanho. Se aparecerem outras pessoas, confira se elas estão de acordo.
             </li>
+            {SHOW_ACTIVITY_VIDEOS_NOTICE && <li>
+              Nas atividades: um vídeo ou GIF opcional por atividade. Você escolhe se mantém o áudio
+              do vídeo. Convertemos o arquivo e retiramos os metadados de origem, como a localização.
+              O GIF fica sem som e só se move quando você inicia a reprodução. Confira se as pessoas
+              que aparecem ou têm a voz gravada estão de acordo.
+            </li>}
             <li>
               No Registro de Pensamentos (RPD): as situações que você descreve e, para cada uma, o pensamento
               automático, o quanto você acredita nele, as emoções e a intensidade de cada uma, o comportamento e
@@ -264,6 +272,11 @@ export function PrivacyPage() {
             no Cloudflare R2. A profissional vinculada pode assistir se você liberar a Ação e os vídeos, e
             ambas as contas aceitarem o aviso que inclui essa área.
           </p>}
+          {SHOW_ACTIVITY_VIDEOS_NOTICE && <p>
+            Os vídeos e GIFs das atividades também ficam em armazenamento privado no Cloudflare R2.
+            A profissional vinculada pode assistir se você liberar Atividades e Vídeos e GIFs das
+            atividades e as duas contas aceitarem o aviso que inclui essa área.
+          </p>}
         </Section>
 
         <Section title="Como protegemos">
@@ -287,6 +300,11 @@ export function PrivacyPage() {
           {SHOW_ACTION_VIDEOS_NOTICE && <p>
             O vídeo deixa de estar acessível quando você o remove ou exclui a conta. O app agenda a
             remoção do arquivo armazenado. Depois da conversão, o app remove o original.
+          </p>}
+          {SHOW_ACTIVITY_VIDEOS_NOTICE && <p>
+            O app remove o original de cada vídeo ou GIF da atividade depois da conversão. Ao remover
+            o anexo, excluir a atividade ou excluir a conta, o arquivo deixa de estar acessível e entra
+            na fila de remoção. As cópias criptografadas desses arquivos expiram em até 28 dias.
           </p>}
         </Section>
 

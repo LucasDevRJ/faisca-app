@@ -10,15 +10,15 @@ import { processActionVideo } from '../src/lib/action-video-processing.js';
 import { ACTION_VIDEO_MAX_BYTES } from '../src/lib/action-video.js';
 import { createPrivateFileStore, readPrivateFileStorageConfig } from '../src/lib/private-file-store.js';
 
-async function checkR2(input: string, downloaded: string) {
+async function checkR2(input: string, downloaded: string, isGif = false) {
   const store = createPrivateFileStore(readPrivateFileStorageConfig(process.env));
   const prefix = `probe/${randomUUID()}/`;
-  const sourceKey = `${prefix}entrada.mov`;
+  const sourceKey = `${prefix}${isGif ? 'entrada.gif' : 'entrada.mov'}`;
   const outputKey = `${prefix}convertido.mp4`;
   try {
     const body = await readFile(input);
-    await store.put(sourceKey, { body, contentType: 'video/quicktime', contentLength: body.length }, { ifMissing: true });
-    await processActionVideo(store, { sourceKey, outputKey, keepAudio: false });
+    await store.put(sourceKey, { body, contentType: isGif ? 'image/gif' : 'video/quicktime', contentLength: body.length }, { ifMissing: true });
+    await processActionVideo(store, { sourceKey, outputKey, keepAudio: false, isGif });
     const file = await store.get(outputKey);
     await pipeline(file.body, createWriteStream(downloaded, { flags: 'wx' }), { signal: AbortSignal.timeout(120_000) });
     assert.equal(file.contentType, 'video/mp4');
@@ -42,6 +42,9 @@ const audible = join(root, 'com-audio.mp4');
 const long = join(root, 'longo.mp4');
 const rejected = join(root, 'rejeitado.mp4');
 const fromR2 = join(root, 'recebido-do-r2.mp4');
+const gif = join(root, 'animacao.gif');
+const fromGif = join(root, 'animacao.mp4');
+const fromGifR2 = join(root, 'animacao-recebida-do-r2.mp4');
 try {
   const commandOptions = { timeout: 30_000, windowsHide: true };
   const trackLabel = 'Faixa fictícia';
@@ -89,10 +92,23 @@ try {
     assert.ok(!data.includes(trackLabel));
   }
 
+  function checkGifOutput(output: string) {
+    const data = probe(output);
+    assert.match(data, /"codec_name": "h264"/);
+    assert.doesNotMatch(data, /"codec_type": "audio"/);
+  }
+
   await processActionVideo(store, { sourceKey: input, outputKey: silent, keepAudio: false });
   checkOutput(silent, false);
   await processActionVideo(store, { sourceKey: input, outputKey: audible });
   checkOutput(audible);
+
+  execFileSync('ffmpeg', [
+    '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=s=64x64:r=8:d=1', '-loop', '0', gif,
+  ], commandOptions);
+  await processActionVideo(store, { sourceKey: gif, outputKey: fromGif, isGif: true });
+  checkGifOutput(fromGif);
+  process.stdout.write('GIF fictício convertido para MP4 sem áudio e sem repetição automática.\n');
 
   execFileSync('ffmpeg', [
     '-v', 'error', '-f', 'lavfi', '-i', 'color=blue:s=64x64:r=1:d=61',
@@ -111,7 +127,9 @@ try {
     try {
       await checkR2(input, fromR2);
       checkOutput(fromR2, false);
-      process.stdout.write('R2: vídeo fictício convertido, conferido e removido.\n');
+      await checkR2(gif, fromGifR2, true);
+      checkGifOutput(fromGifR2);
+      process.stdout.write('R2: vídeo e GIF fictícios convertidos, conferidos e removidos.\n');
     } catch {
       // Erros do provedor podem conter detalhes da requisição autenticada.
       process.stderr.write('Falha ao converter, conferir ou limpar o vídeo fictício no R2. Confira a configuração do serviço.\n');
@@ -119,6 +137,6 @@ try {
     }
   }
 } finally {
-  await Promise.all([input, silent, audible, long, rejected, fromR2].map((path) => rm(path, { force: true })));
+  await Promise.all([input, silent, audible, long, rejected, fromR2, gif, fromGif, fromGifR2].map((path) => rm(path, { force: true })));
   await rmdir(root);
 }

@@ -30,6 +30,7 @@ export type SessionUser = {
     plans: boolean;
     // Fotos das atividades (DEC-103, DEC-104).
     activityPhotos: boolean;
+    activityVideos?: boolean;
     // Tarefas (DEC-106).
     tasks: boolean;
     // Sono e humor e o Remédio do dia (DEC-107, DEC-108).

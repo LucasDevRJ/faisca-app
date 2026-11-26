@@ -206,6 +206,8 @@ describe('aviso de novo vínculo com duas profissionais', () => {
     expect(within(ana).getByRole('button', { name: /Marcar tudo/ })).toBeDisabled();
     await user.click(within(ana).getByRole('button', { name: /Salvar o que Ana vê/ }));
 
-    await waitFor(() => expect(writes[0]?.body).toEqual({ areas: SHARED_AREAS.filter((area) => area !== 'ACTION_VIDEOS') }));
+    await waitFor(() => expect(writes[0]?.body).toEqual({
+      areas: SHARED_AREAS.filter((area) => area !== 'ACTION_VIDEOS' && area !== 'ACTIVITY_VIDEOS'),
+    }));
   });
 });

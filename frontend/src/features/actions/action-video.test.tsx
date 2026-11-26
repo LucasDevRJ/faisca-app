@@ -7,15 +7,15 @@ import { describe, expect, it } from 'vitest';
 import { fakeUser, server } from '../../test/server';
 import { ActionVideo } from './action-video';
 
-function renderVideo(patientId?: string) {
+function renderVideo(patientId?: string, activity = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   server.use(http.get('*/api/auth/me', () => HttpResponse.json({
-    user: { ...fakeUser, privacyAreas: { ...fakeUser.privacyAreas, actionVideos: true } },
+    user: { ...fakeUser, privacyAreas: { ...fakeUser.privacyAreas, actionVideos: true, activityVideos: true } },
   })));
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <ActionVideo actionId="acao-ficticia" canChange={!patientId} patientId={patientId} />
+        <ActionVideo actionId="acao-ficticia" canChange={!patientId} patientId={patientId} activity={activity} />
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -60,4 +60,28 @@ describe('vídeos na Ação', () => {
     );
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
+});
+
+it('envia GIF nas atividades sem áudio e aguarda a reprodução manual', async () => {
+  const user = userEvent.setup();
+  let uploaded: { audio: string | null; type: string | null } | undefined;
+  const path = '*/api/activities/acao-ficticia/video';
+  server.use(
+    http.get(path, () => HttpResponse.json(uploaded ? { state: 'READY' } : null)),
+    http.post(path, ({ request }) => {
+      uploaded = { audio: new URL(request.url).searchParams.get('audio'), type: request.headers.get('content-type') };
+      return HttpResponse.json({ state: 'PENDING' }, { status: 202 });
+    }),
+  );
+  renderVideo(undefined, true);
+  await user.click(await screen.findByRole('button', { name: 'Adicionar vídeo ou GIF' }));
+  const dialog = screen.getByRole('dialog', { name: 'Adicionar vídeo ou GIF à atividade' });
+  await user.upload(within(dialog).getByLabelText('Arquivo de vídeo ou GIF'), new File(['fictício'], 'ficticio.gif', { type: 'image/gif' }));
+  expect(within(dialog).queryByRole('checkbox', { name: 'Manter o áudio no vídeo final' })).not.toBeInTheDocument();
+  await user.click(within(dialog).getByRole('button', { name: 'Enviar arquivo' }));
+  const video = await screen.findByLabelText('Vídeo ou GIF da atividade');
+  expect(uploaded).toEqual({ audio: 'remove', type: 'image/gif' });
+  expect(video).toHaveAttribute('controls');
+  expect(video).not.toHaveAttribute('autoplay');
+  expect(video).not.toHaveAttribute('loop');
 });

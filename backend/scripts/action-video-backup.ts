@@ -22,7 +22,7 @@ async function listReadyVideos(url: string) {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl.parse(url) }) });
   try {
     const videos = await prisma.actionVideo.findMany({
-      where: { state: 'READY', actionId: { not: null }, outputVersion: { not: null } },
+      where: { state: 'READY', OR: [{ actionId: { not: null } }, { activityId: { not: null } }], outputVersion: { not: null } },
       select: { id: true, outputVersion: true },
       orderBy: { id: 'asc' },
     });

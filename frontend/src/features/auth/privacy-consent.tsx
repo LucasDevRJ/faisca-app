@@ -21,6 +21,7 @@ const AREA_NAME: Record<PrivacyArea, string> = {
   aboutMe: 'o “Sobre mim”',
   plans: 'o Meus Planos',
   activityPhotos: 'as fotos das atividades',
+  activityVideos: 'os vídeos e GIFs das atividades',
   tasks: 'as Tarefas',
   sleepMood: 'o Sono e humor',
   medication: 'o Remédio do dia',
@@ -116,6 +117,16 @@ const CONSENT_TEXT: Record<PrivacyArea, { patient: ConsentCopy; therapist: Conse
     therapist: {
       intro: 'Para ver as fotos das atividades dos seus pacientes, leia o que mudou e confirme.',
       scope: 'inclusive com o acesso às fotos das atividades dos meus pacientes como dados de saúde.',
+    },
+  },
+  activityVideos: {
+    patient: {
+      intro: 'Para anexar vídeos ou GIFs às suas atividades, leia o que mudou e confirme.',
+      scope: 'inclusive com o armazenamento dos vídeos e GIFs que eu anexar às minhas atividades como dados de saúde.',
+    },
+    therapist: {
+      intro: 'Para ver os vídeos e GIFs das atividades que seus pacientes liberarem, leia o que mudou e confirme.',
+      scope: 'inclusive com o acesso aos vídeos e GIFs das atividades que meus pacientes liberarem.',
     },
   },
   tasks: {
@@ -322,6 +333,7 @@ export function PrivacyUpdateBanner({ gatedArea }: { gatedArea?: PrivacyArea }) 
   // com um texto que não é o da versão atual.
   const missing = Object.entries(user.privacyAreas)
     .filter(([area]) => area !== 'actionVideos' || import.meta.env.VITE_ACTION_VIDEOS_ENABLED === 'true')
+    .filter(([area]) => area !== 'activityVideos' || import.meta.env.VITE_ACTIVITY_VIDEOS_ENABLED === 'true')
     .filter(([, allowed]) => !allowed)
     .map(([area]) => area);
   if (missing.some((area) => !(area in AREA_NAME))) {

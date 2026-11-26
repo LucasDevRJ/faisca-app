@@ -230,6 +230,7 @@ model Activity {
 
   user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   photos ActivityPhoto[]
+  video  ActionVideo?
 
   @@index([userId, activityDate])
 }
@@ -501,6 +502,7 @@ enum SharedArea {
   // Fotos das atividades (DEC-103): caixa própria, como as fotos da Ação. Vínculos que já liberavam
   // as atividades começam sem elas.
   ACTIVITY_PHOTOS
+  ACTIVITY_VIDEOS
   THOUGHT_RECORDS
   TENSION_EPISODES
   ACTIONS
@@ -755,14 +757,17 @@ enum ActionVideoState {
 model ActionVideo {
   id        String           @id @default(uuid()) @db.Uuid
   actionId  String?          @unique @db.Uuid
+  activityId String?         @unique @db.Uuid
   state     ActionVideoState @default(UPLOADING)
   keepAudio Boolean          @default(true)
+  isGif     Boolean          @default(false)
   cleanupPending Boolean     @default(true)
   outputVersion String?      @db.Uuid
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
   action BehavioralAction? @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  activity Activity? @relation(fields: [activityId], references: [id], onDelete: SetNull)
 
   @@index([state, cleanupPending, updatedAt])
   @@index([actionId, updatedAt])
