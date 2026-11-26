@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'node:stream';
 import { z } from 'zod';
 
@@ -51,7 +51,7 @@ export function createPrivateFileStore(config: StorageConfig) {
   });
 
   return {
-    async put(key: string, file: PrivateFileUpload) {
+    async put(key: string, file: PrivateFileUpload, { ifMissing = false } = {}) {
       await client.send(new PutObjectCommand({
         Bucket: bucket,
         Key: key,
@@ -59,6 +59,7 @@ export function createPrivateFileStore(config: StorageConfig) {
         ContentType: file.contentType,
         ContentLength: file.contentLength,
         CacheControl: 'private, no-store',
+        ...(ifMissing ? { IfNoneMatch: '*' } : {}),
       }), { abortSignal: AbortSignal.timeout(120_000) });
     },
     async get(key: string, range?: string) {
@@ -77,6 +78,16 @@ export function createPrivateFileStore(config: StorageConfig) {
       await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }), {
         abortSignal: AbortSignal.timeout(30_000),
       });
+    },
+    async exists(key: string) {
+      try {
+        await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }), { abortSignal: AbortSignal.timeout(30_000) });
+        return true;
+      } catch (error) {
+        const status = (error as { $metadata?: { httpStatusCode?: number } } | null)?.$metadata?.httpStatusCode;
+        if (status !== 404) throw error;
+        return false;
+      }
     },
     async *list(prefix: string) {
       let cursor: string | undefined;
