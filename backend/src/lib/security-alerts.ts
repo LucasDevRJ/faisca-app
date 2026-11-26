@@ -88,7 +88,8 @@ export function createSecurityAlerts({ mailer, to = env.SECURITY_ALERT_EMAIL, no
 
     const config = SECURITY_ALERT_KINDS[kind];
 
-    const summary = `${count} ${config.label} em ${ALERT_WINDOW_MINUTES} minutos.`;
+    // "Pelo menos": cada contador guarda só os últimos N, então o número é o limite, não o total.
+    const summary = `Pelo menos ${count} ${config.label} em ${ALERT_WINDOW_MINUTES} minutos.`;
     const text = [
       'Alerta de segurança do Faísca.',
       '',
