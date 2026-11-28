@@ -17,6 +17,8 @@ export default defineConfig({
     // Segredos fictícios, válidos só nos testes. O mailer é trocado por um em memória.
     env: {
       NODE_ENV: 'test',
+      HELP_ASSISTANT_ENABLED: 'false',
+      HELP_ASSISTANT_RETENTION_CONFIRMED: 'false',
       LOG_LEVEL: 'silent',
       FRONTEND_URL: 'http://localhost:5173',
       DATABASE_URL: testDatabaseUrls().appUrl,

@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
+import { HelpAssistant } from '../features/help-assistant/help-assistant';
 import { ACTION_VIDEOS_ENABLED, ACTIVITY_VIDEOS_ENABLED } from '../features/actions/action-video-api';
 
 const linkClass = 'font-medium text-primary-text underline underline-offset-4';
@@ -107,6 +108,8 @@ export function HowItWorksPage() {
           ))}
         </nav>
       </section>
+
+      <HelpAssistant />
 
       <Section id="conta" title="Criar sua conta">
         <p>

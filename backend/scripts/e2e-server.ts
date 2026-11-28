@@ -34,6 +34,8 @@ const { MESSAGES_PRIVACY_VERSION } = await import('../src/modules/auth/privacy.j
 const SEED_PASSWORD = 'senha-ficticia-123';
 // privacyVersion: versão do aviso já aceita. Sem ela, a conta é de antes do aviso (null).
 const SEED_USERS: { name: string; email: string; patient: boolean; therapist: boolean; privacyVersion?: string }[] = [
+  { name: 'Ajuda Paciente Fictícia', email: 'ajuda-tela@faisca.test', patient: true, therapist: false },
+  { name: 'Ajuda Profissional Fictícia', email: 'ajuda-profissional-tela@faisca.test', patient: false, therapist: true },
   { name: 'Paciente Mensagens Fictícia', email: 'mensagens-paciente@faisca.test', patient: true, therapist: false, privacyVersion: MESSAGES_PRIVACY_VERSION },
   { name: 'Profissional Mensagens Fictícia', email: 'mensagens-profissional@faisca.test', patient: false, therapist: true, privacyVersion: MESSAGES_PRIVACY_VERSION },
   // Só Sono, humor e remédio (api/daily-check-ins.spec.ts, DEC-107), com a versão que cita a área.
@@ -145,7 +147,9 @@ server.get('/__test__/emails/latest', (req, res) => {
   res.json(message);
 });
 // Os testes leem o e-mail logo depois do pedido: o envio acontece antes da resposta (DEC-073).
-server.use(createApp({ mailer, pushSender, runAfterResponse: runInline }));
+server.use(createApp({ mailer, pushSender, runAfterResponse: runInline,
+  ...(process.env.E2E_HELP_MOCK === 'true' && { helpProvider: async () => ({ sources: ['buscar-ligar'] }) }),
+}));
 
 server.listen(env.PORT, () => {
   logger.warn({ port: env.PORT }, `API de testes E2E no ar (banco ${testDatabaseName()})`);

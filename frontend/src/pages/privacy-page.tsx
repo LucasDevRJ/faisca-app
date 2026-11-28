@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Link } from 'react-router';
+import { useEffect, type ReactNode } from 'react';
+import { Link, useLocation } from 'react-router';
 import { ThemeSwitcher } from '../components/theme-switcher';
 import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 
@@ -44,9 +44,10 @@ import { SHOWN_PRIVACY_VERSION } from '../features/auth/privacy-version';
 // em "Importante" (o Faísca não é trabalho acadêmico; TCC aqui é Terapia Cognitivo-Comportamental)
 // e de "a sua terapeuta" para "psicóloga ou psiquiatra" em "Para quê" e "Importante", como já diz
 // "Quem vê" desde a versão 11: não muda nenhum dado coletado nem quem vê.
-const SHOW_ACTIVITY_VIDEOS_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.15';
+const SHOW_HELP_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.16';
+const SHOW_ACTIVITY_VIDEOS_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.15' || SHOW_HELP_NOTICE;
 const SHOW_ACTION_VIDEOS_NOTICE = SHOWN_PRIVACY_VERSION === '2026-11.14' || SHOW_ACTIVITY_VIDEOS_NOTICE;
-const VERSION_LABEL = SHOW_ACTIVITY_VIDEOS_NOTICE ? 'versão de 26 de novembro de 2026'
+const VERSION_LABEL = SHOW_HELP_NOTICE ? 'versão de 27 de novembro de 2026' : SHOW_ACTIVITY_VIDEOS_NOTICE ? 'versão de 26 de novembro de 2026'
   : SHOW_ACTION_VIDEOS_NOTICE ? 'versão de 25 de novembro de 2026' : 'versão 19, de novembro de 2026';
 const CONTACT = 'suporte@minhafaisca.com.br';
 
@@ -62,6 +63,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export function PrivacyPage() {
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash === '#ajuda-ia') document.getElementById('ajuda-ia')?.focus();
+  }, [hash]);
   const contact = (
     <a href={`mailto:${CONTACT}`} className={`${linkClass} break-all`}>
       {CONTACT}
@@ -217,6 +222,13 @@ export function PrivacyPage() {
           </ul>
         </Section>
 
+        {SHOW_HELP_NOTICE && <section id="ajuda-ia" tabIndex={-1} className="flex scroll-mt-6 flex-col gap-2">
+          <h2 className="text-xl font-semibold">Ajuda sobre o aplicativo com IA</h2>
+          <p>O uso é opcional. Antes de cada envio, você autoriza processar sua pergunta e o guia público pela API da OpenAI, com processamento que pode ocorrer nos Estados Unidos. Evite incluir nomes, contatos ou relatos pessoais. O assistente recebe somente o texto que você escrever e a documentação selecionada do aplicativo.</p>
+          <p>O Faísca mantém a pergunta e a resposta apenas na memória durante o uso desta tela. Você pode limpá-las. Guardamos a contagem por conta e dia e o comprovante do aceite para aplicar o limite de 10 perguntas diárias. Contagens antigas são removidas após 30 dias na próxima utilização, e os comprovantes são apagados com a conta.</p>
+          <p>A OpenAI não usa dados da API para treinamento por padrão. Conforme a configuração contratada, dados podem ser retidos para monitoramento de abuso por até 30 dias, com exceções previstas nos termos do serviço. O envio usa armazenamento de respostas desativado. Isso não elimina por si só a retenção de monitoramento.</p>
+          <p>Leia as <a href="https://developers.openai.com/api/docs/guides/your-data" className={linkClass} target="_blank" rel="noreferrer">condições de tratamento da OpenAI</a>. Ao preferir consultar apenas o guia, você continua com acesso à ajuda do Faísca.</p>
+        </section>}
         <Section title="Para quê">
           <p>
             Para você registrar suas atividades, o seu Registro de Pensamentos, os seus Episódios de tensão, as

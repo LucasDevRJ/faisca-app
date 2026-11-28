@@ -360,3 +360,8 @@ O Faísca trata registros psicológicos como **dados pessoais sensíveis de saú
 - **Hashtags possíveis:** #TerapiaCognitivoComportamental #SaudeMental #Psicologia #AtivacaoComportamental #Acessibilidade #LGPD
 - **Chamada para ação:** *"Conheça e crie sua conta em https://minhafaisca.com.br."*
 - **Nunca:** expor dados de pacientes (nem fictícios que pareçam reais) e diferenciar sempre o que já existe do que está "em breve".
+
+**Em desenvolvimento — Ajuda com IA (#346):** pessoas com sessão ativa poderão perguntar sobre o
+uso do Faísca na página Como funciona. A IA seleciona trechos aprovados do guia, com fontes para
+conferir. O envio é opcional, com confirmação antes de cada pergunta e limite diário por conta.
+A ativação depende da configuração do provedor e da revisão das condições de retenção.

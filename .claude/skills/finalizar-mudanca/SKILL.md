@@ -101,6 +101,9 @@ que ficaram desatualizados, no mesmo PR. Procure também o texto antigo que a mu
 Ferramenta de desenvolvimento (skill, hook, script) não precisa de DEC. No relatório, diga quais
 documentos mudaram e quais foram conferidos sem precisar de mudança.
 
+Quando mudar o guia Como funciona, revise também a seleção versionada usada pela ajuda com IA em
+`backend/src/modules/help-assistant/help-guide.ts`, seus links e a fidelidade dos resumos.
+
 ## 7.1 Juntar a main antes do PR (mais de um agente)
 Outro agente pode ter mergeado algo enquanto você trabalhava. Antes de abrir o PR:
 ```bash
