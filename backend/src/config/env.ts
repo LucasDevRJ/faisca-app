@@ -3,6 +3,10 @@ import { z } from 'zod';
 // Só as variáveis usadas até agora. VAPID entra aqui na etapa dos lembretes,
 // para a API não exigir segredo que ainda não usa.
 const envSchema = z.object({
+  HELP_ASSISTANT_ENABLED: z.enum(['true', 'false']).default('false'),
+  HELP_ASSISTANT_RETENTION_CONFIRMED: z.enum(['true', 'false']).default('false'),
+  OPENAI_API_KEY: z.string().optional(),
+  HELP_ASSISTANT_MODEL: z.preprocess((value) => value === '' ? undefined : value, z.string().trim().min(1).max(100).optional()),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3333),
   LOG_LEVEL: z

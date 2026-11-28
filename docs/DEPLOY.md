@@ -583,3 +583,25 @@ O front passa a mostrar o aviso 2026-11.6, a aba
 Tarefas e a novidade 2026-11-tarefas. Vínculos existentes não ganham TASKS automaticamente.
 Conferir com contas fictícias em ambiente local; a verificação de produção é feita pelo usuário.
 Sem variável de ambiente ou serviço novo. O backup existente inclui a tabela nova.
+
+## Ajuda com IA (#346)
+
+- Escolher e testar um modelo compatível com Responses API e saída estruturada. Configurar
+  `OPENAI_API_KEY` e `HELP_ASSISTANT_MODEL` somente no backend. A chave fica fora do frontend.
+- Revisar condições de retenção, localização, contrato e cobrança da conta. Confirmar essa revisão
+  em `HELP_ASSISTANT_RETENTION_CONFIRMED=true`. `store: false` desliga o armazenamento de respostas,
+  e a retenção de monitoramento depende das condições da conta. O aviso explica até 30 dias de
+  monitoramento nas condições padrão. Se o contrato adotado for diferente, ajustar o aviso antes
+  da ativação. Manter compartilhamento opcional de dados para melhoria de modelos desligado.
+- A migration acrescenta somente a contagem diária e o comprovante do aceite em `HelpAssistantUsage`.
+  Depois de aplicar e validar com dados fictícios, ligar `HELP_ASSISTANT_ENABLED=true` na API e
+  publicar o frontend com `VITE_HELP_ASSISTANT_ENABLED=true`. As opções começam desligadas.
+- Usar projeto e chave dedicados. Ativar também o limite de cobrança obrigatório no provedor
+  (Enforce a hard limit) e acompanhar uso. Alertas de orçamento apenas avisam. O teto de dez
+  tentativas por conta/dia e 300 tokens de saída limita o uso por pessoa, mas o custo total cresce
+  com o número de contas. Definir o orçamento do piloto antes da ativação.
+- Para suspender novas chamadas, desligar `HELP_ASSISTANT_ENABLED`. O guia público continua acessível.
+  Falhas de rede ou conversão da resposta também consomem uma tentativa, pois podem ter sido cobradas.
+- Ao alterar Como funciona, revisar `backend/src/modules/help-assistant/help-guide.ts`, atualizar
+  sua versão e as fontes. Validar que os resumos correspondem aos fluxos disponíveis. Usar testes
+  fictícios para dúvidas fora do escopo, instruções maliciosas e variações de português.

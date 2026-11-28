@@ -710,3 +710,24 @@ Ninguém se vincula a si mesmo. Existem duas formas de criar o vínculo:
 - Uso offline com sincronização
 - Mais de uma profissional do mesmo tipo por paciente (hoje, uma psicóloga e uma psiquiatra)
 - Verificação de CRP ou CRM (o número do conselho é só informado pela profissional)
+
+### Ajuda com IA (#346, DEC-145)
+
+Quando habilitada, a página Como funciona oferece perguntas sobre o aplicativo para pessoas
+com sessão ativa, pacientes e profissionais. Cada envio exige confirmação explícita do aviso
+`help-2026-11-27`. A API recebe somente a pergunta (3 a 500 caracteres), o aceite e sua versão.
+O provedor recebe essa pergunta e a seleção versionada do guia público, em uma chamada independente.
+A IA seleciona identificadores de seções. O servidor monta a resposta somente com os textos
+aprovados dessas seções, em texto simples, com links locais. Texto livre gerado pelo modelo é descartado.
+Sem fonte, a interface orienta a consultar o guia ou suporte. Questões clínicas são encaminhadas
+à profissional. O assistente opera sem ferramentas e sem consultas a registros pessoais.
+
+Antes de cada envio, a interface obtém um token CSRF em GET /help/csrf. O POST /help/ask exige o token no cabeçalho e um cookie assinado e vinculado à sessão. Tokens ausentes, alterados ou de outra sessão retornam 403 antes de consumir cota.
+
+O limite é 10 tentativas por conta e dia de São Paulo, reservado atomicamente no banco antes
+da chamada. Falhas também contam. Há limite adicional de três tentativas por minuto por conta.
+O banco guarda somente a contagem, o dia, a versão e o horário do aceite, com exclusão em cascata
+com a conta. Contagens com mais de 30 dias são removidas na próxima utilização da conta.
+Perguntas e respostas ficam apenas na memória da tela e podem ser limpas. No provedor, a requisição
+usa `store: false`, com retenção de monitoramento sujeita ao contrato e à configuração confirmados
+antes da ativação. O aviso `2026-11.16` explica esse processamento e preserva os avisos anteriores.

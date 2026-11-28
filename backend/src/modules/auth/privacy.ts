@@ -52,6 +52,7 @@ export const PRIVACY_VERSIONS = [
   '2026-11.13',
   '2026-11.14',
   '2026-11.15',
+  '2026-11.16',
 ] as const;
 
 export type PrivacyVersion = (typeof PRIVACY_VERSIONS)[number];
@@ -75,7 +76,8 @@ export const MESSAGES_PRIVACY_VERSION: PrivacyVersion = '2026-11.11';
 // A 2026-11.13 (DEC-128, o registro apontado nas Mensagens) virou a atual no PR das telas, com o texto.
 export const ACTION_VIDEOS_PRIVACY_VERSION: PrivacyVersion = '2026-11.14';
 export const ACTIVITY_VIDEOS_PRIVACY_VERSION: PrivacyVersion = '2026-11.15';
-export const PRIVACY_VERSION: PrivacyVersion = env.ACTIVITY_VIDEOS_ENABLED === 'true'
+export const PRIVACY_VERSION: PrivacyVersion = env.HELP_ASSISTANT_ENABLED === 'true'
+  ? '2026-11.16' : env.ACTIVITY_VIDEOS_ENABLED === 'true'
   ? ACTIVITY_VIDEOS_PRIVACY_VERSION
   : env.ACTION_VIDEOS_ENABLED === 'true'
     ? ACTION_VIDEOS_PRIVACY_VERSION
@@ -99,7 +101,8 @@ export function versionToRecord(shownVersion: string | undefined, current: strin
   // apenas a versão enviada pelo app, inclusive quando o PWA ainda mostra a anterior.
   if (shownVersion === undefined || shown === '2026-11.10' || shown === MESSAGES_PRIVACY_VERSION ||
       shown === '2026-11.12' || shown === '2026-11.13' || shown === PRIVACY_VERSION ||
-      (shown === ACTION_VIDEOS_PRIVACY_VERSION && env.ACTIVITY_VIDEOS_ENABLED === 'true')) {
+      (shown === '2026-11.15' && env.HELP_ASSISTANT_ENABLED === 'true') ||
+      (shown === ACTION_VIDEOS_PRIVACY_VERSION && (env.ACTIVITY_VIDEOS_ENABLED === 'true' || env.HELP_ASSISTANT_ENABLED === 'true'))) {
     const kept = PRIVACY_VERSIONS.indexOf(current as PrivacyVersion);
     const displayed = PRIVACY_VERSIONS.indexOf(shown as PrivacyVersion);
     return PRIVACY_VERSIONS[Math.max(kept, displayed)]!;

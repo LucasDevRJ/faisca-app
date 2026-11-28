@@ -21,6 +21,7 @@ enum AnnouncementEmailStatus {
 }
 
 model User {
+  helpAssistantUsage           HelpAssistantUsage[]
   messageEmailEnabled         Boolean           @default(true)
   messagePushEnabled          Boolean           @default(true)
   // Profissional (DEC-128): aceita mensagens "Sobre um registro". Começa ligado.
@@ -143,6 +144,18 @@ model User {
 
   // Foto de perfil (DEC-061), opcional.
   avatar UserAvatar?
+}
+
+// Só contagem diária e comprovante do aceite. Perguntas e respostas ficam fora do banco.
+model HelpAssistantUsage {
+  userId String @db.Uuid
+  day DateTime @db.Date
+  count Int @default(0)
+  consentVersion String
+  consentedAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
 }
 
 // Foto de perfil (DEC-061): guardada já reduzida (256×256, WebP) e sem metadados, como a

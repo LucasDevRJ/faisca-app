@@ -1,4 +1,7 @@
 import cookieParser from 'cookie-parser';
+import { configuredHelpProvider } from './modules/help-assistant/help-config.js';
+import { createHelpAssistantRoutes } from './modules/help-assistant/help-assistant.routes.js';
+import type { HelpProvider } from './modules/help-assistant/help-provider.js';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -39,6 +42,7 @@ import { createCommunityRoutes } from './modules/community/community.routes.js';
 import { createMessagesRoutes } from './modules/messages/messages.routes.js';
 
 export type AppDependencies = {
+  helpProvider?: HelpProvider;
   // Os testes passam um mailer em memória; em dev e produção é o Resend.
   mailer?: Mailer;
   // Os testes passam um pushSender em memória; em dev e produção é o Web Push (VAPID).
@@ -53,6 +57,7 @@ export type AppDependencies = {
 
 // O app fica separado do server.ts para os testes usarem o Supertest sem abrir porta.
 export function createApp({
+  helpProvider = configuredHelpProvider(),
   mailer = createResendMailer(),
   pushSender = createWebPushSender(),
   runAfterResponse = runDetached,
@@ -98,6 +103,7 @@ export function createApp({
   app.use(cookieParser());
 
   app.use(healthRoutes);
+  app.use(createHelpAssistantRoutes(helpProvider));
   app.use(createAuthRoutes(mailer, runAfterResponse, pushSender));
   app.use(createActivitiesRoutes(activityVideos));
   app.use(createAppointmentsRoutes());
