@@ -7,7 +7,7 @@ import { env } from '../config/env.js';
 // Revisar a lista quando novos models com dado sensível forem criados.
 // Não use 'code' genérico: apagaria o err.code (ex.: P2002 do Prisma).
 const SENSITIVE_KEYS = [
-  'question', 'answer', 'input', 'output', 'OPENAI_API_KEY',
+  'question', 'answer', 'input', 'output', 'OPENAI_API_KEY', 'csrfToken',
   // Busca em registros (Issue #152): termos podem revelar informação sobre saúde e nunca ficam no log.
   'term',
   // Mensagens (DEC-127): a prévia da última mensagem é conteúdo privado da conversa (o texto já está

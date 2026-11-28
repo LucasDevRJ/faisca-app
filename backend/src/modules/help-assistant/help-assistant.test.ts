@@ -19,8 +19,12 @@ beforeEach(async () => {
 async function login(therapist = false) {
   const user = await createConfirmedUser({ email: therapist ? 'ajuda-profissional@faisca.test' : 'ajuda-paciente@faisca.test', patient: !therapist, therapist });
   const agent = request.agent(app);
-  expect((await agent.post('/auth/login').send({ email: user.email, password: 'senha-ficticia-123' })).status).toBe(200);
-  return { user, agent };
+  const session = await agent.post('/auth/login').send({ email: user.email, password: 'senha-ficticia-123' });
+  expect(session.status).toBe(200);
+  const token = await agent.get('/help/csrf');
+  expect(token.status).toBe(200);
+  agent.set('X-CSRF-Token', token.body.csrfToken);
+  return { user, agent, csrfToken: token.body.csrfToken as string, sessionCookie: String(session.headers['set-cookie']?.[0]).split(';')[0]! };
 }
 
 describe('autorização e consentimento da ajuda', () => {
@@ -50,6 +54,33 @@ describe('autorização e consentimento da ajuda', () => {
     app = createApp({ mailer: new FakeMailer() });
     const { agent } = await login();
     expect((await agent.post('/help/ask').send(input)).status).toBe(503);
+    expect(provider).not.toHaveBeenCalled();
+  });
+  it('rejeita token ausente, alterado e token copiado de outra sessão antes de consumir cota', async () => {
+    const { user, agent, sessionCookie } = await login();
+    const other = await login(true);
+    expect((await request(app).get('/help/csrf')).status).toBe(401);
+    expect((await request(app).post('/help/ask').set('Cookie', sessionCookie).send(input)).status).toBe(403);
+    expect((await agent.post('/help/ask').set('X-CSRF-Token', 'alterado').send(input)).status).toBe(403);
+    expect((await request(app).post('/help/ask')
+      .set('Cookie', [sessionCookie, `faisca_help_csrf=${other.csrfToken}`])
+      .set('X-CSRF-Token', other.csrfToken).send(input)).status).toBe(403);
+    expect(provider).not.toHaveBeenCalled();
+    expect(await prisma.helpAssistantUsage.count({ where: { userId: user.id } })).toBe(0);
+  });
+  it('vincula o token a cada login e mantém emissões concorrentes da mesma sessão estáveis', async () => {
+    const { user, agent, csrfToken, sessionCookie } = await login();
+    const concurrent = await Promise.all([agent.get('/help/csrf'), agent.get('/help/csrf')]);
+    expect(concurrent.map((response) => response.body.csrfToken)).toEqual([csrfToken, csrfToken]);
+    expect(concurrent[0]!.headers['cache-control']).toBe('no-store');
+    const anotherSession = request.agent(app);
+    await anotherSession.post('/auth/login').send({ email: user.email, password: 'senha-ficticia-123' });
+    const copied = (await anotherSession.get('/help/csrf')).body.csrfToken as string;
+    expect(copied).not.toBe(csrfToken);
+    const response = await request(app).post('/help/ask')
+      .set('Cookie', [sessionCookie, `faisca_help_csrf=${copied}`])
+      .set('X-CSRF-Token', copied).send(input);
+    expect(response.status).toBe(403);
     expect(provider).not.toHaveBeenCalled();
   });
 });

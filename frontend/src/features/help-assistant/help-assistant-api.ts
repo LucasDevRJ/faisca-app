@@ -9,8 +9,9 @@ export type HelpAnswer = {
 };
 
 export async function askHelp(question: string): Promise<HelpAnswer> {
+  const { data: token } = await api.get<{ csrfToken: string }>('/help/csrf');
   const { data } = await api.post<HelpAnswer>('/help/ask', {
     question, accepted: true, consentVersion: HELP_CONSENT_VERSION,
-  }, { timeout: 25_000 });
+  }, { timeout: 25_000, headers: { 'X-CSRF-Token': token.csrfToken } });
   return data;
 }

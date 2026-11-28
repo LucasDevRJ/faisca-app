@@ -722,6 +722,8 @@ aprovados dessas seções, em texto simples, com links locais. Texto livre gerad
 Sem fonte, a interface orienta a consultar o guia ou suporte. Questões clínicas são encaminhadas
 à profissional. O assistente opera sem ferramentas e sem consultas a registros pessoais.
 
+Antes de cada envio, a interface obtém um token CSRF em GET /help/csrf. O POST /help/ask exige o token no cabeçalho e um cookie assinado e vinculado à sessão. Tokens ausentes, alterados ou de outra sessão retornam 403 antes de consumir cota.
+
 O limite é 10 tentativas por conta e dia de São Paulo, reservado atomicamente no banco antes
 da chamada. Falhas também contam. Há limite adicional de três tentativas por minuto por conta.
 O banco guarda somente a contagem, o dia, a versão e o horário do aceite, com exclusão em cascata

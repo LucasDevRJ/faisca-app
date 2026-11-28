@@ -10,7 +10,7 @@ vi.mock('./help-assistant-api', async (importOriginal) => ({
   ...await importOriginal<typeof import('./help-assistant-api')>(), HELP_ASSISTANT_ENABLED: true,
 }));
 
-beforeEach(() => server.use(loggedIn));
+beforeEach(() => server.use(loggedIn, http.get('*/api/help/csrf', () => HttpResponse.json({ csrfToken: 'token-ficticio' }))));
 
 describe('ajuda sobre o aplicativo', () => {
   it('pede confirmação por envio e mostra as fontes com links internos', async () => {
